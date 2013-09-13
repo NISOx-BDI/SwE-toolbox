@@ -149,7 +149,7 @@ for i = 1:length(Ic)
                 if any(j == ind) & any(jj == ind)
                     it2 = it2+1;
                     weight = Co(j,:)'*Co(jj,:);
-                    if (j==jj)
+                    if (j~=jj) %was wrong (BG - 13/09/13) 
                         weight = weight + weight';
                     end
                     weight = weight(tril(ones(size(Co,2)))==1);
