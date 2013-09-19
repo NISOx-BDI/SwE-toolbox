@@ -611,10 +611,10 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
                         tmp(tril(ones(nVis_g(g)))==1) = Cov_vis(iGr_Cov_vis_g==g,iVox);
                         tmp = tmp + tmp' - diag(diag(tmp));
                         [V D] = eig(tmp);
-                        if any (D<0) 
+                        if any (diag(D)<0) %Bug corrected (BG - 19/09/13)
                             D(D<0) = 0;
                             tmp = V * D * V';
-                            Cov_vis(iGr_Cov_vis_g==g,iVox) = tmp(tril(ones(nVis_g))==1);
+                            Cov_vis(iGr_Cov_vis_g==g,iVox) = tmp(tril(ones(nVis_g(g)))==1); %Bug corrected (BG - 19/09/13)
                         end
                     end
                 end
