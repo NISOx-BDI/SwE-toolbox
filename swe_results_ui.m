@@ -241,9 +241,9 @@ function varargout = swe_results_ui(varargin)
 spm('defaults','FMRI')% to avoid trouble with testing
 %-Condition arguments
 %--------------------------------------------------------------------------
-if nargin == 0, Action='SetUp'; else Action=varargin{1}; end
- 
- 
+if nargin == 0, Action='setup'; else Action=varargin{1}; end
+
+
 %==========================================================================
 switch lower(Action), case 'setup'                         %-Set up results
 %==========================================================================
@@ -261,7 +261,7 @@ switch lower(Action), case 'setup'                         %-Set up results
     else
         [SwE,xSwE] = swe_getSPM;
     end
- 
+    
     if isempty(xSwE) 
         varargout = {[],[],[]};
         return;
@@ -269,9 +269,9 @@ switch lower(Action), case 'setup'                         %-Set up results
     
     switch xSwE.STAT
         case 'T'
-            eSTAT = 'Z'
+            eSTAT = 'Z';
         case 'F'
-            eSTAT = 'X'
+            eSTAT = 'X';
     end
     %-Ensure pwd = swd so that relative filenames are valid
     %----------------------------------------------------------------------
@@ -368,15 +368,15 @@ switch lower(Action), case 'setup'                         %-Set up results
         'Callback',{@mychgcon,xSwE});
     if xSwE.Ic+1>numel(SwE.xCon), set(hC1,'Enable','off'); end
     hC1 = uimenu(hC,'Label','Significance level','Separator','on');
-    xSPMtmp = xSwE; xSPMtmp.thresDesc = '';
+    xSwEtmp = xSwE; xSwEtmp.thresDesc = '';
     uimenu(hC1,'Label','Change...','UserData',struct('Ic',xSwE.Ic),...
-        'Callback',{@mychgcon,xSPMtmp});
+        'Callback',{@mychgcon,xSwEtmp});
 %     xSPMtmp = xSwE; xSPMtmp.thresDesc = 'p<0.05 (FWE)';
 %     uimenu(hC1,'Label','Set to 0.05 (FWE)','UserData',struct('Ic',xSwE.Ic),...
 %         'Callback',{@mychgcon,xSPMtmp});
-    xSPMtmp = xSwE; xSPMtmp.thresDesc = 'p<0.001 (unc.)';
+    xSwEtmp = xSwE; xSwEtmp.thresDesc = 'p<0.001 (unc.)';
     uimenu(hC1,'Label','Set to 0.001 (unc.)','UserData',struct('Ic',xSwE.Ic),...
-        'Callback',{@mychgcon,xSPMtmp});
+        'Callback',{@mychgcon,xSwEtmp});
     uimenu(hC1,'Label',[xSwE.thresDesc ', k=' num2str(xSwE.k)],...
         'Enable','off','Separator','on');
     
@@ -409,7 +409,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         'FontWeight','Bold','FontSize',FS(14))
  
  
-    %-Print SPMresults: Results directory & thresholding info
+    %-Print SwEresults: Results directory & thresholding info
     %----------------------------------------------------------------------
     hResAx = axes('Parent',Fgraph,...
         'Position',[0.05 0.55 0.45 0.05],...
@@ -506,6 +506,9 @@ switch lower(Action), case 'setup'                         %-Set up results
     %-Finished results setup
     %----------------------------------------------------------------------
     varargout = {hReg,xSwE,SwE};
+    assignin ('base','hReg',hReg)
+    assignin ('base','xSwE',xSwE)
+    assignin ('base','SwE',SwE)
     spm('Pointer','Arrow')
  
  
