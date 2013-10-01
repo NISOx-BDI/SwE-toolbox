@@ -30,7 +30,7 @@ function varargout = swe_list(varargin)
 %
 % (see spm_getSPM.m for further details of xSwE structures)
 %
-% hReg   - Handle of results section XYZ registry (see spm_results_ui.m)
+% hReg   - Handle of results section XYZ registry (see swe_results_ui.m)
 %
 % Num    - number of maxima per cluster [3]
 % Dis    - distance among clusters {mm} [8]
@@ -180,7 +180,12 @@ case 'table'                                                        %-Table
     VRpv      = xSwE.VRpv;
     n         = xSwE.n;
     STAT      = xSwE.STAT;
-    STAT      = 'P'; 
+    switch STAT
+        case 'T'
+            STATe = 'Z';
+        case 'F'
+            STATe = 'X';
+    end
     df        = xSwE.df;
     u         = xSwE.u;
     k         = xSwE.k;
@@ -189,10 +194,10 @@ case 'table'                                                        %-Table
     try, QPp  = xSwE.Pp; end
     try, QPc  = xSwE.Pc; end
         
-    if STAT~='P'
-        R     = full(xSwE.R);
-        FWHM  = full(xSwE.FWHM);
-    end
+%     if STAT~='P'
+%         R     = full(xSwE.R);
+%         FWHM  = full(xSwE.FWHM);
+%     end
     try
         units = xSwE.units;
     catch
@@ -205,20 +210,19 @@ case 'table'                                                        %-Table
     D         = sum(DIM);             % highest dimension
     VOX       = VOX(DIM);             % scaling
     
-    if STAT ~= 'P'
-        FWHM  = FWHM(DIM);            % Full width at half max
-        FWmm  = FWHM.*VOX;            % FWHM {units}
-        V2R   = 1/prod(FWHM);         % voxels to resels
-        k     = k*V2R;                % extent threshold in resels
-        R     = R(1:(D + 1));         % eliminate null resel counts
+%     if STAT ~= 'P'
+%         FWHM  = FWHM(DIM);            % Full width at half max
+%         FWmm  = FWHM.*VOX;            % FWHM {units}
+%         V2R   = 1/prod(FWHM);         % voxels to resels
+%         k     = k*V2R;                % extent threshold in resels
+%         R     = R(1:(D + 1));         % eliminate null resel counts
+%     end
         try, QPs = sort(QPs(:)); end  % Needed for voxel   FDR
         try, QPp = sort(QPp(:)); end  % Needed for peak    FDR
         try, QPc = sort(QPc(:)); end  % Needed for cluster FDR
-    end
-
     % Choose between voxel-wise and topological FDR
     %----------------------------------------------------------------------
-    topoFDR = true
+    topoFDR = false; %to be checked
     
     %-Tolerance for p-value underflow, when computing equivalent Z's
     %----------------------------------------------------------------------
@@ -237,8 +241,8 @@ case 'table'                                                        %-Table
         'cluster',  'p(unc)',       '\itp\rm_{uncorr}';...
         'peak',     'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
         'peak',     'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
-        'peak',      STAT,          '\itp';...
-        'peak',     'equivZ',       '(\itZ\rm_\equiv)';...
+        'peak',      STATe,         sprintf('\\it%c',STATe);...
+        'peak',     '',             '';...
         'peak',     'p(unc)',       '\itp\rm_{uncorr}';...
         '',         'x,y,z {mm}',   [units{:}]}';...
         
@@ -246,10 +250,10 @@ case 'table'                                                        %-Table
     %----------------------------------------------------------------------
     if isempty(xSwE.XYZmm) % empty results
         xyzfmt = '%3.0f %3.0f %3.0f';
-        voxfmt = repmat('%0.1f ',1,numel(FWmm));
+        %voxfmt = repmat('%0.1f ',1,numel(FWmm));
     elseif ~any(strcmp(units{3},{'mm',''})) % 2D data
         xyzfmt = '%3.0f %3.0f %3.0f';
-        voxfmt = repmat('%0.1f ',1,numel(FWmm));
+        %voxfmt = repmat('%0.1f ',1,numel(FWmm));
     else % 3D data, work out best precision based on voxel sizes and FOV
         xyzsgn = min(xSwE.XYZmm(DIM,:),[],2) < 0;
         xyzexp = max(floor(log10(max(abs(xSwE.XYZmm(DIM,:)),[],2)))+(max(abs(xSwE.XYZmm(DIM,:)),[],2) >= 1),0);
@@ -285,46 +289,46 @@ case 'table'                                                        %-Table
     
     %-Footnote with SPM parameters
     %----------------------------------------------------------------------
-    if STAT ~= 'P'
-        Pz              = spm_P(1,0,u,df,STAT,1,n,S);
-        Pu              = spm_P(1,0,u,df,STAT,R,n,S);
-        [P Pn Ec Ek]    = spm_P(1,k,u,df,STAT,R,n,S);
-        
-        TabDat.ftr      = cell(9,2);
-        TabDat.ftr{1,1} = ...
-            ['Height threshold: ' STAT ' = %0.2f, p = %0.3f (%0.3f)'];
-        TabDat.ftr{1,2} = [u,Pz,Pu];
-        TabDat.ftr{2,1} = ...
-            'Extent threshold: k = %0.0f voxels, p = %0.3f (%0.3f)';
-        TabDat.ftr{2,2} = [k/V2R,Pn,P];
-        TabDat.ftr{3,1} = ...
-            'Expected voxels per cluster, <k> = %0.3f';
-        TabDat.ftr{3,2} = Ek/V2R;
-        TabDat.ftr{4,1} = ...
-            'Expected number of clusters, <c> = %0.2f';
-        TabDat.ftr{4,2} = Ec*Pn;
-        if any(isnan(uc))
-            TabDat.ftr{5,1} = 'FWEp: %0.3f, FDRp: %0.3f';
-            TabDat.ftr{5,2} = uc(1:2);
-        else
-            TabDat.ftr{5,1} = ...
-                'FWEp: %0.3f, FDRp: %0.3f, FWEc: %0.0f, FDRc: %0.0f';
-            TabDat.ftr{5,2} = uc;
-        end
-        TabDat.ftr{6,1} = 'Degrees of freedom = [%0.1f, %0.1f]';
-        TabDat.ftr{6,2} = df;
-        TabDat.ftr{7,1} = ...
-            ['FWHM = ' voxfmt units{:} '; ' voxfmt '{voxels}'];
-        TabDat.ftr{7,2} = [FWmm FWHM];
-        TabDat.ftr{8,1} = ...
-            'Volume: %0.0f = %0.0f voxels = %0.1f resels';
-        TabDat.ftr{8,2} = [S*prod(VOX),S,R(end)];
-        TabDat.ftr{9,1} = ...
-            ['Voxel size: ' voxfmt units{:} '; (resel = %0.2f voxels)'];
-        TabDat.ftr{9,2} = [VOX,prod(FWHM)];
-     else
+%     if STAT ~= 'P'
+%         Pz              = spm_P(1,0,u,df,STAT,1,n,S);
+%         Pu              = spm_P(1,0,u,df,STAT,R,n,S);
+%         [P Pn Ec Ek]    = spm_P(1,k,u,df,STAT,R,n,S);
+%         
+%         TabDat.ftr      = cell(9,2);
+%         TabDat.ftr{1,1} = ...
+%             ['Height threshold: ' STAT ' = %0.2f, p = %0.3f (%0.3f)'];
+%         TabDat.ftr{1,2} = [u,Pz,Pu];
+%         TabDat.ftr{2,1} = ...
+%             'Extent threshold: k = %0.0f voxels, p = %0.3f (%0.3f)';
+%         TabDat.ftr{2,2} = [k/V2R,Pn,P];
+%         TabDat.ftr{3,1} = ...
+%             'Expected voxels per cluster, <k> = %0.3f';
+%         TabDat.ftr{3,2} = Ek/V2R;
+%         TabDat.ftr{4,1} = ...
+%             'Expected number of clusters, <c> = %0.2f';
+%         TabDat.ftr{4,2} = Ec*Pn;
+%         if any(isnan(uc))
+%             TabDat.ftr{5,1} = 'FWEp: %0.3f, FDRp: %0.3f';
+%             TabDat.ftr{5,2} = uc(1:2);
+%         else
+%             TabDat.ftr{5,1} = ...
+%                 'FWEp: %0.3f, FDRp: %0.3f, FWEc: %0.0f, FDRc: %0.0f';
+%             TabDat.ftr{5,2} = uc;
+%         end
+%         TabDat.ftr{6,1} = 'Degrees of freedom = [%0.1f, %0.1f]';
+%         TabDat.ftr{6,2} = df;
+%         TabDat.ftr{7,1} = ...
+%             ['FWHM = ' voxfmt units{:} '; ' voxfmt '{voxels}'];
+%         TabDat.ftr{7,2} = [FWmm FWHM];
+%         TabDat.ftr{8,1} = ...
+%             'Volume: %0.0f = %0.0f voxels = %0.1f resels';
+%         TabDat.ftr{8,2} = [S*prod(VOX),S,R(end)];
+%         TabDat.ftr{9,1} = ...
+%             ['Voxel size: ' voxfmt units{:} '; (resel = %0.2f voxels)'];
+%         TabDat.ftr{9,2} = [VOX,prod(FWHM)];
+%      else
         TabDat.ftr = {};
-    end 
+%     end 
 
     %-Characterize excursion set in terms of maxima
     % (sorted on Z values and grouped by regions)
@@ -347,36 +351,36 @@ case 'table'                                                        %-Table
     c              = max(A);                           %-Number of clusters
     NONSTAT        = spm_get_defaults('stats.rft.nonstat');
     
-    if STAT ~= 'P'
-        if NONSTAT
-            K      = zeros(c,1);
-            for i  = 1:c
-                
-                %-Get LKC for voxels in i-th region
-                %----------------------------------------------------------
-                LKC = spm_get_data(VRpv,L{i});
-                
-                %-Compute average of valid LKC measures for i-th region
-                %----------------------------------------------------------
-                valid = ~isnan(LKC);
-                if any(valid)
-                    LKC = sum(LKC(valid)) / sum(valid);
-                else
-                    LKC = V2R; % fall back to whole-brain resel density
-                end
-                
-                %-Intrinsic volume (with surface correction)
-                %----------------------------------------------------------
-                IV   = spm_resels([1 1 1],L{i},'V');
-                IV   = IV*[1/2 2/3 2/3 1]';
-                K(i) = IV*LKC;
-                
-            end
-            K = K(A);
-        else
-            K = N*V2R;
-        end
-    end
+%     if STAT ~= 'P'
+%         if NONSTAT
+%             K      = zeros(c,1);
+%             for i  = 1:c
+%                 
+%                 %-Get LKC for voxels in i-th region
+%                 %----------------------------------------------------------
+%                 LKC = spm_get_data(VRpv,L{i});
+%                 
+%                 %-Compute average of valid LKC measures for i-th region
+%                 %----------------------------------------------------------
+%                 valid = ~isnan(LKC);
+%                 if any(valid)
+%                     LKC = sum(LKC(valid)) / sum(valid);
+%                 else
+%                     LKC = V2R; % fall back to whole-brain resel density
+%                 end
+%                 
+%                 %-Intrinsic volume (with surface correction)
+%                 %----------------------------------------------------------
+%                 IV   = spm_resels([1 1 1],L{i},'V');
+%                 IV   = IV*[1/2 2/3 2/3 1]';
+%                 K(i) = IV*LKC;
+%                 
+%             end
+%             K = K(A);
+%         else
+%             K = N*V2R;
+%         end
+%     end
     
     %-Convert maxima locations from voxels to mm
     %----------------------------------------------------------------------
@@ -384,11 +388,11 @@ case 'table'                                                        %-Table
     
     %-Set-level p values {c} - do not display if reporting a single cluster
     %----------------------------------------------------------------------
-    if STAT ~= 'P'
-        Pc     = spm_P(c,k,u,df,STAT,R,n,S);            %-Set-level p-value
-    else
+%     if STAT ~= 'P'
+%         Pc     = spm_P(c,k,u,df,STAT,R,n,S);            %-Set-level p-value
+%     else
         Pc     = [];
-    end
+%     end
 
     TabDat.dat = {Pc,c};
     TabLin     = 1;
@@ -405,50 +409,46 @@ case 'table'                                                        %-Table
 
         %-Compute cluster {k} and peak-level {u} p values for this cluster
         %------------------------------------------------------------------
-        if STAT ~= 'P'
-            
-            % p-values (FWE)
-            %--------------------------------------------------------------
-            Pz      = spm_P(1,0,   U,df,STAT,1,n,S);  % uncorrected p value
-            Pu      = spm_P(1,0,   U,df,STAT,R,n,S);  % FWE-corrected {based on Z}
-            [Pk Pn] = spm_P(1,K(i),u,df,STAT,R,n,S);  % [un]corrected {based on K}
-            
-            % q-values (FDR)
-            %--------------------------------------------------------------
-            if topoFDR
-                Qc  = spm_P_clusterFDR(K(i),df,STAT,R,n,u,QPc); % based on K
-                Qp  = spm_P_peakFDR(U,df,STAT,R,n,u,QPp);       % based on Z
-                Qu  = [];
-            else
-                Qu  = spm_P_FDR(U,df,STAT,n,QPs);     % voxel FDR-corrected
-                Qc  = [];
-                Qp  = [];
-            end
-
-            % Equivalent Z-variate
-            %--------------------------------------------------------------
-            if Pz < tol
-                Ze  = Inf;
-            else
-                Ze  = spm_invNcdf(1 - Pz);
-            end
-        else
-            Pz      = [];
+%         if STAT ~= 'P'
+%             
+%             % p-values (FWE)
+%             %--------------------------------------------------------------
+%             Pz      = spm_P(1,0,   U,df,STAT,1,n,S);  % uncorrected p value
+%             Pu      = spm_P(1,0,   U,df,STAT,R,n,S);  % FWE-corrected {based on Z}
+%             [Pk Pn] = spm_P(1,K(i),u,df,STAT,R,n,S);  % [un]corrected {based on K}
+%             
+%             % q-values (FDR)
+%             %--------------------------------------------------------------
+%             if topoFDR
+%                 Qc  = spm_P_clusterFDR(K(i),df,STAT,R,n,u,QPc); % based on K
+%                 Qp  = spm_P_peakFDR(U,df,STAT,R,n,u,QPp);       % based on Z
+%                 Qu  = [];
+%             else
+%                 Qc  = [];
+%                 Qp  = [];
+%             end
+%         else
+            switch STATe
+                case 'Z'
+                    Pz      = normcdf(-U);
+                case 'X'
+                    Pz      = 1-chi2cdf(U,1);
+            end                           
             Pu      = [];
             Qu      = [];
             Pk      = [];
             Pn      = [];
             Qc      = [];
             Qp      = [];
+            Qu      = spm_P_FDR(U,[1 1],STATe,n,QPs);    % voxel FDR-corrected
             ws      = warning('off','SPM:outOfRangeNormal');
-            Ze      = spm_invNcdf(U);
             warning(ws);
-        end
+%         end
         
         if topoFDR
-        [TabDat.dat{TabLin,3:12}] = deal(Pk,Qc,N(i),Pn,Pu,Qp,U,Ze,Pz,XYZmm(:,i));
+        [TabDat.dat{TabLin,3:12}] = deal(Pk,Qc,N(i),Pn,Pu,Qp,U,[],Pz,XYZmm(:,i));
         else
-        [TabDat.dat{TabLin,3:12}] = deal(Pk,Qc,N(i),Pn,Pu,Qu,U,Ze,Pz,XYZmm(:,i));
+        [TabDat.dat{TabLin,3:12}] = deal(Pk,Qc,N(i),Pn,Pu,Qu,U,[],Pz,XYZmm(:,i));
         end
         TabLin = TabLin + 1;
         
@@ -462,37 +462,38 @@ case 'table'                                                        %-Table
                 if length(D) < Num
                     % voxel-level p values {Z}
                     %------------------------------------------------------
-                    if STAT ~= 'P'
-                        Pz     = spm_P(1,0,Z(d),df,STAT,1,n,S);
-                        Pu     = spm_P(1,0,Z(d),df,STAT,R,n,S);
-                        if topoFDR
-                            Qp = spm_P_peakFDR(Z(d),df,STAT,R,n,u,QPp);
-                            Qu = [];
-                        else
-                            Qu = spm_P_FDR(Z(d),df,STAT,n,QPs);
-                            Qp = [];
-                        end
-                        if Pz < tol
-                            Ze = Inf;
-                        else
-                            Ze = spm_invNcdf(1 - Pz); 
-                        end
-                    else
-                        Pz     = [];
+%                     if STAT ~= 'P'
+%                         Pz     = spm_P(1,0,Z(d),df,STAT,1,n,S);
+%                         Pu     = spm_P(1,0,Z(d),df,STAT,R,n,S);
+%                         if topoFDR
+%                             Qp = spm_P_peakFDR(Z(d),df,STAT,R,n,u,QPp);
+%                             Qu = [];
+%                         else
+%                             Qu = spm_P_FDR(Z(d),df,STATe,n,QPs);
+%                             Qp = [];
+%                         end
+%                         if Pz < tol
+%                             Ze = Inf;
+%                         else
+%                             Ze = spm_invNcdf(1 - Pz); 
+%                         end
+%                     else
+                        Pz     = normcdf(-Z(d));
                         Pu     = [];
                         Qu     = [];
                         Qp     = [];
+                        Qu      = spm_P_FDR(Z(d),[1 1],STATe,n,QPs);    % voxel FDR-corrected
                         ws     = warning('off','SPM:outOfRangeNormal');
                         Ze     = spm_invNcdf(Z(d));
                         warning(ws);
-                    end
+%                     end
                     D     = [D d];
                     if topoFDR
                     [TabDat.dat{TabLin,7:12}] = ...
-                        deal(Pu,Qp,Z(d),Ze,Pz,XYZmm(:,d));
+                        deal(Pu,Qp,Z(d),[],Pz,XYZmm(:,d));
                     else
                     [TabDat.dat{TabLin,7:12}] = ...
-                        deal(Pu,Qu,Z(d),Ze,Pz,XYZmm(:,d));
+                        deal(Pu,Qu,Z(d),[],Pz,XYZmm(:,d));
                     end
                     TabLin = TabLin+1;
                 end
@@ -516,7 +517,7 @@ case 'table'                                                        %-Table
     
     %-Get current location (to highlight selected voxel in table)
     %----------------------------------------------------------------------
-    xyzmm = spm_results_ui('GetCoords');
+    xyzmm = swe_results_ui('GetCoords');
     
     %-Setup Graphics panel
     %----------------------------------------------------------------------
@@ -528,7 +529,7 @@ case 'table'                                                        %-Table
         Fgraph = spm_figure('GetWin','Graphics');
         ht = 0.4; bot = 0.1;
     end
-    spm_results_ui('Clear',Fgraph)
+    swe_results_ui('Clear',Fgraph)
     FS     = spm('FontSizes');           %-Scaled font sizes
     PF     = spm_platform('fonts');      %-Font names (for this platform)
     
@@ -769,8 +770,8 @@ case 'table'                                                        %-Table
             %-Jump to voxel nearest current location
             %--------------------------------------------------------------
             [xyzmm,i] = spm_XYZreg('NearestXYZ',...
-                spm_results_ui('GetCoords'),xSwE.XYZmm);
-            spm_results_ui('SetCoords',xSwE.XYZmm(:,i));
+                swe_results_ui('GetCoords'),xSwE.XYZmm);
+            swe_results_ui('SetCoords',xSwE.XYZmm(:,i));
 
             %-Find selected cluster
             %--------------------------------------------------------------
