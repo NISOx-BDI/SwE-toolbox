@@ -168,10 +168,12 @@ for i = 1:length(Ic)
         spm_progress_bar('Clear')
 
         str   = 'spm computation';
-        spm_progress_bar('Init',100,str,'');         
+        spm_progress_bar('Init',100,str,'');
+        Z2 = zeros(1,S);
         switch(xCon(ic).STAT)
             case 'T'                                 %-Compute spm{t} image
                 %----------------------------------------------------------
+                eSTAT = 'Z';
                 Z = cB ./ sqrt(cCovBc);
                 spm_progress_bar('Set',100*(0.1));
                 if dof_type                   
@@ -184,12 +186,14 @@ for i = 1:length(Ic)
                     edf = cCovBc.^2 ./ tmp;
                     spm_progress_bar('Set',100*(0.2));
                     % transform into Z-scores image
-                    Z = -norminv(tcdf(-Z,edf)); 
+                    Z2(Z>0) = -norminv(tcdf(-Z(Z>0),edf(Z>0))); 
+                    Z2(Z<0) = norminv(tcdf(Z(Z<0),edf(Z<0))); 
                     %Z = -log10(1-spm_Tcdf(Z,edf)); %transfo into -log10(p)
                     spm_progress_bar('Set',100);
                 else
                     % transform into Z-scores image
-                    Z = -norminv(tcdf(-Z,xCon(ic).edf)); 
+                    Z2(Z>0) = -norminv(tcdf(-Z(Z>0),xCon(ic).edf)); 
+                    Z2(Z<0) = norminv(tcdf(Z(Z<0),xCon(ic).edf));
                     % transform into -log10(p-values) image
                     %Z = -log10(1-spm_Tcdf(Z,xCon(ic).edf));
                     spm_progress_bar('Set',100);
@@ -197,6 +201,7 @@ for i = 1:length(Ic)
                 
             case 'F'                                 %-Compute spm{F} image
                 %---------------------------------------------------------
+                eSTAT = 'X';
                 if size(Co,2)==1
                     Z = abs(cB ./ sqrt(cCovBc));
                     spm_progress_bar('Set',100*(0.1));
@@ -210,13 +215,13 @@ for i = 1:length(Ic)
                         edf = cCovBc.^2 ./ tmp;
                         spm_progress_bar('Set',100*(3/4));
                         % transform into X-scores image
-                        Z = (norminv(spm_Tcdf(-Z,edf))).^2;
+                        Z2 = (norminv(spm_Tcdf(-abs(Z),edf))).^2;
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Fcdf(Z,1,edf));
                         spm_progress_bar('Set',100);
                     else
                         % transform into X-scores image
-                        Z = (norminv(spm_Tcdf(-Z,xCon(ic).edf))).^2;
+                        Z2 = (norminv(spm_Tcdf(-abs(Z),xCon(ic).edf))).^2;
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Fcdf(Z,1, xCon(ic).edf));
                         spm_progress_bar('Set',100);
@@ -249,13 +254,13 @@ for i = 1:length(Ic)
                         clear cCovBc_g
                         Z = Z .*(edf-xCon(ic).eidf+1)./edf/xCon(ic).eidf;
                         % transform into X-scores image
-                        Z = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,edf));
+                        Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,edf),1); 
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Fcdf(Z,xCon(ic).eidf,edf));
                     else
                         Z = Z *(xCon(ic).edf -xCon(ic).eidf+1)/xCon(ic).edf/xCon(ic).eidf;
                         % transform into X-scores image
-                        Z = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf));
+                        Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf),1);
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf));
                         spm_progress_bar('Set',100);
@@ -266,11 +271,31 @@ for i = 1:length(Ic)
         clear cCovBc cB tmp
         
         
-        %-Write SwE - statistic image & edf image if needed
+        %-Write SwE - statistic images & edf image if needed
         %------------------------------------------------------------------
         fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...writing');      %-#
 
         xCon(ic).Vspm = struct(...
+            'fname',  sprintf('spm%c_%04d.img',eSTAT,ic),...
+            'dim',    SwE.xVol.DIM',...
+            'dt',     [spm_type('float32'), spm_platform('bigend')],...
+            'mat',    SwE.xVol.M,...
+            'pinfo',  [1,0,0]',...
+            'descrip',sprintf('spm{%c} - contrast %d: %s',...%'SwE{%c_%s} - contrast %d: %s'
+           eSTAT,ic,xCon(ic).name));% eSTAT,str,ic,xCon(ic).name));
+        xCon(ic).Vspm = spm_create_vol(xCon(ic).Vspm);
+
+        tmp           = zeros(SwE.xVol.DIM');
+        tmp(Q)        = Z2;
+        xCon(ic).Vspm = spm_write_vol(xCon(ic).Vspm,tmp);
+
+        clear tmp Z2
+        fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+            '...written %s',spm_str_manip(xCon(ic).Vspm.fname,'t')));
+        %-# 
+        fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...writing');      %-#
+
+        xCon(ic).Vspm2 = struct(...
             'fname',  sprintf('spm%c_%04d.img',xCon(ic).STAT,ic),...
             'dim',    SwE.xVol.DIM',...
             'dt',     [spm_type('float32'), spm_platform('bigend')],...
@@ -278,15 +303,17 @@ for i = 1:length(Ic)
             'pinfo',  [1,0,0]',...
             'descrip',sprintf('spm{%c} - contrast %d: %s',...%'SwE{%c_%s} - contrast %d: %s'
            xCon(ic).STAT,ic,xCon(ic).name));% xCon(ic).STAT,str,ic,xCon(ic).name));
-        xCon(ic).Vspm = spm_create_vol(xCon(ic).Vspm);
+        xCon(ic).Vspm2 = spm_create_vol(xCon(ic).Vspm2);
 
         tmp           = zeros(SwE.xVol.DIM');
         tmp(Q)        = Z;
-        xCon(ic).Vspm = spm_write_vol(xCon(ic).Vspm,tmp);
+        xCon(ic).Vspm2 = spm_write_vol(xCon(ic).Vspm2,tmp);
 
         clear tmp Z
         fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
-            '...written %s',spm_str_manip(xCon(ic).Vspm.fname,'t')));   %-#
+            '...written %s',spm_str_manip(xCon(ic).Vspm2.fname,'t')));   %-#
+
+     
         
         if dof_type
             xCon(ic).Vedf = struct(...
