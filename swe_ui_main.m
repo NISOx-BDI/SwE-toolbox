@@ -134,7 +134,8 @@ function specify_Callback(hObject, eventdata, handles)
 % hObject    handle to specify (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-swe_batch
+swe_design
+
 
 
 % --- Executes on button press in run.
