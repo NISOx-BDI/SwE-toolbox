@@ -1,10 +1,11 @@
 function varargout = swe(varargin)
 % Sandwich Estimator for Neuroimaging Longitudinal Data Analysis, SwE.
 %
-% This function initializes things for swe and provides some low level
-% functionalities
+% This function initializes things for the SwE toolbox and provides 
+% some low level functionalities
 
 % Written by Bryan Guillaume
+% $Id$
 if nargin == 0,
     Action = 'StartUp';
 else
@@ -25,6 +26,12 @@ switch lower(Action)
         
         % Welcome message
         swe('ASCIIwelcome');
+        
+        % Add pathes for SPM functions
+        addpath(fullfile(spm('Dir'),'matlabbatch'))
+        if strncmpi(spm('ver'),'spm12',5)
+            addpath(fullfile(spm('Dir'),'compat'))
+        end
         
         % launch the main GUI
         swe_ui_main;
@@ -53,7 +60,7 @@ end
 return
 
 %=======================================================================
-%% SUBFUNCTIONS
+% SUBFUNCTIONS
 %=======================================================================
 
 %=======================================================================
