@@ -44,8 +44,6 @@ Vcov_beta = SwE.Vcov_beta;
 dof_type = SwE.dof.dof_type;
 if dof_type
     Vcov_beta_g = SwE.Vcov_beta_g;
-else
-    dof_cov = SwE.dof.dof_cov;
 end
 
 %-Compute & store contrast parameters, contrast/ESS images, & SwE images
