@@ -10,7 +10,8 @@ function design = swe_cfg_design
 dir         = cfg_files;
 dir.tag     = 'dir';
 dir.name    = 'Directory';
-dir.help    = {'Select a directory where the SwE.mat file containing the specified design matrix will be written.'};
+dir.help    = {' '
+    'Select a directory where the SwE.mat file containing the specified design matrix will be written.'};
 dir.filter = 'dir';
 dir.ufilter = '.*';
 dir.num     = [1 1];
@@ -21,7 +22,8 @@ dir.num     = [1 1];
 scans         = cfg_files;
 scans.tag     = 'scans';
 scans.name    = 'Scans';
-scans.help    = {'Select the images.  They must all have the same image dimensions, orientation, voxel size etc.'};
+scans.help    = {' '
+    'Select the images.  They must all have the same image dimensions, orientation, voxel size etc.'};
 scans.filter = 'image';
 scans.ufilter = '.*';
 scans.num     = [1 Inf];
@@ -32,11 +34,11 @@ scans.num     = [1 Inf];
 groups         = cfg_entry;
 groups.tag     = 'groups';
 groups.name    = 'Groups';
-groups.help    = {
+groups.help    = {' '
              'Vector of groups.'
-             'Enter the groups vector in the ordering of the scans'
-             'The groups are used to define subjects sharing a common covariance matrix'
-}';
+             'Enter the groups in the ordering of the scans'
+             'The groups correspond to subjects sharing a common covariance matrix'
+             ' '}';
 groups.strtype = 'e';
 groups.num     = [Inf 1];
 
@@ -47,10 +49,10 @@ groups.num     = [Inf 1];
 subjects         = cfg_entry;
 subjects.tag     = 'subjects';
 subjects.name    = 'Subjects';
-subjects.help    = {
+subjects.help    = {' '
              'Vector of subjects.'
-             'Enter the subjects vector in the ordering of the scans'
-}';
+             'Enter the subjects in the ordering of the scans'
+             ' '}';
 subjects.strtype = 'e';
 subjects.num     = [Inf 1];
 
@@ -60,11 +62,11 @@ subjects.num     = [Inf 1];
 visits         = cfg_entry;
 visits.tag     = 'visits';
 visits.name    = 'Visits';
-visits.help    = {
-             'Vector of visits.'
-             'Enter the visits vector in the ordering of the scans'
-             'The visits has to be consistent accross subjects'
-}';
+visits.help    = {' '
+             'Vector of visit categories.'
+             'Enter the visit categories in the ordering of the scans'
+             'The visit categories must be consistent accross subjects belonging to the same group'
+             ' '}';
 visits.strtype = 'e';
 visits.num     = [Inf 1];
 
@@ -75,10 +77,10 @@ visits.num     = [Inf 1];
 c         = cfg_entry;
 c.tag     = 'c';
 c.name    = 'Vector';
-c.help    = {
+c.help    = {' '
              'Vector of covariate values.'
              'Enter the covariate values in the ordering of the scans'
-}';
+             ' ' }';
 c.strtype = 'e';
 c.num     = [Inf 1];
 % ---------------------------------------------------------------------
@@ -87,7 +89,7 @@ c.num     = [Inf 1];
 cname         = cfg_entry;
 cname.tag     = 'cname';
 cname.name    = 'Name';
-cname.help    = {'Name of covariate'};
+cname.help    = {'Name of the covariate'};
 cname.strtype = 's';
 cname.num     = [1 Inf];
 % ---------------------------------------------------------------------
@@ -280,11 +282,11 @@ masking.help    = {
 }';
 
 % ---------------------------------------------------------------------
-% ss Small samples adjustments
+% ss Small sample adjustments
 % ---------------------------------------------------------------------
 ss         = cfg_menu;
 ss.tag     = 'ss';
-ss.name    = 'Small samples adjustments';
+ss.name    = 'Small sample adjustments';
 ss.help    = {''};
 ss.labels  = { 'type 0' 'type 1' 'type 2' 'type 3' };
 
@@ -292,14 +294,14 @@ ss.values  = {0 1 2 3};
 ss.val     = { 3 };
 ss.help    = {  ' '
                 'type 0: no small sample adjustment is used.'
-                '             It tends to be biased and generally leads to overconfident inference in small sample.'
-                'type 1: the errors used in the SwE estimation are multiplied by sqrt(n/(n-p)).'
-                '             It tends to correct for the bias in small samples, but simulations seems to show that it still may leads to overconfident inference.'
-                'type 2: the errors used in the SwE estimation are multiplied by 1/sqrt(1-h_ik).'
-                '             It tends to correct for the bias in small samples, but, even if it generally performs better than the "type 1" adjustment, simulations seems to show that it still may leads to overconfident inference.'
-                'type 3: the errors used in the SwE estimation are multiplied by 1/(1-h_ik).'
-                '             It tends to correct for the bias in small samples, but simulations seems to show that it may leads to overconsevative inference.'
-                'h_ik is the diagonal element of the hat matrix H=X''(X''X)^(-1)X.'
+                '             It tends to be biased and generally leads to overconfident inference in small samples.'
+                'type 1: the residuals used in the SwE estimation are multiplied by sqrt(n/(n-p)).'
+                '             It tends to correct for the small sample bias, but simulations seem to show that it still may lead to liberal inference in small samples.'
+                'type 2: the residuals used in the SwE estimation are multiplied by 1/sqrt(1-h_ik).'
+                '             It tends to correct for the small sample bias, but, even if it generally performs better than the "type 1" adjustment, simulations seems to show that it still may lead to liberal inferences in small samples.'
+                'type 3: the residuals used in the SwE estimation are multiplied by 1/(1-h_ik).'
+                '             It tends to correct fo the small sample bias, but simulations seems to show that it may lead to conservative inferences in small samples.'
+                'h_ik is the diagonal element of the hat matrix H=X''(X''X)^(-1)X corresponding to subject i and visit k.'
                 ' '
                 }';
 % ---------------------------------------------------------------------
@@ -312,10 +314,11 @@ dof_cl.labels  = { 'naive' 'approx' };
 dof_cl.values  = { 0 1 };
 dof_cl.val     = { 0 };
 dof_cl.help    = {  ' '
-                'naive: naive estimation of the degrees of freedom by m-p_B (the number of subject minus the number of pure between covariates).'
-                '             this choice tends to overestimate the degrees of freedom, but reduce the quantity of images saved and the computation time.'
-                'approx: degrees of freedom estimation with the estimate proposed in Guillaume et al. (in preparation).'
-                '             This choice is not recommended for the classic SwE as, with this SwE version, it is generally overconservative and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
+                'naive: naive estimation of the degrees of freedom by the total number of subjects belonging to the insparable sub-design matrices involved in the contrast tested minus the number of non-zero pure between covariates present in these insparable sub-design matrices.'
+                '             This choice tends to overestimate the degrees of freedom, but reduce the quantity of images saved and the computation time.'
+                ' '
+                'approx: degrees of freedom estimation with the estimate proposed in Guillaume et al. (in submission).'
+                '             This choice is not recommended for the classic SwE as, with this SwE version, it generally underestimate the degrees of freedom and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
                 ' '
                 }';
 % ---------------------------------------------------------------------
@@ -328,10 +331,11 @@ dof_mo.labels  = { 'naive' 'approx' };
 dof_mo.values  = { 0 1 };
 dof_mo.val     = { 1 };
 dof_mo.help    = {  ' '
-                'naive: naive estimation of the degrees of freedom by m-p_B (the number of subject minus the number of pure between covariates).'
-                '             this choice tends to overestimate the degrees of freedom, but reduce the quantity of images saved and the computation time.'
+                'naive: naive estimation of the degrees of freedom by the total number of subjects belonging to the insparable sub-design matrices involved in the contrast tested minus the number of non-zero pure between covariates present in these insparable sub-design matrices.'
+                '             This choice tends to overestimate the degrees of freedom, but reduce the quantity of images saved and the computation time.'
+                ' '
                 'approx: degrees of freedom estimation with the estimate proposed in Guillaume et al. (in preparation).'
-                '             This choice is not recommended for the classic SwE as, with this SwE version, it is generally overconservative and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
+                '             This choice is not recommended for the classic SwE as, with this SwE version, it generally underestimate the degrees of freedom and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
                 ' '
                }';        
 % ---------------------------------------------------------------------
@@ -360,7 +364,10 @@ type         = cfg_choice;
 type.tag     = 'type';
 type.name    = 'SwE type';
 type.val     = {modified };
-type.help    = {''};
+type.help    = {' '
+                'Classic: classic SwE assuming that the subjects have different covariance matrices'
+                'Modified: modified SwE assuming that the subjects can be divided into groups in which the subjects share a common covariance matrix'
+                ' '};
 type.values  = {classic modified};
 % ---------------------------------------------------------------------
 % g_omit Omit
@@ -513,7 +520,8 @@ design        = cfg_exbranch;
 design.tag    = 'design';
 design.name   = 'Data & Design';
 design.val    = {dir scans type subjects generic masking globalc globalm};
-design.help   = {'Specify the data and design.'};
+design.help   = {' '
+                 'Module of the SwE toolbox allowing the specification of the data and design.'};
 design.prog   = @swe_run_design;
 design.vout   = @vout_data;
 
