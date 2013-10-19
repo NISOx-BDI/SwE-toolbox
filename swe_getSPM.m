@@ -186,7 +186,7 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 
 %-GUI setup
 %--------------------------------------------------------------------------
-spm_help('!ContextHelp',mfilename)
+%spm_help('!ContextHelp',mfilename)
 spm('Pointer','Arrow')
 
 %-Select SwE.mat & note SwE results directory
