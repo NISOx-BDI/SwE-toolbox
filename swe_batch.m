@@ -7,15 +7,12 @@ function swe_batch
 
 % Written by Bryan Guillaume
 
-persistent batch_initialize
-
-if isempty(batch_initialize) || ~batch_initialize
+% Check if SwE config tree is there
+if ~isstruct(cfg_util('tag2mod_cfg_id','swe.design'))
     % SwE config tree
     swe_gui = swe_cfg_batch;
     % Adding SwE config tree to the SPM tools
     cfg_util('addapp', swe_gui)
-    % No need to do it again for this session
-    batch_initialize = 1;
 end
 
 % Launching the batch system
