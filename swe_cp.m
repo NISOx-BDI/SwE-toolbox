@@ -106,7 +106,7 @@ while ~all(iGr_dof)
         end
     end
 end
-%need to check if the partiation is correct
+%need to check if the partition is correct
 while 1
     uGr_dof = unique(iGr_dof);
     nGr_dof = length(uGr_dof);
@@ -134,7 +134,7 @@ pB_dof   = zeros(1,nGr_dof);
 for i=1:nBeta    
     tmp=1;
     for ii=1:nSubj
-        if length(unique(xX.X(iSubj==uSubj(ii),i)))~=1
+        if length(unique(xX.X(iSubj==uSubj(ii)&iGr_dof'==iBeta_dof(i),i)))~=1
             tmp=0;
             break
         end
