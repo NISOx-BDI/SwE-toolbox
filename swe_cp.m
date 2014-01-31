@@ -594,27 +594,38 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
                 for i = Ind_Cov_vis_diag
                     Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2);
                 end
-                for i = Ind_Cov_vis_off_diag
-                    Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:)).*...
-                        sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
-                        Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
-                        sum(res(Flagk(i,:),:).^2)./...
-                        sum(res(Flagkk(i,:),:).^2));
+                % Check if some voxels have variance = 0 and mask them 
+                tmp = ~any(Cov_vis(Ind_Cov_vis_diag,:)==0);
+                if ~tmp
+                    beta    = beta(tmp);
+                    res     = res(tmp);
+                    Cm(Cm)  = tmp;
+                    CrS     = sum(Cm);
+                    Cov_vis = Cov_vis(tmp);
                 end
-                %NaN may be produced in cov. estimation when one correspondant
-                %variance are = 0, so set them to 0
-                Cov_vis(isnan(Cov_vis))=0;
-                %need to check if the eigenvalues of Cov_vis matrices are >=0
-                for g = 1:nGr
-                    for iVox = 1:CrS
-                        tmp = zeros(nVis_g(g));                   
-                        tmp(tril(ones(nVis_g(g)))==1) = Cov_vis(iGr_Cov_vis_g==g,iVox);
-                        tmp = tmp + tmp' - diag(diag(tmp));
-                        [V D] = eig(tmp);
-                        if any (diag(D)<0) %Bug corrected (BG - 19/09/13)
-                            D(D<0) = 0;
-                            tmp = V * D * V';
-                            Cov_vis(iGr_Cov_vis_g==g,iVox) = tmp(tril(ones(nVis_g(g)))==1); %Bug corrected (BG - 19/09/13)
+                if CrS % Check if there is at least one voxel left
+                    for i = Ind_Cov_vis_off_diag
+                        Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:)).*...
+                            sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
+                            Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
+                            sum(res(Flagk(i,:),:).^2)./...
+                            sum(res(Flagkk(i,:),:).^2));
+                    end
+                    %NaN may be produced in cov. estimation when one correspondant
+                    %variance are = 0, so set them to 0
+                    Cov_vis(isnan(Cov_vis))=0;
+                    %need to check if the eigenvalues of Cov_vis matrices are >=0
+                    for g = 1:nGr
+                        for iVox = 1:CrS
+                            tmp = zeros(nVis_g(g));
+                            tmp(tril(ones(nVis_g(g)))==1) = Cov_vis(iGr_Cov_vis_g==g,iVox);
+                            tmp = tmp + tmp' - diag(diag(tmp));
+                            [V D] = eig(tmp);
+                            if any (diag(D)<0) %Bug corrected (BG - 19/09/13)
+                                D(D<0) = 0;
+                                tmp = V * D * V';
+                                Cov_vis(iGr_Cov_vis_g==g,iVox) = tmp(tril(ones(nVis_g(g)))==1); %Bug corrected (BG - 19/09/13)
+                            end
                         end
                     end
                 end
