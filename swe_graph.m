@@ -102,7 +102,7 @@ XYZ     = xSwE.XYZ(:,i);
 
 %-Find out what to plot
 %==========================================================================
-Cplot = {   'Contrast estimates and 90% C.I.',...
+Cplot = {   'Contrast estimates and 95% C.I.',...
             'Fitted responses',...
             'Event-related responses',...
             'Parametric responses',...
@@ -122,11 +122,17 @@ switch Cplot
 
     % select contrast if
     %----------------------------------------------------------------------
-    case {'Contrast estimates and 90% C.I.','Fitted responses'}
+    case {'Contrast estimates and 95% C.I.','Fitted responses'}
 
         % determine which contrast
         %------------------------------------------------------------------
-        Ic    = spm_input('Which contrast?','!+1','m',{SwE.xCon.name});
+        ind_tcon = [];
+        for i = 1:size(SwE.xCon,2)
+            if size(SwE.xCon(i).c,2) == 1
+                ind_tcon = [ind_tcon, i]
+            end
+        end
+        Ic    = ind_tcon(spm_input('Which contrast?','!+1','m',{SwE.xCon(ind_tcon).name}));
         TITLE = {Cplot SwE.xCon(Ic).name};
 
         % select session and trial if
@@ -259,7 +265,7 @@ for j = 1:size(Co,1)
         end
     end
 end
-CI    = 1.6449;                 % = spm_invNcdf(1 - 0.05);
+CI    = spm_invTcdf(1-0.025,spm_get_data(SwE.xCon(Ic).Vedf, XYZ));
 
 spm('Pointer','Arrow');
 
@@ -274,9 +280,9 @@ switch Cplot
 
     %-Plot parameter estimates
     %======================================================================
-    case 'Contrast estimates and 90% C.I.'
+    case 'Contrast estimates and 95% C.I.'
 
-        % compute contrast of parameter estimates and 90% C.I.
+        % compute contrast of parameter estimates and 95% C.I.
         %------------------------------------------------------------------
 
         cbeta = Co'*beta;
@@ -413,7 +419,7 @@ switch Cplot
         % get plot type
         %------------------------------------------------------------------
         Rplot   = { 'fitted response and PSTH',...
-            'fitted response and 90% C.I.',...
+            'fitted response and 95% C.I.',...
             'fitted response and adjusted data'};
 
         if isempty(y)
@@ -500,7 +506,7 @@ switch Cplot
                 plot(PST,PSTH,'LineWidth',4,'Color',Col(2,:))
                 plot(x,Y,'-.','Color',Col(3,:))
 
-            case 'fitted response and 90% C.I.'
+            case 'fitted response and 95% C.I.'
                 %----------------------------------------------------------
                 plot(x,Y,'Color',Col(2,:),'LineWidth',4)
                 plot(x,Y + CI,'-.',x,Y - CI,'-.','Color',Col(1,:))
