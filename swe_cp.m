@@ -781,12 +781,12 @@ if isfield(SwE.type,'modified')
     spm_progress_bar('Init',100,str,'');
     
     S_z = 0;
-    jj = NaN(xdim,ydim);
     for z = 1:zdim                       %-loop over planes (2D or 3D data)       
         XY_z = XYZ(1:2,XYZ(3,:)==z); % extract coord in plane z        
         Q_z = cumprod([1,DIM(1)'])*XY_z - ...
             sum(cumprod(DIM(1)'));
-        s_z = length(XY_z); % number of active voxels in plane z
+        s_z = length(Q_z); % number of active voxels in plane z
+        jj = NaN(xdim,ydim);
         if dof_type
             Cov_beta = zeros(nCov_beta,s_z); % initialize SwE for the plane
             it = 0;
