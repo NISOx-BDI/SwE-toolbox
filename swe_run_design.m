@@ -423,9 +423,9 @@ switch iGMsca,
         if iGloNorm~=8, error('iGloNorm-iGMsca(8) mismatch for PropSca'), end
         gSF    = GM./g;
         g      = GM*ones(nScan,1);
-    case {1,2,3,4,5,6,7}
+    case 1
         %-Grand mean scaling according to iGMsca
-        gSF    = GM./spm_meanby(g,eval(CCforms{iGMsca}));
+        gSF    = GM./spm_meanby(g,ones(nScan,1));
         g      = g.*gSF;
     case 9
         %-No grand mean scaling
@@ -463,7 +463,8 @@ if any(iGloNorm == [1:7])
         case 9                  %-User specified centre
             %-gc set above
         case 10                 %-As implied by AnCova option
-            gc = spm_meanby(g,eval(CCforms{iGloNorm}));
+            gcB = spm_meanby(g,ones(nScan,1));
+            gcW = spm_meanby(g,Subj.iSubj);
         case 11                 %-Around GM
             gc = GM;
         otherwise               %-unknown iGC
@@ -472,30 +473,38 @@ if any(iGloNorm == [1:7])
 
     %-AnCova - add scaled centred global to DesMtx `G' partition
     %----------------------------------------------------------------------
-    rcname     = 'global';
-    tI         = [eval(CFIforms{iGloNorm,1}),g - gc];
-    tConst     = CFIforms{iGloNorm,2};
-    tFnames    = [eval(CFIforms{iGloNorm,3}),{rcname}];
-    [f,gnames]  = spm_DesMtx(tI,tConst,tFnames);
-    clear tI tConst tFnames
+    fB = gcW - gcB;
+    gnamesB = 'between-subject global';
+    fW = g - gcW;
+    gnamesW = 'within-subject global';
 
     %-Save GX info in xC struct for reference
     %----------------------------------------------------------------------
-    str     = {sprintf('%s: %s',dstr{2},rcname)};
+    str     = {sprintf('%s: %s',dstr{2},gnamesB)};
     if any(iGMsca==[1:7]), str=[str;{['(after ',sGMsca,')']}]; end
     if iGC ~= 8, str=[str;{['used centered ',sCC{iGC}]}]; end
     if iGloNorm > 1
         str=[str;{['fitted as interaction ',sCFI{iGloNorm}]}];
     end
-    tmp  = struct(  'rc',rg.*gSF,       'rcname',rcname,...
-        'c',f,          'cname' ,{gnames},...
-        'iCC',iGC,      'iCFI'  ,iGloNorm,...
+    tmpB  = struct(  'rc',rg.*gSF,       'rcname',gnamesB,...
+        'c',fB,          'cname' ,{gnamesB},...%'iCC',iGC,      'iCFI'  ,iGloNorm,...
         'type',         3,...
-        'cols',[1:size(f,2)] + size([H C B G],2),...
+        'cols',1 + size([H C B G],2),...
         'descrip',      {str}       );
-
-    G = [G,f]; Gnames = [Gnames; gnames];
-    if isempty(xC), xC = tmp; else xC = [xC,tmp]; end
+    str     = {sprintf('%s: %s',dstr{2},gnamesB)};
+    if any(iGMsca==[1:7]), str=[str;{['(after ',sGMsca,')']}]; end
+    if iGC ~= 8, str=[str;{['used centered ',sCC{iGC}]}]; end
+    if iGloNorm > 1
+        str=[str;{['fitted as interaction ',sCFI{iGloNorm}]}];
+    end
+    tmpW  = struct(  'rc',rg.*gSF,       'rcname',gnamesW,...
+        'c',fW,          'cname' ,{gnamesW},...%'iCC',iGC,      'iCFI'  ,iGloNorm,...
+        'type',         3,...
+        'cols',2 + size([H C B G],2),...
+        'descrip',      {str}       );
+    
+    G = [G,fB,fW]; Gnames = [Gnames; {gnamesB}; {gnamesW}];
+    if isempty(xC), xC = [tmpB,tmpW]; else xC = [xC,tmpB,tmpW]; end
 
 elseif iGloNorm==8 || iGXcalc>1
 
@@ -512,8 +521,7 @@ elseif iGloNorm==8 || iGXcalc>1
 
     rcname ='global';
     tmp     = struct('rc',rg,    'rcname',rcname,...
-        'c',{[]},   'cname' ,{{}},...
-        'iCC',0,    'iCFI'  ,0,...
+        'c',{[]},   'cname' ,{{}},...%        'iCC',0,    'iCFI'  ,0,...
         'type',     3,...
         'cols',     {[]},...
         'descrip',  {str}           );
