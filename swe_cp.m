@@ -90,6 +90,25 @@ switch SwE.SS
         corr  = (1-diag(Hat)).^(-0.5); % residual correction (type 2)
     case 3
         corr  = (1-diag(Hat)).^(-1); % residual correction (type 3)
+    case 4
+        corr  = cell(nSubj,1);
+        I_Hat = eye(nScan) - Hat;
+        for i = 1:nSubj
+            tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
+            tmp = (tmp + tmp')/2;
+			[tmpV, tmpE] = eig(tmp);
+            corr{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV'; 
+        end
+        clear I_Hat tmp
+    case 5
+        corr  = cell(nSubj,1);
+        I_Hat = eye(nScan) - Hat;
+        for i = 1:nSubj
+            tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
+            tmp = (tmp + tmp')/2;
+            corr{i} = inv(tmp); 
+        end
+        clear I_Hat tmp
 end
 
 %-detect if the design matrix is separable (a little bit messy, but seems to do the job)
@@ -581,7 +600,15 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
             fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...estimation');%-#
 
             beta  = pX*Y;                     %-Parameter estimates
-            res   = diag(corr)*(Y-xX.X*beta); %-Corrected residuals
+            if SwE.SS >= 4  % Cluster-wise adjustments
+                res = zeros(size(Y));
+                for i = 1:nSubj
+                    res(iSubj==uSubj(i),:) = corr{i} *...
+                        (Y(iSubj==uSubj(i),:)-xX.X(iSubj==uSubj(i),:)*beta);
+                end
+            else
+                res   = diag(corr)*(Y-xX.X*beta); %-Corrected residuals
+            end
             clear Y                           %-Clear to save memory
 
             %-Estimation of the data variance-covariance components (modified SwE) 

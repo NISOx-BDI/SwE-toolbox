@@ -288,10 +288,10 @@ ss         = cfg_menu;
 ss.tag     = 'ss';
 ss.name    = 'Small sample adjustments';
 ss.help    = {''};
-ss.labels  = { 'type 0' 'type 1' 'type 2' 'type 3' };
+ss.labels  = { 'type 0' 'type 1' 'type 2' 'type 3' 'type C2' 'type C3' };
 
-ss.values  = {0 1 2 3};
-ss.val     = { 3 };
+ss.values  = {0 1 2 3 4 5};
+ss.val     = { 4 };
 ss.help    = {  ' '
                 'type 0: no small sample adjustment is used.'
                 '             It tends to be biased and generally leads to overconfident inference in small samples.'
@@ -300,8 +300,13 @@ ss.help    = {  ' '
                 'type 2: the residuals used in the SwE estimation are multiplied by 1/sqrt(1-h_ik).'
                 '             It tends to correct for the small sample bias, but, even if it generally performs better than the "type 1" adjustment, simulations seems to show that it still may lead to liberal inferences in small samples.'
                 'type 3: the residuals used in the SwE estimation are multiplied by 1/(1-h_ik).'
-                '             It tends to correct fo the small sample bias, but simulations seems to show that it may lead to conservative inferences in small samples.'
+                '             It tends to correct fo the small sample bias, but simulations seem to show that it may lead to conservative inferences in small samples.'
+                'type C2: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-0.5.'
+                '             Simulations seem to show that it is the best correction and remove the correctely the bias in many scenarios'
+                'type C3: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-1.'
+                '             Simulations seem to show that it overcorrect and yield conservative inferences'
                 'h_ik is the diagonal element of the hat matrix H=X''(X''X)^(-1)X corresponding to subject i and visit k.'
+                'H_ii is the sub-matrix of the hat matrix H=X''(X''X)^(-1)X corresponding to subject i.'
                 ' '
                 }';
 % ---------------------------------------------------------------------
