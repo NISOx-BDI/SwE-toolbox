@@ -2,7 +2,7 @@ SwE
 ===
 
 Sandwich Estimator for SPM.
-How to corectly analyse neuroimaging data from a longitudinal study.
+How to correctly analyse neuroimaging data from a longitudinal study.
 
 Work done by Bryan Guillaume and Tom Nichols, Department of Statistics, Warwick University, UK.
 
