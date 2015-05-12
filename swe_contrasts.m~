@@ -345,7 +345,7 @@ for i = 1:length(Ic)
                                 end
                                 edf(iVox)=(trace(cCovBc_vox^2) + (trace(cCovBc_vox))^2) / tmp;                            
                         end
-                        spm_progress_bar('Set',10 + 80 * (iVox/S));
+                        spm_progress_bar('Set',100*(iVox/S/2));
                     end
                     if dof_type ~= 0
                         clear cCovBc_g
