@@ -351,13 +351,17 @@ for i = 1:length(Ic)
                         clear cCovBc_g
                         Z = Z .*(edf-xCon(ic).eidf+1)./edf/xCon(ic).eidf;
                         % transform into X-scores image
-                        Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,edf),1); 
+                        % Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,edf-xCon(ic).eidf+1),1);
+                        Z2(Z<=1) = norminv(0.5 + fcdf(Z(Z<=1),xCon(ic).eidf,edf(Z<=1)-xCon(ic).eidf+1)/2).^2;
+                        Z2(Z>1) = norminv(fcdf(Z(Z>1),xCon(ic).eidf,edf(Z>1)-xCon(ic).eidf+1,'upper')/2).^2;
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Fcdf(Z,xCon(ic).eidf,edf));
                     else
                         Z = Z *(xCon(ic).edf -xCon(ic).eidf+1)/xCon(ic).edf/xCon(ic).eidf;
                         % transform into X-scores image
-                        Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf),1);
+                        %Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1),1);
+                        Z2(Z<=1) = norminv(0.5 + fcdf(Z(Z<=1),xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1)/2).^2;
+                        Z2(Z>1) = norminv(fcdf(Z(Z>1),xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1,'upper')/2).^2;
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf));
                     end

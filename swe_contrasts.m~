@@ -345,19 +345,23 @@ for i = 1:length(Ic)
                                 end
                                 edf(iVox)=(trace(cCovBc_vox^2) + (trace(cCovBc_vox))^2) / tmp;                            
                         end
-                        spm_progress_bar('Set',100*(iVox/S/2));
+                        spm_progress_bar('Set',10 + 80 * (iVox/S));
                     end
                     if dof_type ~= 0
                         clear cCovBc_g
                         Z = Z .*(edf-xCon(ic).eidf+1)./edf/xCon(ic).eidf;
                         % transform into X-scores image
-                        Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,edf),1); 
+                        % Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,edf-xCon(ic).eidf+1),1);
+                        Z2(Z<=1) = norminv(0.5 + fcdf(Z,xCon(ic).eidf,edf-xCon(ic).eidf+1)/2).^2;
+                        Z2(Z>1) = norminv(fcdf(Z,xCon(ic).eidf,edf-xCon(ic).eidf+1,'upper')/2).^2;
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Fcdf(Z,xCon(ic).eidf,edf));
                     else
                         Z = Z *(xCon(ic).edf -xCon(ic).eidf+1)/xCon(ic).edf/xCon(ic).eidf;
                         % transform into X-scores image
-                        Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf),1);
+                        %Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1),1);
+                        Z2(Z<=1) = norminv(0.5 + fcdf(Z,xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1)/2).^2;
+                        Z2(Z>1) = norminv(fcdf(Z,xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1,'upper')/2).^2;
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf));
                     end
