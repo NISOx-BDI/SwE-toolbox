@@ -14,7 +14,7 @@ function vechCovVechV = swe_vechCovVechV(covVis,dofMat,type)
 %         information (precalculated in swe_cp.m). 
 %         for type 3, scalar.
 %         See Guillaume (2015)for more information.
-% Note: there are probably ways to compute this quicker, but will do for
+% Note: there are probably ways to compute this quicker, but this will do for
 % now.
 % By Bryan Guillaume
 [nCovVis, nVox] = size(covVis);
