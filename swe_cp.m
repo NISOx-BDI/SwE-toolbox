@@ -376,7 +376,9 @@ DIM      = VY(1).dim(1:3)';
 VOX      = sqrt(diag(M(1:3, 1:3)'*M(1:3, 1:3)))';
 xdim     = DIM(1); ydim = DIM(2); zdim = DIM(3);
 %vFWHM    = SwE.vFWHM; to be added later (for the variance smoothing)
-YNaNrep  = spm_type(VY(1).dt(1),'nanrep');
+
+% check how the data image treat 0 (as NaN or not)
+YNaNrep = VY(1).dt(2);
 
 %-Maximum number of residual images for smoothness estimation
 %--------------------------------------------------------------------------
