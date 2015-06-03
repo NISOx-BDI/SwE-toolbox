@@ -65,17 +65,19 @@ for i = 1:length(Ic)
         Q = cumprod([1,SwE.xVol.DIM(1:2)'])*XYZ - ...
             sum(cumprod(SwE.xVol.DIM(1:2)'));
         Co=xCon(ic).c;
+        nBeta = size(Co,1);
+        nSizeCon = size(Co,2);
         xCon(ic).eidf=rank(Co);
         % detect the indices of the betas of interest
-        if size(Co,2)==1
+        if nSizeCon==1
             ind = find(Co ~= 0);
         else
             ind = find(any(Co'~=0));
         end
-        nCov_beta = (size(Co,1)+1)*size(Co,1)/2;
+        nCov_beta = (nBeta+1)*nBeta/2;
 
         % if the Co is a vector, then create Co * Beta (Vcon)
-        if size(Co,2)==1
+        if nSizeCon==1
             %-Compute contrast
             %------------------------------------------------------
             fprintf('\t%-32s: %30s',sprintf('contrast image %2d',ic),...
@@ -117,7 +119,7 @@ for i = 1:length(Ic)
             str   = 'contrast computation';
             spm_progress_bar('Init',100,str,'');
             V      = Vbeta(ind);
-            cB     = zeros(size(Co,2),S);
+            cB     = zeros(nSizeCon,S);
             for j=1:numel(V)
                 cB = cB + Co(ind(j),:)' * spm_get_data(V(j),XYZ);
                 spm_progress_bar('Set',100*(j/numel(V)));
@@ -137,15 +139,15 @@ for i = 1:length(Ic)
 
         it = 0;
         it2 = 0;
-        cCovBc = zeros(size(Co,2)*(size(Co,2)+1)/2,S);
+        cCovBc = zeros(nSizeCon*(nSizeCon+1)/2,S);
         if dof_type == 1
-            cCovBc_g = zeros(size(Co,2)*(size(Co,2)+1)/2,S,SwE.Gr.nGr);
+            cCovBc_g = zeros(nSizeCon*(nSizeCon+1)/2,S,SwE.Gr.nGr);
         else
             xCon(ic).edf = sum(SwE.dof.nSubj_dof(unique(SwE.dof.iBeta_dof(ind))) - ...
             SwE.dof.pB_dof(unique(SwE.dof.iBeta_dof(ind)))); 
         end
-        for j = 1:size(Co,1)
-            for jj = j:size(Co,1)
+        for j = 1:nBeta
+            for jj = j:nBeta
                 it = it + 1;
                 if any(j == ind) && any(jj == ind)
                     it2 = it2+1;
@@ -153,7 +155,7 @@ for i = 1:length(Ic)
                     if (j~=jj) %was wrong (BG - 13/09/13) 
                         weight = weight + weight';
                     end
-                    weight = weight(tril(ones(size(Co,2)))==1);
+                    weight = weight(tril(ones(nSizeCon))==1);
                     cCovBc = cCovBc + weight * spm_get_data(Vcov_beta(it),XYZ);
                     if dof_type == 1
                         for g = 1:SwE.Gr.nGr                            
@@ -202,7 +204,7 @@ for i = 1:length(Ic)
                     case 2
                         CovcCovBc = 0;
                         for g = 1:SwE.Gr.nGr
-                            Wg = kron(Co,Co)' * swe_duplication_matrix(size(Co,1)) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
+                            Wg = kron(Co,Co)' * swe_duplication_matrix(nBeta) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
                             Wg = kron(Wg,Wg) * swe_duplication_matrix(SwE.Vis.nCov_vis_g(g));
                             CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},1);
                             spm_progress_bar('Set',100*(0.1) + g*80/SwE.Gr.nGr);
@@ -218,7 +220,7 @@ for i = 1:length(Ic)
                     case 3
                         CovcCovBc = 0;
                         for g = 1:SwE.Gr.nGr
-                            Wg = kron(Co,Co)' * swe_duplication_matrix(size(Co,1)) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
+                            Wg = kron(Co,Co)' * swe_duplication_matrix(nBeta) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
                             Wg = kron(Wg,Wg) * swe_duplication_matrix(SwE.Vis.nCov_vis_g(g));
                             CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},2);
                             spm_progress_bar('Set',100*(0.1) + g*80/SwE.Gr.nGr);                            
@@ -236,7 +238,7 @@ for i = 1:length(Ic)
             case 'F'                                 %-Compute spm{F} image
                 %---------------------------------------------------------
                 eSTAT = 'X';
-                if size(Co,2)==1
+                if nSizeCon==1
                     Z = abs(cB ./ sqrt(cCovBc));
                     spm_progress_bar('Set',100*(0.1));
                     switch dof_type
@@ -263,7 +265,7 @@ for i = 1:length(Ic)
                         case 2
                             CovcCovBc = 0;
                             for g = 1:SwE.Gr.nGr
-                                Wg = kron(Co,Co)' * swe_duplication_matrix(size(Co,1)) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
+                                Wg = kron(Co,Co)' * swe_duplication_matrix(nBeta) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
                                 Wg = kron(Wg,Wg) * swe_duplication_matrix(SwE.Vis.nCov_vis_g(g));
                                 CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},1);
                                 spm_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));
@@ -280,7 +282,7 @@ for i = 1:length(Ic)
                         case 3
                             CovcCovBc = 0;
                             for g = 1:SwE.Gr.nGr
-                                Wg = kron(Co,Co)' * swe_duplication_matrix(size(Co,1)) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
+                                Wg = kron(Co,Co)' * swe_duplication_matrix(nBeta) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
                                 Wg = kron(Wg,Wg) * swe_duplication_matrix(SwE.Vis.nCov_vis_g(g));
                                 CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},2);
                                 spm_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));                           
@@ -306,17 +308,17 @@ for i = 1:length(Ic)
                     if dof_type == 2
                         CovcCovBc = 0;
                         for g = 1:SwE.Gr.nGr
-                             Wg = kron(Co,Co)' * swe_duplication_matrix(size(Co,1)) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
+                             Wg = kron(Co,Co)' * swe_duplication_matrix(nBeta) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
                              Wg = sum(kron(Wg,Wg)) * swe_duplication_matrix(SwE.Vis.nCov_vis_g(g));
                              CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},1);
                         end
-                        edf = 2 * (sum(swe_duplication_matrix(size(Co,2))) * cCovBc).^2 ./ CovcCovBc - 2;
+                        edf = 2 * (sum(swe_duplication_matrix(nSizeCon)) * cCovBc).^2 ./ CovcCovBc - 2;
                     end
                      if dof_type == 3
                         CovcCovBc = 0;
-                        tmp = eye(size(Co,2)^2);  
+                        tmp = eye(nSizeCon^2);  
                         for g = 1:SwE.Gr.nGr
-                             Wg = kron(Co,Co)' * swe_duplication_matrix(size(Co,1)) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
+                             Wg = kron(Co,Co)' * swe_duplication_matrix(nBeta) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
                              % tmp is used to sum only the diagonal element
                              % this is useful to compute the trace as
                              % tr(A) = vec(I)' * vec(A)                                                        
@@ -324,28 +326,33 @@ for i = 1:length(Ic)
                              CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},2);
                         end
                         % note that tr(A^2) = vec(A)' * vec(A)
-                        tmp = eye(size(Co,2));
-                        edf = (sum(swe_duplication_matrix(size(Co,2))) * cCovBc.^2 +...
-                                (tmp(:)' * swe_duplication_matrix(size(Co,2)) * cCovBc).^2) ./ CovcCovBc;
-                    end                   
+                        tmp = eye(nSizeCon);
+                        edf = (sum(swe_duplication_matrix(nSizeCon)) * cCovBc.^2 +...
+                                (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
+                     end
+                    % define a parameter to tell when to update progress
+                    % bar only 80 times
+                    updateEvery = round(S/80);
                     for iVox=1:S
-                        cCovBc_vox = zeros(size(Co,2));
-                        cCovBc_vox(tril(ones(size(Co,2)))==1) = cCovBc(:,iVox);
+                        cCovBc_vox = zeros(nSizeCon);
+                        cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
                         cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
-                        Z(iVox) = cB(:,iVox)' / cCovBc_vox * cB(:,iVox);                     
-                        switch dof_type
-                            case 1
-                                tmp = 0;
-                                for g = 1:SwE.Gr.nGr
-                                    cCovBc_g_vox = zeros(size(Co,2));
-                                    cCovBc_g_vox(tril(ones(size(Co,2)))==1) = cCovBc_g(:,iVox,g);
-                                    cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
-                                    tmp = tmp + (trace(cCovBc_g_vox^2) + (trace(cCovBc_g_vox))^2)/...
-                                        SwE.dof.edof_Gr(g);                              
-                                end
-                                edf(iVox)=(trace(cCovBc_vox^2) + (trace(cCovBc_vox))^2) / tmp;                            
+                        Z(iVox) = cB(:,iVox)' / cCovBc_vox * cB(:,iVox);                   
+                        if (dof_type == 1)					   
+                          tmp = 0;
+                          for g = 1:SwE.Gr.nGr
+                            cCovBc_g_vox = zeros(nSizeCon);
+                            cCovBc_g_vox(tril(ones(nSizeCon))==1) = cCovBc_g(:,iVox,g);
+                            cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
+                            tmp = tmp + (trace(cCovBc_g_vox^2) + (trace(cCovBc_g_vox))^2)/...
+                              SwE.dof.edof_Gr(g);                              
+                          end
+                          edf(iVox)=(trace(cCovBc_vox^2) + (trace(cCovBc_vox))^2) / tmp;                            
                         end
-                        spm_progress_bar('Set',10 + 80 * (iVox/S));
+                        % update progress_bar only approx 80 times 
+                        if (mod(iVox,updateEvery) == 0)
+                          spm_progress_bar('Set',10 + 80 * (iVox/S));
+                        end
                     end
                     if dof_type ~= 0
                         clear cCovBc_g
