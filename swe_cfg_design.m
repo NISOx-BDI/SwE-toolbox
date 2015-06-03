@@ -288,10 +288,10 @@ ss         = cfg_menu;
 ss.tag     = 'ss';
 ss.name    = 'Small sample adjustments';
 ss.help    = {''};
-ss.labels  = { 'type 0' 'type 1' 'type 2' 'type 3' };
+ss.labels  = { 'type 0' 'type 1' 'type 2' 'type 3' 'type C2' 'type C3' };
 
-ss.values  = {0 1 2 3};
-ss.val     = { 3 };
+ss.values  = {0 1 2 3 4 5};
+ss.val     = { 4 };
 ss.help    = {  ' '
                 'type 0: no small sample adjustment is used.'
                 '             It tends to be biased and generally leads to overconfident inference in small samples.'
@@ -300,8 +300,13 @@ ss.help    = {  ' '
                 'type 2: the residuals used in the SwE estimation are multiplied by 1/sqrt(1-h_ik).'
                 '             It tends to correct for the small sample bias, but, even if it generally performs better than the "type 1" adjustment, simulations seems to show that it still may lead to liberal inferences in small samples.'
                 'type 3: the residuals used in the SwE estimation are multiplied by 1/(1-h_ik).'
-                '             It tends to correct fo the small sample bias, but simulations seems to show that it may lead to conservative inferences in small samples.'
+                '             It tends to correct fo the small sample bias, but simulations seem to show that it may lead to conservative inferences in small samples.'
+                'type C2: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-0.5.'
+                '             Simulations seem to show that it is the best correction and remove the correctely the bias in many scenarios'
+                'type C3: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-1.'
+                '             Simulations seem to show that it overcorrect and yield conservative inferences'
                 'h_ik is the diagonal element of the hat matrix H=X''(X''X)^(-1)X corresponding to subject i and visit k.'
+                'H_ii is the sub-matrix of the hat matrix H=X''(X''X)^(-1)X corresponding to subject i.'
                 ' '
                 }';
 % ---------------------------------------------------------------------
@@ -310,15 +315,16 @@ ss.help    = {  ' '
 dof_cl         = cfg_menu;
 dof_cl.tag     = 'dof_cl';
 dof_cl.name    = 'Degrees of freedom type';
-dof_cl.labels  = { 'naive' 'approx' };
-dof_cl.values  = { 0 1 };
-dof_cl.val     = { 0 };
+dof_cl.labels  = { 'naive' 'approx I' 'approx II'};
+dof_cl.values  = { 0 1 2 };
+dof_cl.val     = { 1 };
 dof_cl.help    = {  ' '
                 'naive: naive estimation of the degrees of freedom by the total number of subjects belonging to the insparable sub-design matrices involved in the contrast tested minus the number of non-zero pure between covariates present in these insparable sub-design matrices.'
                 '             This choice tends to overestimate the degrees of freedom, but reduce the quantity of images saved and the computation time.'
-                ' '
-                'approx: degrees of freedom estimation with the estimate proposed in Guillaume et al. (in submission).'
-                '             This choice is not recommended for the classic SwE as, with this SwE version, it generally underestimate the degrees of freedom and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
+                'approx I: degrees of freedom estimation with the estimate proposed in Guillaume et al. (2014).'
+                '             This choice is not recommended for the classic SwE as, with this SwE version, it generally underestimate  the degrees of freedom in small samples and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
+                'approx II: degrees of freedom estimation with the estimate proposed in Guillaume (in preparation).'
+                '             This choice is not recommended for the classic SwE as, with this SwE version, it generally overestimate the degrees of freedom in small samples and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
                 ' '
                 }';
 % ---------------------------------------------------------------------
@@ -327,15 +333,22 @@ dof_cl.help    = {  ' '
 dof_mo         = cfg_menu;
 dof_mo.tag     = 'dof_mo';
 dof_mo.name    = 'Degrees of freedom type';
-dof_mo.labels  = { 'naive' 'approx' };
-dof_mo.values  = { 0 1 };
-dof_mo.val     = { 1 };
+dof_mo.labels  = { 'naive' 'approx I' 'approx II' 'approx III'};
+dof_mo.values  = { 0 1 2 3};
+dof_mo.val     = { 3 };
 dof_mo.help    = {  ' '
                 'naive: naive estimation of the degrees of freedom by the total number of subjects belonging to the insparable sub-design matrices involved in the contrast tested minus the number of non-zero pure between covariates present in these insparable sub-design matrices.'
-                '             This choice tends to overestimate the degrees of freedom, but reduce the quantity of images saved and the computation time.'
-                ' '
-                'approx: degrees of freedom estimation with the estimate proposed in Guillaume et al. (in preparation).'
-                '             This choice is not recommended for the classic SwE as, with this SwE version, it generally underestimate the degrees of freedom and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
+                '             This choice tends to overestimate the degrees of freedom in some designs, but reduce the quantity of images saved and the computation time.'
+                'approx I: degrees of freedom estimation with the estimate proposed in Guillaume et al. (2014).'
+                '             This estimate assumes no missing data and does not correct for the presence of a small sample bias and a missng data bias.'
+                '             Simulations seems to show that the estimate approx II and approx III are better choices (see below).' 
+                'approx II: degrees of freedom estimation with an alternative estimate proposed in Guillaume (in preparation).'
+                '             The estimate accounts partially for the presence of missing data and for a small-sample bias, but does not account for a missing data bias.'
+                '             Simulations seems to indicate that it performs better than approx I, but should be used only under no missing data'
+                'approx III: degrees of freedom estimation with an alternative estimate proposed in Guillaume (in preparation).'
+                '             The estimate accounts for the presence of missing data (the missing data bias included), but not for the small-sample bias.'
+                '             Simulations seems to indicate that it systematically performs better than approx II under missing data, but seems slightly less performant (slightly conservative) than approx II under no missing data.'
+                '             That is the recommended choice by default. Nevertheless, if there is no missing data, approx II could be selected instead.'
                 ' '
                }';        
 % ---------------------------------------------------------------------

@@ -73,7 +73,7 @@ end
 %==========================================================================
 fprintf('%-40s: %30s','Initialising parameters','...computing');        %-#
 xX            = SwE.xX;
-[nScan nBeta] = size(xX.X);
+[nScan, nBeta] = size(xX.X);
 nCov_beta     = (nBeta+1)*nBeta/2;
 pX            = pinv(xX.X); % pseudo-inverse
 Hat           = xX.X*(pX); % Hat matrix
@@ -90,6 +90,25 @@ switch SwE.SS
         corr  = (1-diag(Hat)).^(-0.5); % residual correction (type 2)
     case 3
         corr  = (1-diag(Hat)).^(-1); % residual correction (type 3)
+    case 4
+        corr  = cell(nSubj,1);
+        I_Hat = eye(nScan) - Hat;
+        for i = 1:nSubj
+            tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
+            tmp = (tmp + tmp')/2;
+			[tmpV, tmpE] = eig(tmp);
+            corr{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV'; 
+        end
+        clear I_Hat tmp
+    case 5
+        corr  = cell(nSubj,1);
+        I_Hat = eye(nScan) - Hat;
+        for i = 1:nSubj
+            tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
+            tmp = (tmp + tmp')/2;
+            corr{i} = inv(tmp); 
+        end
+        clear I_Hat tmp
 end
 
 %-detect if the design matrix is separable (a little bit messy, but seems to do the job)
@@ -158,7 +177,7 @@ else
     dof_type = SwE.type.classic.dof_cl;        
 end
 
-if ~dof_type % so naive estimation is used
+if dof_type == 0 % so naive estimation is used
     dof_cov = zeros(1,nBeta);
     for i = 1:nBeta
         dof_cov(i) = nSubj_dof(iBeta_dof(i)) - ...
@@ -234,17 +253,52 @@ if isfield(SwE.type,'modified')
         end
     end
     %-compute the effective dof from each homogeneous group if dof_type
-    if dof_type
-        edof_Gr = zeros(1,nGr);
-        nSubj_g = zeros(1,nGr);
-        for g = 1:nGr
-            nSubj_g(g) = length(unique(iSubj(iGr == g)));
-            tmp = 0;
-            for j = 1:nSubj_g(g)
-               tmp = tmp + 1/edof_Subj(uSubj == uSubj_g{g}(j));
+    switch dof_type
+        case 1
+            edof_Gr = zeros(1,nGr);
+            nSubj_g = zeros(1,nGr);
+            for g = 1:nGr
+                nSubj_g(g) = length(unique(iSubj(iGr == g)));
+                tmp = 0;
+                for j = 1:nSubj_g(g)
+                   tmp = tmp + 1/edof_Subj(uSubj == uSubj_g{g}(j));
+                end
+                edof_Gr(g) = nSubj_g(g)^2/tmp;
+            end            
+        case {2,3} % compute a matrix containing the variables linked to the degrees of freedom (for test II and III)
+            dofMat = cell(nGr,1);
+            for g = 1:nGr
+                dofMat{g} = zeros(nCov_vis_g(g));
+                it1 =0;
+                for i  = 1:nVis_g(g)
+                    for j  = i:nVis_g(g)
+                        it1 = it1 + 1;
+                        it2 = 0;
+                        for a = 1:nVis_g(g)
+                            for b = a:nVis_g(g)
+                                it2 = it2 + 1;
+                                mij = 0;mab = 0;tmp = 0;
+                                for ii = 1:nSubj_g(g)
+                                    mij = mij + 1*(...
+                                        any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(i)) &...
+                                        any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(j)));
+                                    mab = mab + 1*(...
+                                        any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(a)) &...
+                                        any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(b)));
+                                    tmp = tmp + 1*(...
+                                        any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(a)) &...
+                                        any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(b)) &...
+                                        any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(i)) &...
+                                        any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(j)))...
+                                        /edof_Subj(uSubj==uSubj_g{g}(ii));
+                                end
+                                dofMat{g}(it1,it2) = tmp/mij/mab;
+                            end
+                        end
+                    end
+                end
             end
-            edof_Gr(g) = nSubj_g(g)^2/tmp;
-        end
+            clear tmp mij mab
     end
 end
 
@@ -284,7 +338,7 @@ if isfield(SwE.type,'classic')
         end
     end 
     %-compute the effective dof from each homogeneous group (here, subject)
-    if dof_type
+    if dof_type == 1
        edof_Gr = edof_Subj;
     end
 end
@@ -322,7 +376,9 @@ DIM      = VY(1).dim(1:3)';
 VOX      = sqrt(diag(M(1:3, 1:3)'*M(1:3, 1:3)))';
 xdim     = DIM(1); ydim = DIM(2); zdim = DIM(3);
 %vFWHM    = SwE.vFWHM; to be added later (for the variance smoothing)
-YNaNrep  = spm_type(VY(1).dt(1),'nanrep');
+
+% check how the data image treat 0 (as NaN or not)
+YNaNrep = VY(1).dt(2);
 
 %-Maximum number of residual images for smoothness estimation
 %--------------------------------------------------------------------------
@@ -384,7 +440,7 @@ Vcov_beta = spm_create_vol(Vcov_beta);
 
 %-Initialise Cov_beta_g image files if needed
 %----------------------------------------------------------------------
-if dof_type
+if dof_type == 1
     if isfield(SwE.type,'classic')
         nGr = nSubj;
     end
@@ -493,7 +549,7 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
         CrCov_vis    = []; 
     else
         CrCov_beta   = [];
-        if dof_type
+        if dof_type ==1
             CrCov_beta_i = [];
         end
     end
@@ -581,7 +637,15 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
             fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...estimation');%-#
 
             beta  = pX*Y;                     %-Parameter estimates
-            res   = diag(corr)*(Y-xX.X*beta); %-Corrected residuals
+            if SwE.SS >= 4  % Cluster-wise adjustments
+                res = zeros(size(Y));
+                for i = 1:nSubj
+                    res(iSubj==uSubj(i),:) = corr{i} *...
+                        (Y(iSubj==uSubj(i),:)-xX.X(iSubj==uSubj(i),:)*beta);
+                end
+            else
+                res   = diag(corr)*(Y-xX.X*beta); %-Corrected residuals
+            end
             clear Y                           %-Clear to save memory
 
             %-Estimation of the data variance-covariance components (modified SwE) 
@@ -620,7 +684,7 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
                             tmp = zeros(nVis_g(g));
                             tmp(tril(ones(nVis_g(g)))==1) = Cov_vis(iGr_Cov_vis_g==g,iVox);
                             tmp = tmp + tmp' - diag(diag(tmp));
-                            [V D] = eig(tmp);
+                            [V, D] = eig(tmp);
                             if any (diag(D)<0) %Bug corrected (BG - 19/09/13)
                                 D(D<0) = 0;
                                 tmp = V * D * V';
@@ -630,14 +694,14 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
                     end
                 end
             else
-                if dof_type %need to save all subject contributions...
+                if dof_type == 1 %need to save all subject contributions...
                     Cov_beta_i =  NaN(nSubj,nCov_beta,CrS);
                 end
                 for i = 1:nSubj
                     Cov_beta_i_tmp = weight(:,Ind_Cov_vis_classic==i) *...
                         (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
                     Cov_beta = Cov_beta + Cov_beta_i_tmp;
-                    if dof_type %need to save all subject contributions...
+                    if dof_type == 1 %need to save all subject contributions...
                         Cov_beta_i(i,:,:) = Cov_beta_i_tmp;
                     end
                 end
@@ -651,7 +715,7 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
                 CrCov_vis     = [CrCov_vis,  Cov_vis]; %#ok<AGROW>
             else
                 CrCov_beta     = [CrCov_beta, Cov_beta]; %#ok<AGROW>
-                if dof_type
+                if dof_type == 1
                     CrCov_beta_i     = cat(3, CrCov_beta_i, Cov_beta_i);
                 end
             end
@@ -700,7 +764,7 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
             if ~isempty(Q), jj(Q) = CrCov_beta(i,:); end
             Vcov_beta(i) = spm_write_plane(Vcov_beta(i), jj, CrPl);
         end
-        if dof_type
+        if dof_type == 1
             it = 0;
             for i=1:nSubj
                 for ii=1:nCov_beta
@@ -734,7 +798,7 @@ if isfield(SwE.type,'modified')
     clear Cov_vis CrCov_vis
 else
     clear  Cov_beta CrCov_beta        
-    if dof_type
+    if dof_type == 1
         clear Cov_beta_i CrCov_beta_i
     end
 end
@@ -787,22 +851,23 @@ if isfield(SwE.type,'modified')
             sum(cumprod(DIM(1)'));
         s_z = length(Q_z); % number of active voxels in plane z
         jj = NaN(xdim,ydim);
-        if dof_type
-            Cov_beta = zeros(nCov_beta,s_z); % initialize SwE for the plane
-            it = 0;
-            for g = 1:nGr
-                Cov_beta_g = weight(:,iGr_Cov_vis_g==g) * Cov_vis(iGr_Cov_vis_g==g,(1+S_z):(S_z+s_z));
-                for i=1:nCov_beta
-                    if ~isempty(Q_z), jj(Q_z)=Cov_beta_g(i,:); end
-                    it = it + 1;
-                    Vcov_beta_g(it)=spm_write_plane(Vcov_beta_g(it),jj, z);
+        switch dof_type 
+            case 1
+                Cov_beta = zeros(nCov_beta,s_z); % initialize SwE for the plane
+                it = 0;
+                for g = 1:nGr
+                    Cov_beta_g = weight(:,iGr_Cov_vis_g==g) * Cov_vis(iGr_Cov_vis_g==g,(1+S_z):(S_z+s_z));
+                    for i=1:nCov_beta
+                        if ~isempty(Q_z), jj(Q_z)=Cov_beta_g(i,:); end
+                        it = it + 1;
+                        Vcov_beta_g(it)=spm_write_plane(Vcov_beta_g(it),jj, z);
+                    end
+                    Cov_beta = Cov_beta + Cov_beta_g;
+                    spm_progress_bar('Set',100*((z-1)/zdim + g/nGr/zdim));
                 end
-                Cov_beta = Cov_beta + Cov_beta_g;
-                spm_progress_bar('Set',100*((z-1)/zdim + g/nGr/zdim));
-            end
-        else
-            Cov_beta = weight * Cov_vis(:,(1+S_z):(S_z+s_z));
-            spm_progress_bar('Set',100*(z/zdim));
+            case {0 2 3}
+                Cov_beta = weight * Cov_vis(:,(1+S_z):(S_z+s_z));
+                spm_progress_bar('Set',100*(z/zdim));
         end
         for i=1:nCov_beta
             if ~isempty(Q_z), jj(Q_z)=Cov_beta(i,:); end
@@ -865,7 +930,7 @@ SwE.Vcov_beta  = Vcov_beta;         %-Filehandle - Beta covariance
 if isfield(SwE.type,'modified')
     SwE.Vcov_vis   = Vcov_vis;      %-Filehandle - Visit covariance    
 end
-if dof_type
+if dof_type == 1
     SwE.Vcov_beta_g  = Vcov_beta_g;     %-Filehandle - Beta covariance contributions
 end
 % if ~all(vFWHM==0)
@@ -885,6 +950,11 @@ SwE.Subj.nSubj = nSubj;
 
 if isfield(SwE.type,'modified')
     
+    if dof_type >1
+        SwE.Vis.weight        = weight;
+        SwE.Vis.iGr_Cov_vis_g = iGr_Cov_vis_g;
+        SwE.Vis.Ind_corr_diag = Ind_corr_diag;
+    end
     SwE.Vis.uVis_g = uVis_g;
     SwE.Vis.nVis_g = nVis_g;
     SwE.Vis.nCov_vis_g = nCov_vis_g;
@@ -895,7 +965,7 @@ if isfield(SwE.type,'modified')
     SwE.Gr.nSubj_g   = nSubj_g;
     SwE.Gr.uSubj_g   = uSubj_g;
 else
-    if dof_type
+    if dof_type == 1
         SwE.Gr.nGr   = nSubj;
     end
 end
@@ -908,10 +978,12 @@ SwE.dof.pB_dof    = pB_dof;
 SwE.dof.nSubj_dof = nSubj_dof;
 SwE.dof.edof_Subj = edof_Subj;
 SwE.dof.dof_type  = dof_type;
-if dof_type % so naive estimation is used
+if dof_type == 1 
     SwE.dof.edof_Gr = edof_Gr;
-else
+elseif dof_type == 0
     SwE.dof.dof_cov = dof_cov;
+else
+    SwE.dof.dofMat = dofMat; 
 end
 
 %-Save analysis parameters in SwE.mat file
