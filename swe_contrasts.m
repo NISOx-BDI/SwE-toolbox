@@ -190,14 +190,14 @@ for i = 1:length(Ic)
                         edf = cCovBc.^2 ./ tmp;
                         spm_progress_bar('Set',100*(0.2));
                         % transform into Z-scores image
-                        Z2(Z>0) = -norminv(tcdf(-Z(Z>0),edf(Z>0))); 
-                        Z2(Z<0) = norminv(tcdf(Z(Z<0),edf(Z<0))); 
+                        Z2(Z>0) = -norminv(spm_Tcdf(-Z(Z>0),edf(Z>0))); 
+                        Z2(Z<0) = norminv(spm_Tcdf(Z(Z<0),edf(Z<0))); 
                         %Z = -log10(1-spm_Tcdf(Z,edf)); %transfo into -log10(p)
                         spm_progress_bar('Set',100);
                     case 0
                         % transform into Z-scores image
-                        Z2(Z>0) = -norminv(tcdf(-Z(Z>0),xCon(ic).edf)); 
-                        Z2(Z<0) = norminv(tcdf(Z(Z<0),xCon(ic).edf));
+                        Z2(Z>0) = -norminv(spm_Tcdf(-Z(Z>0),xCon(ic).edf)); 
+                        Z2(Z<0) = norminv(spm_Tcdf(Z(Z<0),xCon(ic).edf));
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Tcdf(Z,xCon(ic).edf));
                         spm_progress_bar('Set',100);
@@ -314,22 +314,22 @@ for i = 1:length(Ic)
                         end
                         edf = 2 * (sum(swe_duplication_matrix(nSizeCon)) * cCovBc).^2 ./ CovcCovBc - 2;
                     end
-                     if dof_type == 3
-                        CovcCovBc = 0;
-                        tmp = eye(nSizeCon^2);  
-                        for g = 1:SwE.Gr.nGr
-                             Wg = kron(Co,Co)' * swe_duplication_matrix(nBeta) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
-                             % tmp is used to sum only the diagonal element
-                             % this is useful to compute the trace as
-                             % tr(A) = vec(I)' * vec(A)                                                        
-                             Wg = tmp(:)' * (kron(Wg,Wg)) * swe_duplication_matrix(SwE.Vis.nCov_vis_g(g));
-                             CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},2);
-                        end
-                        % note that tr(A^2) = vec(A)' * vec(A)
-                        tmp = eye(nSizeCon);
-                        edf = (sum(swe_duplication_matrix(nSizeCon)) * cCovBc.^2 +...
-                                (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
-                     end
+                    if dof_type == 3
+                      CovcCovBc = 0;
+                      tmp = eye(nSizeCon^2);
+                      for g = 1:SwE.Gr.nGr
+                        Wg = kron(Co,Co)' * swe_duplication_matrix(nBeta) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
+                        % tmp is used to sum only the diagonal element
+                        % this is useful to compute the trace as
+                        % tr(A) = vec(I)' * vec(A)
+                        Wg = tmp(:)' * (kron(Wg,Wg)) * swe_duplication_matrix(SwE.Vis.nCov_vis_g(g));
+                        CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},2);
+                      end
+                      % note that tr(A^2) = vec(A)' * vec(A)
+                      tmp = eye(nSizeCon);
+                      edf = (sum(swe_duplication_matrix(nSizeCon)) * cCovBc.^2 +...
+                        (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
+                    end
                     % define a parameter to tell when to update progress
                     % bar only 80 times
                     updateEvery = round(S/80);
