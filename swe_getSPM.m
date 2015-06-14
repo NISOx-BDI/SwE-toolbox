@@ -234,7 +234,7 @@ end
 xX   = SwE.xX;                      %-Design definition structure
 XYZ  = SwE.xVol.XYZ;                %-XYZ coordinates
 S    = SwE.xVol.S;                  %-search Volume {voxels}
-R    = SwE.xVol.R;                  %-search Volume {resels}
+% R    = SwE.xVol.R;                  %-search Volume {resels}
 M    = SwE.xVol.M(1:3,1:3);         %-voxels to mm matrix
 VOX  = sqrt(diag(M'*M))';           %-voxel dimensions
 
@@ -676,13 +676,14 @@ if STAT ~= 'P'
     end
     %-Peak FDR
     %----------------------------------------------------------------------
-    switch STAT
-        case 'T'
-            [up,Pp] = spm_uc_peakFDR(0.05,df,'Z',R,n,Zum,XYZum,u);
-        case 'F'
-            [up,Pp] = spm_uc_peakFDR(0.05,df,'X',R,n,Zum,XYZum,u);
-    end
-
+%     switch STAT
+%         case 'T'
+%             [up,Pp] = spm_uc_peakFDR(0.05,df,'Z',R,n,Zum,XYZum,u);
+%         case 'F'
+%             [up,Pp] = spm_uc_peakFDR(0.05,df,'X',R,n,Zum,XYZum,u);
+%     end
+        up  = NaN;
+        Pp  = NaN;
     %-Cluster FDR
     %----------------------------------------------------------------------
 %     if STAT == 'T' && n == 1
@@ -784,8 +785,6 @@ xSwE   = struct( ...
             'XYZ',      XYZ,...
             'XYZmm',    SwE.xVol.M(1:3,:)*[XYZ; ones(1,size(XYZ,2))],...
             'S',        SwE.xVol.S,...
-            'R',        SwE.xVol.R,...
-            'FWHM',     SwE.xVol.FWHM,...
             'M',        SwE.xVol.M,...
             'iM',       SwE.xVol.iM,...
             'DIM',      SwE.xVol.DIM,...
@@ -793,6 +792,10 @@ xSwE   = struct( ...
             'Vspm',     VspmSv,...
             'thresDesc',thresDesc);
 
+ %             'R',        SwE.xVol.R,...
+%             'FWHM',     SwE.xVol.FWHM,...
+          
+          
 %-RESELS per voxel (density) if it exists
 %--------------------------------------------------------------------------
 try, xSwE.VRpv = SwE.xVol.VRpv; end

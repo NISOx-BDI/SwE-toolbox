@@ -14,7 +14,13 @@ if nargin == 0
         swd     = fileparts(P{i});
         load(fullfile(swd,'SwE.mat'));
         SwE.swd = swd;
-        swe_cp(SwE);
+        
+        % detect if this is a WB analysis or a "standard analysis"
+        if isfield(SwE, 'WB')
+          swe_cp_WB(SwE);
+        else
+          swe_cp(SwE);
+        end
     end
     return
 end
@@ -52,11 +58,11 @@ if exist(fullfile(SwE.swd,'mask.img'),'file') == 2
     end
 end
  
-files = {'^mask\..{3}$','^beta_.{4}\..{3}$','^con_.{4}\..{3}$',...
-         '^ResI_.{4}\..{3}$','^cov_beta_.{4}d_.{4}\..{3}$',...
-         '^cov_beta_g_.{4}d_.{4}d_.{4}\..{3}$',...
-         '^cov_vis_.{4}d_.{4}d_.{4}\..{3}$'
-         };
+files = {'^mask\..{3}$','^ResMS\..{3}$','^RPV\..{3}$',...
+    '^beta_.{4}\..{3}$','^con_.{4}\..{3}$','^ResI_.{4}\..{3}$',...
+    '^ess_.{4}\..{3}$', '^spm\w{1}_.{4}\..{3}$',...
+    '^cov_beta_.{4}_.{4}\..{3}$', '^cov_vis_.{4}_.{4}_.{4}\..{3}$',...
+    '^edf_.{4}\..{3}$'};
  
 for i = 1:length(files)
     j = spm_select('List',SwE.swd,files{i});
@@ -183,7 +189,7 @@ if dof_type == 0 % so naive estimation is used
         dof_cov(i) = nSubj_dof(iBeta_dof(i)) - ...
             pB_dof(iBeta_dof(i));    
     end;
-end
+end  
 
 %-preprocessing for the modified SwE
 if isfield(SwE.type,'modified')
@@ -492,21 +498,21 @@ if isfield(SwE.type,'modified')
 end
 %-Initialise standardised residual images
 %----------------------------------------------------------------------
-VResI(1:nSres) = deal(struct(...
-    'fname',    [],...
-    'dim',      DIM',...
-    'dt',       [spm_type('float32') spm_platform('bigend')],...
-    'mat',      M,...
-    'pinfo',    [1 0 0]',...
-    'descrip',  'swe_cp:StandardisedResiduals'));
-
-for i = 1:nSres
-    VResI(i).fname   = sprintf('ResI_%04d.img', i);
-    VResI(i).descrip = sprintf('spm_spm:ResI (%04d)', i);
-end
-VResI = spm_create_vol(VResI);
-fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-# 
- 
+% VResI(1:nSres) = deal(struct(...
+%     'fname',    [],...
+%     'dim',      DIM',...
+%     'dt',       [spm_type('float32') spm_platform('bigend')],...
+%     'mat',      M,...
+%     'pinfo',    [1 0 0]',...
+%     'descrip',  'swe_cp:StandardisedResiduals'));
+% 
+% for i = 1:nSres
+%     VResI(i).fname   = sprintf('ResI_%04d.img', i);
+%     VResI(i).descrip = sprintf('spm_spm:ResI (%04d)', i);
+% end
+% VResI = spm_create_vol(VResI);
+% fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-# 
+%  
 %==========================================================================
 % - F I T   M O D E L   &   W R I T E   P A R A M E T E R    I M A G E S
 %==========================================================================
@@ -697,6 +703,7 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
                 if dof_type == 1 %need to save all subject contributions...
                     Cov_beta_i =  NaN(nSubj,nCov_beta,CrS);
                 end
+                Cov_beta = 0;
                 for i = 1:nSubj
                     Cov_beta_i_tmp = weight(:,Ind_Cov_vis_classic==i) *...
                         (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
@@ -778,12 +785,12 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
     
     %-Write standardised residual images
     %------------------------------------------------------------------
-    for i = 1:nSres
-        if ~isempty(Q), jj(Q) = CrResI(i,:)./...
-                sqrt(CrCov_vis(Flagk(:,i) & Flagkk(:,i),:)); 
-        end 
-        VResI(i) = spm_write_plane(VResI(i), jj, CrPl);
-    end
+%     for i = 1:nSres
+%         if ~isempty(Q), jj(Q) = CrResI(i,:)./...
+%                 sqrt(CrCov_vis(Flagk(:,i) & Flagkk(:,i),:)); 
+%         end 
+%         VResI(i) = spm_write_plane(VResI(i), jj, CrPl);
+%     end
 
     %-Report progress
     %----------------------------------------------------------------------
@@ -888,15 +895,15 @@ if S == 0, spm('alert!','No inmask voxels - empty analysis!'); return; end
 
 
 %-Smoothness estimates of component fields and RESEL counts for volume
-%==========================================================================
-try
-    FWHM = SwE.xVol.FWHM;
-    VRpv = SwE.xVol.VRpv;
-    R    = SwE.xVol.R;
-catch
-    erdf      = spm_SpUtil('trRV',xX.X); % Working error df / do not agree to be checked
-    [FWHM,VRpv,R] = spm_est_smoothness(VResI,VM,[nScan erdf]);
-end
+% %==========================================================================
+% try
+%     FWHM = SwE.xVol.FWHM;
+%     VRpv = SwE.xVol.VRpv;
+%     R    = SwE.xVol.R;
+% catch
+%     erdf      = spm_SpUtil('trRV',xX.X); % Working error df / do not agree to be checked
+%     [FWHM,VRpv,R] = spm_est_smoothness(VResI,VM,[nScan erdf]);
+% end
 
 %-Delete the residuals images
 %==========================================================================
@@ -919,10 +926,10 @@ SwE.xVol.XYZ   = XYZ;               %-InMask XYZ coords (voxels)
 SwE.xVol.M     = M;                 %-voxels -> mm
 SwE.xVol.iM    = inv(M);            %-mm -> voxels
 SwE.xVol.DIM   = DIM;               %-image dimensions
-SwE.xVol.FWHM  = FWHM;              %-Smoothness data
-SwE.xVol.R     = R;                 %-Resel counts
+% SwE.xVol.FWHM  = FWHM;              %-Smoothness data
+% SwE.xVol.R     = R;                 %-Resel counts
 SwE.xVol.S     = S;                 %-Volume (voxels)
-SwE.xVol.VRpv  = VRpv;              %-Filehandle - Resels per voxel
+% SwE.xVol.VRpv  = VRpv;              %-Filehandle - Resels per voxel
 SwE.xVol.units = {'mm' 'mm' 'mm'};
 
 SwE.Vbeta      = Vbeta;             %-Filehandle - Beta
