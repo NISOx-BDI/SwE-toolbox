@@ -492,21 +492,21 @@ if isfield(SwE.type,'modified')
 end
 %-Initialise standardised residual images
 %----------------------------------------------------------------------
-VResI(1:nSres) = deal(struct(...
-    'fname',    [],...
-    'dim',      DIM',...
-    'dt',       [spm_type('float32') spm_platform('bigend')],...
-    'mat',      M,...
-    'pinfo',    [1 0 0]',...
-    'descrip',  'swe_cp:StandardisedResiduals'));
-
-for i = 1:nSres
-    VResI(i).fname   = sprintf('ResI_%04d.img', i);
-    VResI(i).descrip = sprintf('spm_spm:ResI (%04d)', i);
-end
-VResI = spm_create_vol(VResI);
-fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-# 
- 
+% VResI(1:nSres) = deal(struct(...
+%     'fname',    [],...
+%     'dim',      DIM',...
+%     'dt',       [spm_type('float32') spm_platform('bigend')],...
+%     'mat',      M,...
+%     'pinfo',    [1 0 0]',...
+%     'descrip',  'swe_cp:StandardisedResiduals'));
+% 
+% for i = 1:nSres
+%     VResI(i).fname   = sprintf('ResI_%04d.img', i);
+%     VResI(i).descrip = sprintf('spm_spm:ResI (%04d)', i);
+% end
+% VResI = spm_create_vol(VResI);
+% fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-# 
+%  
 %==========================================================================
 % - F I T   M O D E L   &   W R I T E   P A R A M E T E R    I M A G E S
 %==========================================================================
@@ -778,12 +778,12 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
     
     %-Write standardised residual images
     %------------------------------------------------------------------
-    for i = 1:nSres
-        if ~isempty(Q), jj(Q) = CrResI(i,:)./...
-                sqrt(CrCov_vis(Flagk(:,i) & Flagkk(:,i),:)); 
-        end 
-        VResI(i) = spm_write_plane(VResI(i), jj, CrPl);
-    end
+%     for i = 1:nSres
+%         if ~isempty(Q), jj(Q) = CrResI(i,:)./...
+%                 sqrt(CrCov_vis(Flagk(:,i) & Flagkk(:,i),:)); 
+%         end 
+%         VResI(i) = spm_write_plane(VResI(i), jj, CrPl);
+%     end
 
     %-Report progress
     %----------------------------------------------------------------------
@@ -888,15 +888,15 @@ if S == 0, spm('alert!','No inmask voxels - empty analysis!'); return; end
 
 
 %-Smoothness estimates of component fields and RESEL counts for volume
-%==========================================================================
-try
-    FWHM = SwE.xVol.FWHM;
-    VRpv = SwE.xVol.VRpv;
-    R    = SwE.xVol.R;
-catch
-    erdf      = spm_SpUtil('trRV',xX.X); % Working error df / do not agree to be checked
-    [FWHM,VRpv,R] = spm_est_smoothness(VResI,VM,[nScan erdf]);
-end
+% %==========================================================================
+% try
+%     FWHM = SwE.xVol.FWHM;
+%     VRpv = SwE.xVol.VRpv;
+%     R    = SwE.xVol.R;
+% catch
+%     erdf      = spm_SpUtil('trRV',xX.X); % Working error df / do not agree to be checked
+%     [FWHM,VRpv,R] = spm_est_smoothness(VResI,VM,[nScan erdf]);
+% end
 
 %-Delete the residuals images
 %==========================================================================
@@ -919,10 +919,10 @@ SwE.xVol.XYZ   = XYZ;               %-InMask XYZ coords (voxels)
 SwE.xVol.M     = M;                 %-voxels -> mm
 SwE.xVol.iM    = inv(M);            %-mm -> voxels
 SwE.xVol.DIM   = DIM;               %-image dimensions
-SwE.xVol.FWHM  = FWHM;              %-Smoothness data
-SwE.xVol.R     = R;                 %-Resel counts
+% SwE.xVol.FWHM  = FWHM;              %-Smoothness data
+% SwE.xVol.R     = R;                 %-Resel counts
 SwE.xVol.S     = S;                 %-Volume (voxels)
-SwE.xVol.VRpv  = VRpv;              %-Filehandle - Resels per voxel
+% SwE.xVol.VRpv  = VRpv;              %-Filehandle - Resels per voxel
 SwE.xVol.units = {'mm' 'mm' 'mm'};
 
 SwE.Vbeta      = Vbeta;             %-Filehandle - Beta
