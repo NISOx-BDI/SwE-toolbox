@@ -38,7 +38,9 @@ end
 %--------------------------------------------------------------------------
 files = {'^mask\..{3}$','^ResMS\..{3}$','^RPV\..{3}$',...
     '^beta_.{4}\..{3}$','^con_.{4}\..{3}$','^ResI_.{4}\..{3}$',...
-    '^ess_.{4}\..{3}$', '^spm\w{1}_.{4}\..{3}$'};
+    '^ess_.{4}\..{3}$', '^spm\w{1}_.{4}\..{3}$',...
+    '^cov_beta_.{4}_.{4}\..{3}$', '^cov_vis_.{4}_.{4}_.{4}\..{3}$',...
+    '^edf_.{4}\..{3}$'};
 
 for i=1:length(files)
     j = spm_select('List',pwd,files{i});
@@ -141,7 +143,7 @@ factor(1).dept     = 0;
 %--------------------------------------------------------------------------
 
 Subj.iSubj = job.subjects;              %subjects list
-Subj.nSubj=length(unique(Subj.iSubj));  %number of subjects
+Subj.nSubj = length(unique(Subj.iSubj));  %number of subjects
 
 % Set up visits & groups information: Vis & Gr
 %--------------------------------------------------------------------------
@@ -616,6 +618,54 @@ xsDes = struct('Design',    {DesName},...
 fprintf('%30s\n','...done')                                             %-#
 
 
+%==========================================================================
+% - WB configuration - Only if needed
+%==========================================================================
+if isfield(job.WB, 'WB_yes')
+  
+  WB.RWB            = job.WB.WB_yes.WB_type;
+  WB.SS             = job.WB.WB_yes.WB_ss;
+  WB.nB             = job.WB.WB_yes.WB_nB;
+  WB.RSwE           = job.WB.WB_yes.WB_SwE;
+  WB.voxelWise      = 1;
+  WB.voxelWiseInfo = [];
+  switch char(fieldnames(job.WB.WB_yes.WB_cluster))
+    
+    case 'WB_cluster_no'
+      WB.clusterWise  = 0;
+      
+    case 'WB_cluster_yes'
+      WB.clusterWise  = 1;
+      WB.clusterInfo = [];
+      WB.clusterInfo.primaryThreshold = job.WB.WB_yes.WB_cluster.WB_cluster_yes;
+      if WB.clusterInfo.primaryThreshold > 1 || WB.clusterInfo.primaryThreshold < 0
+        error('cluster-forming threshold should be between 0 an 1 (this is a probability)');
+      end     
+  end
+  
+  switch char(fieldnames(job.WB.WB_yes.WB_stat))
+    
+    case 'WB_T'
+      WB.stat = 'T';
+      WB.con = job.WB.WB_yes.WB_stat.WB_T.WB_T_con;
+      if any(size(WB.con) ~= [1 size(X,2)])
+        error('contrast not well specified');
+      end
+      
+    case 'WB_F'
+      WB.stat = 'F';
+      WB.con = job.WB.WB_yes.WB_stat.WB_F.WB_F_con;
+      if size(WB.con,2) ~= size(X,2)
+        error('contrast not well specified');
+      end
+      
+    otherwise
+      error('unexpected statistic type');
+  end
+ 
+end
+
+
 %-Assemble SwE structure like it is done in SPM structure
 %==========================================================================
 SwE.xY.P    = P;            % filenames
@@ -631,7 +681,9 @@ SwE.SS      = SS;           % SwE small samples adj. type
 SwE.Subj    = Subj;         % subjects data
 SwE.Vis     = Vis;          % visits data (empty if classic SwE)
 SwE.Gr      = Gr;           % groups data (empty if classic SwE)
-
+if isfield(job.WB, 'WB_yes')
+  SwE.WB      = WB;           % WB structure
+end
 
 %-Save SwE.mat and set output argument
 %--------------------------------------------------------------------------
