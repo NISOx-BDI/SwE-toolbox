@@ -14,7 +14,13 @@ if nargin == 0
         swd     = fileparts(P{i});
         load(fullfile(swd,'SwE.mat'));
         SwE.swd = swd;
-        swe_cp(SwE);
+        
+        % detect if this is a WB analysis or a "standard analysis"
+        if isfield(SwE, 'WB')
+          swe_cp_WB(SwE);
+        else
+          swe_cp(SwE);
+        end
     end
     return
 end
@@ -52,11 +58,11 @@ if exist(fullfile(SwE.swd,'mask.img'),'file') == 2
     end
 end
  
-files = {'^mask\..{3}$','^beta_.{4}\..{3}$','^con_.{4}\..{3}$',...
-         '^ResI_.{4}\..{3}$','^cov_beta_.{4}d_.{4}\..{3}$',...
-         '^cov_beta_g_.{4}d_.{4}d_.{4}\..{3}$',...
-         '^cov_vis_.{4}d_.{4}d_.{4}\..{3}$'
-         };
+files = {'^mask\..{3}$','^ResMS\..{3}$','^RPV\..{3}$',...
+    '^beta_.{4}\..{3}$','^con_.{4}\..{3}$','^ResI_.{4}\..{3}$',...
+    '^ess_.{4}\..{3}$', '^spm\w{1}_.{4}\..{3}$',...
+    '^cov_beta_.{4}_.{4}\..{3}$', '^cov_vis_.{4}_.{4}_.{4}\..{3}$',...
+    '^edf_.{4}\..{3}$'};
  
 for i = 1:length(files)
     j = spm_select('List',SwE.swd,files{i});
@@ -183,7 +189,7 @@ if dof_type == 0 % so naive estimation is used
         dof_cov(i) = nSubj_dof(iBeta_dof(i)) - ...
             pB_dof(iBeta_dof(i));    
     end;
-end
+end  
 
 %-preprocessing for the modified SwE
 if isfield(SwE.type,'modified')
@@ -697,6 +703,7 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
                 if dof_type == 1 %need to save all subject contributions...
                     Cov_beta_i =  NaN(nSubj,nCov_beta,CrS);
                 end
+                Cov_beta = 0;
                 for i = 1:nSubj
                     Cov_beta_i_tmp = weight(:,Ind_Cov_vis_classic==i) *...
                         (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
