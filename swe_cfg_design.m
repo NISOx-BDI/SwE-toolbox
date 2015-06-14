@@ -153,7 +153,7 @@ generic.help    = {
                    ''
 }';
 generic.values  = {cov };
-generic.num     = [0 Inf];
+generic.num     = [1 Inf];
 
 % ---------------------------------------------------------------------
 % tm_none None
@@ -287,7 +287,6 @@ masking.help    = {
 ss         = cfg_menu;
 ss.tag     = 'ss';
 ss.name    = 'Small sample adjustments';
-ss.help    = {''};
 ss.labels  = { 'type 0' 'type 1' 'type 2' 'type 3' 'type C2' 'type C3' };
 
 ss.values  = {0 1 2 3 4 5};
@@ -302,7 +301,7 @@ ss.help    = {  ' '
                 'type 3: the residuals used in the SwE estimation are multiplied by 1/(1-h_ik).'
                 '             It tends to correct fo the small sample bias, but simulations seem to show that it may lead to conservative inferences in small samples.'
                 'type C2: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-0.5.'
-                '             Simulations seem to show that it is the best correction and remove the correctely the bias in many scenarios'
+                '             Simulations seem to show that it is the best correction and removes correctly the bias in many scenarios'
                 'type C3: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-1.'
                 '             Simulations seem to show that it overcorrect and yield conservative inferences'
                 'h_ik is the diagonal element of the hat matrix H=X''(X''X)^(-1)X corresponding to subject i and visit k.'
@@ -315,9 +314,10 @@ ss.help    = {  ' '
 dof_cl         = cfg_menu;
 dof_cl.tag     = 'dof_cl';
 dof_cl.name    = 'Degrees of freedom type';
-dof_cl.labels  = { 'naive' 'approx I' 'approx II'};
-dof_cl.values  = { 0 1 2 };
-dof_cl.val     = { 1 };
+dof_cl.labels  = { 'naive' 'approx I'};
+%dof_cl.labels  = { 'naive' 'approx I' 'approx II'};
+dof_cl.values  = { 0 1  }; % dof_cl.values  = { 0 1 2 };
+dof_cl.val     = { 0 };
 dof_cl.help    = {  ' '
                 'naive: naive estimation of the degrees of freedom by the total number of subjects belonging to the insparable sub-design matrices involved in the contrast tested minus the number of non-zero pure between covariates present in these insparable sub-design matrices.'
                 '             This choice tends to overestimate the degrees of freedom, but reduce the quantity of images saved and the computation time.'
@@ -325,6 +325,7 @@ dof_cl.help    = {  ' '
                 '             This choice is not recommended for the classic SwE as, with this SwE version, it generally underestimate  the degrees of freedom in small samples and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
                 'approx II: degrees of freedom estimation with the estimate proposed in Guillaume (in preparation).'
                 '             This choice is not recommended for the classic SwE as, with this SwE version, it generally overestimate the degrees of freedom in small samples and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
+                'Note that "approx II" is not yet implemented for the classic SwE. It seems that to get accurate inferences with the classic SwE in small samples, it is preferable to consider a non-parametric analysis with the Wild Bootstrap.'
                 ' '
                 }';
 % ---------------------------------------------------------------------
@@ -527,12 +528,230 @@ globalm.help    = {
                    ''
 }';
 % ---------------------------------------------------------------------
+% WB_no No
+% ---------------------------------------------------------------------
+WB_no         = cfg_const;
+WB_no.tag     = 'WB_no';
+WB_no.name    = 'No';
+WB_no.val     = {0};
+WB_no.help    = {''
+  'Only a "standard" parametric SwE analysis is considered'};
+
+% ---------------------------------------------------------------------
+% WB_type WB_type
+% ---------------------------------------------------------------------
+WB_type         = cfg_menu;
+WB_type.tag     = 'WB_type';
+WB_type.name    = 'Type of resampling';
+WB_type.labels     = {'U-WB' 'R-WB'};
+WB_type.values     = {0 1};
+WB_type.val     = {1};
+WB_type.help    = {''
+  'U-WB: unrestrited WB which based the resampling on the unrestricted model (not imposing the null hypothesis)'
+  ''
+  'R-WB: restrited WB which based the resampling on the restricted model (imposing the null hypothesis)'
+  ''
+  'Monte Carlo simulations indicates that the R-WB generally outperforms the U-WB and, therefore, it seems preferebale to always use this WB version. The U-WB option is currently available, but nothing indicates that it should be used and thus might be removed later.'
+  ''
+  };
+% ---------------------------------------------------------------------
+% WB_SwE type of SwE
+% ---------------------------------------------------------------------
+WB_SwE         = cfg_menu;
+WB_SwE.tag     = 'WB_SwE';
+WB_SwE.name    = 'Type of SwE';
+WB_SwE.labels     = {'U-SwE' 'R-SwE'};
+WB_SwE.values     = {0 1};
+WB_SwE.val     = {0};
+WB_SwE.help    = {''
+  'U-SwE: unrestrited SwE which is obtained using the residuals of the unrestricted model (not imposing the null hypothesis)'
+  ''
+  'R-SwE: restrited SwE which is obtained using the residuals of the restricted model (imposing the null hypothesis)'
+  ''
+  'The R-SwE is sometimes considered in the Wild Bootstrap literature. However, in our Monte Carlo simulations, no appreciable differences have been observed between this two versions when they are used with the R-WB, indicating that they could be both considered in practice. Nevertheless, it is clear that the R-SwE is generally a biased estimator of the true covariance matrix of the parameters, making it a "not-so-good" candidate for a "standard" parametric SwE analysis. The latter observation may be an argument in favour of the U-SwE, particularly for cluster analysis where a primary cluster threshold need to be defined.'
+  ''
+  };
+% ---------------------------------------------------------------------
+% WB_T_con WB contrast for T-scores
+% ---------------------------------------------------------------------
+WB_T_con         = cfg_entry;
+WB_T_con.tag     = 'WB_T_con';
+WB_T_con.name    = 'Contrast';
+WB_T_con.help    = {' '
+             'Contrast vector of size 1 x p to be tested, where p is the number of covariates in the unrestricted model.'
+             'Enter the values in the ordering of the covariates'
+             ' ' }';
+WB_T_con.strtype = 'e';
+WB_T_con.num     = [1 Inf];
+
+% ---------------------------------------------------------------------
+% WB_F_con WB contrast for F-scores
+% ---------------------------------------------------------------------
+WB_F_con         = cfg_entry;
+WB_F_con.tag     = 'WB_F_con';
+WB_F_con.name    = 'Contrast';
+WB_F_con.help    = {' '
+             'Contrast vector or matrix of size q x p to be tested, where p is the number of covariates in the unrestricted model.'
+             'Enter the values in the ordering of the covariates'
+             ' ' }';
+WB_F_con.strtype = 'e';
+WB_F_con.num     = [Inf Inf];
+
+% ---------------------------------------------------------------------
+% WB_T T-scores
+% ---------------------------------------------------------------------
+WB_T         = cfg_branch;
+WB_T.tag     = 'WB_T';
+WB_T.name    = 'T';
+WB_T.val     = {WB_T_con};
+WB_T.help    = {''
+                     'T-scores are considered.'
+                     ''
+}';
+
+% ---------------------------------------------------------------------
+% WB_T T-scores
+% ---------------------------------------------------------------------
+WB_F         = cfg_branch;
+WB_F.tag     = 'WB_F';
+WB_F.name    = 'F';
+WB_F.val     = {WB_F_con};
+WB_F.help    = {''
+                     'F-scores are considered.'
+                     ''
+}';
+% ---------------------------------------------------------------------
+% WB_Stat  Statistic type
+% ---------------------------------------------------------------------
+WB_stat         = cfg_choice;
+WB_stat.tag     = 'WB_stat';
+WB_stat.name    = 'Statistic type';
+WB_stat.values     = {WB_T WB_F};
+WB_stat.val     = {WB_T};
+WB_stat.help    = {''
+  'T: T-scores are considered. Both positif (+) and negative (-) effects p-values will be computed'
+  ''
+  'F: F-scores are considered.'
+  ''};
+
+% ---------------------------------------------------------------------
+% WB_ss Small sample adjustments WB
+% ---------------------------------------------------------------------
+WB_ss         = cfg_menu;
+WB_ss.tag     = 'WB_ss';
+WB_ss.name    = 'Small sample adjustments for the resampling';
+WB_ss.labels  = { 'type 0' 'type 1' 'type 2' 'type 3' 'type C2' 'type C3' };
+
+WB_ss.values  = {0 1 2 3 4 5};
+WB_ss.val     = { 4 };
+WB_ss.help    = {  ' '
+                'Small sample adjustement of the residuals to be resampled'
+                ''
+                'It may be different from the one used for the SwE, but it seems better to consider by default the "type C2" version for both the SwE and the WB resampling as this is the correction which seems to adjust the best the residuals to make their variances/covariances close to the one the errors'
+                ''
+                'Note also that, if the R-WB is considered, the toolbox accounts for the use of a restricted model to adjust the residuals, and the description below needs to be adapted accordingly (e.g., replace the unrestricted design matrix X, by the restricted design matrix X_R).'
+                ''
+                'Below, the description of the adjustments for an U-WB:'
+                'type 0: no small sample adjustment is used.'
+                '             It tends to be biased and generally leads to overconfident inference in small samples.'
+                'type 1: the residuals used in the SwE estimation are multiplied by sqrt(n/(n-p)).'
+                '             It tends to correct for the small sample bias, but simulations seem to show that it still may lead to liberal inference in small samples.'
+                'type 2: the residuals used in the SwE estimation are multiplied by 1/sqrt(1-h_ik).'
+                '             It tends to correct for the small sample bias, but, even if it generally performs better than the "type 1" adjustment, simulations seems to show that it still may lead to liberal inferences in small samples.'
+                'type 3: the residuals used in the SwE estimation are multiplied by 1/(1-h_ik).'
+                '             It tends to correct fo the small sample bias, but simulations seem to show that it may lead to conservative inferences in small samples.'
+                'type C2: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-0.5.'
+                '             Simulations seem to show that it is the best correction and removes correctly the bias in many scenarios'
+                'type C3: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-1.'
+                '             Simulations seem to show that it overcorrect and yield conservative inferences'
+                'h_ik is the diagonal element of the hat matrix H=X''(X''X)^(-1)X corresponding to subject i and visit k.'
+                'H_ii is the sub-matrix of the hat matrix H=X''(X''X)^(-1)X corresponding to subject i.'
+                ' '}';
+
+% ---------------------------------------------------------------------
+% WB_cluster_no No
+% ---------------------------------------------------------------------
+WB_cluster_no         = cfg_const;
+WB_cluster_no.tag     = 'WB_cluster_no';
+WB_cluster_no.name    = 'No';
+WB_cluster_no.val     = {0};
+WB_cluster_no.help    = {''
+  'No cluster-wise inference will be performed'
+  ''};
+% ---------------------------------------------------------------------
+% WB_yes Yes
+% ---------------------------------------------------------------------
+WB_cluster_yes         = cfg_entry;
+WB_cluster_yes.tag     = 'WB_cluster_yes';
+WB_cluster_yes.name    = 'Yes, set the cluster-forming threshold now';
+WB_cluster_yes.val     = {0.001};
+WB_cluster_yes.help    = {''
+                     'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold need to be set now (p=0.001 per default)'
+''}';
+WB_cluster_yes.strtype = 'e';
+WB_cluster_yes.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_nB nB
+% ---------------------------------------------------------------------
+WB_nB         = cfg_entry;
+WB_nB.tag     = 'WB_nB';
+WB_nB.name    = 'Number of bootstaps';
+WB_nB.val     = {999};
+WB_nB.help    = {''
+                 'This sets the number of bootstraps (nB). This will notably set the number of possible FWER-corrected p-values to nB+1 and set the minimum possible FWER-corrected p-value to 1/(nB +1).'
+''}';
+WB_nB.strtype = 'i';
+WB_nB.num     = [1 1];
+
+
+% ---------------------------------------------------------------------
+% WB_cluster WB cluster-wise inference 
+% ---------------------------------------------------------------------
+WB_cluster         = cfg_choice;
+WB_cluster.tag     = 'WB_cluster';
+WB_cluster.name    = 'Cluster-wise inference';
+WB_cluster.values  = {WB_cluster_no WB_cluster_yes};
+WB_cluster.val     = {WB_cluster_no};
+WB_cluster.help    = {''
+  'No: no cluster-wise inference will be performed'
+  ''
+  'Yes: a cluster-wise inference will be performed alongside the voxel-wise inference. If this option is selected, the U-SwE will be automatically used in order to produce "meaningful" parametric p-value bootstrap images to be thresholded by the specified cluster-forming threshold.'
+  ''};
+
+% ---------------------------------------------------------------------
+% WB_yes Yes
+% ---------------------------------------------------------------------
+WB_yes         = cfg_branch;
+WB_yes.tag     = 'WB_yes';
+WB_yes.name    = 'Yes';
+WB_yes.val     = {WB_type WB_ss WB_nB WB_SwE WB_stat WB_cluster};
+WB_yes.help    = {''
+                     'A non-parametric Wild Bootstrap procedure is considered to analyse the data'
+}';
+
+% ---------------------------------------------------------------------
+% WB Wild Bootstrap
+% ---------------------------------------------------------------------
+WB         = cfg_choice;
+WB.tag     = 'WB';
+WB.name    = 'Non-parametric Wild Bootstrap';
+WB.help    = {''
+              'Yes: a non-parametric Wild Bootstrap procedure is considered to analyse the data'
+              ''
+              'No: only a "standard" parametric SwE analysis is considered (default)'
+}';
+WB.values = {WB_no WB_yes};
+WB.val    = {WB_no};
+
+
+% ---------------------------------------------------------------------
 % data Data & Design
 % ---------------------------------------------------------------------
 design        = cfg_exbranch;
 design.tag    = 'design';
 design.name   = 'Data & Design';
-design.val    = {dir scans type subjects generic masking globalc globalm};
+design.val    = {dir scans type subjects generic masking WB globalc globalm};
 design.help   = {' '
                  'Module of the SwE toolbox allowing the specification of the data and design.'};
 design.prog   = @swe_run_design;
