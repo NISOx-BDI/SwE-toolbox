@@ -177,7 +177,7 @@ case 'table'                                                        %-Table
     M         = xSwE.M;
     XYZ       = xSwE.XYZ;
     Z         = xSwE.Z;
-    VRpv      = xSwE.VRpv;
+%     VRpv      = xSwE.VRpv;
     n         = xSwE.n;
     STAT      = xSwE.STAT;
     switch STAT
