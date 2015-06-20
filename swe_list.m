@@ -522,8 +522,8 @@ case 'table'                                                        %-Table
     %-Setup Graphics panel
     %----------------------------------------------------------------------
     Fgraph = spm_figure('FindWin','Satellite');
-    if Fgraph
-        figure(Fgraph);
+    if ~isempty(Fgraph)
+        spm_figure('Focus', Fgraph);
         ht = 0.85; bot = 0.14;
     else
         Fgraph = spm_figure('GetWin','Graphics');
