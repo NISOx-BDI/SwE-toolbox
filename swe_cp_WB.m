@@ -1570,12 +1570,20 @@ end
 
 %
 % - write out lP_FDR+ and lP_FDR- images;
-% 
-tmp(Q) = -log10(spm_P_FDR(uncP));
+%
+try
+  tmp(Q) = -log10(spm_P_FDR(uncP));
+catch
+  tmp(Q) = -log10(spm_P_FDR(uncP,[],'P',[],sort(uncP)'));
+end
 spm_write_vol(VlP_FDR_pos, tmp);
 
 if WB.stat =='T'
-  tmp(Q) = -log10(spm_P_FDR(1 + 1/(WB.nB + 1) - uncP));
+  try
+    tmp(Q) = -log10(spm_P_FDR(1 + 1/(WB.nB + 1) - uncP));
+  catch
+    tmp(Q) = -log10(spm_P_FDR(1 + 1/(WB.nB + 1) - uncP,[],'P',[],sort(1 + 1/(WB.nB + 1) - uncP)'));
+  end
   spm_write_vol(VlP_FDR_neg, tmp);
 end
 
