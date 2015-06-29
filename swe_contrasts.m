@@ -359,16 +359,24 @@ for i = 1:length(Ic)
                         Z = Z .*(edf-xCon(ic).eidf+1)./edf/xCon(ic).eidf;
                         % transform into X-scores image
                         % Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,edf-xCon(ic).eidf+1),1);
-                        Z2(Z<=1) = norminv(0.5 + fcdf(Z(Z<=1),xCon(ic).eidf,edf(Z<=1)-xCon(ic).eidf+1)/2).^2;
-                        Z2(Z>1) = norminv(fcdf(Z(Z>1),xCon(ic).eidf,edf(Z>1)-xCon(ic).eidf+1,'upper')/2).^2;
+                        try % check if the user do not have the fcdf function or one with 'upper' option
+                          Z2(Z>1) = norminv(fcdf(Z(Z>1),xCon(ic).eidf,edf(Z>1)-xCon(ic).eidf+1,'upper')/2).^2; % more accurate to look this way for high scores
+                          Z2(Z<=1) = norminv(0.5 - fcdf(Z(Z<=1),xCon(ic).eidf,edf(Z<=1)-xCon(ic).eidf+1)/2).^2;
+                        catch 
+                            Z2 = norminv(0.5 - spm_Fcdf(Z,xCon(ic).eidf,edf-xCon(ic).eidf+1)/2).^2;
+                        end
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Fcdf(Z,xCon(ic).eidf,edf));
                     else
                         Z = Z *(xCon(ic).edf -xCon(ic).eidf+1)/xCon(ic).edf/xCon(ic).eidf;
                         % transform into X-scores image
                         %Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1),1);
-                        Z2(Z<=1) = norminv(0.5 + fcdf(Z(Z<=1),xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1)/2).^2;
-                        Z2(Z>1) = norminv(fcdf(Z(Z>1),xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1,'upper')/2).^2;
+                        try % check if the user do not have the fcdf function or one with 'upper' options
+                          Z2(Z>1) = norminv(fcdf(Z(Z>1),xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1,'upper')/2).^2; % more accurate to look this way for high score
+                          Z2(Z<=1) = norminv(0.5 - fcdf(Z(Z<=1),xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1)/2).^2;
+                        catch 
+                            Z2 = norminv(0.5 - spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1)/2).^2;
+                        end
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf));
                     end
