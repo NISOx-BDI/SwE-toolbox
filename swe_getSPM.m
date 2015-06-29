@@ -213,6 +213,11 @@ try
 catch
     error(['Cannot read ' fullfile(swd,'SwE.mat')]);
 end
+
+if isfield(SwE, 'WB')
+  error('No result display feature is currentely availabe for the Wild Bootstrap. The results are written into -log10(p-values) images (e.g., see lP_FWE+.img for FWE-corrected p-values) into the folder used for the analysis. You can display and threshold these images using SPM or an alternative software package.');
+end
+
 SwE.swd = swd;
 
 %-Change directory so that relative filenames are valid
