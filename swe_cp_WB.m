@@ -1022,9 +1022,11 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
                 (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
           end
           score = (edf-rankCon+1) ./ edf .* score;
-          
+          score(score < 0 ) = 0;
           % spm_Fcdf can be inaccurate in some case --> fcdf
-          p = fcdf(score, rankCon, edf - rankCon + 1,'upper');
+          p(score>0) = betainc((edf(score>0)-rankCon+1)./(edf(score>0)-rankCon+1+rankCon*score(score>0)),(edf(score>0)-rankCon+1)/2, rankCon/2);
+          p(score == 0) = 1;
+          
           activatedVoxels = [activatedVoxels, p <= WB.clusterInfo.primaryThreshold];
         end
         maxScore(1) = max(maxScore(1), max(score));
@@ -1463,9 +1465,10 @@ for b = 1:WB.nB
 
         end
         score = (edf-rankCon+1) ./ edf .* score;
+        score(score < 0 ) = 0;
+        p(score>0) = betainc((edf(score>0)-rankCon+1)./(edf(score>0)-rankCon+1+rankCon*score(score>0)),(edf(score>0)-rankCon+1)/2, rankCon/2);
+        p(score == 0) = 1;
 
-        % spm_Fcdf can be inaccurate in some case --> fcdf
-        p = fcdf(score, rankCon, edf - rankCon + 1,'upper');
         activatedVoxels(index) = p <= WB.clusterInfo.primaryThreshold;
       end
       uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;

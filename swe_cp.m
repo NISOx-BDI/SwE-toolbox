@@ -449,6 +449,7 @@ Vcov_beta = spm_create_vol(Vcov_beta);
 if dof_type == 1
     if isfield(SwE.type,'classic')
         nGr = nSubj;
+        uGr = uSubj;
     end
     Vcov_beta_g(1:nCov_beta*nGr) = deal(struct(...
         'fname',    [],...

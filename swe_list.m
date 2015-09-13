@@ -430,9 +430,17 @@ case 'table'                                                        %-Table
 %         else
             switch STATe
                 case 'Z'
+                  try
                     Pz      = normcdf(-U);
+                  catch
+                    Pz      = spm_Ncdf(-U);
+                  end
                 case 'X'
+                  try
                     Pz      = 1-chi2cdf(U,1);
+                  catch 
+                    Pz      = 1-spm_Xcdf(U,1);
+                  end
             end                           
             Pu      = [];
             Qu      = [];
@@ -478,7 +486,7 @@ case 'table'                                                        %-Table
 %                             Ze = spm_invNcdf(1 - Pz); 
 %                         end
 %                     else
-                        Pz     = normcdf(-Z(d));
+                        Pz     = spm_Ncdf(-Z(d));
                         Pu     = [];
                         Qu     = [];
                         Qp     = [];
