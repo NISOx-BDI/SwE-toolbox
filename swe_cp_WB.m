@@ -248,10 +248,10 @@ while 1
   for i = 1:nGr_dof
     tmp(i,:) = any(xX.X(iGr_dof==i,:));
   end
-  if nGr_dof==1 | all(sum(tmp)==1) %#ok<OR2>
+  if nGr_dof==1 | all(sum(tmp, 1)==1) %#ok<OR2>
     break % all is ok, just stop the while
   else
-    ind1 = find(sum(tmp)>1,1); % detect the first column in common
+    ind1 = find(sum(tmp, 1)>1,1); % detect the first column in common
     ind2 = find(tmp(:,ind1)==1); % detect the groups to be fused
     for ii = ind2'
       iGr_dof(iGr_dof==ii) = ind2(1); % fuse the groups
@@ -387,7 +387,7 @@ if isfield(SwE.type,'modified')
 
   for g = 1:nGr
     Wg{g} = kron(weightR(:,iGr_Cov_vis_g==g),weightR(:,iGr_Cov_vis_g==g)) * swe_duplication_matrix(nCov_vis_g(g));
-    Wg_testII{g} = sum(kron(swe_duplication_matrix(nSizeCon),swe_duplication_matrix(nSizeCon))) * Wg{g};
+    Wg_testII{g} = sum(kron(swe_duplication_matrix(nSizeCon),swe_duplication_matrix(nSizeCon)), 1) * Wg{g};
     Wg_testIII{g} = tmp(:)' * (kron(swe_duplication_matrix(nSizeCon),swe_duplication_matrix(nSizeCon))) * Wg{g};
   end
    
@@ -863,7 +863,7 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
       if isfield(SwE.type,'modified')
         Cov_vis=zeros(nCov_vis,CrS);
         for i = Ind_Cov_vis_diag
-          Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2);
+          Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2, 1);
         end
         
         % Check if some voxels have variance = 0 and mask them
@@ -879,11 +879,13 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
         end
         if CrS % Check if there is at least one voxel left
           for i = Ind_Cov_vis_off_diag
-            Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:)).*...
-              sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
-              Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
-              sum(res(Flagk(i,:),:).^2)./...
-              sum(res(Flagkk(i,:),:).^2));
+            if any(Flagk(i,:))
+              Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
+                sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
+                Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
+                sum(res(Flagk(i,:),:).^2, 1)./...
+                sum(res(Flagkk(i,:),:).^2, 1));
+            end
           end
           %NaN may be produced in cov. estimation when one correspondant
           %variance are = 0, so set them to 0
@@ -1010,7 +1012,7 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
               for g = 1:nGr 
               	CovcCovBc = CovcCovBc + Wg_testII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
               end
-              edf = 2 * (sum(swe_duplication_matrix(nSizeCon)) * cCovBc).^2 ./ CovcCovBc - 2;
+              edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
               
             case 3
               CovcCovBc = 0;
@@ -1018,7 +1020,7 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
               	CovcCovBc = CovcCovBc + Wg_testIII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
               end
               tmp = eye(nSizeCon);
-              edf = (sum(swe_duplication_matrix(nSizeCon)) * cCovBc.^2 +...
+              edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
                 (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
           end
           score = (edf-rankCon+1) ./ edf .* score;
@@ -1311,11 +1313,13 @@ for b = 1:WB.nB
             Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2);
         end
         for i = Ind_Cov_vis_off_diag
-            Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:)).*...
+          if any(Flagk(i,:))
+            Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
                 sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
                 Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
-                sum(res(Flagk(i,:),:).^2)./...
-                sum(res(Flagkk(i,:),:).^2));
+                sum(res(Flagk(i,:),:).^2, 1)./...
+                sum(res(Flagkk(i,:),:).^2, 1));
+          end
         end
         %NaN may be produced in cov. estimation when one correspondant
         %variance are = 0, so set them to 0
@@ -1452,7 +1456,7 @@ for b = 1:WB.nB
             for g = 1:nGr 
               CovcCovBc = CovcCovBc + Wg_testII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
             end
-            edf = 2 * (sum(swe_duplication_matrix(nSizeCon)) * cCovBc).^2 ./ CovcCovBc - 2;
+            edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
 
           case 3
             CovcCovBc = 0;
@@ -1460,7 +1464,7 @@ for b = 1:WB.nB
               CovcCovBc = CovcCovBc + Wg_testIII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
             end
             tmp = eye(nSizeCon);
-            edf = (sum(swe_duplication_matrix(nSizeCon)) * cCovBc.^2 +...
+            edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
               (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
 
         end

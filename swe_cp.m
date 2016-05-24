@@ -139,10 +139,10 @@ while 1
     for i = 1:nGr_dof
         tmp(i,:) = any(xX.X(iGr_dof==i,:));
     end
-    if nGr_dof==1 | all(sum(tmp)==1) %#ok<OR2>
+    if nGr_dof==1 | all(sum(tmp,1)==1) %#ok<OR2>
         break % all is ok, just stop the while
     else
-        ind1 = find(sum(tmp)>1,1); % detect the first column in common
+        ind1 = find(sum(tmp,1)>1,1); % detect the first column in common
         ind2 = find(tmp(:,ind1)==1); % detect the groups to be fused
         for ii = ind2'
             iGr_dof(iGr_dof==ii) = ind2(1); % fuse the groups 
@@ -303,6 +303,7 @@ if isfield(SwE.type,'modified')
                         end
                     end
                 end
+                dofMat{g}(isnan(dofMat{g})) = 0;
             end
             clear tmp mij mab
     end
@@ -663,7 +664,7 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
                 Cov_beta = 0;
                 Cov_vis=zeros(nCov_vis,CrS);
                 for i = Ind_Cov_vis_diag
-                    Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2);
+                    Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2, 1);
                 end
                 % Check if some voxels have variance = 0 and mask them 
                 tmp = ~any(Cov_vis(Ind_Cov_vis_diag,:)==0);
@@ -676,11 +677,13 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
                 end
                 if CrS % Check if there is at least one voxel left
                     for i = Ind_Cov_vis_off_diag
-                        Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:)).*...
+                      if any(Flagk(i,:))
+                        Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
                             sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
                             Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
-                            sum(res(Flagk(i,:),:).^2)./...
-                            sum(res(Flagkk(i,:),:).^2));
+                            sum(res(Flagk(i,:),:).^2, 1)./...
+                            sum(res(Flagkk(i,:),:).^2, 1));
+                      end
                     end
                     %NaN may be produced in cov. estimation when one correspondant
                     %variance are = 0, so set them to 0
