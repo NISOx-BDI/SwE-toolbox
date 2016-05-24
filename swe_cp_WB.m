@@ -940,7 +940,8 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
             case 2
               CovcCovBc = 0;
               for g = 1:nGr
-                CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
+                %CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
+                CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
               end
               edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
               clear CovcCovBc cCovBc
@@ -999,6 +1000,7 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
           score(iVox) = cBeta(:,iVox)' / cCovBc_vox * cBeta(:,iVox);
         end
         score = score / rankCon;
+        maxScore(1) = max(maxScore(1), max(score));
         % save cluster information is needed
         if (SwE.WB.clusterWise == 1)
           % need to convert score into parametric p-values
@@ -1024,15 +1026,17 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
               edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
                 (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
           end
-          score = (edf-rankCon+1) ./ edf .* score;
-          score(score < 0 ) = 0;
+          scoreTmp = (edf-rankCon+1) ./ edf .* score;
+          scoreTmp(scoreTmp < 0 ) = 0;
           % spm_Fcdf can be inaccurate in some case --> fcdf
-          p(score>0) = betainc((edf(score>0)-rankCon+1)./(edf(score>0)-rankCon+1+rankCon*score(score>0)),(edf(score>0)-rankCon+1)/2, rankCon/2);
-          p(score == 0) = 1;
-          
+          if dof_type == 0
+              p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);        
+          else
+            p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
+            p(scoreTmp == 0) = 1;
+          end
           activatedVoxels = [activatedVoxels, p <= WB.clusterInfo.primaryThreshold];
         end
-        maxScore(1) = max(maxScore(1), max(score));
       end
       
       %-Save betas etc. for current plane as we go along
@@ -1469,10 +1473,14 @@ for b = 1:WB.nB
               (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
 
         end
-        score = (edf-rankCon+1) ./ edf .* score;
-        score(score < 0 ) = 0;
-        p(score>0) = betainc((edf(score>0)-rankCon+1)./(edf(score>0)-rankCon+1+rankCon*score(score>0)),(edf(score>0)-rankCon+1)/2, rankCon/2);
-        p(score == 0) = 1;
+        scoreTmp = (edf-rankCon+1) ./ edf .* score;
+        scoreTmp(scoreTmp < 0 ) = 0;
+          if dof_type == 0
+              p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);        
+          else
+            p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
+            p(scoreTmp == 0) = 1;
+          end
 
         activatedVoxels(index) = p <= WB.clusterInfo.primaryThreshold;
       end
@@ -1611,7 +1619,7 @@ if WB.clusterWise == 1
   tmp2 = -log10(clusterFWERP);
   
   tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
-  for iC = 1:nCluster
+  for iC = 1:SwE.WB.clusterInfo.nCluster
     tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = tmp2(iC);
   end
   tmp(Q) = tmp3;
