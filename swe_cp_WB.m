@@ -1272,7 +1272,7 @@ for b = 1:WB.nB
     end
     %-Print progress information in command window
     %------------------------------------------------------------------
-    str = sprintf('Bootstap # %i  Block %i/%i', b, bch, nbch);
+    str = sprintf('Bootstrap # %i  Block %i/%i', b, bch, nbch);
 
     if  bch == 1
         str2 = '';
