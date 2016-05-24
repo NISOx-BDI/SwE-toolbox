@@ -436,6 +436,7 @@ if isfield(SwE.type,'modified')
               end
             end
           end
+          dofMat{g}(isnan(dofMat{g})) = 0;
         end
         clear tmp mij mab
     end
