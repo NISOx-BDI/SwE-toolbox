@@ -633,21 +633,25 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
         % matrix design either in a visit category or within-subject (BG - 27/05/2016)
         %------------------------------------------------------------------
         for g = 1:nGr_dof % first look data for each separable matrix design
-          for g2 = 1:nGr % then look data for each "homogeneous" group
-            % check if the data is contant over subject for each visit category
-            for k = 1:nVis_g(g2) 
-              Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps);
-              for kk = k:nVis_g(g2)
-                if k ~= kk
-                  % extract the list of subject with both visit k and kk
-                  subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
-                  % look if some difference are observed within subject
-                  if ~isempty(subjList)
-                    diffVis = Cm(Cm) == 0;
-                    for i = 1:length(subjList)
-                      diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
+          if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)     
+            for g2 = 1:nGr % then look data for each "homogeneous" group
+              % check if the data is contant over subject for each visit category
+              for k = 1:nVis_g(g2) 
+                if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
+                  Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
+                  for kk = k:nVis_g(g2)
+                    if k ~= kk
+                      % extract the list of subject with both visit k and kk
+                      subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
+                      % look if some difference are observed within subject
+                      if ~isempty(subjList)
+                        diffVis = Cm(Cm) == 0;
+                        for i = 1:length(subjList)
+                          diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
+                        end
+                        Cm(Cm) = diffVis;
+                      end
                     end
-                    Cm(Cm) = diffVis;
                   end
                 end
               end
