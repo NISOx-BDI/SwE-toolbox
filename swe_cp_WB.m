@@ -321,8 +321,8 @@ if isfield(SwE.type,'modified')
   % info specific for each group
   uVis_g = cell(1,nGr); % unique visits for each group
   nVis_g = zeros(1,nGr); % number of visits for each group
-  uSubj_g = cell(1,nGr); % unique visits for each group
-  nSubj_g = zeros(1,nGr); % number of visits for each group
+  uSubj_g = cell(1,nGr); % unique subjects for each group
+  nSubj_g = zeros(1,nGr); % number of subjects for each group
   for g = 1:nGr
     uVis_g{g}  = unique(iVis(iGr==uGr(g)));
     nVis_g(g)  = length(uVis_g{g});
@@ -790,14 +790,33 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
     end
     
     %-Mask out voxels where data is constant in at least one separable
-    % matrix design
+    % matrix design either in a visit category or within-subject (BG - 27/05/2016)
     %------------------------------------------------------------------
-    for g = 1:nGr_dof
-      Cm(Cm) = any(diff(Y(iGr_dof==g,Cm),1));
+    for g = 1:nGr_dof % first look data for each separable matrix design
+      for g2 = 1:nGr % then look data for each "homogeneous" group
+        % check if the data is contant over subject for each visit category
+        for k = 1:nVis_g(g2) 
+          Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps);
+          for kk = k:nVis_g(g2)
+            if k ~= kk
+              % extract the list of subject with both visit k and kk
+              subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
+              % look if some difference are observed within subject
+              if ~isempty(subjList)
+                diffVis = Cm(Cm) == 0;
+                for i = 1:length(subjList)
+                  diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
+                end
+                Cm(Cm) = diffVis;
+              end
+            end
+          end
+        end
+      end
     end
+    clear diffVis
     Y      = Y(:,Cm);                          %-Data within mask
     CrS    = sum(Cm);                          %-# current voxels
-    
     
     %==================================================================
     %-Proceed with General Linear Model (if there are voxels)
@@ -945,7 +964,6 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
               end
               edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
               clear CovcCovBc cCovBc
-              
               if WB.stat == 'T'
                 p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
                 p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
