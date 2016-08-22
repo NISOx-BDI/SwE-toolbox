@@ -483,7 +483,7 @@ case 'table'                                                        %-Table
 %                         if Pz < tol
 %                             Ze = Inf;
 %                         else
-%                             Ze = spm_invNcdf(1 - Pz); 
+%                             Ze = swe_invNcdf(1 - Pz); 
 %                         end
 %                     else
                         Pz     = spm_Ncdf(-Z(d));
@@ -492,7 +492,7 @@ case 'table'                                                        %-Table
                         Qp     = [];
                         Qu      = spm_P_FDR(Z(d),[1 1],STATe,n,QPs);    % voxel FDR-corrected
                         ws     = warning('off','SPM:outOfRangeNormal');
-                        Ze     = spm_invNcdf(Z(d));
+                        Ze     = swe_invNcdf(Z(d));
                         warning(ws);
 %                     end
                     D     = [D d];

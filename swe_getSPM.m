@@ -554,7 +554,7 @@ for i = 1:numel(Im)
         Mask = spm_get_data(xCon(Im(i)).Vspm,XYZ);
         switch xCon(Im(i)).STAT
             case 'T'
-                um   = spm_invNcdf(1-pm);
+                um   = swe_invNcdf(1-pm);
             case 'F'
                 um   = spm_invXcdf(1-pm,1);
         end        
@@ -654,7 +654,7 @@ if STAT ~= 'P'
                 thresDesc = ['p<' num2str(u) ' (unc.)'];
                 switch STAT
                     case 'T'
-                        u  = spm_invNcdf(1-u^(1/n));
+                        u  = swe_invNcdf(1-u^(1/n));
                     case 'F'
                         u  = spm_invXcdf(1-u^(1/n),1);
                 end
