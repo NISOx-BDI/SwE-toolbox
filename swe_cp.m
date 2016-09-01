@@ -89,7 +89,9 @@ nSubj         = length(uSubj);
 
 %-residual correction
 %
-switch SwE.SS   
+switch SwE.SS
+    case 0
+        corr = ones(nScan,1);
     case 1
         corr  = sqrt(nScan/(nScan-nBeta)); % residual correction (type 1) 
     case 2
@@ -634,22 +636,25 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
         %------------------------------------------------------------------
         for g = 1:nGr_dof % first look data for each separable matrix design
           if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)     
-            for g2 = 1:nGr % then look data for each "homogeneous" group
-              % check if the data is contant over subject for each visit category
-              for k = 1:nVis_g(g2) 
-                if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
-                  Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
-                  for kk = k:nVis_g(g2)
-                    if k ~= kk
-                      % extract the list of subject with both visit k and kk
-                      subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
-                      % look if some difference are observed within subject
-                      if ~isempty(subjList)
-                        diffVis = Cm(Cm) == 0;
-                        for i = 1:length(subjList)
-                          diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
+            Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1); % mask constant data within separable matrix design g (added by BG on 29/08/16)
+            if isfield(SwE.type,'modified') % added by BG on 29/08/16
+              for g2 = 1:nGr % then look data for each "homogeneous" group
+                % check if the data is contant over subject for each visit category
+                for k = 1:nVis_g(g2) 
+                  if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
+                    Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
+                    for kk = k:nVis_g(g2)
+                      if k ~= kk
+                        % extract the list of subject with both visit k and kk
+                        subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
+                        % look if some difference are observed within subject
+                        if ~isempty(subjList)
+                          diffVis = Cm(Cm) == 0;
+                          for i = 1:length(subjList)
+                            diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
+                          end
+                          Cm(Cm) = diffVis;
                         end
-                        Cm(Cm) = diffVis;
                       end
                     end
                   end
@@ -695,8 +700,8 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
                 for i = Ind_Cov_vis_diag
                     Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2, 1);
                 end
-                % Check if some voxels have variance = 0 and mask them 
-                tmp = ~any(Cov_vis(Ind_Cov_vis_diag,:)==0);
+                % Check if some voxels have variance < eps and mask them 
+                tmp = ~any(Cov_vis(Ind_Cov_vis_diag,:) < eps); % modified by BG on 29/08/16
                 if ~tmp
                     beta    = beta(tmp);
                     res     = res(tmp);
@@ -732,7 +737,7 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
                         end
                     end
                 end
-            else
+            else % else for "if isfield(SwE.type,'modified')"
                 if dof_type == 1 %need to save all subject contributions...
                     Cov_beta_i =  NaN(nSubj,nCov_beta,CrS);
                 end
