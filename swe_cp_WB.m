@@ -1261,7 +1261,8 @@ end
 % Produce the random value following the Rademacher distribution
 resamplingMatrix = NaN(nScan,WB.nB);
 for iS = 1:nSubj
-    resamplingMatrix(iSubj == uSubj(iS),:) = repmat(binornd(1, 0.5, 1, WB.nB), sum(iSubj == uSubj(iS)), 1);
+%     resamplingMatrix(iSubj == uSubj(iS),:) = repmat(binornd(1, 0.5, 1, WB.nB), sum(iSubj == uSubj(iS)), 1);
+  resamplingMatrix(iSubj == uSubj(iS),:) = repmat(randi([0 1], 1, WB.nB), sum(iSubj == uSubj(iS)), 1);  % BG (08/11/2016): using randi instead of binornd (which is from the stats toolbox)
 end
 resamplingMatrix(resamplingMatrix == 0) = -1;
 
