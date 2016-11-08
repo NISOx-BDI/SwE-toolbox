@@ -958,8 +958,12 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
           switch dof_type
             case 0
               if WB.stat == 'T'
-                p(score > 0)  = spm_Tcdf(-score(score>0), edf);
-                p(score <= 0) = spm_Tcdf(score(score<=0), edf);
+                if any(score > 0)
+                  p(score > 0)  = spm_Tcdf(-score(score>0), edf);
+                end
+                if any(score <= 0)
+                  p(score <= 0) = spm_Tcdf(score(score<=0), edf);
+                end
               else
                 p = 2 * spm_Tcdf(-abs(score), edf);
               end
@@ -975,8 +979,12 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
               edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
               clear CovcCovBc cCovBc
               if WB.stat == 'T'
-                p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-                p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
+                if any(score > 0)
+                  p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
+                end
+                if any(score <= 0)
+                  p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
+                end
               else
                 p = 2 * spm_Tcdf(-abs(score), edf);
               end
