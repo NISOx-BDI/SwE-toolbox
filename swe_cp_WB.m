@@ -1649,10 +1649,12 @@ if WB.clusterWise == 1
   tmp= nan(SwE.xVol.DIM');
   
   clusterFWERP = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
-  for b = 1:WB.nB
-    clusterFWERP = clusterFWERP + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize) * 1;
+  if (~isempty(SwE.WB.clusterInfo.clusterSize))
+    for b = 1:WB.nB
+      clusterFWERP = clusterFWERP + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize) * 1;
+    end
+    clusterFWERP = clusterFWERP / (WB.nB + 1);
   end
-  clusterFWERP = clusterFWERP / (WB.nB + 1);
   tmp2 = -log10(clusterFWERP);
   
   tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
@@ -1667,10 +1669,12 @@ if WB.clusterWise == 1
     tmp= nan(SwE.xVol.DIM');
     
     clusterFWERPNeg = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
-    for b = 1:WB.nB
-      clusterFWERPNeg = clusterFWERPNeg + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg) * 1;
+    if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
+      for b = 1:WB.nB
+        clusterFWERPNeg = clusterFWERPNeg + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg) * 1;
+      end
+      clusterFWERPNeg = clusterFWERPNeg / (WB.nB + 1);
     end
-    clusterFWERPNeg = clusterFWERPNeg / (WB.nB + 1);
     tmp2 = -log10(clusterFWERPNeg);
     
     tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg, 2));
