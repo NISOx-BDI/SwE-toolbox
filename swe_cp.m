@@ -386,7 +386,7 @@ end
 
 M        = VY(1).mat;
 DIM      = VY(1).dim(1:3)';
-VOX      = sqrt(diag(M(1:3, 1:3)'*M(1:3, 1:3)))';
+% VOX      = sqrt(diag(M(1:3, 1:3)'*M(1:3, 1:3)))'; (commented by BG on 08/11/2016)
 xdim     = DIM(1); ydim = DIM(2); zdim = DIM(3);
 %vFWHM    = SwE.vFWHM; to be added later (for the variance smoothing)
 
@@ -395,8 +395,8 @@ YNaNrep = VY(1).dt(2);
 
 %-Maximum number of residual images for smoothness estimation
 %--------------------------------------------------------------------------
-MAXRES   = Inf; 
-nSres    = nScan;
+% MAXRES   = Inf; (commented by BG on 08/11/2016)
+% nSres    = nScan; (commented by BG on 08/11/2016)
 
 fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done');               %-#
 
@@ -539,7 +539,7 @@ blksz  = blksz * nbz;
 [xords, yords] = ndgrid(1:xdim, 1:ydim);
 xords = xords(:)'; yords = yords(:)';           % plane X,Y coordinates
 S     = 0;                                      % Volume (voxels)
-i_res = round(linspace(1,nScan,nSres))';        % Indices for residual
+% i_res = round(linspace(1,nScan,nSres))';        % Indices for residual (commented by BG on 08/11/2016)
  
 %-Initialise XYZ matrix of in-mask voxel co-ordinates (real space)
 %--------------------------------------------------------------------------
@@ -557,7 +557,7 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
     CrPl         = z:min(z+nbz-1,zdim);       %-plane list
     zords        = CrPl(:)*ones(1,xdim*ydim); %-plane Z coordinates
     CrBl         = [];                        %-parameter estimates
-    CrResI       = [];                        %-residuals
+%     CrResI       = [];                        %-residuals (commented by BG on 08/11/2016)
     Q            = [];                        %-in mask indices for this plane
     if isfield(SwE.type,'modified')
         CrCov_vis    = []; 
@@ -702,12 +702,12 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
                 end
                 % Check if some voxels have variance < eps and mask them 
                 tmp = ~any(Cov_vis(Ind_Cov_vis_diag,:) < eps); % modified by BG on 29/08/16
-                if ~tmp
-                    beta    = beta(tmp);
-                    res     = res(tmp);
+                if any(~tmp)
+                    beta    = beta(:,tmp);
+                    res     = res(:,tmp);
                     Cm(Cm)  = tmp;
                     CrS     = sum(Cm);
-                    Cov_vis = Cov_vis(tmp);
+                    Cov_vis = Cov_vis(:,tmp);
                 end
                 if CrS % Check if there is at least one voxel left
                     for i = Ind_Cov_vis_off_diag
@@ -755,7 +755,7 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
             %-Save betas etc. for current plane as we go along
             %----------------------------------------------------------
             CrBl          = [CrBl,    beta]; %#ok<AGROW>
-            CrResI        = [CrResI,  res(i_res,:)]; %#ok<AGROW>
+%             CrResI        = [CrResI,  res(i_res,:)]; %#ok<AGROW> (commented by BG on 08/11/2016)
             if isfield(SwE.type,'modified') 
                 CrCov_vis     = [CrCov_vis,  Cov_vis]; %#ok<AGROW>
             else

@@ -898,14 +898,14 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
         
         % Check if some voxels have variance < eps and mask them
         tmp = ~any(Cov_vis(Ind_Cov_vis_diag,:) < eps); % modified by BG on 29/08/16
-        if ~tmp
-          beta    = beta(tmp);
-          resWB   = resWB(tmp);
-          res     = res(tmp);
-          YR      = YR(tmp);
+        if any(~tmp)
+          beta    = beta(:,tmp);
+          resWB   = resWB(:,tmp);
+          res     = res(:,tmp);
+          YR      = YR(:,tmp);
           Cm(Cm)  = tmp;
           CrS     = sum(Cm);
-          Cov_vis = Cov_vis(tmp);
+          Cov_vis = Cov_vis(:,tmp);
         end
         if CrS % Check if there is at least one voxel left
           for i = Ind_Cov_vis_off_diag
