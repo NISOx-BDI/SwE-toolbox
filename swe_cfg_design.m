@@ -23,8 +23,10 @@ scans         = cfg_files;
 scans.tag     = 'scans';
 scans.name    = 'Scans';
 scans.help    = {' '
-    'Select the images.  They must all have the same image dimensions, orientation, voxel size etc.'};
-scans.filter = 'image';
+    'Select the images (".img" or ".nii") or a single ".mat" object containing the matrix of data with the subjects in rows.'
+    'The images must all have the same image dimensions, orientation, voxel size etc.'
+    ' '};
+scans.filter = {'image', 'mat'};
 scans.ufilter = '.*';
 scans.num     = [1 Inf];
 
@@ -242,7 +244,6 @@ im.help    = {
               'For image data-types without a representation of NaN, zero is the mask value, and the user can choose whether zero voxels should be masked out or not.'
               ''
               'By default, an implicit mask is used. '
-              ''
 }';
 im.labels = {
              'Yes'
@@ -264,8 +265,10 @@ em.help    = {
               ''
               'Explicit mask images can have any orientation and voxel/image size. Nearest neighbour interpolation of a mask image is used if the voxel centers of the input images do not coincide with that of the mask image.'
               ''
+              'Note that, when the data is specified as a matrix save as a ".mat" file, the mask is expected to be specified as a mask vector saved as a ".mat" file.'
+
 }';
-em.filter = 'image';
+em.filter = {'image', 'mat'};
 em.ufilter = '.*';
 em.num     = [0 1];
 
@@ -323,7 +326,7 @@ dof_cl.help    = {  ' '
                 '             This choice tends to overestimate the degrees of freedom, but reduce the quantity of images saved and the computation time.'
                 'approx I: degrees of freedom estimation with the estimate proposed in Guillaume et al. (2014).'
                 '             This choice is not recommended for the classic SwE as, with this SwE version, it generally underestimate  the degrees of freedom in small samples and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
-                'approx II: degrees of freedom estimation with the estimate proposed in Guillaume (in preparation).'
+                'approx II: degrees of freedom estimation with the estimate proposed in Guillaume (2015).'
                 '             This choice is not recommended for the classic SwE as, with this SwE version, it generally overestimate the degrees of freedom in small samples and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
                 'Note that "approx II" is not yet implemented for the classic SwE. It seems that to get accurate inferences with the classic SwE in small samples, it is preferable to consider a non-parametric analysis with the Wild Bootstrap.'
                 ' '
@@ -341,12 +344,12 @@ dof_mo.help    = {  ' '
                 'naive: naive estimation of the degrees of freedom by the total number of subjects belonging to the insparable sub-design matrices involved in the contrast tested minus the number of non-zero pure between covariates present in these insparable sub-design matrices.'
                 '             This choice tends to overestimate the degrees of freedom in some designs, but reduce the quantity of images saved and the computation time.'
                 'approx I: degrees of freedom estimation with the estimate proposed in Guillaume et al. (2014).'
-                '             This estimate assumes no missing data and does not correct for the presence of a small sample bias and a missng data bias.'
+                '             This estimate assumes no missing data and does not correct for the presence of a small sample bias and a missing data bias.'
                 '             Simulations seems to show that the estimate approx II and approx III are better choices (see below).' 
-                'approx II: degrees of freedom estimation with an alternative estimate proposed in Guillaume (in preparation).'
+                'approx II: degrees of freedom estimation with an alternative estimate proposed in Guillaume (2015).'
                 '             The estimate accounts partially for the presence of missing data and for a small-sample bias, but does not account for a missing data bias.'
                 '             Simulations seems to indicate that it performs better than approx I, but should be used only under no missing data'
-                'approx III: degrees of freedom estimation with an alternative estimate proposed in Guillaume (in preparation).'
+                'approx III: degrees of freedom estimation with an alternative estimate proposed in Guillaume (2015).'
                 '             The estimate accounts for the presence of missing data (the missing data bias included), but not for the small-sample bias.'
                 '             Simulations seems to indicate that it systematically performs better than approx II under missing data, but seems slightly less performant (slightly conservative) than approx II under no missing data.'
                 '             That is the recommended choice by default. Nevertheless, if there is no missing data, approx II could be selected instead.'
@@ -551,7 +554,7 @@ WB_type.help    = {''
   ''
   'R-WB: restrited WB which based the resampling on the restricted model (imposing the null hypothesis)'
   ''
-  'Monte Carlo simulations indicates that the R-WB generally outperforms the U-WB and, therefore, it seems preferebale to always use this WB version. The U-WB option is currently available, but nothing indicates that it should be used and thus might be removed later.'
+  'Monte Carlo simulations (see Guillaume, 2015) indicates that the R-WB generally outperforms the U-WB and, therefore, it seems preferebale to always use this WB version. The U-WB option is currently available, but nothing indicates that it should be used and thus might be removed later.'
   ''
   };
 % ---------------------------------------------------------------------
@@ -568,7 +571,7 @@ WB_SwE.help    = {''
   ''
   'R-SwE: restrited SwE which is obtained using the residuals of the restricted model (imposing the null hypothesis)'
   ''
-  'The R-SwE is sometimes considered in the Wild Bootstrap literature. However, in our Monte Carlo simulations, no appreciable differences have been observed between this two versions when they are used with the R-WB, indicating that they could be both considered in practice. Nevertheless, it is clear that the R-SwE is generally a biased estimator of the true covariance matrix of the parameters, making it a "not-so-good" candidate for a "standard" parametric SwE analysis. The latter observation may be an argument in favour of the U-SwE, particularly for cluster analysis where a primary cluster threshold need to be defined.'
+  'The R-SwE is sometimes considered in the Wild Bootstrap literature. However, in our Monte Carlo simulations (see Guillaume, 2015), no appreciable differences have been observed between this two versions when they are used with the R-WB, indicating that they could be both considered in practice. Nevertheless, it is clear that the R-SwE is generally a biased estimator of the true covariance matrix of the parameters, making it a "not-so-good" candidate for a "standard" parametric SwE analysis. The latter observation may be an argument in favour of the U-SwE, particularly for cluster analysis where a primary cluster threshold need to be defined.'
   ''
   };
 % ---------------------------------------------------------------------
@@ -727,7 +730,7 @@ WB_yes.tag     = 'WB_yes';
 WB_yes.name    = 'Yes';
 WB_yes.val     = {WB_type WB_ss WB_nB WB_SwE WB_stat WB_cluster};
 WB_yes.help    = {''
-                     'A non-parametric Wild Bootstrap procedure is considered to analyse the data'
+                     'A non-parametric Wild Bootstrap procedure is considered to analyse the data (see Guillaume, 2015)'
 }';
 
 % ---------------------------------------------------------------------
@@ -737,7 +740,7 @@ WB         = cfg_choice;
 WB.tag     = 'WB';
 WB.name    = 'Non-parametric Wild Bootstrap';
 WB.help    = {''
-              'Yes: a non-parametric Wild Bootstrap procedure is considered to analyse the data'
+              'Yes: a non-parametric Wild Bootstrap procedure is considered to analyse the data (see Guillaume, 2015)'
               ''
               'No: only a "standard" parametric SwE analysis is considered (default)'
 }';

@@ -131,7 +131,12 @@ factor = [];
 DesName = 'SwE';
 
 P = job.scans;
-n = length(P);
+
+n = length(job.subjects);
+% check length of variables
+if ~(length(P) == 1 || length(P) == n)
+    error('The number of scans and the length of the subject indicator variable does not match.')
+end
 I = (1:n)';
 I = [I,ones(n,3)];
 
@@ -150,15 +155,20 @@ Subj.nSubj = length(unique(Subj.iSubj));  %number of subjects
 
 switch char(fieldnames(job.type))
 
-    case 'modified',
+    case 'modified'
      
         Vis.iVis = job.type.modified.visits;
         Vis.nVis = length(unique(Vis.iVis));
         Gr.iGr   = job.type.modified.groups;
         Gr.nGr   = length(unique(Gr.iGr));
         SS       = job.type.modified.ss;
-        
-    case 'classic',
+        if length(Vis.iVis) ~= n
+            error('The lengths of the subject and visit indicator variables do not match.')
+        end
+        if length(Gr.iGr) ~= n
+            error('The lengths of the subject and group indicator variables do not match.')
+        end
+    case 'classic'
 
         Vis =[];
         Gr =[];
@@ -179,7 +189,7 @@ xC = [];                         %-Struct array to hold raw covariates
 
 % Covariate options:
 nc=length(job.cov); % number of covariates
-for i=1:nc,
+for i=1:nc
 
     c      = job.cov(i).c;
     cname  = job.cov(i).cname;
@@ -254,8 +264,13 @@ clear c tI tConst tFnames
 
 fprintf('%-40s: ','Mapping files')    
 P = job.scans;
-VY = spm_vol(char(P));
-
+[~,~,file_ext] = fileparts(P{1});
+isMat = strcmpi(file_ext,'.mat');
+if isMat
+    VY = {};
+else
+    VY = spm_vol(char(P));
+end
 %-Check compatibility of images
 %--------------------------------------------------------------------------
 spm_check_orientations(VY);
@@ -438,8 +453,10 @@ end
 
 %-Apply gSF to memory-mapped scalefactors to implement scaling
 %--------------------------------------------------------------------------
-for i = 1:nScan
-    VY(i).pinfo(1:2,:) = VY(i).pinfo(1:2,:)*gSF(i); % FIXME % for meshes
+if ~strcmpi(file_ext,'.mat')
+    for i = 1:nScan
+        VY(i).pinfo(1:2,:) = VY(i).pinfo(1:2,:)*gSF(i); % FIXME % for meshes
+    end
 end
 
 %-Global centering (for AnCova GloNorm)                                (GC)
@@ -562,10 +579,14 @@ end
 %-Implicit masking: Ignore zero voxels in low data-types?
 %--------------------------------------------------------------------------
 % (Implicit mask is NaN in higher data-types.)
-type = getfield(spm_vol(P{1,1}),'dt')*[1,0]';
+if strcmpi(file_ext,'.mat')
+    type = 16; % assume that there is a nan representation
+else
+    type = getfield(spm_vol(P{1,1}),'dt')*[1,0]';
+end
 if ~spm_type(type,'nanrep')
     M_I = job.masking.im;  % Implicit mask ?
-    if M_I,
+    if M_I
         xsM.Implicit_masking = 'Yes: zero''s treated as missing';
     else
         xsM.Implicit_masking = 'No';
@@ -580,7 +601,15 @@ if isempty(job.masking.em{:})
     VM = [];
     xsM.Explicit_masking = 'No';
 else
-    VM = spm_vol(char(job.masking.em));
+    if isMat
+        VM = job.masking.em;
+        [~,~,file_ext_mask] = fileparts(VM{1});
+        if ~strcmpi(file_ext_mask,'.mat')
+            error('The explicit mask is not in ".mat" format as expected.')
+        end
+    else
+        VM = spm_vol(char(job.masking.em));
+    end
     xsM.Explicit_masking = 'Yes';
 end
 
@@ -701,8 +730,12 @@ out.swemat{1} = fullfile(pwd, 'SwE.mat');
 %-Display Design report
 %==========================================================================
 if ~spm('CmdLine')
-    fprintf('%-40s: ','Design reporting')                               %-#
-    fname     = cat(1,{SwE.xY.VY.fname}');
+    fprintf('%-40s: ','Design reporting') 
+    if strcmpi(file_ext,'.mat')
+        fname = cellstr(repmat('  ', nScan, 1));
+    else
+    	fname = cat(1,{SwE.xY.VY.fname}');
+    end
     spm_DesRep('DesMtx',SwE.xX,fname,SwE.xsDes)
     fprintf('%30s\n','...done')                                         %-#
 end

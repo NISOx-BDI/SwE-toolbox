@@ -236,13 +236,21 @@ catch
     
 end
 
+% check format of data
+[~,~,file_ext] = fileparts(SwE.xY.P{1});
+isMat          = strcmpi(file_ext,'.mat');
+
 xX   = SwE.xX;                      %-Design definition structure
 XYZ  = SwE.xVol.XYZ;                %-XYZ coordinates
 S    = SwE.xVol.S;                  %-search Volume {voxels}
 % R    = SwE.xVol.R;                  %-search Volume {resels}
-M    = SwE.xVol.M(1:3,1:3);         %-voxels to mm matrix
-VOX  = sqrt(diag(M'*M))';           %-voxel dimensions
-
+if isMat
+  M = SwE.xVol.M;
+  VOX = [];
+else
+  M    = SwE.xVol.M(1:3,1:3);         %-voxels to mm matrix
+  VOX  = sqrt(diag(M'*M))';           %-voxel dimensions
+end
 % check the data and other files have valid filenames
 %--------------------------------------------------------------------------
 %something here occurs and the paths to spm and swe toolboxes disappear????
@@ -419,7 +427,11 @@ elseif Mask == 2
     try
         Im = xSwE.Im;
     catch
+      if isMat
+        Im = cellstr(spm_select([1 Inf],'mat','Select mask image(s)'));
+      else
         Im = cellstr(spm_select([1 Inf],'image','Select mask image(s)'));
+      end
     end
     
     %-Inclusive or exclusive masking
@@ -536,7 +548,13 @@ fprintf('\t%-32s: %30s','SPM computation','...initialising')            %-#
 %--------------------------------------------------------------------------
 Z     = Inf;
 for i = Ic
+  if isMat
+    load(xCon(i).Vspm);
+    Z = min(Z,equivalentScore);
+    clear equivalentScore
+  else
     Z = min(Z,spm_get_data(xCon(i).Vspm,XYZ));
+  end
 end
 
 
@@ -551,25 +569,37 @@ for i = 1:numel(Im)
     
     fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...masking')           %-#
     if isnumeric(Im)
+      if isMat
+        load(xCon(Im(i)).Vspm);
+        Mask = equivalentScore;
+        clear equivalentScore
+      else
         Mask = spm_get_data(xCon(Im(i)).Vspm,XYZ);
-        switch xCon(Im(i)).STAT
-            case 'T'
-                um   = swe_invNcdf(1-pm);
-            case 'F'
-                um   = spm_invXcdf(1-pm,1);
-        end        
-        if Ex
-            Q = Mask <= um;
-        else
-            Q = Mask >  um;
-        end
+      end
+      switch xCon(Im(i)).STAT
+        case 'T'
+          um   = swe_invNcdf(1-pm);
+        case 'F'
+          um   = spm_invXcdf(1-pm,1);
+      end
+      if Ex
+        Q = Mask <= um;
+      else
+        Q = Mask >  um;
+      end
     else
+      if isMat
+        Mask = importdata(Im{i});
+      else
         v = spm_vol(Im{i});
         Mask = spm_get_data(v,v.mat\SwE.xVol.M*[XYZ; ones(1,size(XYZ,2))]);
-        Q = Mask ~= 0 & ~isnan(Mask);
-        if Ex, Q = ~Q; end
+      end
+      Q = Mask ~= 0 & ~isnan(Mask);
+      if Ex, Q = ~Q; end
     end
-    XYZ   = XYZ(:,Q);
+    if ~isMat
+      XYZ   = XYZ(:,Q);
+    end
     Z     = Z(Q);
     if isempty(Q)
         fprintf('\n')                                                   %-#
@@ -719,7 +749,9 @@ Q      = find(Z > u);
 %-Apply height threshold
 %--------------------------------------------------------------------------
 Z      = Z(:,Q);
-XYZ    = XYZ(:,Q);
+if ~isMat
+  XYZ    = XYZ(:,Q);
+end
 if isempty(Q)
     fprintf('\n');                                                      %-#
     warning('SwE:NoVoxels','No voxels survive masking at p=%4.2f',pm);
@@ -773,6 +805,11 @@ spm('Pointer','Arrow')
 
 %-Assemble output structures of unfiltered data
 %==========================================================================
+if isMat
+  XYZmm = [];
+else
+  XYZmm = SwE.xVol.M(1:3,:)*[XYZ; ones(1,size(XYZ,2))]
+end
 xSwE   = struct( ...
             'swd',      swd,...
             'title',    titlestr,...
@@ -788,7 +825,7 @@ xSwE   = struct( ...
             'u',        u,...
             'k',        k,...
             'XYZ',      XYZ,...
-            'XYZmm',    SwE.xVol.M(1:3,:)*[XYZ; ones(1,size(XYZ,2))],...
+            'XYZmm',    XYZmm,...
             'S',        SwE.xVol.S,...
             'M',        SwE.xVol.M,...
             'iM',       SwE.xVol.iM,...

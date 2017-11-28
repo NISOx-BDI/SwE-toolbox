@@ -34,6 +34,11 @@ if nargin < 2
     Ic   = 1:length(xCon);
 end
 
+%-Check data format
+%--------------------------------------------------------------------------
+[~,~,file_ext] = fileparts(SwE.xY.P{1});
+isMat          = strcmpi(file_ext,'.mat');
+
 %-Map parameter files
 %--------------------------------------------------------------------------
     
@@ -62,8 +67,10 @@ for i = 1:length(Ic)
     %-Write contrast images?
     %======================================================================
     if isempty(xCon(ic).Vspm)
-        Q = cumprod([1,SwE.xVol.DIM(1:2)'])*XYZ - ...
+        if ~isMat
+          Q = cumprod([1,SwE.xVol.DIM(1:2)'])*XYZ - ...
             sum(cumprod(SwE.xVol.DIM(1:2)'));
+        end
         Co=xCon(ic).c;
         nBeta = size(Co,1);
         nSizeCon = size(Co,2);
@@ -75,7 +82,13 @@ for i = 1:length(Ic)
             ind = find(any(Co'~=0));
         end
         nCov_beta = (nBeta+1)*nBeta/2;
-
+  
+        % if ".mat" format, load data now
+        if isMat
+          beta = importdata(Vbeta);
+          S = size(beta,2);
+        end
+        
         % if the Co is a vector, then create Co * Beta (Vcon)
         if nSizeCon==1
             %-Compute contrast
@@ -85,32 +98,43 @@ for i = 1:length(Ic)
             str   = 'contrast computation';
             spm_progress_bar('Init',100,str,'');            
             V      = Vbeta(ind);
-            cB     = zeros(1,S);
+            cBeta     = zeros(1,S);
             for j=1:numel(V)
-                cB = cB + Co(ind(j)) * spm_get_data(V(j),XYZ);
+              if isMat
+               	cBeta = cBeta + Co(ind(j)) * beta(ind(j),:);               
+              else
+                cBeta = cBeta + Co(ind(j)) * spm_get_data(V(j),XYZ);
+              end
                 spm_progress_bar('Set',100*(j/numel(V)));
             end
-            spm_progress_bar('Clear')            
-            %-Prepare handle for contrast image
-            %------------------------------------------------------
-            xCon(ic).Vcon = struct(...
+            spm_progress_bar('Clear')
+            
+            if isMat
+              %-save contrasted beta
+              %------------------------------------------------------
+              xCon(ic).Vcon = sprintf('con_%04d.mat',ic);
+              save(xCon(ic).Vcon, 'cBeta')
+            else
+              %-Prepare handle for contrast image
+              %------------------------------------------------------
+              xCon(ic).Vcon = struct(...
                 'fname',  sprintf('con_%04d.img',ic),...
                 'dim',    SwE.xVol.DIM',...
                 'dt',     [spm_type('float32') spm_platform('bigend')],...
                 'mat',    SwE.xVol.M,...
                 'pinfo',  [1,0,0]',...
                 'descrip',sprintf('SwE contrast - %d: %s',ic,xCon(ic).name));
-            
-            %-Write image
-            %------------------------------------------------------
-            tmp = NaN(SwE.xVol.DIM');
-            tmp(Q) = cB;            
-            xCon(ic).Vcon = spm_write_vol(xCon(ic).Vcon,tmp);
-                    
-            clear tmp
-            fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
-                        '...written %s',spm_file(xCon(ic).Vcon.fname,'filename')))%-#
-
+              
+              %-Write image
+              %------------------------------------------------------
+              tmp = NaN(SwE.xVol.DIM');
+              tmp(Q) = cBeta;
+              xCon(ic).Vcon = spm_write_vol(xCon(ic).Vcon,tmp);
+              
+              clear tmp
+              fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+                '...written %s',spm_file(xCon(ic).Vcon.fname,'filename')))%-#
+            end
         else
             %-Compute contrast
             %------------------------------------------------------
@@ -119,15 +143,22 @@ for i = 1:length(Ic)
             str   = 'contrast computation';
             spm_progress_bar('Init',100,str,'');
             V      = Vbeta(ind);
-            cB     = zeros(nSizeCon,S);
+            cBeta     = zeros(nSizeCon,S);
             for j=1:numel(V)
-                cB = cB + Co(ind(j),:)' * spm_get_data(V(j),XYZ);
+              if isMat
+               	cBeta = cBeta + Co(ind(j),:)' * beta(ind(j),:);               
+              else
+                cBeta = cBeta + Co(ind(j),:)' * spm_get_data(V(j),XYZ);
+              end
                 spm_progress_bar('Set',100*(j/numel(V)));
-            end 
+            end
             spm_progress_bar('Clear')
+        end     
+        
+        % clear beta for memory
+        if isMat
+          clear beta
         end
-        
-        
         %-Write inference SwE
         %======================================================================
         
@@ -146,6 +177,15 @@ for i = 1:length(Ic)
             xCon(ic).edf = sum(SwE.dof.nSubj_dof(unique(SwE.dof.iBeta_dof(ind))) - ...
             SwE.dof.pB_dof(unique(SwE.dof.iBeta_dof(ind)))); 
         end
+        
+        % load .mat file(s) if this is the format
+        if isMat
+          cov_beta = importdata(Vcov_beta);
+          if dof_type == 1
+            cov_beta_g = importdata(Vcov_beta_g);
+          end
+        end
+        
         for j = 1:nBeta
             for jj = j:nBeta
                 it = it + 1;
@@ -156,13 +196,22 @@ for i = 1:length(Ic)
                         weight = weight + weight';
                     end
                     weight = weight(tril(ones(nSizeCon))==1);
-                    cCovBc = cCovBc + weight * spm_get_data(Vcov_beta(it),XYZ);
+                    if isMat
+                      cCovBc = cCovBc + weight * cov_beta(it,:);                     
+                    else
+                      cCovBc = cCovBc + weight * spm_get_data(Vcov_beta(it),XYZ);
+                    end
                     if dof_type == 1
-                        for g = 1:SwE.Gr.nGr                            
-                            cCovBc_g(:,:,g) = cCovBc_g(:,:,g) + weight *...
-                                spm_get_data(Vcov_beta_g((g-1)*nCov_beta+it),XYZ);
-                            spm_progress_bar('Set',100*((it2-1+g/SwE.Gr.nGr)/length(ind)/(length(ind)+1)*2));
+                      for g = 1:SwE.Gr.nGr
+                        if isMat
+                          cCovBc_g(:,:,g) = cCovBc_g(:,:,g) + weight *...
+                            cov_beta_g(g,it,:);
+                        else
+                          cCovBc_g(:,:,g) = cCovBc_g(:,:,g) + weight *...
+                            spm_get_data(Vcov_beta_g((g-1)*nCov_beta+it),XYZ);
                         end
+                        spm_progress_bar('Set',100*((it2-1+g/SwE.Gr.nGr)/length(ind)/(length(ind)+1)*2));
+                      end
                     end
                     spm_progress_bar('Set',100*(it2/length(ind)/(length(ind)+1)*2));
                 end
@@ -172,12 +221,12 @@ for i = 1:length(Ic)
 
         str   = 'spm computation';
         spm_progress_bar('Init',100,str,'');
-        Z2 = zeros(1,S);
+        equivalentScore = zeros(1,S);
         switch(xCon(ic).STAT)
             case 'T'                                 %-Compute spm{t} image
                 %----------------------------------------------------------
                 eSTAT = 'Z';
-                Z = cB ./ sqrt(cCovBc);
+                score = cBeta ./ sqrt(cCovBc);
                 spm_progress_bar('Set',100*(0.1));
                 switch dof_type 
                     case 1
@@ -190,62 +239,76 @@ for i = 1:length(Ic)
                         edf = cCovBc.^2 ./ tmp;
                         spm_progress_bar('Set',100*(0.2));
                         % transform into Z-scores image
-                        if any(Z>0) % avoid to run the following line when all Z are < 0 (BG - 22/08/2016)
-                          Z2(Z>0) = -swe_invNcdf(spm_Tcdf(-Z(Z>0),edf(Z>0))); 
+                        if any(score>0) % avoid to run the following line when all Z are < 0 (BG - 22/08/2016)
+                          equivalentScore(score>0) = -swe_invNcdf(spm_Tcdf(-score(score>0),edf(score>0))); 
                         end
-                        if any(Z<0) % avoid to run the following line when all Z are > 0(BG - 22/08/2016)
-                         Z2(Z<0) = swe_invNcdf(spm_Tcdf(Z(Z<0),edf(Z<0))); 
+                        if any(score<0) % avoid to run the following line when all Z are > 0(BG - 22/08/2016)
+                         equivalentScore(score<0) = swe_invNcdf(spm_Tcdf(score(score<0),edf(score<0))); 
                         end
                         %Z = -log10(1-spm_Tcdf(Z,edf)); %transfo into -log10(p)
                         spm_progress_bar('Set',100);
                     case 0
                         % transform into Z-scores image
-                        if any(Z>0) % avoid to run the following line when all Z are < 0 (BG - 22/08/2016)
-                          Z2(Z>0) = -swe_invNcdf(spm_Tcdf(-Z(Z>0),xCon(ic).edf)); 
+                        if any(score>0) % avoid to run the following line when all Z are < 0 (BG - 22/08/2016)
+                          equivalentScore(score>0) = -swe_invNcdf(spm_Tcdf(-score(score>0),xCon(ic).edf)); 
                         end
-                        if any(Z<0) % avoid to run the following line when all Z are > 0(BG - 22/08/2016)
-                          Z2(Z<0) = swe_invNcdf(spm_Tcdf(Z(Z<0),xCon(ic).edf));
+                        if any(score<0) % avoid to run the following line when all Z are > 0(BG - 22/08/2016)
+                          equivalentScore(score<0) = swe_invNcdf(spm_Tcdf(score(score<0),xCon(ic).edf));
                         end
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Tcdf(Z,xCon(ic).edf));
                         spm_progress_bar('Set',100);
                     case 2
                         CovcCovBc = 0;
+                        if isMat
+                          cov_vis = importdata(Vcov_vis);
+                        end
                         for g = 1:SwE.Gr.nGr
                             Wg = kron(Co,Co)' * swe_duplication_matrix(nBeta) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
                             Wg = kron(Wg,Wg) * swe_duplication_matrix(SwE.Vis.nCov_vis_g(g));
-                            CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},1);
+                            if isMat
+                            	CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},1);
+                            else
+                              CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},1);
+                            end
                             spm_progress_bar('Set',100*(0.1) + g*80/SwE.Gr.nGr);
                         end
-                        clear Wg
+                        clear Wg cov_vis
                         edf = 2 * cCovBc.^2 ./ CovcCovBc - 2; 
                         clear CovcCovBc
                         % transform into Z-scores image
-                        if any(Z>0) % avoid to run the following line when all Z are < 0 (BG - 22/08/2016)
-                          Z2(Z>0) = -swe_invNcdf(spm_Tcdf(-Z(Z>0),edf(Z>0))); 
+                        if any(score>0) % avoid to run the following line when all Z are < 0 (BG - 22/08/2016)
+                          equivalentScore(score>0) = -swe_invNcdf(spm_Tcdf(-score(score>0),edf(score>0))); 
                         end
-                        if any(Z<0) % avoid to run the following line when all Z are > 0(BG - 22/08/2016)
-                          Z2(Z<0) = swe_invNcdf(spm_Tcdf(Z(Z<0),edf(Z<0)));
+                        if any(score<0) % avoid to run the following line when all Z are > 0(BG - 22/08/2016)
+                          equivalentScore(score<0) = swe_invNcdf(spm_Tcdf(score(score<0),edf(score<0)));
                         end
                         %Z = -log10(1-spm_Tcdf(Z,edf)); %transfo into -log10(p)
                         spm_progress_bar('Set',100);
                     case 3
-                        CovcCovBc = 0;
+                        CovcCovBc = 0;                      
+                        if isMat
+                          cov_vis = importdata(Vcov_vis);
+                        end
                         for g = 1:SwE.Gr.nGr
-                            Wg = kron(Co,Co)' * swe_duplication_matrix(nBeta) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
-                            Wg = kron(Wg,Wg) * swe_duplication_matrix(SwE.Vis.nCov_vis_g(g));
+                          Wg = kron(Co,Co)' * swe_duplication_matrix(nBeta) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
+                          Wg = kron(Wg,Wg) * swe_duplication_matrix(SwE.Vis.nCov_vis_g(g));
+                          if isMat
+                            CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},2);
+                          else
                             CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},2);
-                            spm_progress_bar('Set',100*(0.1) + g*80/SwE.Gr.nGr);                            
-                        end  
-                        clear Wg
+                          end
+                          spm_progress_bar('Set',100*(0.1) + g*80/SwE.Gr.nGr);
+                        end
+                        clear Wg cov_vis
                         edf = 2 * cCovBc.^2 ./ CovcCovBc;
                         clear CovcCovBc
                         % transform into Z-scores image
-                        if any(Z>0) % avoid to run the following line when all Z are < 0 (BG - 22/08/2016)
-                          Z2(Z>0) = -swe_invNcdf(spm_Tcdf(-Z(Z>0),edf(Z>0))); 
+                        if any(score>0) % avoid to run the following line when all Z are < 0 (BG - 22/08/2016)
+                          equivalentScore(score>0) = -swe_invNcdf(spm_Tcdf(-score(score>0),edf(score>0))); 
                         end
-                        if any(Z<0) % avoid to run the following line when all Z are > 0(BG - 22/08/2016)
-                          Z2(Z<0) = swe_invNcdf(spm_Tcdf(Z(Z<0),edf(Z<0)));
+                        if any(score<0) % avoid to run the following line when all Z are > 0(BG - 22/08/2016)
+                          equivalentScore(score<0) = swe_invNcdf(spm_Tcdf(score(score<0),edf(score<0)));
                         end
                         %Z = -log10(1-spm_Tcdf(Z,edf)); %transfo into -log10(p)
                         spm_progress_bar('Set',100);
@@ -255,7 +318,7 @@ for i = 1:length(Ic)
                 %---------------------------------------------------------
                 eSTAT = 'X';
                 if nSizeCon==1
-                    Z = abs(cB ./ sqrt(cCovBc));
+                    score = abs(cBeta ./ sqrt(cCovBc));
                     spm_progress_bar('Set',100*(0.1));
                     switch dof_type
                         case 1
@@ -268,45 +331,59 @@ for i = 1:length(Ic)
                             edf = cCovBc.^2 ./ tmp;
                             spm_progress_bar('Set',100*(3/4));
                             % transform into X-scores image 
-                            Z2 = (swe_invNcdf(spm_Tcdf(-abs(Z),edf))).^2;
+                            equivalentScore = (swe_invNcdf(spm_Tcdf(-abs(score),edf))).^2;
                             % transform into -log10(p-values) image
                             %Z = -log10(1-spm_Fcdf(Z,1,edf));
                             spm_progress_bar('Set',100);
                         case 0
                             % transform into X-scores image
-                            Z2 = (swe_invNcdf(spm_Tcdf(-abs(Z),xCon(ic).edf))).^2;
+                            equivalentScore = (swe_invNcdf(spm_Tcdf(-abs(score),xCon(ic).edf))).^2;
                             % transform into -log10(p-values) image
                             %Z = -log10(1-spm_Fcdf(Z,1, xCon(ic).edf));
                             spm_progress_bar('Set',100);
                         case 2
                             CovcCovBc = 0;
+                            if isMat
+                              cov_vis = importdata(Vcov_vis);
+                            end
                             for g = 1:SwE.Gr.nGr
                                 Wg = kron(Co,Co)' * swe_duplication_matrix(nBeta) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
                                 Wg = kron(Wg,Wg) * swe_duplication_matrix(SwE.Vis.nCov_vis_g(g));
-                                CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},1);
+                                if isMat
+                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},1);
+                                else
+                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},1);
+                                end
                                 spm_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));
                             end
-                            clear Wg
+                            clear Wg cov_vis
                             edf = 2 * cCovBc.^2 ./ CovcCovBc - 2; 
                             clear CovcCovBc
                             spm_progress_bar('Set',100*(3/4));
                             % transform into X-scores image
-                            Z2 = (swe_invNcdf(spm_Tcdf(-abs(Z),edf))).^2;
+                            equivalentScore = (swe_invNcdf(spm_Tcdf(-abs(score),edf))).^2;
                             % transform into -log10(p-values) image
                             %Z = -log10(1-spm_Fcdf(Z,1,edf));
                             spm_progress_bar('Set',100);
                         case 3
                             CovcCovBc = 0;
+                            if isMat
+                              cov_vis = importdata(Vcov_vis);
+                            end
                             for g = 1:SwE.Gr.nGr
                                 Wg = kron(Co,Co)' * swe_duplication_matrix(nBeta) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
                                 Wg = kron(Wg,Wg) * swe_duplication_matrix(SwE.Vis.nCov_vis_g(g));
-                                CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},2);
+                                if isMat
+                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},2);         
+                                else
+                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},2);         
+                                end
                                 spm_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));                           
                             end  
-                            clear Wg
+                            clear Wg cov_vis
                             edf = 2 * cCovBc.^2 ./ CovcCovBc;
                             % transform into X-scores image
-                            Z2 = (swe_invNcdf(spm_Tcdf(-abs(Z),edf))).^2;
+                            equivalentScore = (swe_invNcdf(spm_Tcdf(-abs(score),edf))).^2;
                             % transform into -log10(p-values) image
                             %Z = -log10(1-spm_Fcdf(Z,1,edf));
                             spm_progress_bar('Set',100);
@@ -314,24 +391,35 @@ for i = 1:length(Ic)
                     end
                     % need to transform in F-score, not in absolute t-score
                     % corrected on 12/05/15 by BG
-                    Z = Z.^2;
+                    score = score.^2;
                     
                 else
-                    Z   = zeros(1,S);
+                    score   = zeros(1,S);
                     if dof_type ~= 0
                         edf = zeros(1,S);
                     end
                     if dof_type == 2
                         CovcCovBc = 0;
+                        if isMat
+                          cov_vis = importdata(Vcov_vis);
+                        end
                         for g = 1:SwE.Gr.nGr
                              Wg = kron(Co,Co)' * swe_duplication_matrix(nBeta) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
                              Wg = sum(kron(Wg,Wg)) * swe_duplication_matrix(SwE.Vis.nCov_vis_g(g));
-                             CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},1);
+                             if isMat
+                               CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},1);
+                             else
+                               CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},1);
+                             end
                         end
+                        clear cov_vis
                         edf = 2 * (sum(swe_duplication_matrix(nSizeCon)) * cCovBc).^2 ./ CovcCovBc - 2;
                     end
                     if dof_type == 3
                       CovcCovBc = 0;
+                      if isMat
+                        cov_vis = importdata(Vcov_vis);
+                      end
                       tmp = eye(nSizeCon^2);
                       for g = 1:SwE.Gr.nGr
                         Wg = kron(Co,Co)' * swe_duplication_matrix(nBeta) * SwE.Vis.weight(:,SwE.Vis.iGr_Cov_vis_g==g);
@@ -339,8 +427,13 @@ for i = 1:length(Ic)
                         % this is useful to compute the trace as
                         % tr(A) = vec(I)' * vec(A)
                         Wg = tmp(:)' * (kron(Wg,Wg)) * swe_duplication_matrix(SwE.Vis.nCov_vis_g(g));
-                        CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},2);
+                        if isMat
+                          CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},2);
+                        else
+                          CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},2);
+                        end
                       end
+                      clear cov_vis
                       % note that tr(A^2) = vec(A)' * vec(A)
                       tmp = eye(nSizeCon);
                       edf = (sum(swe_duplication_matrix(nSizeCon)) * cCovBc.^2 +...
@@ -353,7 +446,7 @@ for i = 1:length(Ic)
                         cCovBc_vox = zeros(nSizeCon);
                         cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
                         cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
-                        Z(iVox) = cB(:,iVox)' / cCovBc_vox * cB(:,iVox);                   
+                        score(iVox) = cBeta(:,iVox)' / cCovBc_vox * cBeta(:,iVox);                   
                         if (dof_type == 1)					   
                           tmp = 0;
                           for g = 1:SwE.Gr.nGr
@@ -372,33 +465,33 @@ for i = 1:length(Ic)
                     end
                     if dof_type ~= 0
                         clear cCovBc_g
-                        Z = Z .*(edf-xCon(ic).eidf+1)./edf/xCon(ic).eidf;
-                        Z(Z < 0) = 0; % force negatif F-score to 0 (can happen for very low edf) 
+                        score = score .*(edf-xCon(ic).eidf+1)./edf/xCon(ic).eidf;
+                        score(score < 0) = 0; % force negatif F-score to 0 (can happen for very low edf) 
                         % transform into X-scores image
                         % Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,edf-xCon(ic).eidf+1),1);
                         try % check if the user do not have the fcdf function or one with 'upper' option
-                          Z2(Z>1) = swe_invNcdf(fcdf(Z(Z>1),xCon(ic).eidf,edf(Z>1)-xCon(ic).eidf+1,'upper')/2).^2; % more accurate to look this way for high scores
-                          Z2(Z<=1 & Z > 0) = swe_invNcdf(0.5 - fcdf(Z(Z<=1 & Z > 0),xCon(ic).eidf,edf(Z<=1 & Z > 0)-xCon(ic).eidf+1)/2).^2;
+                          equivalentScore(score>1) = swe_invNcdf(fcdf(score(score>1),xCon(ic).eidf,edf(score>1)-xCon(ic).eidf+1,'upper')/2).^2; % more accurate to look this way for high scores
+                          equivalentScore(score<=1 & score > 0) = swe_invNcdf(0.5 - fcdf(score(score<=1 & score > 0),xCon(ic).eidf,edf(score<=1 & score > 0)-xCon(ic).eidf+1)/2).^2;
                         catch 
-                          Z2(Z>0) = swe_invNcdf(betainc((edf(Z>0) - xCon(ic).eidf + 1)./(edf(Z>0) - xCon(ic).eidf + 1 + xCon(ic).eidf * Z(Z>0)),(edf(Z>0)-xCon(ic).eidf+1)/2, xCon(ic).eidf/2)/2).^2; 
+                          equivalentScore(score>0) = swe_invNcdf(betainc((edf(score>0) - xCon(ic).eidf + 1)./(edf(score>0) - xCon(ic).eidf + 1 + xCon(ic).eidf * score(score>0)),(edf(score>0)-xCon(ic).eidf+1)/2, xCon(ic).eidf/2)/2).^2; 
 %                             Z2 = swe_invNcdf(0.5 - spm_Fcdf(Z,xCon(ic).eidf, edf-xCon(ic).eidf+1)/2).^2;
                         end
-                        Z2(Z == 0) = 0;
+                        equivalentScore(score == 0) = 0;
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Fcdf(Z,xCon(ic).eidf,edf));
                     else
-                        Z = Z *(xCon(ic).edf -xCon(ic).eidf+1)/xCon(ic).edf/xCon(ic).eidf;
-                        Z(Z < 0) = 0; % force negatif F-score to 0 (can happen for very low edf) 
+                        score = score *(xCon(ic).edf -xCon(ic).eidf+1)/xCon(ic).edf/xCon(ic).eidf;
+                        score(score < 0) = 0; % force negatif F-score to 0 (can happen for very low edf) 
                         % transform into X-scores image
                         %Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1),1);
                         try % check if the user do not have the fcdf function or one with 'upper' options
-                          Z2(Z>1) = swe_invNcdf(fcdf(Z(Z>1),xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1,'upper')/2).^2; % more accurate to look this way for high score
-                          Z2(Z<=1 & Z > 0) = swe_invNcdf(0.5 - fcdf(Z(Z<=1 & Z > 0),xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1)/2).^2;
+                          equivalentScore(score>1) = swe_invNcdf(fcdf(score(score>1),xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1,'upper')/2).^2; % more accurate to look this way for high score
+                          equivalentScore(score<=1 & score > 0) = swe_invNcdf(0.5 - fcdf(score(score<=1 & score > 0),xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1)/2).^2;
                         catch 
-                          Z2(Z>0) = swe_invNcdf(betainc((xCon(ic).edf - xCon(ic).eidf + 1)./(xCon(ic).edf - xCon(ic).eidf + 1 + xCon(ic).eidf * Z(Z>0)),(xCon(ic).edf-xCon(ic).eidf+1)/2, xCon(ic).eidf/2)/2).^2; 
+                          equivalentScore(score>0) = swe_invNcdf(betainc((xCon(ic).edf - xCon(ic).eidf + 1)./(xCon(ic).edf - xCon(ic).eidf + 1 + xCon(ic).eidf * score(score>0)),(xCon(ic).edf-xCon(ic).eidf+1)/2, xCon(ic).eidf/2)/2).^2; 
 %                           Z2(Z>0) = swe_invNcdf(0.5 - spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1)/2).^2;
                         end
-                        Z2(Z == 0) = 0;
+                        equivalentScore(score == 0) = 0;
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf));
                     end
@@ -412,68 +505,92 @@ for i = 1:length(Ic)
         %-Write SwE - statistic images & edf image if needed
         %------------------------------------------------------------------
         fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...writing');      %-#
-
-        xCon(ic).Vspm = struct(...
+        
+        equivalentScore (equivalentScore > realmax('single')) = realmax('single');
+        equivalentScore (equivalentScore < -realmax('single')) = -realmax('single');
+        
+        if isMat
+          xCon(ic).Vspm = sprintf('spm%c_%04d.mat',eSTAT,ic);
+          save(xCon(ic).Vspm, 'equivalentScore');
+        else
+          xCon(ic).Vspm = struct(...
             'fname',  sprintf('spm%c_%04d.img',eSTAT,ic),...
             'dim',    SwE.xVol.DIM',...
             'dt',     [spm_type('float32'), spm_platform('bigend')],...
             'mat',    SwE.xVol.M,...
             'pinfo',  [1,0,0]',...
             'descrip',sprintf('spm{%c} - contrast %d: %s',...%'SwE{%c_%s} - contrast %d: %s'
-           eSTAT,ic,xCon(ic).name));% eSTAT,str,ic,xCon(ic).name));
-        xCon(ic).Vspm = spm_create_vol(xCon(ic).Vspm);
-        
-        Z2 (Z2 > realmax('single')) = realmax('single');
-        Z2 (Z2 < -realmax('single')) = -realmax('single');
-        
-        tmp           = zeros(SwE.xVol.DIM');
-        tmp(Q)        = Z2;
-        xCon(ic).Vspm = spm_write_vol(xCon(ic).Vspm,tmp);
-
-        clear tmp Z2
-        fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+            eSTAT,ic,xCon(ic).name));% eSTAT,str,ic,xCon(ic).name));
+          xCon(ic).Vspm = spm_create_vol(xCon(ic).Vspm);
+          
+          tmp           = zeros(SwE.xVol.DIM');
+          tmp(Q)        = equivalentScore;
+          xCon(ic).Vspm = spm_write_vol(xCon(ic).Vspm,tmp);
+        end
+        clear tmp equivalentScore
+        if isMat
+          fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+            '...written %s',spm_str_manip(xCon(ic).Vspm,'t')));
+        else
+          fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
             '...written %s',spm_str_manip(xCon(ic).Vspm.fname,'t')));
+        end
         %-# 
         fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...writing');      %-#
 
-        xCon(ic).Vspm2 = struct(...
+        if isMat
+          xCon(ic).Vspm2 = sprintf('spm%c_%04d.mat',xCon(ic).STAT,ic);
+          save(xCon(ic).Vspm2, 'score');
+        else
+          xCon(ic).Vspm2 = struct(...
             'fname',  sprintf('spm%c_%04d.img',xCon(ic).STAT,ic),...
             'dim',    SwE.xVol.DIM',...
             'dt',     [spm_type('float32'), spm_platform('bigend')],...
             'mat',    SwE.xVol.M,...
             'pinfo',  [1,0,0]',...
             'descrip',sprintf('spm{%c} - contrast %d: %s',...%'SwE{%c_%s} - contrast %d: %s'
-           xCon(ic).STAT,ic,xCon(ic).name));% xCon(ic).STAT,str,ic,xCon(ic).name));
-        xCon(ic).Vspm2 = spm_create_vol(xCon(ic).Vspm2);
-
-        tmp           = zeros(SwE.xVol.DIM');
-        tmp(Q)        = Z;
-        xCon(ic).Vspm2 = spm_write_vol(xCon(ic).Vspm2,tmp);
-
-        clear tmp Z
-        fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
-            '...written %s',spm_str_manip(xCon(ic).Vspm2.fname,'t')));   %-#
-
-     
+            xCon(ic).STAT,ic,xCon(ic).name));% xCon(ic).STAT,str,ic,xCon(ic).name));
+          xCon(ic).Vspm2 = spm_create_vol(xCon(ic).Vspm2);
+          
+          tmp           = zeros(SwE.xVol.DIM');
+          tmp(Q)        = score;
+          xCon(ic).Vspm2 = spm_write_vol(xCon(ic).Vspm2,tmp);
+        end
+        clear tmp score
+        if isMat
+          fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+            '...written %s',spm_str_manip(xCon(ic).Vspm2,'t')));   %-#
+        else
+           fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+            '...written %s',spm_str_manip(xCon(ic).Vspm2.fname,'t')));   %-#         
+        end
         
         if dof_type
+          if isMat
+            xCon(ic).Vedf = sprintf('edf_%04d.mat',ic);
+            save(xCon(ic).Vedf, 'edf');
+          else
             xCon(ic).Vedf = struct(...
-                'fname',  sprintf('edf_%04d.img',ic),...
-                'dim',    SwE.xVol.DIM',...
-                'dt',     [16 spm_platform('bigend')],...
-                'mat',    SwE.xVol.M,...
-                'pinfo',  [1,0,0]',...
-                'descrip',sprintf('SwE effective degrees of freedom - %d: %s',ic,xCon(ic).name));
+              'fname',  sprintf('edf_%04d.img',ic),...
+              'dim',    SwE.xVol.DIM',...
+              'dt',     [16 spm_platform('bigend')],...
+              'mat',    SwE.xVol.M,...
+              'pinfo',  [1,0,0]',...
+              'descrip',sprintf('SwE effective degrees of freedom - %d: %s',ic,xCon(ic).name));
             fprintf('%s%20s',repmat(sprintf('\b'),1,20),'...computing')%-#
             xCon(ic).Vedf = spm_create_vol(xCon(ic).Vedf);
             tmp = NaN(SwE.xVol.DIM');
             tmp(Q) = edf;
             xCon(ic).Vedf = spm_write_vol(xCon(ic).Vedf,tmp);
-            
-            clear tmp edf
+          end
+          clear tmp edf
+          if isMat
             fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
-                '...written %s',spm_str_manip(xCon(ic).Vedf.fname,'t')))%-#
-              
+              '...written %s',spm_str_manip(xCon(ic).Vedf,'t')))%-#
+          else
+            fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+              '...written %s',spm_str_manip(xCon(ic).Vedf.fname,'t')))%-#
+          end
         end
                            
     end % if isempty(xCon(ic).Vspm)

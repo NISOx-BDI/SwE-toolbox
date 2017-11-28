@@ -42,6 +42,22 @@ catch
     return
 end
 
+%-Check if we have data in a.mat format and set some variables accordingly
+%--------------------------------------------------------------------------
+[~,~,file_ext] = fileparts(SwE.xY.P{1});
+isMat               = strcmpi(file_ext,'.mat');
+
+if ~isMat
+    isMeshData = spm_mesh_detect(SwE.xY.VY);
+    if isMeshData
+        file_ext = '.gii';
+    else
+        file_ext = spm_file_ext;
+    end
+else
+    isMeshData = false;
+end
+
 %-Delete files from previous analyses
 %--------------------------------------------------------------------------
 if exist(fullfile(SwE.swd,'mask.img'),'file') == 2
@@ -194,7 +210,7 @@ if dof_type == 0 % so naive estimation is used
     for i = 1:nBeta
         dof_cov(i) = nSubj_dof(iBeta_dof(i)) - ...
             pB_dof(iBeta_dof(i));    
-    end;
+    end
 end  
 
 %-preprocessing for the modified SwE
@@ -370,290 +386,327 @@ if ~isstruct(xM)
                 'xs',   struct('Masking','analysis threshold'));
 end
 
-%-Image dimensions and data
-%==========================================================================
-VY       = SwE.xY.VY;
-spm_check_orientations(VY);
+if ~isMat
+    %-Image dimensions and data
+    %==========================================================================
+    VY       = SwE.xY.VY;
+    spm_check_orientations(VY);
 
-% check files exists and try pwd
-%--------------------------------------------------------------------------
-for i = 1:numel(VY)
-    if ~spm_existfile(VY(i).fname)
-        [p,n,e]     = fileparts(VY(i).fname);
-        VY(i).fname = [n,e];
-    end
-end
-
-M        = VY(1).mat;
-DIM      = VY(1).dim(1:3)';
-% VOX      = sqrt(diag(M(1:3, 1:3)'*M(1:3, 1:3)))'; (commented by BG on 08/11/2016)
-xdim     = DIM(1); ydim = DIM(2); zdim = DIM(3);
-%vFWHM    = SwE.vFWHM; to be added later (for the variance smoothing)
-
-% check how the data image treat 0 (as NaN or not)
-YNaNrep = VY(1).dt(2);
-
-%-Maximum number of residual images for smoothness estimation
-%--------------------------------------------------------------------------
-% MAXRES   = Inf; (commented by BG on 08/11/2016)
-% nSres    = nScan; (commented by BG on 08/11/2016)
-
-fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done');               %-#
-
-fprintf('%-40s: %30s','Output images','...initialising');           %-#
-
-%-Initialise new mask name: current mask & conditions on voxels
-%----------------------------------------------------------------------
-VM    = struct('fname',  'mask.img',...
-    'dim',    DIM',...
-    'dt',     [spm_type('uint8') spm_platform('bigend')],...
-    'mat',    M,...
-    'pinfo',  [1 0 0]',...
-    'descrip','swe_cp:resultant analysis mask');
-VM    = spm_create_vol(VM);
-
-%-Initialise beta image files
-%----------------------------------------------------------------------
-
-Vbeta(1:nBeta) = deal(struct(...
-    'fname',    [],...
-    'dim',      DIM',...
-    'dt',       [spm_type('float32') spm_platform('bigend')],...
-    'mat',      M,...
-    'pinfo',    [1 0 0]',...
-    'descrip',  ''));
-
-for i = 1:nBeta
-    Vbeta(i).fname   = sprintf('beta_%04d.img',i);
-    Vbeta(i).descrip = sprintf('swe_cp:beta (%04d) - %s',i,xX.name{i});
-end
-Vbeta = spm_create_vol(Vbeta);
-
-%-Initialise Cov_beta image files
-%----------------------------------------------------------------------
-
-Vcov_beta(1:nCov_beta) = deal(struct(...
-    'fname',    [],...
-    'dim',      DIM',...
-    'dt',       [spm_type('float32') spm_platform('bigend')],...
-    'mat',      M,...
-    'pinfo',    [1 0 0]',...
-    'descrip',  ''));
-
-it=0;
-for i=1:nBeta
-    for ii=i:nBeta
-        it=it+1;
-        Vcov_beta(it).fname= sprintf('cov_beta_%04d_%04d.img',i,ii);
-        Vcov_beta(it).descrip=sprintf('cov_beta_%04d_%04d hats - %s/%s',...
-            i,ii,xX.name{i},xX.name{ii});
-    end
-end
-Vcov_beta = spm_create_vol(Vcov_beta);
-
-%-Initialise Cov_beta_g image files if needed
-%----------------------------------------------------------------------
-if dof_type == 1
-    if isfield(SwE.type,'classic')
-        nGr = nSubj;
-        uGr = uSubj;
-    end
-    Vcov_beta_g(1:nCov_beta*nGr) = deal(struct(...
-        'fname',    [],...
-        'dim',      DIM',...
-        'dt',       [spm_type('float32') spm_platform('bigend')],...
-        'mat',      M,...
-        'pinfo',    [1 0 0]',...
-        'descrip',  ''));
-    
-    it=0;
-    for g=1:nGr
-        for ii=1:nBeta
-            for iii=ii:nBeta
-                it=it+1;
-                Vcov_beta_g(it).fname= sprintf('cov_beta_g_%04d_%04d_%04d.img',g,ii,iii);
-                Vcov_beta_g(it).descrip=sprintf('cov_beta_g_%04d_%04d_%04d hats - group %s - %s/%s',...
-                    g,ii,iii,num2str(uGr(g)),xX.name{ii},xX.name{iii});
-            end
+    % check files exists and try pwd
+    %--------------------------------------------------------------------------
+    for i = 1:numel(VY)
+        if ~spm_existfile(VY(i).fname)
+            [~,n,e]     = fileparts(VY(i).fname);
+            VY(i).fname = [n,e];
         end
     end
-    Vcov_beta_g = spm_create_vol(Vcov_beta_g);
-end
 
-%-Initialise cov_vis image files
-%----------------------------------------------------------------------
-if isfield(SwE.type,'modified')
-    Vcov_vis(1:nCov_vis) = deal(struct(...
-        'fname',    [],...
-        'dim',      DIM',...
-        'dt',       [spm_type('float32') spm_platform('bigend')],...
-        'mat',      M,...
-        'pinfo',    [1 0 0]',...
-        'descrip',  ''));
-    
-    it=0;
-    for g =1:nGr
-        for ii=1:nVis_g(g)
-            for iii=ii:nVis_g(g)
-                it=it+1;
-                Vcov_vis(it).fname= sprintf('cov_vis_%04d_%04d_%04d.img',g,ii,iii);
-                Vcov_vis(it).descrip=sprintf('cov_vis_%04d_%04d_%04d hats - group %s - visits %s/%s',...
-                    g,ii,iii,num2str(uGr(g)),num2str(uVis_g{g}(ii)),num2str(uVis_g{g}(iii)));
-            end
-        end
-    end
-    Vcov_vis = spm_create_vol(Vcov_vis);
-end
-%-Initialise standardised residual images
-%----------------------------------------------------------------------
-% VResI(1:nSres) = deal(struct(...
-%     'fname',    [],...
-%     'dim',      DIM',...
-%     'dt',       [spm_type('float32') spm_platform('bigend')],...
-%     'mat',      M,...
-%     'pinfo',    [1 0 0]',...
-%     'descrip',  'swe_cp:StandardisedResiduals'));
-% 
-% for i = 1:nSres
-%     VResI(i).fname   = sprintf('ResI_%04d.img', i);
-%     VResI(i).descrip = sprintf('spm_spm:ResI (%04d)', i);
-% end
-% VResI = spm_create_vol(VResI);
-% fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-# 
-%  
-%==========================================================================
-% - F I T   M O D E L   &   W R I T E   P A R A M E T E R    I M A G E S
-%==========================================================================
+    M        = VY(1).mat;
+    DIM      = VY(1).dim(1:3)';
+    % VOX      = sqrt(diag(M(1:3, 1:3)'*M(1:3, 1:3)))'; (commented by BG on 08/11/2016)
+    xdim     = DIM(1); ydim = DIM(2); zdim = DIM(3);
+    %vFWHM    = SwE.vFWHM; to be added later (for the variance smoothing)
 
-%-MAXMEM is the maximum amount of data processed at a time (bytes)
-%--------------------------------------------------------------------------
-MAXMEM = spm_get_defaults('stats.maxmem');
-mmv    = MAXMEM/8/nScan;
-blksz  = min(xdim*ydim,ceil(mmv));                             %-block size
-nbch   = ceil(xdim*ydim/blksz);                                %-# blocks
-nbz    = max(1,min(zdim,floor(mmv/(xdim*ydim)))); nbz = 1;     %-# planes forced to 1 so far
-blksz  = blksz * nbz;
+    % check how the data image treat 0 (as NaN or not)
+    YNaNrep = VY(1).dt(2);
 
-%-Initialise variables used in the loop
-%==========================================================================
-[xords, yords] = ndgrid(1:xdim, 1:ydim);
-xords = xords(:)'; yords = yords(:)';           % plane X,Y coordinates
-S     = 0;                                      % Volume (voxels)
-% i_res = round(linspace(1,nScan,nSres))';        % Indices for residual (commented by BG on 08/11/2016)
- 
-%-Initialise XYZ matrix of in-mask voxel co-ordinates (real space)
-%--------------------------------------------------------------------------
-XYZ   = zeros(3,xdim*ydim*zdim);
+    %-Maximum number of residual images for smoothness estimation
+    %--------------------------------------------------------------------------
+    % MAXRES   = Inf; (commented by BG on 08/11/2016)
+    % nSres    = nScan; (commented by BG on 08/11/2016)
 
-%-Cycle over bunches blocks within planes to avoid memory problems
-%==========================================================================
-str   = 'parameter estimation';
-spm_progress_bar('Init',100,str,'');
+    fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done');               %-#
 
-for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
- 
-    % current plane-specific parameters
+    fprintf('%-40s: %30s','Output images','...initialising');           %-#
+
+    %-Initialise new mask name: current mask & conditions on voxels
     %----------------------------------------------------------------------
-    CrPl         = z:min(z+nbz-1,zdim);       %-plane list
-    zords        = CrPl(:)*ones(1,xdim*ydim); %-plane Z coordinates
-    CrBl         = [];                        %-parameter estimates
-%     CrResI       = [];                        %-residuals (commented by BG on 08/11/2016)
-    Q            = [];                        %-in mask indices for this plane
-    if isfield(SwE.type,'modified')
-        CrCov_vis    = []; 
+    VM    = struct('fname',  ['mask' file_ext],...
+        'dim',    DIM',...
+        'dt',     [spm_type('uint8') spm_platform('bigend')],...
+        'mat',    M,...
+        'pinfo',  [1 0 0]',...
+        'descrip','swe_cp:resultant analysis mask');
+
+    % create .gii files if needed
+    if isMeshData
+        VM = spm_data_hdr_write(VM);
     else
-        CrCov_beta   = [];
-        if dof_type ==1
-            CrCov_beta_i = [];
+        VM = spm_create_vol(VM);
+    end
+
+    %-Initialise beta image files
+    %----------------------------------------------------------------------
+
+    Vbeta(1:nBeta) = deal(struct(...
+        'fname',    [],...
+        'dim',      DIM',...
+        'dt',       [spm_type('float32') spm_platform('bigend')],...
+        'mat',      M,...
+        'pinfo',    [1 0 0]',...
+        'descrip',  ''));
+
+    for i = 1:nBeta
+        Vbeta(i).fname   = [sprintf('beta_%04d',i) file_ext];
+        Vbeta(i).descrip = sprintf('swe_cp:beta (%04d) - %s',i,xX.name{i});
+    end
+
+    % create .gii files if needed
+    if isMeshData
+        Vbeta = spm_data_hdr_write(Vbeta);
+    else
+        Vbeta = spm_create_vol(Vbeta);
+    end
+
+    %-Initialise Cov_beta image files
+    %----------------------------------------------------------------------
+
+    Vcov_beta(1:nCov_beta) = deal(struct(...
+        'fname',    [],...
+        'dim',      DIM',...
+        'dt',       [spm_type('float32') spm_platform('bigend')],...
+        'mat',      M,...
+        'pinfo',    [1 0 0]',...
+        'descrip',  ''));
+
+    it=0;
+    for i=1:nBeta
+        for ii=i:nBeta
+            it=it+1;
+            Vcov_beta(it).fname     = [sprintf('cov_beta_%04d_%04d',i,ii) file_ext];
+            Vcov_beta(it).descrip   = sprintf('cov_beta_%04d_%04d hats - %s/%s',...
+                i,ii,xX.name{i},xX.name{ii});
         end
     end
-    
-    for bch = 1:nbch                     %-loop over blocks
 
-        %-Print progress information in command window
-        %------------------------------------------------------------------
-        if numel(CrPl) == 1
-            str = sprintf('Plane %3d/%-3d, block %3d/%-3d',...
-                z,zdim,bch,nbch);
+    % create .gii files if needed
+    if isMeshData
+        Vcov_beta = spm_data_hdr_write(Vcov_beta);
+    else
+        Vcov_beta = spm_create_vol(Vcov_beta);
+    end
+
+    %-Initialise Cov_beta_g image files if needed
+    %----------------------------------------------------------------------
+    if dof_type == 1
+        if isfield(SwE.type,'classic')
+            nGr = nSubj;
+            uGr = uSubj;
+        end
+        Vcov_beta_g(1:nCov_beta*nGr) = deal(struct(...
+            'fname',    [],...
+            'dim',      DIM',...
+            'dt',       [spm_type('float32') spm_platform('bigend')],...
+            'mat',      M,...
+            'pinfo',    [1 0 0]',...
+            'descrip',  ''));
+
+        it=0;
+        for g=1:nGr
+            for ii=1:nBeta
+                for iii=ii:nBeta
+                    it=it+1;
+                    Vcov_beta_g(it).fname   = [sprintf('cov_beta_g_%04d_%04d_%04d',g,ii,iii) file_ext];
+                    Vcov_beta_g(it).descrip = sprintf('cov_beta_g_%04d_%04d_%04d hats - group %s - %s/%s',...
+                        g,ii,iii,num2str(uGr(g)),xX.name{ii},xX.name{iii});
+                end
+            end
+        end
+        % create .gii files if needed
+        if isMeshData
+            Vcov_beta_g = spm_data_hdr_write(Vcov_beta_g);
         else
-            str = sprintf('Planes %3d-%-3d/%-3d',z,CrPl(end),zdim);
+            Vcov_beta_g = spm_create_vol(Vcov_beta_g);
         end
-        if z == 1 && bch == 1
-            str2 = '';
+    end
+
+    %-Initialise cov_vis image files
+    %----------------------------------------------------------------------
+    if isfield(SwE.type,'modified')
+        Vcov_vis(1:nCov_vis) = deal(struct(...
+            'fname',    [],...
+            'dim',      DIM',...
+            'dt',       [spm_type('float32') spm_platform('bigend')],...
+            'mat',      M,...
+            'pinfo',    [1 0 0]',...
+            'descrip',  ''));
+
+        it=0;
+        for g =1:nGr
+            for ii=1:nVis_g(g)
+                for iii=ii:nVis_g(g)
+                    it=it+1;
+                    Vcov_vis(it).fname= [sprintf('cov_vis_%04d_%04d_%04d',g,ii,iii) file_ext];
+                    Vcov_vis(it).descrip=sprintf('cov_vis_%04d_%04d_%04d hats - group %s - visits %s/%s',...
+                        g,ii,iii,num2str(uGr(g)),num2str(uVis_g{g}(ii)),num2str(uVis_g{g}(iii)));
+                end
+            end
+        end
+        % create .gii files if needed
+        if isMeshData
+            Vcov_vis = spm_data_hdr_write(Vcov_vis);
         else
-            str2 = repmat(sprintf('\b'),1,72);
+            Vcov_vis = spm_create_vol(Vcov_vis);
         end
-        fprintf('%s%-40s: %30s',str2,str,' ');
+    end
+    %-Initialise standardised residual images
+    %----------------------------------------------------------------------
+    % VResI(1:nSres) = deal(struct(...
+    %     'fname',    [],...
+    %     'dim',      DIM',...
+    %     'dt',       [spm_type('float32') spm_platform('bigend')],...
+    %     'mat',      M,...
+    %     'pinfo',    [1 0 0]',...
+    %     'descrip',  'swe_cp:StandardisedResiduals'));
+    % 
+    % for i = 1:nSres
+    %     VResI(i).fname   = sprintf('ResI_%04d.img', i);
+    %     VResI(i).descrip = sprintf('spm_spm:ResI (%04d)', i);
+    % end
+    % VResI = spm_create_vol(VResI);
+    % fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-# 
+    %  
+    %==========================================================================
+    % - F I T   M O D E L   &   W R I T E   P A R A M E T E R    I M A G E S
+    %==========================================================================
 
+    %-MAXMEM is the maximum amount of data processed at a time (bytes)
+    %--------------------------------------------------------------------------
+    MAXMEM = spm_get_defaults('stats.maxmem');
+    mmv    = MAXMEM/8/nScan;
+    blksz  = min(xdim*ydim,ceil(mmv));                             %-block size
+    nbch   = ceil(xdim*ydim/blksz);                                %-# blocks
+    nbz    = max(1,min(zdim,floor(mmv/(xdim*ydim)))); nbz = 1;     %-# planes forced to 1 so far
+    blksz  = blksz * nbz;
+    % use chunks instead of slices
+    % chunksize = floor(spm_get_defaults('stats.maxmem') / 8 / nScan);
+    % nbchunks  = ceil(prod(DIM) / chunksize);
+    % chunks    = min(cumsum([1 repmat(chunksize,1,nbchunks)]),prod(DIM)+1);
 
-        %-construct list of voxels in this block
-        %------------------------------------------------------------------
-        I     = (1:blksz) + (bch - 1)*blksz;       %-voxel indices
-        I     = I(I <= numel(CrPl)*xdim*ydim);     %-truncate
-        xyz   = [repmat(xords,1,numel(CrPl)); ...
-            repmat(yords,1,numel(CrPl)); ...
-            reshape(zords',1,[])];
-        xyz   = xyz(:,I);                          %-voxel coordinates
-        nVox  = size(xyz,2);                       %-number of voxels
+    %spm_progress_bar('Init',nbchunks,'Parameter estimation','Chunks');
 
-        %-Get data & construct analysis mask
-        %=================================================================
-        fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...read & mask data')
-        Cm    = true(1,nVox);                      %-current mask
+    %-Initialise variables used in the loop
+    %==========================================================================
+    [xords, yords] = ndgrid(1:xdim, 1:ydim);
+    xords = xords(:)'; yords = yords(:)';           % plane X,Y coordinates
+    S     = 0;                                      % Volume (voxels)
+    % i_res = round(linspace(1,nScan,nSres))';        % Indices for residual (commented by BG on 08/11/2016)
 
-        %-Compute explicit mask
-        % (note that these may not have same orientations)
-        %------------------------------------------------------------------
-        for i = 1:length(xM.VM)
+    %-Initialise XYZ matrix of in-mask voxel co-ordinates (real space)
+    %--------------------------------------------------------------------------
+    XYZ   = zeros(3,xdim*ydim*zdim);
 
-            %-Coordinates in mask image
-            %--------------------------------------------------------------
-            j = xM.VM(i).mat\M*[xyz;ones(1,nVox)];
+    %-Cycle over bunches blocks within planes to avoid memory problems
+    %==========================================================================
+    str   = 'parameter estimation';
+    spm_progress_bar('Init',100,str,'');
 
-            %-Load mask image within current mask & update mask
-            %--------------------------------------------------------------
-            Cm(Cm) = spm_get_data(xM.VM(i),j(:,Cm),false) > 0;
-        end
+    for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
 
-        %-Get the data in mask, compute threshold & implicit masks
-        %------------------------------------------------------------------
-        Y     = zeros(nScan,nVox);
-        for i = 1:nScan
-
-            %-Load data in mask
-            %--------------------------------------------------------------
-            if ~any(Cm), break, end                %-Break if empty mask
-            Y(i,Cm)  = spm_get_data(VY(i),xyz(:,Cm),false);
-
-            Cm(Cm)   = Y(i,Cm) > xM.TH(i);         %-Threshold (& NaN) mask
-            if xM.I && ~YNaNrep && xM.TH(i) < 0    %-Use implicit mask
-                Cm(Cm) = abs(Y(i,Cm)) > eps;
+        % current plane-specific parameters
+        %----------------------------------------------------------------------
+        CrPl         = z:min(z+nbz-1,zdim);       %-plane list
+        zords        = CrPl(:)*ones(1,xdim*ydim); %-plane Z coordinates
+        CrBl         = [];                        %-parameter estimates
+    %     CrResI       = [];                        %-residuals (commented by BG on 08/11/2016)
+        Q            = [];                        %-in mask indices for this plane
+        if isfield(SwE.type,'modified')
+            CrCov_vis    = []; 
+        else
+            CrCov_beta   = [];
+            if dof_type ==1
+                CrCov_beta_i = [];
             end
         end
 
-        %-Mask out voxels where data is constant in at least one separable
-        % matrix design either in a visit category or within-subject (BG - 27/05/2016)
-        %------------------------------------------------------------------
-        for g = 1:nGr_dof % first look data for each separable matrix design
-          if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)     
-            Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1); % mask constant data within separable matrix design g (added by BG on 29/08/16)
-            if isfield(SwE.type,'modified') % added by BG on 29/08/16
-              for g2 = 1:nGr % then look data for each "homogeneous" group
-                % check if the data is contant over subject for each visit category
-                for k = 1:nVis_g(g2) 
-                  if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
-                    Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
-                    for kk = k:nVis_g(g2)
-                      if k ~= kk
-                        % extract the list of subject with both visit k and kk
-                        subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
-                        % look if some difference are observed within subject
-                        if ~isempty(subjList)
-                          diffVis = Cm(Cm) == 0;
-                          for i = 1:length(subjList)
-                            diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
+        for bch = 1:nbch                     %-loop over blocks
+
+            %-Print progress information in command window
+            %------------------------------------------------------------------
+            if numel(CrPl) == 1
+                str = sprintf('Plane %3d/%-3d, block %3d/%-3d',...
+                    z,zdim,bch,nbch);
+            else
+                str = sprintf('Planes %3d-%-3d/%-3d',z,CrPl(end),zdim);
+            end
+            if z == 1 && bch == 1
+                str2 = '';
+            else
+                str2 = repmat(sprintf('\b'),1,72);
+            end
+            fprintf('%s%-40s: %30s',str2,str,' ');
+
+
+            %-construct list of voxels in this block
+            %------------------------------------------------------------------
+            I     = (1:blksz) + (bch - 1)*blksz;       %-voxel indices
+            I     = I(I <= numel(CrPl)*xdim*ydim);     %-truncate
+            xyz   = [repmat(xords,1,numel(CrPl)); ...
+                repmat(yords,1,numel(CrPl)); ...
+                reshape(zords',1,[])];
+            xyz   = xyz(:,I);                          %-voxel coordinates
+            nVox  = size(xyz,2);                       %-number of voxels
+
+            %-Get data & construct analysis mask
+            %=================================================================
+            fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...read & mask data')
+            Cm    = true(1,nVox);                      %-current mask
+
+            %-Compute explicit mask
+            % (note that these may not have same orientations)
+            %------------------------------------------------------------------
+            for i = 1:length(xM.VM)
+
+                %-Coordinates in mask image
+                %--------------------------------------------------------------
+                j = xM.VM(i).mat\M*[xyz;ones(1,nVox)];
+
+                %-Load mask image within current mask & update mask
+                %--------------------------------------------------------------
+                Cm(Cm) = spm_get_data(xM.VM(i),j(:,Cm),false) > 0;
+            end
+
+            %-Get the data in mask, compute threshold & implicit masks
+            %------------------------------------------------------------------
+            Y     = zeros(nScan,nVox);
+            for i = 1:nScan
+
+                %-Load data in mask
+                %--------------------------------------------------------------
+                if ~any(Cm), break, end                %-Break if empty mask
+                Y(i,Cm)  = spm_get_data(VY(i),xyz(:,Cm),false);
+
+                Cm(Cm)   = Y(i,Cm) > xM.TH(i);         %-Threshold (& NaN) mask
+                if xM.I && ~YNaNrep && xM.TH(i) < 0    %-Use implicit mask
+                    Cm(Cm) = abs(Y(i,Cm)) > eps;
+                end
+            end
+
+            %-Mask out voxels where data is constant in at least one separable
+            % matrix design either in a visit category or within-subject (BG - 27/05/2016)
+            %------------------------------------------------------------------
+            for g = 1:nGr_dof % first look data for each separable matrix design
+              if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)     
+                Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1); % mask constant data within separable matrix design g (added by BG on 29/08/16)
+                if isfield(SwE.type,'modified') % added by BG on 29/08/16
+                  for g2 = 1:nGr % then look data for each "homogeneous" group
+                    % check if the data is contant over subject for each visit category
+                    for k = 1:nVis_g(g2) 
+                      if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
+                        Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
+                        for kk = k:nVis_g(g2)
+                          if k ~= kk
+                            % extract the list of subject with both visit k and kk
+                            subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
+                            % look if some difference are observed within subject
+                            if ~isempty(subjList)
+                              diffVis = Cm(Cm) == 0;
+                              for i = 1:length(subjList)
+                                diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
+                              end
+                              Cm(Cm) = diffVis;
+                            end
                           end
-                          Cm(Cm) = diffVis;
                         end
                       end
                     end
@@ -661,302 +714,490 @@ for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
                 end
               end
             end
-          end
-        end
-        clear diffVis
-        
-        Y      = Y(:,Cm);                          %-Data within mask
-        CrS    = sum(Cm);                          %-# current voxels
+            clear diffVis
+
+            Y      = Y(:,Cm);                          %-Data within mask
+            CrS    = sum(Cm);                          %-# current voxels
 
 
-        %==================================================================
-        %-Proceed with General Linear Model (if there are voxels)
-        %==================================================================
-        if CrS
+            %==================================================================
+            %-Proceed with General Linear Model (if there are voxels)
+            %==================================================================
+            if CrS
 
-            %-General linear model: Ordinary least squares estimation
-            %--------------------------------------------------------------
-            fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...estimation');%-#
+                %-General linear model: Ordinary least squares estimation
+                %--------------------------------------------------------------
+                fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...estimation');%-#
 
-            beta  = pX*Y;                     %-Parameter estimates
-            if SwE.SS >= 4  % Cluster-wise adjustments
-                res = zeros(size(Y));
-                for i = 1:nSubj
-                    res(iSubj==uSubj(i),:) = corr{i} *...
-                        (Y(iSubj==uSubj(i),:)-xX.X(iSubj==uSubj(i),:)*beta);
-                end
-            else
-                res   = diag(corr)*(Y-xX.X*beta); %-Corrected residuals
-            end
-            clear Y                           %-Clear to save memory
-
-            %-Estimation of the data variance-covariance components (modified SwE) 
-            %-SwE estimation (classic version)
-            %--------------------------------------------------------------
-            
-            if isfield(SwE.type,'modified')
-                Cov_beta = 0;
-                Cov_vis=zeros(nCov_vis,CrS);
-                for i = Ind_Cov_vis_diag
-                    Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2, 1);
-                end
-                % Check if some voxels have variance < eps and mask them 
-                tmp = ~any(Cov_vis(Ind_Cov_vis_diag,:) < eps); % modified by BG on 29/08/16
-                if any(~tmp)
-                    beta    = beta(:,tmp);
-                    res     = res(:,tmp);
-                    Cm(Cm)  = tmp;
-                    CrS     = sum(Cm);
-                    Cov_vis = Cov_vis(:,tmp);
-                end
-                if CrS % Check if there is at least one voxel left
-                    for i = Ind_Cov_vis_off_diag
-                      if any(Flagk(i,:))
-                        Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
-                            sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
-                            Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
-                            sum(res(Flagk(i,:),:).^2, 1)./...
-                            sum(res(Flagkk(i,:),:).^2, 1));
-                      end
+                beta  = pX*Y;                     %-Parameter estimates
+                if SwE.SS >= 4  % Cluster-wise adjustments
+                    res = zeros(size(Y));
+                    for i = 1:nSubj
+                        res(iSubj==uSubj(i),:) = corr{i} *...
+                            (Y(iSubj==uSubj(i),:)-xX.X(iSubj==uSubj(i),:)*beta);
                     end
-                    %NaN may be produced in cov. estimation when one correspondant
-                    %variance are = 0, so set them to 0
-                    Cov_vis(isnan(Cov_vis))=0;
-                    %need to check if the eigenvalues of Cov_vis matrices are >=0
-                    for g = 1:nGr
-                        for iVox = 1:CrS
-                            tmp = zeros(nVis_g(g));
-                            tmp(tril(ones(nVis_g(g)))==1) = Cov_vis(iGr_Cov_vis_g==g,iVox);
-                            tmp = tmp + tmp' - diag(diag(tmp));
-                            [V, D] = eig(tmp);
-                            if any (diag(D)<0) %Bug corrected (BG - 19/09/13)
-                                D(D<0) = 0;
-                                tmp = V * D * V';
-                                Cov_vis(iGr_Cov_vis_g==g,iVox) = tmp(tril(ones(nVis_g(g)))==1); %Bug corrected (BG - 19/09/13)
+                else
+                    res   = diag(corr)*(Y-xX.X*beta); %-Corrected residuals
+                end
+                clear Y                           %-Clear to save memory
+
+                %-Estimation of the data variance-covariance components (modified SwE) 
+                %-SwE estimation (classic version)
+                %--------------------------------------------------------------
+
+                if isfield(SwE.type,'modified')
+                    Cov_beta = 0;
+                    Cov_vis=zeros(nCov_vis,CrS);
+                    for i = Ind_Cov_vis_diag
+                        Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2, 1);
+                    end
+                    % Check if some voxels have variance < eps and mask them 
+                    tmp = ~any(Cov_vis(Ind_Cov_vis_diag,:) < eps); % modified by BG on 29/08/16
+                    if any(~tmp)
+                        beta    = beta(:,tmp);
+                        res     = res(:,tmp);
+                        Cm(Cm)  = tmp;
+                        CrS     = sum(Cm);
+                        Cov_vis = Cov_vis(:,tmp);
+                    end
+                    if CrS % Check if there is at least one voxel left
+                        for i = Ind_Cov_vis_off_diag
+                          if any(Flagk(i,:))
+                            Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
+                                sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
+                                Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
+                                sum(res(Flagk(i,:),:).^2, 1)./...
+                                sum(res(Flagkk(i,:),:).^2, 1));
+                          end
+                        end
+                        %NaN may be produced in cov. estimation when one correspondant
+                        %variance are = 0, so set them to 0
+                        Cov_vis(isnan(Cov_vis))=0;
+                        %need to check if the eigenvalues of Cov_vis matrices are >=0
+                        for g = 1:nGr
+                            for iVox = 1:CrS
+                                tmp = zeros(nVis_g(g));
+                                tmp(tril(ones(nVis_g(g)))==1) = Cov_vis(iGr_Cov_vis_g==g,iVox);
+                                tmp = tmp + tmp' - diag(diag(tmp));
+                                [V, D] = eig(tmp);
+                                if any (diag(D)<0) %Bug corrected (BG - 19/09/13)
+                                    D(D<0) = 0;
+                                    tmp = V * D * V';
+                                    Cov_vis(iGr_Cov_vis_g==g,iVox) = tmp(tril(ones(nVis_g(g)))==1); %Bug corrected (BG - 19/09/13)
+                                end
                             end
                         end
                     end
-                end
-            else % else for "if isfield(SwE.type,'modified')"
-                if dof_type == 1 %need to save all subject contributions...
-                    Cov_beta_i =  NaN(nSubj,nCov_beta,CrS);
-                end
-                Cov_beta = 0;
-                for i = 1:nSubj
-                    Cov_beta_i_tmp = weight(:,Ind_Cov_vis_classic==i) *...
-                        (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
-                    Cov_beta = Cov_beta + Cov_beta_i_tmp;
+                else % else for "if isfield(SwE.type,'modified')"
                     if dof_type == 1 %need to save all subject contributions...
-                        Cov_beta_i(i,:,:) = Cov_beta_i_tmp;
+                        Cov_beta_i =  NaN(nSubj,nCov_beta,CrS);
+                    end
+                    Cov_beta = 0;
+                    for i = 1:nSubj
+                        Cov_beta_i_tmp = weight(:,Ind_Cov_vis_classic==i) *...
+                            (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
+                        Cov_beta = Cov_beta + Cov_beta_i_tmp;
+                        if dof_type == 1 %need to save all subject contributions...
+                            Cov_beta_i(i,:,:) = Cov_beta_i_tmp;
+                        end
                     end
                 end
-            end
-                
-            %-Save betas etc. for current plane as we go along
-            %----------------------------------------------------------
-            CrBl          = [CrBl,    beta]; %#ok<AGROW>
-%             CrResI        = [CrResI,  res(i_res,:)]; %#ok<AGROW> (commented by BG on 08/11/2016)
-            if isfield(SwE.type,'modified') 
-                CrCov_vis     = [CrCov_vis,  Cov_vis]; %#ok<AGROW>
-            else
-                CrCov_beta     = [CrCov_beta, Cov_beta]; %#ok<AGROW>
-                if dof_type == 1
-                    CrCov_beta_i     = cat(3, CrCov_beta_i, Cov_beta_i);
-                end
-            end
-        end % (CrS)
 
-        %-Append new inmask voxel locations and volumes
+                %-Save betas etc. for current plane as we go along
+                %----------------------------------------------------------
+                CrBl          = [CrBl,    beta]; %#ok<AGROW>
+    %             CrResI        = [CrResI,  res(i_res,:)]; %#ok<AGROW> (commented by BG on 08/11/2016)
+                if isfield(SwE.type,'modified') 
+                    CrCov_vis     = [CrCov_vis,  Cov_vis]; %#ok<AGROW>
+                else
+                    CrCov_beta     = [CrCov_beta, Cov_beta]; %#ok<AGROW>
+                    if dof_type == 1
+                        CrCov_beta_i     = cat(3, CrCov_beta_i, Cov_beta_i);
+                    end
+                end
+            end % (CrS)
+
+            %-Append new inmask voxel locations and volumes
+            %------------------------------------------------------------------
+            XYZ(:,S + (1:CrS)) = xyz(:,Cm);     %-InMask XYZ voxel coords
+            Q                  = [Q I(Cm)];     %#ok<AGROW> %-InMask XYZ voxel indices
+            S                  = S + CrS;       %-Volume analysed (voxels)
+
+        end % (bch)
+
+        %-Plane complete, write plane to image files (unless 1st pass)
+        %======================================================================
+
+        fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...saving plane'); %-#
+
+        jj = NaN(xdim,ydim,numel(CrPl));
+
+        %-Write Mask image
         %------------------------------------------------------------------
-        XYZ(:,S + (1:CrS)) = xyz(:,Cm);     %-InMask XYZ voxel coords
-        Q                  = [Q I(Cm)];     %#ok<AGROW> %-InMask XYZ voxel indices
-        S                  = S + CrS;       %-Volume analysed (voxels)
+        if ~isempty(Q), jj(Q) = 1; end
+        VM    = spm_write_plane(VM, ~isnan(jj), CrPl);
 
-    end % (bch)
-
-    %-Plane complete, write plane to image files (unless 1st pass)
-    %======================================================================
-
-    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...saving plane'); %-#
-
-    jj = NaN(xdim,ydim,numel(CrPl));
-
-    %-Write Mask image
-    %------------------------------------------------------------------
-    if ~isempty(Q), jj(Q) = 1; end
-    VM    = spm_write_plane(VM, ~isnan(jj), CrPl);
-
-    %-Write beta images
-    %------------------------------------------------------------------
-    for i = 1:nBeta
-        if ~isempty(Q), jj(Q) = CrBl(i,:); end
-        Vbeta(i) = spm_write_plane(Vbeta(i), jj, CrPl);
-    end
-
-    %-Write visit covariance images
-    %------------------------------------------------------------------
-    if isfield(SwE.type,'modified')
-        for i=1:nCov_vis
-            if ~isempty(Q), jj(Q) = CrCov_vis(i,:); end
-            Vcov_vis(i) = spm_write_plane(Vcov_vis(i), jj, CrPl);
+        %-Write beta images
+        %------------------------------------------------------------------
+        for i = 1:nBeta
+            if ~isempty(Q), jj(Q) = CrBl(i,:); end
+            Vbeta(i) = spm_write_plane(Vbeta(i), jj, CrPl);
         end
-    end
 
-    %-Write SwE images and contributions if needed
-    %------------------------------------------------------------------
-    if isfield(SwE.type,'classic')       
-        for i=1:nCov_beta
-            if ~isempty(Q), jj(Q) = CrCov_beta(i,:); end
-            Vcov_beta(i) = spm_write_plane(Vcov_beta(i), jj, CrPl);
+        %-Write visit covariance images
+        %------------------------------------------------------------------
+        if isfield(SwE.type,'modified')
+            for i=1:nCov_vis
+                if ~isempty(Q), jj(Q) = CrCov_vis(i,:); end
+                Vcov_vis(i) = spm_write_plane(Vcov_vis(i), jj, CrPl);
+            end
         end
-        if dof_type == 1
-            it = 0;
-            for i=1:nSubj
-                for ii=1:nCov_beta
-                    it = it + 1;
-                    if ~isempty(Q), jj(Q) = CrCov_beta_i(i,ii,:); end
-                    Vcov_beta_g(it) = spm_write_plane(Vcov_beta_g(it), jj, CrPl);
+
+        %-Write SwE images and contributions if needed
+        %------------------------------------------------------------------
+        if isfield(SwE.type,'classic')       
+            for i=1:nCov_beta
+                if ~isempty(Q), jj(Q) = CrCov_beta(i,:); end
+                Vcov_beta(i) = spm_write_plane(Vcov_beta(i), jj, CrPl);
+            end
+            if dof_type == 1
+                it = 0;
+                for i=1:nSubj
+                    for ii=1:nCov_beta
+                        it = it + 1;
+                        if ~isempty(Q), jj(Q) = CrCov_beta_i(i,ii,:); end
+                        Vcov_beta_g(it) = spm_write_plane(Vcov_beta_g(it), jj, CrPl);
+                    end
                 end
             end
         end
-    end
-    
-    %-Write standardised residual images
-    %------------------------------------------------------------------
-%     for i = 1:nSres
-%         if ~isempty(Q), jj(Q) = CrResI(i,:)./...
-%                 sqrt(CrCov_vis(Flagk(:,i) & Flagkk(:,i),:)); 
-%         end 
-%         VResI(i) = spm_write_plane(VResI(i), jj, CrPl);
-%     end
 
-    %-Report progress
-    %----------------------------------------------------------------------
-    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');   
-    spm_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
+        %-Write standardised residual images
+        %------------------------------------------------------------------
+    %     for i = 1:nSres
+    %         if ~isempty(Q), jj(Q) = CrResI(i,:)./...
+    %                 sqrt(CrCov_vis(Flagk(:,i) & Flagkk(:,i),:)); 
+    %         end 
+    %         VResI(i) = spm_write_plane(VResI(i), jj, CrPl);
+    %     end
 
-end % (for z = 1:zdim)
-fprintf('\n');                                                          %-#
-spm_progress_bar('Clear')
-clear beta res Cov_vis CrBl CrResI CrCov_vis jj%-Clear to save memory
-if isfield(SwE.type,'modified')
-    clear Cov_vis CrCov_vis
-else
-    clear  Cov_beta CrCov_beta        
-    if dof_type == 1
-        clear Cov_beta_i CrCov_beta_i
-    end
-end
-XYZ   = XYZ(:,1:S); % remove all the data not used 
+        %-Report progress
+        %----------------------------------------------------------------------
+        fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');   
+        spm_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
 
-%-SwE computation (for modified version, done later in case of a spatial regul.)
-%==========================================================================
-if isfield(SwE.type,'modified')
-    
-    %-Loading the visit covariance for the whole brain
-    %----------------------------------------------------------------------
-    fprintf('Loading the visit covariance for the SwE computation...'); %-#
-    
-    Cov_vis = spm_get_data(Vcov_vis,XYZ);
-    
-    %- Spatial regularization of the visit covariance if required
-    %----------------------------------------------------------------------
-    % Blurred mask is used to truncate kernel to brain; if not
-    % used variance at edges would be underestimated due to
-    % convolution with zero activity out side the brain.
-    %-----------------------------------------------------------------
-%     Q           = cumprod([1,DIM(1:2)'])*XYZ - ...
-%         sum(cumprod(DIM(1:2)'));
-%     if ~all(vFWHM==0)
-%         fprintf('Working on the SwE spatial regularization...'); %-#
-%         SmCov_vis = zeros(xdim, ydim, zdim);
-%         SmMask    = zeros(xdim, ydim, zdim);
-%         TmpVol    = zeros(xdim, ydim, zdim);
-%         TmpVol(Q) = ones(size(Q));
-%         spm_smooth(TmpVol,SmMask,vFWHM./VOX);
-%         jj = NaN(xdim,ydim,zdim);
-%         for i = 1:nCov_vis
-%             TmpVol(Q) = Cov_vis(i,:);
-%             spm_smooth(TmpVol,SmCov_vis,vFWHM./VOX);
-%             Cov_vis (i,:) = SmCov_vis(Q)./SmMask(Q);
-%             jj(Q) = Cov_vis (i,:);
-%             spm_write_vol(Vsmcov_vis(i),jj);
-%         end
-%     end
-    fprintf('\n');                                                    %-#
-    disp('Working on the SwE computation...');
-    %Computation of the SwE
-    str   = 'SwE computation';
-    spm_progress_bar('Init',100,str,'');
-    
-    S_z = 0;
-    for z = 1:zdim                       %-loop over planes (2D or 3D data)       
-        XY_z = XYZ(1:2,XYZ(3,:)==z); % extract coord in plane z        
-        Q_z = cumprod([1,DIM(1)'])*XY_z - ...
-            sum(cumprod(DIM(1)'));
-        s_z = length(Q_z); % number of active voxels in plane z
-        jj = NaN(xdim,ydim);
-        switch dof_type 
-            case 1
-                Cov_beta = zeros(nCov_beta,s_z); % initialize SwE for the plane
-                it = 0;
-                for g = 1:nGr
-                    Cov_beta_g = weight(:,iGr_Cov_vis_g==g) * Cov_vis(iGr_Cov_vis_g==g,(1+S_z):(S_z+s_z));
-                    for i=1:nCov_beta
-                        if ~isempty(Q_z), jj(Q_z)=Cov_beta_g(i,:); end
-                        it = it + 1;
-                        Vcov_beta_g(it)=spm_write_plane(Vcov_beta_g(it),jj, z);
-                    end
-                    Cov_beta = Cov_beta + Cov_beta_g;
-                    spm_progress_bar('Set',100*((z-1)/zdim + g/nGr/zdim));
-                end
-            case {0 2 3}
-                Cov_beta = weight * Cov_vis(:,(1+S_z):(S_z+s_z));
-                spm_progress_bar('Set',100*(z/zdim));
-        end
-        for i=1:nCov_beta
-            if ~isempty(Q_z), jj(Q_z)=Cov_beta(i,:); end
-            Vcov_beta(i)=spm_write_plane(Vcov_beta(i),jj, z);
-        end
-        S_z = S_z + s_z;
-    end% (for z = 1:zdim)
-    fprintf('\n');                                                    %-#
+    end % (for z = 1:zdim)
+    fprintf('\n');                                                          %-#
     spm_progress_bar('Clear')
+    clear beta res Cov_vis CrBl CrResI CrCov_vis jj%-Clear to save memory
+    if isfield(SwE.type,'modified')
+        clear Cov_vis CrCov_vis
+    else
+        clear  Cov_beta CrCov_beta        
+        if dof_type == 1
+            clear Cov_beta_i CrCov_beta_i
+        end
+    end
+    XYZ   = XYZ(:,1:S); % remove all the data not used 
+
+    %-SwE computation (for modified version, done later in case of a spatial regul.)
+    %==========================================================================
+    if isfield(SwE.type,'modified')
+
+        %-Loading the visit covariance for the whole brain
+        %----------------------------------------------------------------------
+        fprintf('Loading the visit covariance for the SwE computation...'); %-#
+
+        Cov_vis = spm_get_data(Vcov_vis,XYZ);
+
+        %- Spatial regularization of the visit covariance if required
+        %----------------------------------------------------------------------
+        % Blurred mask is used to truncate kernel to brain; if not
+        % used variance at edges would be underestimated due to
+        % convolution with zero activity out side the brain.
+        %-----------------------------------------------------------------
+    %     Q           = cumprod([1,DIM(1:2)'])*XYZ - ...
+    %         sum(cumprod(DIM(1:2)'));
+    %     if ~all(vFWHM==0)
+    %         fprintf('Working on the SwE spatial regularization...'); %-#
+    %         SmCov_vis = zeros(xdim, ydim, zdim);
+    %         SmMask    = zeros(xdim, ydim, zdim);
+    %         TmpVol    = zeros(xdim, ydim, zdim);
+    %         TmpVol(Q) = ones(size(Q));
+    %         spm_smooth(TmpVol,SmMask,vFWHM./VOX);
+    %         jj = NaN(xdim,ydim,zdim);
+    %         for i = 1:nCov_vis
+    %             TmpVol(Q) = Cov_vis(i,:);
+    %             spm_smooth(TmpVol,SmCov_vis,vFWHM./VOX);
+    %             Cov_vis (i,:) = SmCov_vis(Q)./SmMask(Q);
+    %             jj(Q) = Cov_vis (i,:);
+    %             spm_write_vol(Vsmcov_vis(i),jj);
+    %         end
+    %     end
+        fprintf('\n');                                                    %-#
+        disp('Working on the SwE computation...');
+        %Computation of the SwE
+        str   = 'SwE computation';
+        spm_progress_bar('Init',100,str,'');
+
+        S_z = 0;
+        for z = 1:zdim                       %-loop over planes (2D or 3D data)       
+            XY_z = XYZ(1:2,XYZ(3,:)==z); % extract coord in plane z        
+            Q_z = cumprod([1,DIM(1)'])*XY_z - ...
+                sum(cumprod(DIM(1)'));
+            s_z = length(Q_z); % number of active voxels in plane z
+            jj = NaN(xdim,ydim);
+            switch dof_type 
+                case 1
+                    Cov_beta = zeros(nCov_beta,s_z); % initialize SwE for the plane
+                    it = 0;
+                    for g = 1:nGr
+                        Cov_beta_g = weight(:,iGr_Cov_vis_g==g) * Cov_vis(iGr_Cov_vis_g==g,(1+S_z):(S_z+s_z));
+                        for i=1:nCov_beta
+                            if ~isempty(Q_z), jj(Q_z)=Cov_beta_g(i,:); end
+                            it = it + 1;
+                            Vcov_beta_g(it)=spm_write_plane(Vcov_beta_g(it),jj, z);
+                        end
+                        Cov_beta = Cov_beta + Cov_beta_g;
+                        spm_progress_bar('Set',100*((z-1)/zdim + g/nGr/zdim));
+                    end
+                case {0 2 3}
+                    Cov_beta = weight * Cov_vis(:,(1+S_z):(S_z+s_z));
+                    spm_progress_bar('Set',100*(z/zdim));
+            end
+            for i=1:nCov_beta
+                if ~isempty(Q_z), jj(Q_z)=Cov_beta(i,:); end
+                Vcov_beta(i)=spm_write_plane(Vcov_beta(i),jj, z);
+            end
+            S_z = S_z + s_z;
+        end% (for z = 1:zdim)
+        fprintf('\n');                                                    %-#
+        spm_progress_bar('Clear')
+
+    end
+
+
+    %==========================================================================
+    % - P O S T   E S T I M A T I O N   C L E A N U P
+    %==========================================================================
+    if S == 0, spm('alert!','No inmask voxels - empty analysis!'); return; end
+
+else % matrix input
+    % check how the data image treat 0 (as NaN or not)
+    YNaNrep = 0;
+    %-Get data & construct analysis mask
+    %=================================================================
+    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...read & mask data')
+
+    %-Get the data in mask, compute threshold & implicit masks
+    %------------------------------------------------------------------
+    Y     = importdata(SwE.xY.P{1});
+    % do some checking
+    if ~isnumeric(Y)
+        error('The input data is not a matrix. Please revised the model specification and specify a ".mat" file containing a unique matrix as data input file')
+    elseif size(Y, 1) ~= SwE.nscan
+        error('The input data does not have %i rows and thus is not compatible with the other specified variables. Please revised the model specification.', SwE.nscan)
+    end
     
+    nVox = size(Y, 2);
+    
+    %-Produce the mask
+    Cm = true(1, nVox);
+    %-Use the explicit mask if specified
+    if length(SwE.xM.VM) == 1
+        Cm(:) = importdata(SwE.xM.VM{1}) > 0;
+    end
+    %-check if some data need to be masked
+    for i = 1:nScan
+        if ~any(Cm), break, end                %-Break if empty mask
+        Cm(Cm)   = Y(i,Cm) > xM.TH(i);         %-Threshold (& NaN) mask
+        if xM.I && ~YNaNrep && xM.TH(i) < 0    %-Use implicit mask
+            Cm(Cm) = abs(Y(i,Cm)) > eps;
+        end
+    end
+    %-Mask out voxels where data is constant in at least one separable
+    % matrix design either in a visit category or within-subject (BG - 27/05/2016)
+    %------------------------------------------------------------------
+    for g = 1:nGr_dof % first look data for each separable matrix design
+      if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)     
+        Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1); % mask constant data within separable matrix design g (added by BG on 29/08/16)
+        if isfield(SwE.type,'modified') % added by BG on 29/08/16
+          for g2 = 1:nGr % then look data for each "homogeneous" group
+            % check if the data is contant over subject for each visit category
+            for k = 1:nVis_g(g2) 
+              if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
+                Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
+                for kk = k:nVis_g(g2)
+                  if k ~= kk
+                    % extract the list of subject with both visit k and kk
+                    subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
+                    % look if some difference are observed within subject
+                    if ~isempty(subjList)
+                      diffVis = Cm(Cm) == 0;
+                      for i = 1:length(subjList)
+                        diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
+                      end
+                      Cm(Cm) = diffVis;
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+    clear diffVis
+
+    Y      = Y(:,Cm);                          %-Data within mask
+    CrS    = sum(Cm);                          %-# current voxels
+
+    %==================================================================
+    %-Proceed with General Linear Model (if there are voxels)
+    %==================================================================
+    if CrS
+
+        %-General linear model: Ordinary least squares estimation
+        %--------------------------------------------------------------
+        fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...estimation');%-#
+
+        crBeta  = pX*Y;                     %-Parameter estimates
+
+        if SwE.SS >= 4  % Cluster-wise adjustments
+            res = zeros(size(Y));
+            for i = 1:nSubj
+                res(iSubj==uSubj(i),:) = corr{i} *...
+                    (Y(iSubj==uSubj(i),:)-xX.X(iSubj==uSubj(i),:)*crBeta);
+            end
+        else
+            res   = diag(corr)*(Y-xX.X*crBeta); %-Corrected residuals
+        end
+        clear Y                        %-Clear to save memory
+
+        %-Estimation of the data variance-covariance components (modified SwE)
+        %-SwE estimation (classic version)
+        %--------------------------------------------------------------
+
+        if isfield(SwE.type,'modified')
+            crCov_beta = 0;
+            crCov_vis=zeros(nCov_vis,CrS);
+            for i = Ind_Cov_vis_diag
+                crCov_vis(i,:) = mean(res(Flagk(i,:),:).^2, 1);
+            end
+            % Check if some voxels have variance < eps and mask them
+            tmp = ~any(crCov_vis(Ind_Cov_vis_diag,:) < eps); % modified by BG on 29/08/16
+            if any(~tmp)
+                crBeta    = crBeta(:,tmp);
+                res     = res(:,tmp);
+                Cm(Cm)  = tmp;
+                CrS     = sum(Cm);
+                crCov_vis = crCov_vis(:,tmp);
+            end
+            if CrS % Check if there is at least one voxel left
+                for i = Ind_Cov_vis_off_diag
+                    if any(Flagk(i,:))
+                        crCov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
+                            sqrt(crCov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
+                            crCov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
+                            sum(res(Flagk(i,:),:).^2, 1)./...
+                            sum(res(Flagkk(i,:),:).^2, 1));
+                    end
+                end
+                %NaN may be produced in crCov. estimation when one correspondant
+                %variance are = 0, so set them to 0
+                crCov_vis(isnan(crCov_vis))=0;
+                %need to check if the eigenvalues of crCov_vis matrices are >=0
+                for g = 1:nGr
+                    for iVox = 1:CrS
+                        tmp = zeros(nVis_g(g));
+                        tmp(tril(ones(nVis_g(g)))==1) = crCov_vis(iGr_Cov_vis_g==g,iVox);
+                        tmp = tmp + tmp' - diag(diag(tmp));
+                        [V, D] = eig(tmp);
+                        if any (diag(D)<0) %Bug corrected (BG - 19/09/13)
+                            D(D<0) = 0;
+                            tmp = V * D * V';
+                            crCov_vis(iGr_Cov_vis_g==g,iVox) = tmp(tril(ones(nVis_g(g)))==1); %Bug corrected (BG - 19/09/13)
+                        end
+                    end
+                end
+            end
+        else % else for "if isfield(SwE.type,'modified')"
+            if dof_type == 1 %need to save all subject contributions...
+                crCov_beta_i =  NaN(nSubj,nCov_beta,CrS);
+            end
+            crCov_beta = 0;
+            for i = 1:nSubj
+                crCov_beta_i_tmp = weight(:,Ind_Cov_vis_classic==i) *...
+                    (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
+                crCov_beta = crCov_beta + crCov_beta_i_tmp;
+                if dof_type == 1 %need to save all subject contributions...
+                    crCov_beta_i(i,:,:) = crCov_beta_i_tmp;
+                end
+            end
+        end
+        clear res
+        if isfield(SwE.type,'modified')
+            fprintf('\n');                                                    %-#
+            disp('Working on the SwE computation...');
+            switch dof_type 
+                case 1
+                    crCov_beta = zeros(nCov_beta,CrS); % initialize SwE for the plane
+                    crCov_beta_i =  NaN(nGr,nCov_beta,CrS);
+                    for g = 1:nGr
+                        crCov_beta_i(g,:,:) = weight(:,iGr_Cov_vis_g==g) * crCov_vis(iGr_Cov_vis_g==g,:);                
+                        Cov_beta = Cov_beta + crCov_beta_i(g,:,:);
+                    end
+                case {0 2 3}
+                    crCov_beta = weight * crCov_vis;
+            end
+        end
+        fprintf('\n');                                                    %-#
+    end
+        
+    %-Save betas etc. 
+    %----------------------------------------------------------
+    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...saving results'); %-#
+
+    mask = Cm;       
+    save('mask.mat', 'mask');
+    clear mask
+
+    beta = NaN(nBeta, nVox);
+    beta(:,Cm) = crBeta;
+    save('beta.mat', 'beta');
+    clear beta crBeta
+
+    if isfield(SwE.type,'modified')
+        cov_vis = NaN(nCov_vis, nVox);
+        cov_vis(:,Cm) = crCov_vis;
+        save('cov_vis.mat', 'cov_vis');
+        clear cov_vis crCov_vis
+    end
+
+    cov_beta = NaN(nCov_beta, nVox);
+    cov_beta(:,Cm) = crCov_beta;
+    save('cov_beta.mat', 'cov_beta');
+    clear cov_beta crCov_beta
+    if dof_type == 1
+        cov_beta_g = NaN(nGr, nCov_beta, nVox);
+        cov_beta_g(:,:,Cm) = crCov_beta_i;
+        save('cov_beta_g.mat', 'cov_beta_g');
+        clear cov_beta_g crCov_beta_i
+    end
+    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');   
+    
+    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...some clean up'); %-#
+  
+    XYZ         = [];
+    M           = [];
+    DIM         = [];
+    S           = CrS;
+    VM          = 'mask.mat';
+    Vbeta       = 'beta.mat';
+    Vcov_beta   = 'cov_beta.mat';
+    Vcov_vis    = 'cov_vis.mat';
+    Vcov_beta_g = 'cov_beta_g.mat';
 end
-
-
-%==========================================================================
-% - P O S T   E S T I M A T I O N   C L E A N U P
-%==========================================================================
-if S == 0, spm('alert!','No inmask voxels - empty analysis!'); return; end
-
-
-%-Smoothness estimates of component fields and RESEL counts for volume
-% %==========================================================================
-% try
-%     FWHM = SwE.xVol.FWHM;
-%     VRpv = SwE.xVol.VRpv;
-%     R    = SwE.xVol.R;
-% catch
-%     erdf      = spm_SpUtil('trRV',xX.X); % Working error df / do not agree to be checked
-%     [FWHM,VRpv,R] = spm_est_smoothness(VResI,VM,[nScan erdf]);
-% end
-
-%-Delete the residuals images
-%==========================================================================
-j = spm_select('List',SwE.swd,'^ResI_.{4}\..{3}$');
-for  k = 1:size(j,1)
-    spm_unlink(deblank(j(k,:)));
-end
-
-%-Compute scaled design matrix for display purposes
-%--------------------------------------------------------------------------
-%xX.nX        = spm_DesMtx('sca',xX,xX.name);
-
-%-Save remaining results files and analysis parameters
-%==========================================================================
-fprintf('%-40s: %30s','Saving results','...writing');
 
 %-place fields in SwE
 %--------------------------------------------------------------------------
