@@ -1359,6 +1359,7 @@ switch lower(varargin{1})
         DxCon.Vedf = [];
         DxCon.Vspm2 = [];
         DxCon.edf = [];
+        DxCon.VspmUncP = [];
         
         if ~strcmp(DxCon.STAT,STAT), error('STAT & DxCon.STAT mismatch!'), end
         SwE      = get(F,'UserData');

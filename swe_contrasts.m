@@ -96,16 +96,18 @@ for i = 1:length(Ic)
             fprintf('\t%-32s: %30s',sprintf('contrast image %2d',ic),...
                 '...computing');                                %-#
             str   = 'contrast computation';
-            spm_progress_bar('Init',100,str,'');            
-            V      = Vbeta(ind);
+            spm_progress_bar('Init',100,str,'');
+            if ~isMat
+              V      = Vbeta(ind);
+            end
             cBeta     = zeros(1,S);
-            for j=1:numel(V)
+            for j=1:numel(ind)
               if isMat
                	cBeta = cBeta + Co(ind(j)) * beta(ind(j),:);               
               else
                 cBeta = cBeta + Co(ind(j)) * spm_get_data(V(j),XYZ);
               end
-                spm_progress_bar('Set',100*(j/numel(V)));
+                spm_progress_bar('Set',100*(j/numel(ind)));
             end
             spm_progress_bar('Clear')
             
@@ -142,15 +144,17 @@ for i = 1:length(Ic)
                 '...computing');                                %-#
             str   = 'contrast computation';
             spm_progress_bar('Init',100,str,'');
-            V      = Vbeta(ind);
+            if ~isMat
+              V      = Vbeta(ind);
+            end
             cBeta     = zeros(nSizeCon,S);
-            for j=1:numel(V)
+            for j=1:numel(ind)
               if isMat
                	cBeta = cBeta + Co(ind(j),:)' * beta(ind(j),:);               
               else
                 cBeta = cBeta + Co(ind(j),:)' * spm_get_data(V(j),XYZ);
               end
-                spm_progress_bar('Set',100*(j/numel(V)));
+                spm_progress_bar('Set',100*(j/numel(ind)));
             end
             spm_progress_bar('Clear')
         end     
@@ -221,7 +225,9 @@ for i = 1:length(Ic)
 
         str   = 'spm computation';
         spm_progress_bar('Init',100,str,'');
-        equivalentScore = zeros(1,S);
+        equivalentScore = nan(1,S);
+        % add output of uncorrected p-values
+        uncP            = nan(1,S);
         switch(xCon(ic).STAT)
             case 'T'                                 %-Compute spm{t} image
                 %----------------------------------------------------------
@@ -240,20 +246,26 @@ for i = 1:length(Ic)
                         spm_progress_bar('Set',100*(0.2));
                         % transform into Z-scores image
                         if any(score>0) % avoid to run the following line when all Z are < 0 (BG - 22/08/2016)
-                          equivalentScore(score>0) = -swe_invNcdf(spm_Tcdf(-score(score>0),edf(score>0))); 
+                          uncP(score>0)             = spm_Tcdf(-score(score>0),edf(score>0));
+                          equivalentScore(score>0)  = -swe_invNcdf(uncP(score>0)); 
                         end
                         if any(score<0) % avoid to run the following line when all Z are > 0(BG - 22/08/2016)
-                         equivalentScore(score<0) = swe_invNcdf(spm_Tcdf(score(score<0),edf(score<0))); 
+                          uncP(score<0)             = spm_Tcdf(score(score<0),edf(score<0));
+                          equivalentScore(score<0)  = swe_invNcdf(uncP(score<0));
+                          uncP(score<0)             = 1 - uncP(score<0);
                         end
                         %Z = -log10(1-spm_Tcdf(Z,edf)); %transfo into -log10(p)
                         spm_progress_bar('Set',100);
                     case 0
                         % transform into Z-scores image
                         if any(score>0) % avoid to run the following line when all Z are < 0 (BG - 22/08/2016)
-                          equivalentScore(score>0) = -swe_invNcdf(spm_Tcdf(-score(score>0),xCon(ic).edf)); 
+                          uncP(score>0)             = spm_Tcdf(-score(score>0),xCon(ic).edf);
+                          equivalentScore(score>0)  = -swe_invNcdf(uncP(score>0));
                         end
                         if any(score<0) % avoid to run the following line when all Z are > 0(BG - 22/08/2016)
-                          equivalentScore(score<0) = swe_invNcdf(spm_Tcdf(score(score<0),xCon(ic).edf));
+                          uncP(score<0)             = spm_Tcdf(score(score<0),xCon(ic).edf);
+                          equivalentScore(score<0)  = swe_invNcdf(uncP(score<0));
+                          uncP(score<0)             = 1 - uncP(score<0);
                         end
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Tcdf(Z,xCon(ic).edf));
@@ -276,12 +288,14 @@ for i = 1:length(Ic)
                         clear Wg cov_vis
                         edf = 2 * cCovBc.^2 ./ CovcCovBc - 2; 
                         clear CovcCovBc
-                        % transform into Z-scores image
                         if any(score>0) % avoid to run the following line when all Z are < 0 (BG - 22/08/2016)
-                          equivalentScore(score>0) = -swe_invNcdf(spm_Tcdf(-score(score>0),edf(score>0))); 
+                          uncP(score>0)             = spm_Tcdf(-score(score>0),edf(score>0));
+                          equivalentScore(score>0)  = -swe_invNcdf(uncP(score>0)); 
                         end
                         if any(score<0) % avoid to run the following line when all Z are > 0(BG - 22/08/2016)
-                          equivalentScore(score<0) = swe_invNcdf(spm_Tcdf(score(score<0),edf(score<0)));
+                          uncP(score<0)             = spm_Tcdf(score(score<0),edf(score<0));
+                          equivalentScore(score<0)  = swe_invNcdf(uncP(score<0));
+                          uncP(score<0)             = 1 - uncP(score<0);
                         end
                         %Z = -log10(1-spm_Tcdf(Z,edf)); %transfo into -log10(p)
                         spm_progress_bar('Set',100);
@@ -305,10 +319,13 @@ for i = 1:length(Ic)
                         clear CovcCovBc
                         % transform into Z-scores image
                         if any(score>0) % avoid to run the following line when all Z are < 0 (BG - 22/08/2016)
-                          equivalentScore(score>0) = -swe_invNcdf(spm_Tcdf(-score(score>0),edf(score>0))); 
+                          uncP(score>0)             = spm_Tcdf(-score(score>0),edf(score>0));
+                          equivalentScore(score>0)  = -swe_invNcdf(uncP(score>0)); 
                         end
                         if any(score<0) % avoid to run the following line when all Z are > 0(BG - 22/08/2016)
-                          equivalentScore(score<0) = swe_invNcdf(spm_Tcdf(score(score<0),edf(score<0)));
+                          uncP(score<0)             = spm_Tcdf(score(score<0),edf(score<0));
+                          equivalentScore(score<0)  = swe_invNcdf(uncP(score<0));
+                          uncP(score<0)             = 1 - uncP(score<0);
                         end
                         %Z = -log10(1-spm_Tcdf(Z,edf)); %transfo into -log10(p)
                         spm_progress_bar('Set',100);
@@ -319,6 +336,7 @@ for i = 1:length(Ic)
                 eSTAT = 'X';
                 if nSizeCon==1
                     score = abs(cBeta ./ sqrt(cCovBc));
+                    indNotNan = ~isnan(score);
                     spm_progress_bar('Set',100*(0.1));
                     switch dof_type
                         case 1
@@ -330,15 +348,19 @@ for i = 1:length(Ic)
                             clear cCovBc_g
                             edf = cCovBc.^2 ./ tmp;
                             spm_progress_bar('Set',100*(3/4));
-                            % transform into X-scores image 
-                            equivalentScore = (swe_invNcdf(spm_Tcdf(-abs(score),edf))).^2;
+                            % transform into X-scores image
+                            uncP(indNotNan) = spm_Tcdf(-abs(score(indNotNan)), edf(indNotNan));
+                            equivalentScore(indNotNan) = (swe_invNcdf(uncP(indNotNan))).^2;
+                            uncP(indNotNan) = 2 *  uncP(indNotNan);
                             % transform into -log10(p-values) image
                             %Z = -log10(1-spm_Fcdf(Z,1,edf));
                             spm_progress_bar('Set',100);
                         case 0
                             % transform into X-scores image
-                            equivalentScore = (swe_invNcdf(spm_Tcdf(-abs(score),xCon(ic).edf))).^2;
-                            % transform into -log10(p-values) image
+                            uncP(indNotNan) = spm_Tcdf(-abs(score(indNotNan)),xCon(ic).edf);
+                            equivalentScore(indNotNan) = (swe_invNcdf(uncP(indNotNan))).^2;
+                            uncP(indNotNan) = 2 *  uncP(indNotNan);
+                           % transform into -log10(p-values) image
                             %Z = -log10(1-spm_Fcdf(Z,1, xCon(ic).edf));
                             spm_progress_bar('Set',100);
                         case 2
@@ -361,7 +383,9 @@ for i = 1:length(Ic)
                             clear CovcCovBc
                             spm_progress_bar('Set',100*(3/4));
                             % transform into X-scores image
-                            equivalentScore = (swe_invNcdf(spm_Tcdf(-abs(score),edf))).^2;
+                            uncP(indNotNan) = spm_Tcdf(-abs(score(indNotNan)), edf(indNotNan));
+                            equivalentScore(indNotNan) = (swe_invNcdf(uncP(indNotNan))).^2;
+                            uncP(indNotNan) = 2 *  uncP(indNotNan);
                             % transform into -log10(p-values) image
                             %Z = -log10(1-spm_Fcdf(Z,1,edf));
                             spm_progress_bar('Set',100);
@@ -383,7 +407,9 @@ for i = 1:length(Ic)
                             clear Wg cov_vis
                             edf = 2 * cCovBc.^2 ./ CovcCovBc;
                             % transform into X-scores image
-                            equivalentScore = (swe_invNcdf(spm_Tcdf(-abs(score),edf))).^2;
+                            uncP(indNotNan) = spm_Tcdf(-abs(score(indNotNan)), edf(indNotNan));
+                            equivalentScore(indNotNan) = (swe_invNcdf(uncP(indNotNan))).^2;
+                            uncP(indNotNan) = 2 *  uncP(indNotNan);
                             % transform into -log10(p-values) image
                             %Z = -log10(1-spm_Fcdf(Z,1,edf));
                             spm_progress_bar('Set',100);
@@ -391,12 +417,11 @@ for i = 1:length(Ic)
                     end
                     % need to transform in F-score, not in absolute t-score
                     % corrected on 12/05/15 by BG
-                    score = score.^2;
-                    
+                    score = score.^2;                 
                 else
-                    score   = zeros(1,S);
+                    score   = nan(1,S);
                     if dof_type ~= 0
-                        edf = zeros(1,S);
+                        edf = nan(1,S);
                     end
                     if dof_type == 2
                         CovcCovBc = 0;
@@ -442,7 +467,9 @@ for i = 1:length(Ic)
                     % define a parameter to tell when to update progress
                     % bar only 80 times
                     updateEvery = round(S/80);
+                    indNotNan = ~isnan(cCovBc(1,:));
                     for iVox=1:S
+                      if indNotNan(iVox)
                         cCovBc_vox = zeros(nSizeCon);
                         cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
                         cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
@@ -462,6 +489,7 @@ for i = 1:length(Ic)
                         if (mod(iVox,updateEvery) == 0)
                           spm_progress_bar('Set',10 + 80 * (iVox/S));
                         end
+                      end
                     end
                     if dof_type ~= 0
                         clear cCovBc_g
@@ -470,12 +498,16 @@ for i = 1:length(Ic)
                         % transform into X-scores image
                         % Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,edf-xCon(ic).eidf+1),1);
                         try % check if the user do not have the fcdf function or one with 'upper' option
-                          equivalentScore(score>1) = swe_invNcdf(fcdf(score(score>1),xCon(ic).eidf,edf(score>1)-xCon(ic).eidf+1,'upper')/2).^2; % more accurate to look this way for high scores
-                          equivalentScore(score<=1 & score > 0) = swe_invNcdf(0.5 - fcdf(score(score<=1 & score > 0),xCon(ic).eidf,edf(score<=1 & score > 0)-xCon(ic).eidf+1)/2).^2;
+                          uncP(score>1)             = fcdf(score(score>1),xCon(ic).eidf,edf(score>1)-xCon(ic).eidf+1,'upper'); % more accurate to look this way for high scores
+                          equivalentScore(score>1)  = swe_invNcdf(uncP(score>1)/2).^2;
+                          uncP(score<=1 & score > 0)            = 1 - fcdf(score(score<=1 & score > 0),xCon(ic).eidf,edf(score<=1 & score > 0)-xCon(ic).eidf+1);
+                          equivalentScore(score<=1 & score > 0) = swe_invNcdf(uncP(score<=1 & score > 0)/2).^2;
                         catch 
-                          equivalentScore(score>0) = swe_invNcdf(betainc((edf(score>0) - xCon(ic).eidf + 1)./(edf(score>0) - xCon(ic).eidf + 1 + xCon(ic).eidf * score(score>0)),(edf(score>0)-xCon(ic).eidf+1)/2, xCon(ic).eidf/2)/2).^2; 
+                          uncP(score>0)            = betainc((edf(score>0) - xCon(ic).eidf + 1)./(edf(score>0) - xCon(ic).eidf + 1 + xCon(ic).eidf * score(score>0)),(edf(score>0)-xCon(ic).eidf+1)/2, xCon(ic).eidf/2); % more accurate to look this way for high scores
+                          equivalentScore(score>0) = swe_invNcdf(uncP(score>0)/2).^2; 
 %                             Z2 = swe_invNcdf(0.5 - spm_Fcdf(Z,xCon(ic).eidf, edf-xCon(ic).eidf+1)/2).^2;
                         end
+                        uncP(score == 0)            = 0;
                         equivalentScore(score == 0) = 0;
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Fcdf(Z,xCon(ic).eidf,edf));
@@ -485,12 +517,16 @@ for i = 1:length(Ic)
                         % transform into X-scores image
                         %Z2 = chi2inv(spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1),1);
                         try % check if the user do not have the fcdf function or one with 'upper' options
-                          equivalentScore(score>1) = swe_invNcdf(fcdf(score(score>1),xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1,'upper')/2).^2; % more accurate to look this way for high score
-                          equivalentScore(score<=1 & score > 0) = swe_invNcdf(0.5 - fcdf(score(score<=1 & score > 0),xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1)/2).^2;
-                        catch 
-                          equivalentScore(score>0) = swe_invNcdf(betainc((xCon(ic).edf - xCon(ic).eidf + 1)./(xCon(ic).edf - xCon(ic).eidf + 1 + xCon(ic).eidf * score(score>0)),(xCon(ic).edf-xCon(ic).eidf+1)/2, xCon(ic).eidf/2)/2).^2; 
+                          uncP(score>1)             = fcdf(score(score>1),xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1,'upper');% more accurate to look this way for high score
+                          equivalentScore(score>1)  = swe_invNcdf(uncP(score>1)/2).^2;
+                          uncP(score<=1 & score > 0)            = 1 - fcdf(score(score<=1 & score > 0),xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1);
+                          equivalentScore(score<=1 & score > 0) = swe_invNcdf(uncP(score<=1 & score > 0)/2).^2;
+                        catch
+                          uncP(score>0)            = betainc((xCon(ic).edf - xCon(ic).eidf + 1)./(xCon(ic).edf - xCon(ic).eidf + 1 + xCon(ic).eidf * score(score>0)),(xCon(ic).edf-xCon(ic).eidf+1)/2, xCon(ic).eidf/2);
+                          equivalentScore(score>0) = swe_invNcdf(uncP(score>0)/2).^2; 
 %                           Z2(Z>0) = swe_invNcdf(0.5 - spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf-xCon(ic).eidf+1)/2).^2;
                         end
+                        uncP(score == 0)            = 0;
                         equivalentScore(score == 0) = 0;
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf));
@@ -563,6 +599,34 @@ for i = 1:length(Ic)
         else
            fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
             '...written %s',spm_str_manip(xCon(ic).Vspm2.fname,'t')));   %-#         
+        end
+        
+        % save raw uncorrected p-values (new on 05/11/2017)
+        if isMat
+          xCon(ic).VspmUncP = sprintf('spm%s_%04d.mat','UncP',ic);
+          save(xCon(ic).VspmUncP, 'uncP');
+        else
+          xCon(ic).VspmUncP = struct(...
+            'fname',  sprintf('spm%s_%04d.img','UncP',ic),...
+            'dim',    SwE.xVol.DIM',...
+            'dt',     [spm_type('float32'), spm_platform('bigend')],...
+            'mat',    SwE.xVol.M,...
+            'pinfo',  [1,0,0]',...
+            'descrip',sprintf('spm{%s} - contrast %d: %s',...%'SwE{%c_%s} - contrast %d: %s'
+            'UncP',ic,xCon(ic).name));% eSTAT,str,ic,xCon(ic).name));
+          xCon(ic).VspmUncP = spm_create_vol(xCon(ic).VspmUncP);
+          
+          tmp           = zeros(SwE.xVol.DIM');
+          tmp(Q)        = uncP;
+          xCon(ic).VspmUncP = spm_write_vol(xCon(ic).VspmUncP,tmp);
+        end
+        clear tmp uncP
+        if isMat
+          fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+            '...written %s',spm_str_manip(xCon(ic).VspmUncP,'t')));
+        else
+          fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+            '...written %s',spm_str_manip(xCon(ic).VspmUncP.fname,'t')));
         end
         
         if dof_type

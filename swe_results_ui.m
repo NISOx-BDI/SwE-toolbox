@@ -262,6 +262,13 @@ switch lower(Action), case 'setup'                         %-Set up results
         [SwE,xSwE] = swe_getSPM;
     end
     
+    % check format of data
+    [~,~,file_ext] = fileparts(SwE.xY.P{1});
+    isMat          = strcmpi(file_ext,'.mat');
+    while(isMat)
+      [SwE,xSwE] = swe_getSPM(xSwE);
+    end
+    
     if isempty(xSwE) 
         varargout = {[],[],[]};
         return;
@@ -323,7 +330,7 @@ switch lower(Action), case 'setup'                         %-Set up results
                 error('Unknown data type.');
         end
     end
-    if DIM(3) == 1, units{3} = ''; end
+    if ~isMat && DIM(3) == 1, units{3} = ''; end
     xSwE.units      = units;
     SwE.xVol.units  = units;
     
