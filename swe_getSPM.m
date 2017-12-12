@@ -215,7 +215,14 @@ catch
 end
 
 if isfield(SwE, 'WB')
-  error('No result display feature is currentely availabe for the Wild Bootstrap. The results are written into -log10(p-values) images (e.g., see lP_FWE+.img for FWE-corrected p-values) into the folder used for the analysis. You can display and threshold these images using SPM or an alternative software package.');
+  msg = {'No result display feature is currently availabe for the Wild Bootstrap. The results are written into -log10(p-values) images (e.g., see lP_FWE+.img for FWE-corrected p-values) into the folder used for the analysis. You can display and threshold these images using SPM or an alternative software package.'
+  '\n\nBelow, a quick description of all possible outputs:'
+  '\n - lP+ & lP-: Images of -log10(voxel-wise uncorrected non-parametric P-values, positive or negative.)'
+  '\n - lP_FWE+ & lP_FWE-: Images of -log10(voxel-wise FWE-corrected non-parametric P-values, positive or negative). Here, FWE-corrected non-parametric P-values are the proportion of the wild bootstrap distribution for the maximal statistic which exceeds the statistic image at the voxel.'
+  '\n - lP_FDR+ & lP_FDR-: Images of -log10(voxel-wise FDR-corrected non-parametric P-values, positive or negative). They are computed based by applying BH-fdr correction on lP+ & lP-.'
+  '\n - lP_clusterFWE+ & lP_clusterFWE-: Images of -log10(cluster-wise FWE-corrected non-parametric P-values, positive or negative). Note that, the -log10(p-values) of each formed cluster is repeated at each voxel belonging to this cluster. More iinformation about the formed cluters can be found in the "SwE.mat" file in the field SwE.WB.clusterInfo.'
+  '%s'};
+  error(strcat(msg{1:6}),'');
 end
 
 SwE.swd = swd;
