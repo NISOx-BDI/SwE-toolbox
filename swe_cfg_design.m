@@ -23,9 +23,9 @@ scans         = cfg_files;
 scans.tag     = 'scans';
 scans.name    = 'Scans';
 scans.help    = {' '
-    'Select the images (".img" or ".nii") or a single ".mat" object containing the matrix of data with the subjects in rows.'
+    'Select the images (".img" or ".nii") or a single ".mat" object containing the matrix of data with the scans in rows.'
     'The images must all have the same image dimensions, orientation, voxel size etc.'
-    ' '};
+    'The order of images or of the rows in the matrix in the ".mat" file does not matter, but the indicator vectors "Subjects", "Visits" (only for the modified SwE) and "Groups" (only for the modified SwE) must reflect this order.'};
 scans.filter = {'image', 'mat'};
 scans.ufilter = '.*';
 scans.num     = [1 Inf];
@@ -37,9 +37,11 @@ groups         = cfg_entry;
 groups.tag     = 'groups';
 groups.name    = 'Groups';
 groups.help    = {' '
-             'Vector of groups.'
-             'Enter the groups in the ordering of the scans'
-             'The groups correspond to subjects sharing a common covariance matrix'
+             'Vector of groups of length equal to the number of scans.'
+             'Enter the groups in the ordering of the scans.'
+             'The groups correspond to subjects sharing a common covariance matrix.'
+             'The common covariance matrices are allowed to be different accross groups.'
+            
              ' '}';
 groups.strtype = 'e';
 groups.num     = [Inf 1];
@@ -52,7 +54,7 @@ subjects         = cfg_entry;
 subjects.tag     = 'subjects';
 subjects.name    = 'Subjects';
 subjects.help    = {' '
-             'Vector of subjects.'
+             'Vector of subjects of length equal to the number of scans.'
              'Enter the subjects in the ordering of the scans'
              ' '}';
 subjects.strtype = 'e';
@@ -65,9 +67,9 @@ visits         = cfg_entry;
 visits.tag     = 'visits';
 visits.name    = 'Visits';
 visits.help    = {' '
-             'Vector of visit categories.'
+             'Vector of visit categories of length equal to the number of scans.'
              'Enter the visit categories in the ordering of the scans'
-             'The visit categories must be consistent accross subjects belonging to the same group'
+             'The visit categories must be consistent accross subjects belonging to the same group.'
              ' '}';
 visits.strtype = 'e';
 visits.num     = [Inf 1];
@@ -80,7 +82,7 @@ c         = cfg_entry;
 c.tag     = 'c';
 c.name    = 'Vector';
 c.help    = {' '
-             'Vector of covariate values.'
+             'Vector of covariate valuesof length equal to the number of scans.'
              'Enter the covariate values in the ordering of the scans'
              ' ' }';
 c.strtype = 'e';
@@ -142,7 +144,9 @@ cov.tag     = 'cov';
 cov.name    = 'Covariate';
 cov.val     = {c cname };
 %cov.val     = {c cname iCFI iCC };
-cov.help    = {'Add a new covariate to your design'};
+cov.help    = {'Add a new covariate to your design.'
+               'Please note that no covariates is added per default. Thus, all the model covariates must be added by the user.'
+               'Note also that a function called swe_splitCovariate can be used to split time-varying covariates into a cross-sectional component and a longitidinal component. This may be useful to take apart these two different mode of varition'};
 
 % ---------------------------------------------------------------------
 % generic Covariates
