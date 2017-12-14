@@ -215,7 +215,14 @@ catch
 end
 
 if isfield(SwE, 'WB')
-  error('No result display feature is currentely availabe for the Wild Bootstrap. The results are written into -log10(p-values) images (e.g., see lP_FWE+.img for FWE-corrected p-values) into the folder used for the analysis. You can display and threshold these images using SPM or an alternative software package.');
+  msg = {'No result display feature is currently availabe for the Wild Bootstrap. The results are written into -log10(p-values) images (e.g., see lP_FWE+.img for FWE-corrected p-values) into the folder used for the analysis. You can display and threshold these images using SPM or an alternative software package.'
+  '\n\nBelow, a quick description of all possible outputs:'
+  '\n - lP+ & lP-: Images of -log10(voxel-wise uncorrected non-parametric P-values, positive or negative.)'
+  '\n - lP_FWE+ & lP_FWE-: Images of -log10(voxel-wise FWE-corrected non-parametric P-values, positive or negative). Here, FWE-corrected non-parametric P-values are the proportion of the wild bootstrap distribution for the maximal statistic which exceeds the statistic image at the voxel.'
+  '\n - lP_FDR+ & lP_FDR-: Images of -log10(voxel-wise FDR-corrected non-parametric P-values, positive or negative). They are computed based by applying BH-fdr correction on lP+ & lP-.'
+  '\n - lP_clusterFWE+ & lP_clusterFWE-: Images of -log10(cluster-wise FWE-corrected non-parametric P-values, positive or negative). Note that, the -log10(p-values) of each formed cluster is repeated at each voxel belonging to this cluster. More iinformation about the formed cluters can be found in the "SwE.mat" file in the field SwE.WB.clusterInfo.'
+  '%s'};
+  error(strcat(msg{1:6}),'');
 end
 
 SwE.swd = swd;
@@ -236,13 +243,22 @@ catch
     
 end
 
+% check format of data
+[~,~,file_ext] = fileparts(SwE.xY.P{1});
+isMat          = strcmpi(file_ext,'.mat');
+
 xX   = SwE.xX;                      %-Design definition structure
 XYZ  = SwE.xVol.XYZ;                %-XYZ coordinates
 S    = SwE.xVol.S;                  %-search Volume {voxels}
 % R    = SwE.xVol.R;                  %-search Volume {resels}
-M    = SwE.xVol.M(1:3,1:3);         %-voxels to mm matrix
-VOX  = sqrt(diag(M'*M))';           %-voxel dimensions
-
+if isMat
+  M = SwE.xVol.M;
+  VOX = [];
+  clear xSwE
+else
+  M    = SwE.xVol.M(1:3,1:3);         %-voxels to mm matrix
+  VOX  = sqrt(diag(M'*M))';           %-voxel dimensions
+end
 % check the data and other files have valid filenames
 %--------------------------------------------------------------------------
 %something here occurs and the paths to spm and swe toolboxes disappear????
@@ -383,7 +399,11 @@ try
     Mask = ~isempty(xSwE.Im) * (isnumeric(xSwE.Im) + 2*iscellstr(xSwE.Im));
 catch
     % Mask = spm_input('mask with other contrast(s)','+1','y/n',[1,0],2);
-    Mask = spm_input('apply masking','+1','b','none|contrast|image',[0,1,2],1);
+    if isMat
+      Mask = 0;
+    else
+      Mask = spm_input('apply masking','+1','b','none|contrast|image',[0,1,2],1);
+    end
 end
 if Mask == 1
     
@@ -419,7 +439,11 @@ elseif Mask == 2
     try
         Im = xSwE.Im;
     catch
+      if isMat
+        Im = cellstr(spm_select([1 Inf],'mat','Select mask image(s)'));
+      else
         Im = cellstr(spm_select([1 Inf],'image','Select mask image(s)'));
+      end
     end
     
     %-Inclusive or exclusive masking
@@ -441,52 +465,58 @@ end
 
 %-Create/Get title string for comparison
 %--------------------------------------------------------------------------
-if nc == 1
-    str  = xCon(Ic).name;
+if isMat
+  titlestr = xCon(Ic).name;
 else
-    str  = [sprintf('contrasts {%d',Ic(1)),sprintf(',%d',Ic(2:end)),'}'];
-    if n == nc
-        str = [str ' (global null)'];
-    elseif n == 1
-        str = [str ' (conj. null)'];
-    else
-        str = [str sprintf(' (Ha: k>=%d)',(nc-n)+1)];
-    end
-end
-if Ex
-    mstr = 'masked [excl.] by';
-else
-    mstr = 'masked [incl.] by';
-end
-if isnumeric(Im)
-    if length(Im) == 1
-        str = sprintf('%s (%s %s at p=%g)',str,mstr,xCon(Im).name,pm);
-    elseif ~isempty(Im)
-        str = [sprintf('%s (%s {%d',str,mstr,Im(1)),...
-            sprintf(',%d',Im(2:end)),...
-            sprintf('} at p=%g)',pm)];
-    end
-elseif iscellstr(Im) && numel(Im) > 0
-    [pf,nf,ef] = spm_fileparts(Im{1});
-    str  = sprintf('%s (%s %s',str,mstr,[nf ef]);
-    for i=2:numel(Im)
-        [pf,nf,ef] = spm_fileparts(Im{i});
-        str =[str sprintf(', %s',[nf ef])];
-    end
-    str = [str ')'];
-end
-try
-    titlestr = xSwE.title;
-    if isempty(titlestr)
-        titlestr = str;
-    end
-catch
-    titlestr = spm_input('title for comparison','+1','s',str);
+  if nc == 1
+      str  = xCon(Ic).name;
+  else
+      str  = [sprintf('contrasts {%d',Ic(1)),sprintf(',%d',Ic(2:end)),'}'];
+      if n == nc
+          str = [str ' (global null)'];
+      elseif n == 1
+          str = [str ' (conj. null)'];
+      else
+          str = [str sprintf(' (Ha: k>=%d)',(nc-n)+1)];
+      end
+  end
+  if Ex
+      mstr = 'masked [excl.] by';
+  else
+      mstr = 'masked [incl.] by';
+  end
+  if isnumeric(Im)
+      if length(Im) == 1
+          str = sprintf('%s (%s %s at p=%g)',str,mstr,xCon(Im).name,pm);
+      elseif ~isempty(Im)
+          str = [sprintf('%s (%s {%d',str,mstr,Im(1)),...
+              sprintf(',%d',Im(2:end)),...
+              sprintf('} at p=%g)',pm)];
+      end
+  elseif iscellstr(Im) && numel(Im) > 0
+      [pf,nf,ef] = spm_fileparts(Im{1});
+      str  = sprintf('%s (%s %s',str,mstr,[nf ef]);
+      for i=2:numel(Im)
+          [pf,nf,ef] = spm_fileparts(Im{i});
+          str =[str sprintf(', %s',[nf ef])];
+      end
+      str = [str ')'];
+  end
+  try
+      titlestr = xSwE.title;
+      if isempty(titlestr)
+          titlestr = str;
+      end
+  catch
+      titlestr = spm_input('title for comparison','+1','s',str);
+  end
 end
 
 %-Compute & store contrast parameters, contrast/ESS images, & SwE images
 %==========================================================================
 SwE.xCon = xCon;
+alreadyComputed = ~isempty(xCon(Ic).Vspm);
+
 if isnumeric(Im)
     SwE  = swe_contrasts(SwE, unique([Ic, Im, IcAdd]));
 else
@@ -495,6 +525,7 @@ end
 xCon     = SwE.xCon;
 STAT     = xCon(Ic(1)).STAT;
 VspmSv   = cat(1,xCon(Ic).Vspm);
+
 
 %-Check conjunctions - Must be same STAT w/ same df
 %--------------------------------------------------------------------------
@@ -536,7 +567,13 @@ fprintf('\t%-32s: %30s','SPM computation','...initialising')            %-#
 %--------------------------------------------------------------------------
 Z     = Inf;
 for i = Ic
+  if isMat
+    load(xCon(i).Vspm);
+    Z = min(Z,equivalentScore);
+    clear equivalentScore
+  else
     Z = min(Z,spm_get_data(xCon(i).Vspm,XYZ));
+  end
 end
 
 
@@ -548,28 +585,40 @@ Zum   = Z;
 %-Compute mask and eliminate masked voxels
 %--------------------------------------------------------------------------
 for i = 1:numel(Im)
-    
+
     fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...masking')           %-#
     if isnumeric(Im)
+      if isMat
+        load(xCon(Im(i)).Vspm);
+        Mask = equivalentScore;
+        clear equivalentScore
+      else
         Mask = spm_get_data(xCon(Im(i)).Vspm,XYZ);
-        switch xCon(Im(i)).STAT
-            case 'T'
-                um   = swe_invNcdf(1-pm);
-            case 'F'
-                um   = spm_invXcdf(1-pm,1);
-        end        
-        if Ex
-            Q = Mask <= um;
-        else
-            Q = Mask >  um;
-        end
+      end
+      switch xCon(Im(i)).STAT
+        case 'T'
+          um   = swe_invNcdf(1-pm);
+        case 'F'
+          um   = spm_invXcdf(1-pm,1);
+      end
+      if Ex
+        Q = Mask <= um;
+      else
+        Q = Mask >  um;
+      end
     else
+      if isMat
+        Mask = importdata(Im{i});
+      else
         v = spm_vol(Im{i});
         Mask = spm_get_data(v,v.mat\SwE.xVol.M*[XYZ; ones(1,size(XYZ,2))]);
-        Q = Mask ~= 0 & ~isnan(Mask);
-        if Ex, Q = ~Q; end
+      end
+      Q = Mask ~= 0 & ~isnan(Mask);
+      if Ex, Q = ~Q; end
     end
-    XYZ   = XYZ(:,Q);
+    if ~isMat
+      XYZ   = XYZ(:,Q);
+    end
     Z     = Z(Q);
     if isempty(Q)
         fprintf('\n')                                                   %-#
@@ -579,200 +628,215 @@ for i = 1:numel(Im)
 end
 
 
-%==========================================================================
-% - H E I G H T   &   E X T E N T   T H R E S H O L D S
-%==========================================================================
-
-u   = -Inf;        % height threshold
-k   = 0;           % extent threshold {voxels}
-
-
-%-Height threshold - classical inference
-%--------------------------------------------------------------------------
-if STAT ~= 'P'
-    
-    %-Get height threshold
-    %----------------------------------------------------------------------
-    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...height threshold')  %-#
-    try
-        thresDesc = xSwE.thresDesc;
-    catch
-          str = 'FDR|none';
-%         if topoFDR
-%             str = 'FWE|none';
-%         else
-%             str = 'FWE|FDR|none';
-%         end
-        thresDesc = spm_input('p value adjustment to control','+1','b',str,[],1);
-    end
-        
-    switch thresDesc
-        
-%         case 'FWE' % Family-wise false positive rate
-%             %--------------------------------------------------------------
-%             try
-%                 u = xSwE.u;
-%             catch
-%                 u = spm_input('p value (FWE)','+0','r',0.05,1,[0,1]);
-%             end
-%             thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
-%             switch STAT
-%                 case 'T'
-%                     u   = spm_uc(u,[0,0],'Z',R,n,S);
-%                 case 'F'
-%                     u   = spm_uc(u,[0,1],'X',R,n,S);
-%             end
-            
-            
-        case 'FDR' % False discovery rate
-            %--------------------------------------------------------------
-%             if topoFDR,
-%                 fprintf('\n');                                          %-#
-%                 error('Change defaults.stats.topoFDR to use voxel FDR');
-%             end
-            try
-                u = xSwE.u;
-            catch
-                u = spm_input('p value (FDR)','+0','r',0.05,1,[0,1]);
-            end
-            thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
-            switch STAT
-                case 'T'
-                   u = spm_uc_FDR(u,df,'Z',n,VspmSv,0); 
-                case 'F'
-                   u = spm_uc_FDR(u,df,'X',n,VspmSv,0); 
-            end
-
-        case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
-            %--------------------------------------------------------------
-            try
-                u = xSwE.u;
-            catch
-                u = spm_input(['threshold {',STAT,' or p value}'],'+0','r',0.001,1);
-            end
-            if u <= 1
-                thresDesc = ['p<' num2str(u) ' (unc.)'];
-                switch STAT
-                    case 'T'
-                        u  = swe_invNcdf(1-u^(1/n));
-                    case 'F'
-                        u  = spm_invXcdf(1-u^(1/n),1);
-                end
-            else
-                thresDesc = [STAT '=' num2str(u) ];
-            end
-            
-            
-            
-        otherwise
-            %--------------------------------------------------------------
-            fprintf('\n');                                              %-#
-            error('Unknown control method "%s".',thresDesc);
-            
-    end % switch thresDesc
-    %-Compute p-values for topological and voxel-wise FDR (all search voxels)
-    %----------------------------------------------------------------------
-    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...for voxelFDR')  %-#
-    switch STAT
-        case 'T'
-            Ps = (1-spm_Ncdf(Zum)).^n;
-        case 'F'
-            Ps = (1-spm_Xcdf(Zum,df(2))).^n;
-    end
-    %-Peak FDR
-    %----------------------------------------------------------------------
-%     switch STAT
-%         case 'T'
-%             [up,Pp] = spm_uc_peakFDR(0.05,df,'Z',R,n,Zum,XYZum,u);
-%         case 'F'
-%             [up,Pp] = spm_uc_peakFDR(0.05,df,'X',R,n,Zum,XYZum,u);
-%     end
-        up  = NaN;
-        Pp  = NaN;
-    %-Cluster FDR
-    %----------------------------------------------------------------------
-%     if STAT == 'T' && n == 1
-%         V2R        = 1/prod(SwE.xVol.FWHM(SwE.xVol.DIM > 1));
-%         [uc,Pc,ue] = spm_uc_clusterFDR(0.05,df,STAT,R,n,Zum,XYZum,V2R,u);
-%     else
-        uc  = NaN;
-        ue  = NaN;
-        Pc  = [];
-%     end
-    
-    %-Peak FWE
-    %----------------------------------------------------------------------
-%     switch STAT
-%         case 'T'
-%             uu      = spm_uc(0.05,[0 0],'Z',R,n,S);
-%         case 'F'
-%             uu      = spm_uc(0.05,[0 1],'X',R,n,S);
-%     end
-    uu = [];
-    
-end
-
-%-Calculate height threshold filtering
-%--------------------------------------------------------------------------
-Q      = find(Z > u);
-
-%-Apply height threshold
-%--------------------------------------------------------------------------
-Z      = Z(:,Q);
-XYZ    = XYZ(:,Q);
-if isempty(Q)
-    fprintf('\n');                                                      %-#
-    warning('SwE:NoVoxels','No voxels survive masking at p=%4.2f',pm);
-end
+  %==========================================================================
+  % - H E I G H T   &   E X T E N T   T H R E S H O L D S
+  %==========================================================================
+if ~isMat
+  u   = -Inf;        % height threshold
+  k   = 0;           % extent threshold {voxels}
 
 
-%-Extent threshold (disallowed for conjunctions)
-%--------------------------------------------------------------------------
-if ~isempty(XYZ) && nc == 1
-    
-    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...extent threshold')  %-#
-    
-    %-Get extent threshold [default = 0]
-    %----------------------------------------------------------------------
-    try
-        k = xSwE.k;
-    catch
-        k = spm_input('& extent threshold {voxels}','+1','r',0,1,[0,Inf]);
-    end
-    
-    %-Calculate extent threshold filtering
-    %----------------------------------------------------------------------
-    A     = spm_clusters(XYZ);
-    Q     = [];
-    for i = 1:max(A)
-        j = find(A == i);
-        if length(j) >= k; Q = [Q j]; end
-    end
-    
-    % ...eliminate voxels
-    %----------------------------------------------------------------------
-    Z     = Z(:,Q);
-    XYZ   = XYZ(:,Q);
-    if isempty(Q)
-        fprintf('\n');                                                  %-#
-        warning('SwE:NoVoxels','No voxels survive masking at p=%4.2f',pm);
-    end
-    
-else
-    
-    k = 0;
-    
-end % (if ~isempty(XYZ))
+  %-Height threshold - classical inference
+  %--------------------------------------------------------------------------
+  if STAT ~= 'P'
 
+      %-Get height threshold
+      %----------------------------------------------------------------------
+      fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...height threshold')  %-#
+      try
+          thresDesc = xSwE.thresDesc;
+      catch
+            str = 'FDR|none';
+  %         if topoFDR
+  %             str = 'FWE|none';
+  %         else
+  %             str = 'FWE|FDR|none';
+  %         end
+          thresDesc = spm_input('p value adjustment to control','+1','b',str,[],1);
+      end
+
+      switch thresDesc
+
+  %         case 'FWE' % Family-wise false positive rate
+  %             %--------------------------------------------------------------
+  %             try
+  %                 u = xSwE.u;
+  %             catch
+  %                 u = spm_input('p value (FWE)','+0','r',0.05,1,[0,1]);
+  %             end
+  %             thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
+  %             switch STAT
+  %                 case 'T'
+  %                     u   = spm_uc(u,[0,0],'Z',R,n,S);
+  %                 case 'F'
+  %                     u   = spm_uc(u,[0,1],'X',R,n,S);
+  %             end
+
+
+          case 'FDR' % False discovery rate
+              %--------------------------------------------------------------
+  %             if topoFDR,
+  %                 fprintf('\n');                                          %-#
+  %                 error('Change defaults.stats.topoFDR to use voxel FDR');
+  %             end
+              try
+                  u = xSwE.u;
+              catch
+                  u = spm_input('p value (FDR)','+0','r',0.05,1,[0,1]);
+              end
+              thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
+              switch STAT
+                  case 'T'
+                     u = spm_uc_FDR(u,df,'Z',n,VspmSv,0); 
+                  case 'F'
+                     u = spm_uc_FDR(u,df,'X',n,VspmSv,0); 
+              end
+
+          case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
+              %--------------------------------------------------------------
+              try
+                  u = xSwE.u;
+              catch
+                  u = spm_input(['threshold {',STAT,' or p value}'],'+0','r',0.001,1);
+              end
+              if u <= 1
+                  thresDesc = ['p<' num2str(u) ' (unc.)'];
+                  switch STAT
+                      case 'T'
+                          u  = swe_invNcdf(1-u^(1/n));
+                      case 'F'
+                          u  = spm_invXcdf(1-u^(1/n),1);
+                  end
+              else
+                  thresDesc = [STAT '=' num2str(u) ];
+              end
+
+
+
+          otherwise
+              %--------------------------------------------------------------
+              fprintf('\n');                                              %-#
+              error('Unknown control method "%s".',thresDesc);
+
+      end % switch thresDesc
+      %-Compute p-values for topological and voxel-wise FDR (all search voxels)
+      %----------------------------------------------------------------------
+      fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...for voxelFDR')  %-#
+      switch STAT
+          case 'T'
+              Ps = (1-spm_Ncdf(Zum)).^n;
+          case 'F'
+              Ps = (1-spm_Xcdf(Zum,df(2))).^n;
+      end
+      %-Peak FDR
+      %----------------------------------------------------------------------
+  %     switch STAT
+  %         case 'T'
+  %             [up,Pp] = spm_uc_peakFDR(0.05,df,'Z',R,n,Zum,XYZum,u);
+  %         case 'F'
+  %             [up,Pp] = spm_uc_peakFDR(0.05,df,'X',R,n,Zum,XYZum,u);
+  %     end
+          up  = NaN;
+          Pp  = NaN;
+      %-Cluster FDR
+      %----------------------------------------------------------------------
+  %     if STAT == 'T' && n == 1
+  %         V2R        = 1/prod(SwE.xVol.FWHM(SwE.xVol.DIM > 1));
+  %         [uc,Pc,ue] = spm_uc_clusterFDR(0.05,df,STAT,R,n,Zum,XYZum,V2R,u);
+  %     else
+          uc  = NaN;
+          ue  = NaN;
+          Pc  = [];
+  %     end
+
+      %-Peak FWE
+      %----------------------------------------------------------------------
+  %     switch STAT
+  %         case 'T'
+  %             uu      = spm_uc(0.05,[0 0],'Z',R,n,S);
+  %         case 'F'
+  %             uu      = spm_uc(0.05,[0 1],'X',R,n,S);
+  %     end
+      uu = [];
+
+  end
+
+  %-Calculate height threshold filtering
+  %--------------------------------------------------------------------------
+  Q      = find(Z > u);
+
+  %-Apply height threshold
+  %--------------------------------------------------------------------------
+  Z      = Z(:,Q);
+  if ~isMat
+    XYZ    = XYZ(:,Q);
+  end
+  if isempty(Q)
+      fprintf('\n');                                                      %-#
+      warning('SwE:NoVoxels','No voxels survive masking at p=%4.2f',pm);
+  end
+
+
+  %-Extent threshold (disallowed for conjunctions)
+  %--------------------------------------------------------------------------
+  if ~isempty(XYZ) && nc == 1
+
+      fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...extent threshold')  %-#
+
+      %-Get extent threshold [default = 0]
+      %----------------------------------------------------------------------
+      try
+          k = xSwE.k;
+      catch
+          k = spm_input('& extent threshold {voxels}','+1','r',0,1,[0,Inf]);
+      end
+
+      %-Calculate extent threshold filtering
+      %----------------------------------------------------------------------
+      A     = spm_clusters(XYZ);
+      Q     = [];
+      for i = 1:max(A)
+          j = find(A == i);
+          if length(j) >= k; Q = [Q j]; end
+      end
+
+      % ...eliminate voxels
+      %----------------------------------------------------------------------
+      Z     = Z(:,Q);
+      XYZ   = XYZ(:,Q);
+      if isempty(Q)
+          fprintf('\n');                                                  %-#
+          warning('SwE:NoVoxels','No voxels survive masking at p=%4.2f',pm);
+      end
+
+  else
+
+      k = 0;
+
+  end % (if ~isempty(XYZ))
+end 
 
 %==========================================================================
 % - E N D
 %==========================================================================
-fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done')                %-#
+if alreadyComputed && isMat
+  fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...already done previously')                %-#
+else
+  fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done')                %-#
+end
 spm('Pointer','Arrow')
 
 %-Assemble output structures of unfiltered data
 %==========================================================================
+if isMat
+  XYZmm     = [];
+  Z         = [];
+  u         = [];
+  k         = [];
+  thresDesc = [];
+else
+  XYZmm = SwE.xVol.M(1:3,:)*[XYZ; ones(1,size(XYZ,2))];
+end
 xSwE   = struct( ...
             'swd',      swd,...
             'title',    titlestr,...
@@ -788,7 +852,7 @@ xSwE   = struct( ...
             'u',        u,...
             'k',        k,...
             'XYZ',      XYZ,...
-            'XYZmm',    SwE.xVol.M(1:3,:)*[XYZ; ones(1,size(XYZ,2))],...
+            'XYZmm',    XYZmm,...
             'S',        SwE.xVol.S,...
             'M',        SwE.xVol.M,...
             'iM',       SwE.xVol.iM,...

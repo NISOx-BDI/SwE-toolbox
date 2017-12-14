@@ -23,8 +23,10 @@ scans         = cfg_files;
 scans.tag     = 'scans';
 scans.name    = 'Scans';
 scans.help    = {' '
-    'Select the images.  They must all have the same image dimensions, orientation, voxel size etc.'};
-scans.filter = 'image';
+    'Select the images (".img" or ".nii") or a single ".mat" object containing the matrix of data with the scans in rows.'
+    'The images must all have the same image dimensions, orientation, voxel size etc.'
+    'The order of images or of the rows in the matrix in the ".mat" file does not matter, but the indicator vectors "Subjects", "Visits" (only for the modified SwE) and "Groups" (only for the modified SwE) must reflect this order.'};
+scans.filter = {'image', 'mat'};
 scans.ufilter = '.*';
 scans.num     = [1 Inf];
 
@@ -35,9 +37,11 @@ groups         = cfg_entry;
 groups.tag     = 'groups';
 groups.name    = 'Groups';
 groups.help    = {' '
-             'Vector of groups.'
-             'Enter the groups in the ordering of the scans'
-             'The groups correspond to subjects sharing a common covariance matrix'
+             'Vector of groups of length equal to the number of scans.'
+             'Enter the groups in the ordering of the scans.'
+             'The groups correspond to subjects sharing a common covariance matrix.'
+             'The common covariance matrices are allowed to be different accross groups.'
+            
              ' '}';
 groups.strtype = 'e';
 groups.num     = [Inf 1];
@@ -50,7 +54,7 @@ subjects         = cfg_entry;
 subjects.tag     = 'subjects';
 subjects.name    = 'Subjects';
 subjects.help    = {' '
-             'Vector of subjects.'
+             'Vector of subjects of length equal to the number of scans.'
              'Enter the subjects in the ordering of the scans'
              ' '}';
 subjects.strtype = 'e';
@@ -63,9 +67,9 @@ visits         = cfg_entry;
 visits.tag     = 'visits';
 visits.name    = 'Visits';
 visits.help    = {' '
-             'Vector of visit categories.'
+             'Vector of visit categories of length equal to the number of scans.'
              'Enter the visit categories in the ordering of the scans'
-             'The visit categories must be consistent accross subjects belonging to the same group'
+             'The visit categories must be consistent accross subjects belonging to the same group.'
              ' '}';
 visits.strtype = 'e';
 visits.num     = [Inf 1];
@@ -78,7 +82,7 @@ c         = cfg_entry;
 c.tag     = 'c';
 c.name    = 'Vector';
 c.help    = {' '
-             'Vector of covariate values.'
+             'Vector of covariate valuesof length equal to the number of scans.'
              'Enter the covariate values in the ordering of the scans'
              ' ' }';
 c.strtype = 'e';
@@ -140,7 +144,9 @@ cov.tag     = 'cov';
 cov.name    = 'Covariate';
 cov.val     = {c cname };
 %cov.val     = {c cname iCFI iCC };
-cov.help    = {'Add a new covariate to your design'};
+cov.help    = {'Add a new covariate to your design.'
+               'Please note that no covariates is added per default. Thus, all the model covariates must be added by the user.'
+               'Note also that a function called swe_splitCovariate can be used to split time-varying covariates into a cross-sectional component and a longitidinal component. This may be useful to take apart these two different mode of varition'};
 
 % ---------------------------------------------------------------------
 % generic Covariates
@@ -242,7 +248,6 @@ im.help    = {
               'For image data-types without a representation of NaN, zero is the mask value, and the user can choose whether zero voxels should be masked out or not.'
               ''
               'By default, an implicit mask is used. '
-              ''
 }';
 im.labels = {
              'Yes'
@@ -264,8 +269,10 @@ em.help    = {
               ''
               'Explicit mask images can have any orientation and voxel/image size. Nearest neighbour interpolation of a mask image is used if the voxel centers of the input images do not coincide with that of the mask image.'
               ''
+              'Note that, when the data is specified as a matrix save as a ".mat" file, the mask is expected to be specified as a mask vector saved as a ".mat" file.'
+
 }';
-em.filter = 'image';
+em.filter = {'image', 'mat'};
 em.ufilter = '.*';
 em.num     = [0 1];
 
@@ -323,7 +330,7 @@ dof_cl.help    = {  ' '
                 '             This choice tends to overestimate the degrees of freedom, but reduce the quantity of images saved and the computation time.'
                 'approx I: degrees of freedom estimation with the estimate proposed in Guillaume et al. (2014).'
                 '             This choice is not recommended for the classic SwE as, with this SwE version, it generally underestimate  the degrees of freedom in small samples and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
-                'approx II: degrees of freedom estimation with the estimate proposed in Guillaume (in preparation).'
+                'approx II: degrees of freedom estimation with the estimate proposed in Guillaume (2015).'
                 '             This choice is not recommended for the classic SwE as, with this SwE version, it generally overestimate the degrees of freedom in small samples and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
                 'Note that "approx II" is not yet implemented for the classic SwE. It seems that to get accurate inferences with the classic SwE in small samples, it is preferable to consider a non-parametric analysis with the Wild Bootstrap.'
                 ' '
@@ -341,12 +348,12 @@ dof_mo.help    = {  ' '
                 'naive: naive estimation of the degrees of freedom by the total number of subjects belonging to the insparable sub-design matrices involved in the contrast tested minus the number of non-zero pure between covariates present in these insparable sub-design matrices.'
                 '             This choice tends to overestimate the degrees of freedom in some designs, but reduce the quantity of images saved and the computation time.'
                 'approx I: degrees of freedom estimation with the estimate proposed in Guillaume et al. (2014).'
-                '             This estimate assumes no missing data and does not correct for the presence of a small sample bias and a missng data bias.'
+                '             This estimate assumes no missing data and does not correct for the presence of a small sample bias and a missing data bias.'
                 '             Simulations seems to show that the estimate approx II and approx III are better choices (see below).' 
-                'approx II: degrees of freedom estimation with an alternative estimate proposed in Guillaume (in preparation).'
+                'approx II: degrees of freedom estimation with an alternative estimate proposed in Guillaume (2015).'
                 '             The estimate accounts partially for the presence of missing data and for a small-sample bias, but does not account for a missing data bias.'
                 '             Simulations seems to indicate that it performs better than approx I, but should be used only under no missing data'
-                'approx III: degrees of freedom estimation with an alternative estimate proposed in Guillaume (in preparation).'
+                'approx III: degrees of freedom estimation with an alternative estimate proposed in Guillaume (2015).'
                 '             The estimate accounts for the presence of missing data (the missing data bias included), but not for the small-sample bias.'
                 '             Simulations seems to indicate that it systematically performs better than approx II under missing data, but seems slightly less performant (slightly conservative) than approx II under no missing data.'
                 '             That is the recommended choice by default. Nevertheless, if there is no missing data, approx II could be selected instead.'
@@ -551,7 +558,7 @@ WB_type.help    = {''
   ''
   'R-WB: restrited WB which based the resampling on the restricted model (imposing the null hypothesis)'
   ''
-  'Monte Carlo simulations indicates that the R-WB generally outperforms the U-WB and, therefore, it seems preferebale to always use this WB version. The U-WB option is currently available, but nothing indicates that it should be used and thus might be removed later.'
+  'Monte Carlo simulations (see Guillaume, 2015) indicates that the R-WB generally outperforms the U-WB and, therefore, it seems preferebale to always use this WB version. The U-WB option is currently available, but nothing indicates that it should be used and thus might be removed later.'
   ''
   };
 % ---------------------------------------------------------------------
@@ -568,7 +575,7 @@ WB_SwE.help    = {''
   ''
   'R-SwE: restrited SwE which is obtained using the residuals of the restricted model (imposing the null hypothesis)'
   ''
-  'The R-SwE is sometimes considered in the Wild Bootstrap literature. However, in our Monte Carlo simulations, no appreciable differences have been observed between this two versions when they are used with the R-WB, indicating that they could be both considered in practice. Nevertheless, it is clear that the R-SwE is generally a biased estimator of the true covariance matrix of the parameters, making it a "not-so-good" candidate for a "standard" parametric SwE analysis. The latter observation may be an argument in favour of the U-SwE, particularly for cluster analysis where a primary cluster threshold need to be defined.'
+  'The R-SwE is sometimes considered in the Wild Bootstrap literature. However, in our Monte Carlo simulations (see Guillaume, 2015), no appreciable differences have been observed between this two versions when they are used with the R-WB, indicating that they could be both considered in practice. Nevertheless, it is clear that the R-SwE is generally a biased estimator of the true covariance matrix of the parameters, making it a "not-so-good" candidate for a "standard" parametric SwE analysis. The latter observation may be an argument in favour of the U-SwE, particularly for cluster analysis where a primary cluster threshold need to be defined.'
   ''
   };
 % ---------------------------------------------------------------------
@@ -679,17 +686,71 @@ WB_cluster_no.help    = {''
   'No cluster-wise inference will be performed'
   ''};
 % ---------------------------------------------------------------------
-% WB_yes Yes
+% WB_cluster_yes Yes
 % ---------------------------------------------------------------------
 WB_cluster_yes         = cfg_entry;
 WB_cluster_yes.tag     = 'WB_cluster_yes';
-WB_cluster_yes.name    = 'Yes, set the cluster-forming threshold now';
+WB_cluster_yes.name    = 'Yes for image input, set the cluster-forming threshold now';
 WB_cluster_yes.val     = {0.001};
 WB_cluster_yes.help    = {''
-                     'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold need to be set now (p=0.001 per default)'
+                     'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default)'
 ''}';
 WB_cluster_yes.strtype = 'e';
 WB_cluster_yes.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_cluster_yes_mat_clusP cluP
+% ---------------------------------------------------------------------
+WB_cluster_yes_mat_clusP         = cfg_entry;
+WB_cluster_yes_mat_clusP.tag     = 'WB_cluster_yes_mat_clusP';
+WB_cluster_yes_mat_clusP.name    = 'Set the cluster-forming threshold now for ".mat" imput';
+WB_cluster_yes_mat_clusP.val     = {0.001};
+WB_cluster_yes_mat_clusP.help    = {''
+                     'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default)'
+''}';
+WB_cluster_yes_mat_clusP.strtype = 'e';
+WB_cluster_yes_mat_clusP.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_cluster_yes_mat_type cluP
+% ---------------------------------------------------------------------
+WB_cluster_yes_mat_type         = cfg_menu;
+WB_cluster_yes_mat_type.tag     = 'WB_cluster_yes_mat_type';
+WB_cluster_yes_mat_type.name    = 'Select the type of ".mat" inputs';
+WB_cluster_yes_mat_type.val     = {};
+WB_cluster_yes_mat_type.labels  = { 'Volumetric (voxels)' 'Surface (vertices)'};
+WB_cluster_yes_mat_type.help    = {''
+                     'Select the type of ".mat" inputs. Either volumetric or surface data'
+''}';
+WB_cluster_yes_mat_type.values  = {0 1};
+
+% ---------------------------------------------------------------------
+% WB_cluster_yes_mat_loc loc
+% ---------------------------------------------------------------------
+WB_cluster_yes_mat_loc         = cfg_files;
+WB_cluster_yes_mat_loc.tag     = 'WB_cluster_yes_mat_loc';
+WB_cluster_yes_mat_loc.name    = 'Spatial information';
+WB_cluster_yes_mat_loc.help    = {''
+                     'For volumetric data, the 3D location of voxels is expected in voxel coordinates (XYZ_vox).'
+                     ''
+                     'For surface data, the faces (or triangles) information is expected in vertex coordinates.'
+                     ''
+                     'Note that this spatial information needs to be saved in a ".mat" file as a matrix of size 3 x nVoxels (or its transposed) or nFaces x 3 (or its transposed)'
+}';
+WB_cluster_yes_mat_loc.filter = {'mat'};
+WB_cluster_yes_mat_loc.ufilter = '.*';
+WB_cluster_yes_mat_loc.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_cluster_yesMat Yes
+% ---------------------------------------------------------------------
+WB_cluster_yes_mat         = cfg_branch;
+WB_cluster_yes_mat.tag     = 'WB_cluster_yes_mat';
+WB_cluster_yes_mat.name    = 'Yes for ".mat" input';
+WB_cluster_yes_mat.val     = {WB_cluster_yes_mat_clusP WB_cluster_yes_mat_type WB_cluster_yes_mat_loc};
+WB_cluster_yes_mat.help    = {''
+                     'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default) and some spatial information needs to be specified in order to form clusters.'
+}';
 
 % ---------------------------------------------------------------------
 % WB_nB nB
@@ -711,7 +772,7 @@ WB_nB.num     = [1 1];
 WB_cluster         = cfg_choice;
 WB_cluster.tag     = 'WB_cluster';
 WB_cluster.name    = 'Cluster-wise inference';
-WB_cluster.values  = {WB_cluster_no WB_cluster_yes};
+WB_cluster.values  = {WB_cluster_no WB_cluster_yes WB_cluster_yes_mat};
 WB_cluster.val     = {WB_cluster_no};
 WB_cluster.help    = {''
   'No: no cluster-wise inference will be performed'
@@ -727,7 +788,7 @@ WB_yes.tag     = 'WB_yes';
 WB_yes.name    = 'Yes';
 WB_yes.val     = {WB_type WB_ss WB_nB WB_SwE WB_stat WB_cluster};
 WB_yes.help    = {''
-                     'A non-parametric Wild Bootstrap procedure is considered to analyse the data'
+                     'A non-parametric Wild Bootstrap procedure is considered to analyse the data (see Guillaume, 2015)'
 }';
 
 % ---------------------------------------------------------------------
@@ -737,7 +798,7 @@ WB         = cfg_choice;
 WB.tag     = 'WB';
 WB.name    = 'Non-parametric Wild Bootstrap';
 WB.help    = {''
-              'Yes: a non-parametric Wild Bootstrap procedure is considered to analyse the data'
+              'Yes: a non-parametric Wild Bootstrap procedure is considered to analyse the data (see Guillaume, 2015)'
               ''
               'No: only a "standard" parametric SwE analysis is considered (default)'
 }';
