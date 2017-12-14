@@ -669,6 +669,21 @@ if isfield(job.WB, 'WB_yes')
       WB.clusterInfo.primaryThreshold = job.WB.WB_yes.WB_cluster.WB_cluster_yes;
       if WB.clusterInfo.primaryThreshold > 1 || WB.clusterInfo.primaryThreshold < 0
         error('cluster-forming threshold should be between 0 an 1 (this is a probability)');
+      end
+      
+    case 'WB_cluster_yes_mat'
+      WB.clusterWise  = 1;
+      WB.clusterInfo = [];
+      WB.clusterInfo.primaryThreshold = job.WB.WB_yes.WB_cluster.WB_cluster_yes_mat.WB_cluster_yes_mat_clusP;
+      if WB.clusterInfo.primaryThreshold > 1 || WB.clusterInfo.primaryThreshold < 0
+        error('cluster-forming threshold should be between 0 an 1 (this is a probability)');
+      end
+      if job.WB.WB_yes.WB_cluster.WB_cluster_yes_mat.WB_cluster_yes_mat_type == 0
+        WB.clusterInfo.Vxyz = job.WB.WB_yes.WB_cluster.WB_cluster_yes_mat.WB_cluster_yes_mat_loc;
+      elseif job.WB.WB_yes.WB_cluster.WB_cluster_yes_mat.WB_cluster_yes_mat_type == 1
+        WB.clusterInfo.Vfaces = job.WB.WB_yes.WB_cluster.WB_cluster_yes_mat.WB_cluster_yes_mat_loc;
+      else
+        error('wrong specification of the type of ".mat" files')
       end     
   end
   
@@ -697,19 +712,20 @@ end
 
 %-Assemble SwE structure like it is done in SPM structure
 %==========================================================================
-SwE.xY.P    = P;            % filenames
-SwE.xY.VY   = VY;           % mapped data
-SwE.nscan   = size(xX.X,1); % scan number
-SwE.xX      = xX;           % design structure
-SwE.xC      = xC;           % covariate structure
-SwE.xGX     = xGX;          % global structure
-SwE.xM      = xM;           % mask structure
-SwE.xsDes   = xsDes;        % description
-SwE.type    = job.type;     % SwE type (modified or classic)
-SwE.SS      = SS;           % SwE small samples adj. type
-SwE.Subj    = Subj;         % subjects data
-SwE.Vis     = Vis;          % visits data (empty if classic SwE)
-SwE.Gr      = Gr;           % groups data (empty if classic SwE)
+SwE.xY.P      = P;            % filenames
+SwE.xY.VY     = VY;           % mapped data
+SwE.xY.isMat  = isMat
+SwE.nscan     = size(xX.X,1); % scan number
+SwE.xX        = xX;           % design structure
+SwE.xC        = xC;           % covariate structure
+SwE.xGX       = xGX;          % global structure
+SwE.xM        = xM;           % mask structure
+SwE.xsDes     = xsDes;        % description
+SwE.type      = job.type;     % SwE type (modified or classic)
+SwE.SS        = SS;           % SwE small samples adj. type
+SwE.Subj      = Subj;         % subjects data
+SwE.Vis       = Vis;          % visits data (empty if classic SwE)
+SwE.Gr        = Gr;           % groups data (empty if classic SwE)
 if isfield(job.WB, 'WB_yes')
   SwE.WB      = WB;           % WB structure
 end

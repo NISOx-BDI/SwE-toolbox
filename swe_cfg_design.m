@@ -686,17 +686,71 @@ WB_cluster_no.help    = {''
   'No cluster-wise inference will be performed'
   ''};
 % ---------------------------------------------------------------------
-% WB_yes Yes
+% WB_cluster_yes Yes
 % ---------------------------------------------------------------------
 WB_cluster_yes         = cfg_entry;
 WB_cluster_yes.tag     = 'WB_cluster_yes';
-WB_cluster_yes.name    = 'Yes, set the cluster-forming threshold now';
+WB_cluster_yes.name    = 'Yes for image input, set the cluster-forming threshold now';
 WB_cluster_yes.val     = {0.001};
 WB_cluster_yes.help    = {''
-                     'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold need to be set now (p=0.001 per default)'
+                     'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default)'
 ''}';
 WB_cluster_yes.strtype = 'e';
 WB_cluster_yes.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_cluster_yes_mat_clusP cluP
+% ---------------------------------------------------------------------
+WB_cluster_yes_mat_clusP         = cfg_entry;
+WB_cluster_yes_mat_clusP.tag     = 'WB_cluster_yes_mat_clusP';
+WB_cluster_yes_mat_clusP.name    = 'Set the cluster-forming threshold now for ".mat" imput';
+WB_cluster_yes_mat_clusP.val     = {0.001};
+WB_cluster_yes_mat_clusP.help    = {''
+                     'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default)'
+''}';
+WB_cluster_yes_mat_clusP.strtype = 'e';
+WB_cluster_yes_mat_clusP.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_cluster_yes_mat_type cluP
+% ---------------------------------------------------------------------
+WB_cluster_yes_mat_type         = cfg_menu;
+WB_cluster_yes_mat_type.tag     = 'WB_cluster_yes_mat_type';
+WB_cluster_yes_mat_type.name    = 'Select the type of ".mat" inputs';
+WB_cluster_yes_mat_type.val     = {};
+WB_cluster_yes_mat_type.labels  = { 'Volumetric (voxels)' 'Surface (vertices)'};
+WB_cluster_yes_mat_type.help    = {''
+                     'Select the type of ".mat" inputs. Either volumetric or surface data'
+''}';
+WB_cluster_yes_mat_type.values  = {0 1};
+
+% ---------------------------------------------------------------------
+% WB_cluster_yes_mat_loc loc
+% ---------------------------------------------------------------------
+WB_cluster_yes_mat_loc         = cfg_files;
+WB_cluster_yes_mat_loc.tag     = 'WB_cluster_yes_mat_loc';
+WB_cluster_yes_mat_loc.name    = 'Spatial information';
+WB_cluster_yes_mat_loc.help    = {''
+                     'For volumetric data, the 3D location of voxels is expected in voxel coordinates (XYZ_vox).'
+                     ''
+                     'For surface data, the faces (or triangles) information is expected in vertex coordinates.'
+                     ''
+                     'Note that this spatial information needs to be saved in a ".mat" file as a matrix of size 3 x nVoxels (or its transposed) or nFaces x 3 (or its transposed)'
+}';
+WB_cluster_yes_mat_loc.filter = {'mat'};
+WB_cluster_yes_mat_loc.ufilter = '.*';
+WB_cluster_yes_mat_loc.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_cluster_yesMat Yes
+% ---------------------------------------------------------------------
+WB_cluster_yes_mat         = cfg_branch;
+WB_cluster_yes_mat.tag     = 'WB_cluster_yes_mat';
+WB_cluster_yes_mat.name    = 'Yes for ".mat" input';
+WB_cluster_yes_mat.val     = {WB_cluster_yes_mat_clusP WB_cluster_yes_mat_type WB_cluster_yes_mat_loc};
+WB_cluster_yes_mat.help    = {''
+                     'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default) and some spatial information needs to be specified in order to form clusters.'
+}';
 
 % ---------------------------------------------------------------------
 % WB_nB nB
@@ -718,7 +772,7 @@ WB_nB.num     = [1 1];
 WB_cluster         = cfg_choice;
 WB_cluster.tag     = 'WB_cluster';
 WB_cluster.name    = 'Cluster-wise inference';
-WB_cluster.values  = {WB_cluster_no WB_cluster_yes};
+WB_cluster.values  = {WB_cluster_no WB_cluster_yes WB_cluster_yes_mat};
 WB_cluster.val     = {WB_cluster_no};
 WB_cluster.help    = {''
   'No: no cluster-wise inference will be performed'
