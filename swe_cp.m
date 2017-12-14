@@ -45,7 +45,7 @@ end
 %-Check if we have data in a.mat format and set some variables accordingly
 %--------------------------------------------------------------------------
 [~,~,file_ext] = fileparts(SwE.xY.P{1});
-isMat               = strcmpi(file_ext,'.mat');
+isMat          = strcmpi(file_ext,'.mat');
 
 if ~isMat
     isMeshData = spm_mesh_detect(SwE.xY.VY);
@@ -78,7 +78,7 @@ files = {'^mask\..{3}$','^ResMS\..{3}$','^RPV\..{3}$',...
     '^beta_.{4}\..{3}$','^con_.{4}\..{3}$','^ResI_.{4}\..{3}$',...
     '^ess_.{4}\..{3}$', '^spm\w{1}_.{4}\..{3}$',...
     '^cov_beta_.{4}_.{4}\..{3}$', '^cov_vis_.{4}_.{4}_.{4}\..{3}$',...
-    '^edf_.{4}\..{3}$'};
+    '^edf_.{4}\..{3}$', '^spm\w{4}_.{4}\..{3}$'};
  
 for i = 1:length(files)
     j = spm_select('List',SwE.swd,files{i});
@@ -386,6 +386,8 @@ if ~isstruct(xM)
                 'xs',   struct('Masking','analysis threshold'));
 end
 
+fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done');               %-#
+
 if ~isMat
     %-Image dimensions and data
     %==========================================================================
@@ -414,8 +416,6 @@ if ~isMat
     %--------------------------------------------------------------------------
     % MAXRES   = Inf; (commented by BG on 08/11/2016)
     % nSres    = nScan; (commented by BG on 08/11/2016)
-
-    fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done');               %-#
 
     fprintf('%-40s: %30s','Output images','...initialising');           %-#
 
