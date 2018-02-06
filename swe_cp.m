@@ -1179,6 +1179,7 @@ else % matrix input
     save('cov_beta.mat', 'cov_beta');
     clear cov_beta crCov_beta
     if dof_type == 1
+        nGr = nSubj;
         cov_beta_g = NaN(nGr, nCov_beta, nVox);
         cov_beta_g(:,:,Cm) = crCov_beta_i;
         save('cov_beta_g.mat', 'cov_beta_g');
