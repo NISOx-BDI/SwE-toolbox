@@ -209,7 +209,7 @@ for i = 1:length(Ic)
                       for g = 1:SwE.Gr.nGr
                         if isMat
                           cCovBc_g(:,:,g) = cCovBc_g(:,:,g) + weight *...
-                            cov_beta_g(g,it,:);
+                            reshape(cov_beta_g(g,it,:), 1, S);
                         else
                           cCovBc_g(:,:,g) = cCovBc_g(:,:,g) + weight *...
                             spm_get_data(Vcov_beta_g((g-1)*nCov_beta+it),XYZ);
