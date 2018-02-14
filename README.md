@@ -11,4 +11,4 @@ Supervisors:
 
 Please refer to the GitHub wiki page for additional information about the toolbox.
 
-If you a question about the toolbox, please submit a new issue with this question.
+If you have a question or a suggestion about the toolbox, please submit a new issue with this question.
