@@ -1644,6 +1644,7 @@ SwE.xVol.XYZ   = XYZ;               %-InMask XYZ coords (voxels)
 SwE.xVol.M     = M;                 %-voxels -> mm
 SwE.xVol.iM    = inv(M);            %-mm -> voxels
 SwE.xVol.DIM   = DIM;               %-image dimensions
+SwE.xVol.S     = S;
 SwE.xVol.units = {'mm' 'mm' 'mm'};
 
 if ~isMat
