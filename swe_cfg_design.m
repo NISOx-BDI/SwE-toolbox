@@ -40,7 +40,7 @@ groups.help    = {' '
              'Vector of groups of length equal to the number of scans.'
              'Enter the groups in the ordering of the scans.'
              'The groups correspond to subjects sharing a common covariance matrix.'
-             'The common covariance matrices are allowed to be different accross groups.'
+             'The common covariance matrices are allowed to be different across groups.'
             
              ' '}';
 groups.strtype = 'e';
@@ -69,7 +69,7 @@ visits.name    = 'Visits';
 visits.help    = {' '
              'Vector of visit categories of length equal to the number of scans.'
              'Enter the visit categories in the ordering of the scans'
-             'The visit categories must be consistent accross subjects belonging to the same group.'
+             'The visit categories must be consistent across subjects belonging to the same group.'
              ' '}';
 visits.strtype = 'e';
 visits.num     = [Inf 1];
@@ -82,7 +82,7 @@ c         = cfg_entry;
 c.tag     = 'c';
 c.name    = 'Vector';
 c.help    = {' '
-             'Vector of covariate valuesof length equal to the number of scans.'
+             'Vector of covariate values of length equal to the number of scans.'
              'Enter the covariate values in the ordering of the scans'
              ' ' }';
 c.strtype = 'e';
@@ -146,7 +146,7 @@ cov.val     = {c cname };
 %cov.val     = {c cname iCFI iCC };
 cov.help    = {'Add a new covariate to your design.'
                'Please note that no covariates is added per default. Thus, all the model covariates must be added by the user.'
-               'Note also that a function called swe_splitCovariate can be used to split time-varying covariates into a cross-sectional component and a longitidinal component. This may be useful to take apart these two different mode of varition'};
+               'Note also that a function called swe_splitCovariate can be used to split time-varying covariates into a cross-sectional component and a longitudinal component. This may be useful to take apart these two different mode of variation'};
 
 % ---------------------------------------------------------------------
 % generic Covariates
@@ -310,7 +310,7 @@ ss.help    = {  ' '
                 'type C2: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-0.5.'
                 '             Simulations seem to show that it is the best correction and removes correctly the bias in many scenarios'
                 'type C3: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-1.'
-                '             Simulations seem to show that it overcorrect and yield conservative inferences'
+                '             Simulations seem to show that it over-correct and yield conservative inferences'
                 'h_ik is the diagonal element of the hat matrix H=X''(X''X)^(-1)X corresponding to subject i and visit k.'
                 'H_ii is the sub-matrix of the hat matrix H=X''(X''X)^(-1)X corresponding to subject i.'
                 ' '
@@ -326,7 +326,7 @@ dof_cl.labels  = { 'naive' 'approx I'};
 dof_cl.values  = { 0 1  }; % dof_cl.values  = { 0 1 2 };
 dof_cl.val     = { 0 };
 dof_cl.help    = {  ' '
-                'naive: naive estimation of the degrees of freedom by the total number of subjects belonging to the insparable sub-design matrices involved in the contrast tested minus the number of non-zero pure between covariates present in these insparable sub-design matrices.'
+                'naive: naive estimation of the degrees of freedom by the total number of subjects belonging to the unseparable sub-design matrices involved in the contrast tested minus the number of non-zero pure between covariates present in these unseparable sub-design matrices.'
                 '             This choice tends to overestimate the degrees of freedom, but reduce the quantity of images saved and the computation time.'
                 'approx I: degrees of freedom estimation with the estimate proposed in Guillaume et al. (2014).'
                 '             This choice is not recommended for the classic SwE as, with this SwE version, it generally underestimate  the degrees of freedom in small samples and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
@@ -345,7 +345,7 @@ dof_mo.labels  = { 'naive' 'approx I' 'approx II' 'approx III'};
 dof_mo.values  = { 0 1 2 3};
 dof_mo.val     = { 3 };
 dof_mo.help    = {  ' '
-                'naive: naive estimation of the degrees of freedom by the total number of subjects belonging to the insparable sub-design matrices involved in the contrast tested minus the number of non-zero pure between covariates present in these insparable sub-design matrices.'
+                'naive: naive estimation of the degrees of freedom by the total number of subjects belonging to the unseparable sub-design matrices involved in the contrast tested minus the number of non-zero pure between covariates present in these unseparable sub-design matrices.'
                 '             This choice tends to overestimate the degrees of freedom in some designs, but reduce the quantity of images saved and the computation time.'
                 'approx I: degrees of freedom estimation with the estimate proposed in Guillaume et al. (2014).'
                 '             This estimate assumes no missing data and does not correct for the presence of a small sample bias and a missing data bias.'
@@ -355,7 +355,7 @@ dof_mo.help    = {  ' '
                 '             Simulations seems to indicate that it performs better than approx I, but should be used only under no missing data'
                 'approx III: degrees of freedom estimation with an alternative estimate proposed in Guillaume (2015).'
                 '             The estimate accounts for the presence of missing data (the missing data bias included), but not for the small-sample bias.'
-                '             Simulations seems to indicate that it systematically performs better than approx II under missing data, but seems slightly less performant (slightly conservative) than approx II under no missing data.'
+                '             Simulations seems to indicate that it systematically performs better than approx II under missing data, but seems slightly less well (slightly conservative) than approx II under no missing data.'
                 '             That is the recommended choice by default. Nevertheless, if there is no missing data, approx II could be selected instead.'
                 ' '
                }';        
@@ -444,7 +444,7 @@ globalc.val     = {g_omit };
 globalc.help    = {
                    'This option is only used for PET data.'
                    ''
-                   'There are three methods for estimating global effects (1) Omit (assumming no other options requiring the global value chosen) (2) User defined (enter your own vector of global values) (3) Mean: SPM standard mean voxel value (within per image fullmean/8 mask) '
+                   'There are three methods for estimating global effects (1) Omit (assuming no other options requiring the global value chosen) (2) User defined (enter your own vector of global values) (3) Mean: SPM standard mean voxel value (within per image full-mean/8 mask) '
                    ''
 }';
 globalc.values  = {g_omit g_user g_mean };
@@ -490,7 +490,7 @@ gmsca.val     = {gmsca_no };
 gmsca.help    = {
                  'Scaling of the overall grand mean simply scales all the data by a common factor such that the mean of all the global values is the value specified. For qualitative data, this puts the data into an intuitively accessible scale without altering the statistics. '
                  ''
-                 'When proportional scaling global normalisation is used each image is separately scaled such that it''s global value is that specified (in which case the grand mean is also implicitly scaled to that value). So, to proportionally scale each image so that its global value is eg. 20, select <Yes> then type in 20 for the grand mean scaled value.'
+                 'When proportional scaling global normalisation is used each image is separately scaled such that it''s global value is that specified (in which case the grand mean is also implicitly scaled to that value). So, to proportionally scale each image so that its global value is e.g. 20, select <Yes> then type in 20 for the grand mean scaled value.'
                  ''
                  'When using AnCova or no global normalisation, with data from different subjects or sessions, an intermediate situation may be appropriate, and you may be given the option to scale group, session or subject grand means separately. '
                  ''
@@ -505,7 +505,7 @@ glonorm.name    = 'Normalisation';
 glonorm.help    = {
                    'Global nuisance effects are usually accounted for either by scaling the images so that they all have the same global value (proportional scaling), or by including the global covariate as a nuisance effect in the general linear model (AnCova). Much has been written on which to use, and when. Basically, since proportional scaling also scales the variance term, it is appropriate for situations where the global measurement predominantly reflects gain or sensitivity. Where variance is constant across the range of global values, linear modelling in an AnCova approach has more flexibility, since the model is not restricted to a simple proportional regression. '
                    ''
-                   '''Ancova by subject'' or ''Ancova by effect'' options are implemented using the ANCOVA options provided where each experimental factor (eg. subject or effect), is defined. These allow eg. different subjects to have different relationships between local and global measurements. '
+                   '''Ancova by subject'' or ''Ancova by effect'' options are implemented using the ANCOVA options provided where each experimental factor (e.g. subject or effect), is defined. These allow e.g. different subjects to have different relationships between local and global measurements. '
                    ''
                    'Since differences between subjects may be due to gain and sensitivity effects, AnCova by subject could be combined with "grand mean scaling by subject" (an option also provided where each experimental factor is originally defined) to obtain a combination of between subject proportional scaling and within subject AnCova. '
                    ''
@@ -529,7 +529,7 @@ globalm.help    = {
                    ''
                    'Global nuisance effects are usually accounted for either by scaling the images so that they all have the same global value (proportional scaling), or by including the global covariate as a nuisance effect in the general linear model (AnCova). Much has been written on which to use, and when. Basically, since proportional scaling also scales the variance term, it is appropriate for situations where the global measurement predominantly reflects gain or sensitivity. Where variance is constant across the range of global values, linear modelling in an AnCova approach has more flexibility, since the model is not restricted to a simple proportional regression. '
                    ''
-                   '''Ancova by subject'' or ''Ancova by effect'' options are implemented using the ANCOVA options provided where each experimental factor (eg. subject or effect), is defined. These allow eg. different subjects to have different relationships between local and global measurements. '
+                   '''Ancova by subject'' or ''Ancova by effect'' options are implemented using the ANCOVA options provided where each experimental factor (e.g. subject or effect), is defined. These allow e.g. different subjects to have different relationships between local and global measurements. '
                    ''
                    'Since differences between subjects may be due to gain and sensitivity effects, AnCova by subject could be combined with "grand mean scaling by subject" (an option also provided where each experimental factor is originally defined) to obtain a combination of between subject proportional scaling and within subject AnCova. '
                    ''
@@ -554,11 +554,11 @@ WB_type.labels     = {'U-WB' 'R-WB'};
 WB_type.values     = {0 1};
 WB_type.val     = {1};
 WB_type.help    = {''
-  'U-WB: unrestrited WB which based the resampling on the unrestricted model (not imposing the null hypothesis)'
+  'U-WB: unrestricted WB which based the resampling on the unrestricted model (not imposing the null hypothesis)'
   ''
-  'R-WB: restrited WB which based the resampling on the restricted model (imposing the null hypothesis)'
+  'R-WB: restricted WB which based the resampling on the restricted model (imposing the null hypothesis)'
   ''
-  'Monte Carlo simulations (see Guillaume, 2015) indicates that the R-WB generally outperforms the U-WB and, therefore, it seems preferebale to always use this WB version. The U-WB option is currently available, but nothing indicates that it should be used and thus might be removed later.'
+  'Monte Carlo simulations (see Guillaume, 2015) indicates that the R-WB generally outperforms the U-WB and, therefore, it seems preferable to always use this WB version. The U-WB option is currently available, but nothing indicates that it should be used and thus might be removed later.'
   ''
   };
 % ---------------------------------------------------------------------
@@ -571,9 +571,9 @@ WB_SwE.labels     = {'U-SwE' 'R-SwE'};
 WB_SwE.values     = {0 1};
 WB_SwE.val     = {0};
 WB_SwE.help    = {''
-  'U-SwE: unrestrited SwE which is obtained using the residuals of the unrestricted model (not imposing the null hypothesis)'
+  'U-SwE: unrestricted SwE which is obtained using the residuals of the unrestricted model (not imposing the null hypothesis)'
   ''
-  'R-SwE: restrited SwE which is obtained using the residuals of the restricted model (imposing the null hypothesis)'
+  'R-SwE: restricted SwE which is obtained using the residuals of the restricted model (imposing the null hypothesis)'
   ''
   'The R-SwE is sometimes considered in the Wild Bootstrap literature. However, in our Monte Carlo simulations (see Guillaume, 2015), no appreciable differences have been observed between this two versions when they are used with the R-WB, indicating that they could be both considered in practice. Nevertheless, it is clear that the R-SwE is generally a biased estimator of the true covariance matrix of the parameters, making it a "not-so-good" candidate for a "standard" parametric SwE analysis. The latter observation may be an argument in favour of the U-SwE, particularly for cluster analysis where a primary cluster threshold need to be defined.'
   ''
@@ -636,7 +636,7 @@ WB_stat.name    = 'Statistic type';
 WB_stat.values     = {WB_T WB_F};
 WB_stat.val     = {WB_T};
 WB_stat.help    = {''
-  'T: T-scores are considered. Both positif (+) and negative (-) effects p-values will be computed'
+  'T: T-scores are considered. Both positive (+) and negative (-) effects p-values will be computed'
   ''
   'F: F-scores are considered.'
   ''};
@@ -652,7 +652,7 @@ WB_ss.labels  = { 'type 0' 'type 1' 'type 2' 'type 3' 'type C2' 'type C3' };
 WB_ss.values  = {0 1 2 3 4 5};
 WB_ss.val     = { 4 };
 WB_ss.help    = {  ' '
-                'Small sample adjustement of the residuals to be resampled'
+                'Small sample adjustment of the residuals to be resampled'
                 ''
                 'It may be different from the one used for the SwE, but it seems better to consider by default the "type C2" version for both the SwE and the WB resampling as this is the correction which seems to adjust the best the residuals to make their variances/covariances close to the one the errors'
                 ''
@@ -670,7 +670,7 @@ WB_ss.help    = {  ' '
                 'type C2: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-0.5.'
                 '             Simulations seem to show that it is the best correction and removes correctly the bias in many scenarios'
                 'type C3: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-1.'
-                '             Simulations seem to show that it overcorrect and yield conservative inferences'
+                '             Simulations seem to show that it over-correct and yield conservative inferences'
                 'h_ik is the diagonal element of the hat matrix H=X''(X''X)^(-1)X corresponding to subject i and visit k.'
                 'H_ii is the sub-matrix of the hat matrix H=X''(X''X)^(-1)X corresponding to subject i.'
                 ' '}';
@@ -703,7 +703,7 @@ WB_cluster_yes.num     = [1 1];
 % ---------------------------------------------------------------------
 WB_cluster_yes_mat_clusP         = cfg_entry;
 WB_cluster_yes_mat_clusP.tag     = 'WB_cluster_yes_mat_clusP';
-WB_cluster_yes_mat_clusP.name    = 'Set the cluster-forming threshold now for ".mat" imput';
+WB_cluster_yes_mat_clusP.name    = 'Set the cluster-forming threshold now for ".mat" input';
 WB_cluster_yes_mat_clusP.val     = {0.001};
 WB_cluster_yes_mat_clusP.help    = {''
                      'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default)'
@@ -757,7 +757,7 @@ WB_cluster_yes_mat.help    = {''
 % ---------------------------------------------------------------------
 WB_nB         = cfg_entry;
 WB_nB.tag     = 'WB_nB';
-WB_nB.name    = 'Number of bootstaps';
+WB_nB.name    = 'Number of bootstraps';
 WB_nB.val     = {999};
 WB_nB.help    = {''
                  'This sets the number of bootstraps (nB). This will notably set the number of possible FWER-corrected p-values to nB+1 and set the minimum possible FWER-corrected p-value to 1/(nB +1).'
