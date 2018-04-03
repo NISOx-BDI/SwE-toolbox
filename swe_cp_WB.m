@@ -587,9 +587,17 @@ if ~isMat
     'mat',      M,...
     'pinfo',    [1 0 0]',...
     'descrip',  ''));
+
+  if WB.stat=='T'
+      Vscore.fname   = sprintf('swe_vox_T_c0001.img');
+      Vscore.descrip = sprintf('Original parametric T statistic data.');
+  end
   
-  Vscore.fname   = sprintf('score.img');
-  Vscore.descrip = sprintf('score original data');
+  if WB.stat=='F'
+      Vscore.fname   = sprintf('swe_vox_F_c0001.img');
+      Vscore.descrip = sprintf('Original parametric F statistic data.');
+  end
+  
   Vscore = spm_create_vol(Vscore);
   
   %-Initialise residual images for the resampling
