@@ -214,17 +214,6 @@ catch
     error(['Cannot read ' fullfile(swd,'SwE.mat')]);
 end
 
-if isfield(SwE, 'WB')
-  msg = {'No result display feature is currently availabe for the Wild Bootstrap. The results are written into -log10(p-values) images (e.g., see lP_FWE+.img for FWE-corrected p-values) into the folder used for the analysis. You can display and threshold these images using SPM or an alternative software package.'
-  '\n\nBelow, a quick description of all possible outputs:'
-  '\n - lP+ & lP-: Images of -log10(voxel-wise uncorrected non-parametric P-values, positive or negative.)'
-  '\n - lP_FWE+ & lP_FWE-: Images of -log10(voxel-wise FWE-corrected non-parametric P-values, positive or negative). Here, FWE-corrected non-parametric P-values are the proportion of the wild bootstrap distribution for the maximal statistic which exceeds the statistic image at the voxel.'
-  '\n - lP_FDR+ & lP_FDR-: Images of -log10(voxel-wise FDR-corrected non-parametric P-values, positive or negative). They are computed based by applying BH-fdr correction on lP+ & lP-.'
-  '\n - lP_clusterFWE+ & lP_clusterFWE-: Images of -log10(cluster-wise FWE-corrected non-parametric P-values, positive or negative). Note that, the -log10(p-values) of each formed cluster is repeated at each voxel belonging to this cluster. More iinformation about the formed cluters can be found in the "SwE.mat" file in the field SwE.WB.clusterInfo.'
-  '%s'};
-  error(strcat(msg{1:6}),'');
-end
-
 SwE.swd = swd;
 
 %-Change directory so that relative filenames are valid
@@ -281,8 +270,18 @@ try xCon = SwE.xCon; catch, xCon = {}; end
 try
     Ic        = xSwE.Ic;
 catch
-    [Ic,xCon] = swe_conman(SwE,'T&F',Inf,...
-                           '    Select contrasts...',' for conjunction',1);
+    
+    % If we're not doing wild bootstrap, ask for a contrast.
+    if ~isfield(SwE, 'WB') 
+        [Ic,xCon] = swe_conman(SwE,'T&F',Inf,...
+                               '    Select contrasts...',' for conjunction',1);
+    % Otherwise, we already have a contrast. We just need to record it.
+    else
+        Ic = 1;
+        xCon = struct('name', ['SPM', SwE_wb.WB.stat, '_0001'],...
+                      'STAT', SwE_wb.WB.stat,...
+                      'c', SwE.WB.con);
+    end
 end
 if isempty(xCon)
     % figure out whether new contrasts were defined, but not selected
@@ -321,7 +320,7 @@ if nc > 1
         end
         n = spm_input('Null hyp. to assess?','+1','b',But,Val,1);
         if isnan(n)
-            if nc == 3,
+            if nc == 3
                 n = nc - 1;
             else
                 n = nc - spm_input('Effects under null ','0','n1','1',nc-1);
@@ -526,7 +525,8 @@ xCon     = SwE.xCon;
 STAT     = xCon(Ic(1)).STAT;
 VspmSv   = cat(1,xCon(Ic).Vspm);
 
-
+    
+    
 %-Check conjunctions - Must be same STAT w/ same df
 %--------------------------------------------------------------------------
 if (nc > 1) && (any(diff(double(cat(1,xCon(Ic).STAT)))) || ...
@@ -724,7 +724,7 @@ if ~isMat
       fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...for voxelFDR')  %-#
       switch STAT
           case 'T'
-              Ps = (1-spm_Ncdf(Zum)).^n;
+              Ps = (1-spm_Ncdf(Zum)).^n; % Why is this Ncdf and not Tcdf?
           case 'F'
               Ps = (1-spm_Xcdf(Zum,df(2))).^n;
       end

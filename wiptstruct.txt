@@ -1,0 +1,22 @@
+Normal before estimation
+
+      xGX: [1×1 struct]
+       xM: [1×1 struct]
+    xsDes: [1×1 struct]
+     type: [1×1 struct]
+       SS: 3
+     Subj: [1×1 struct]
+      Vis: [1×1 struct]
+       Gr: [1×1 struct]
+
+WB before estimation
+
+      xGX: [1×1 struct]
+       xM: [1×1 struct]
+    xsDes: [1×1 struct]
+     type: [1×1 struct]
+       SS: 3
+     Subj: [1×1 struct]
+      Vis: [1×1 struct]
+       Gr: [1×1 struct]
+       WB: [1×1 struct]
