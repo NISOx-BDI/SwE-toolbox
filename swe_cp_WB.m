@@ -577,7 +577,7 @@ if ~isMat
     'descrip','swe_cp_WB:resultant analysis mask');
   VM    = spm_create_vol(VM);
   
-  %-Initialise original score image
+  %-Initialise original parametric score image
   %----------------------------------------------------------------------
   
   Vscore = deal(struct(...
@@ -614,6 +614,29 @@ if ~isMat
   Vp.fname   = sprintf('swe_vox_lp_c0001.img');
   Vp.descrip = sprintf('Original parametric P value data.');
   Vp = spm_create_vol(Vp);
+  
+  %-Initialise converted parametric score image
+  %----------------------------------------------------------------------
+  
+  VcScore = deal(struct(...
+    'fname',    [],...
+    'dim',      DIM',...
+    'dt',       [spm_type('float32') spm_platform('bigend')],...
+    'mat',      M,...
+    'pinfo',    [1 0 0]',...
+    'descrip',  ''));
+
+  if WB.stat=='T'
+      VcScore.fname   = sprintf('swe_vox_Z_c0001.img');
+      VcScore.descrip = sprintf('Parametric Z statistic data derived from T-Statistic data.');
+  end
+  
+  if WB.stat=='F'
+      VcScore.fname   = sprintf('swe_vox_X_c0001.img');
+      VcScore.descrip = sprintf('Parametric X statistic data derived from F-Statistic data.');
+  end
+  
+  VcScore = spm_create_vol(VcScore);
   
   %-Initialise residual images for the resampling
   %----------------------------------------------------------------------
@@ -788,7 +811,9 @@ if ~isMat
     CrScore      = [];                        %-scores
     CrYWB         = [];                        %-fitted data under H0
     CrResWB       = [];                        %-residuals
-    Crp          = [];                        %-parametric p-values
+    CrP          = [];                        %-parametric p-values
+    CrConScore   = [];                        %-converted score values. 
+                                              % i.e. Z/X from T/F
     Q            = [];                        %-in mask indices for this plane
     
     for bch = 1:nbch                     %-loop over blocks
@@ -1019,16 +1044,7 @@ if ~isMat
             p = zeros(1, CrS);
             switch dof_type
               case 0
-                if WB.stat == 'T'
-                  if any(score > 0)
-                    p(score > 0)  = spm_Tcdf(-score(score>0), edf);
-                  end
-                  if any(score <= 0)
-                    p(score <= 0) = spm_Tcdf(score(score<=0), edf);
-                  end
-                else
-                  p = 2 * spm_Tcdf(-abs(score), edf);
-                end
+                 % We don't need to calculate the edf.
               case 1
                 error('degrees of freedom type still not implemented for the WB')
                 
@@ -1040,16 +1056,8 @@ if ~isMat
                 end
                 edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
                 clear CovcCovBc cCovBc
-                if WB.stat == 'T'
-                  if any(score > 0)
-                    p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-                  end
-                  if any(score <= 0)
-                    p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-                  end
-                else
-                  p = 2 * spm_Tcdf(-abs(score), edf);
-                end
+                
+                p  = spm_Tcdf(score, edf);
               case 3
                 CovcCovBc = 0;
                 for g = 1:nGr
@@ -1057,24 +1065,21 @@ if ~isMat
                 end
                 edf = 2 * cCovBc.^2 ./ CovcCovBc;
                 clear CovcCovBc cCovBc
-                
-                if WB.stat == 'T'
-                  if any(score > 0)
-                    p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-                  end
-                  if any(score <= 0)
-                    p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-                  end
-                else
-                  p = 2 * spm_Tcdf(-abs(score), edf);
-                end
             end
+            
+            % Get the P values.
+            p  = spm_Tcdf(score, edf);
+            
+            % An F test of rank 1 is a two tailed T test.
             if SwE.WB.stat == 'F'
               score = score .^2;
+              activatedVoxels = [activatedVoxels, p > (1-WB.clusterInfo.primaryThreshold/2) | p < (WB.clusterInfo.primaryThreshold/2)];
             end
-            activatedVoxels = [activatedVoxels, p <= WB.clusterInfo.primaryThreshold & score > 0];
+            
+            % If looking at a T test we do two one tailed tests.
             if (SwE.WB.stat == 'T')
-              activatedVoxelsNeg = [activatedVoxelsNeg, p <= WB.clusterInfo.primaryThreshold & score < 0];
+              activatedVoxels = [activatedVoxels, p > (1-WB.clusterInfo.primaryThreshold)];
+              activatedVoxelsNeg = [activatedVoxelsNeg, p < WB.clusterInfo.primaryThreshold];
             end
           end
           
@@ -1141,7 +1146,13 @@ if ~isMat
         CrYWB             = [CrYWB,    YWB]; %#ok<AGROW>
         CrResWB           = [CrResWB,  resWB]; %#ok<AGROW>
         CrScore           = [CrScore,  score]; %#ok<AGROW>
-        Crp               = [Crp,      p]; %#ok<AGROW>
+        CrP               = [CrP,      p]; %#ok<AGROW>
+        if (SwE.WB.stat == 'T')
+            CrConScore    = [CrConScore, swe_invNcdf(p)];
+        end
+        if(SwE.WB.stat == 'F')
+            CrConScore    = [CrConScore, swe_invXcdf(1-p, 1)];
+        end
         
       end % (CrS)
       
@@ -1179,15 +1190,20 @@ if ~isMat
       VResWB(i) = spm_write_plane(VResWB(i), jj, CrPl);
     end
     
-    %-Write score image of the original data
+    %-Write parametric score image of the original data
     %------------------------------------------------------------------
     if ~isempty(Q), jj(Q) = CrScore; end
     Vscore = spm_write_plane(Vscore, jj, CrPl);
     
     %-Write parametric p-value image
     %------------------------------------------------------------------
-    if ~isempty(Q), jj(Q) = Crp; end
+    if ~isempty(Q), jj(Q) = CrP; end
     Vp = spm_write_plane(Vp, jj, CrPl);
+    
+    %-Write converted parametric score image of the original data
+    %------------------------------------------------------------------
+    if ~isempty(Q), jj(Q) = CrConScore; end
+    VcScore = spm_write_plane(VcScore, jj, CrPl);
     
     %-Report progress
     %----------------------------------------------------------------------
