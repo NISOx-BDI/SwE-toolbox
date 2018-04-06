@@ -612,8 +612,22 @@ if ~isMat
     'descrip',  ''));
   
   Vp.fname   = sprintf('swe_vox_lp_c0001.img');
-  Vp.descrip = sprintf('Original parametric P value data.');
+  Vp.descrip = sprintf('Original parametric -log10(P) value data (positive).');
   Vp = spm_create_vol(Vp);
+  
+  if WB.stat=='T'
+        VpNeg = deal(struct(...
+            'fname',    [],...
+            'dim',      DIM',...
+            'dt',       [spm_type('float32') spm_platform('bigend')],...
+            'mat',      M,...
+            'pinfo',    [1 0 0]',...
+            'descrip',  ''));
+
+        VpNeg.fname   = sprintf('swe_vox_lp_c0001neg.img');
+        VpNeg.descrip = sprintf('Original parametric -log10(P) value data (negative).');
+        VpNeg = spm_create_vol(VpNeg);
+  end
   
   %-Initialise converted parametric score image
   %----------------------------------------------------------------------
@@ -812,6 +826,9 @@ if ~isMat
     CrYWB         = [];                        %-fitted data under H0
     CrResWB       = [];                        %-residuals
     CrP          = [];                        %-parametric p-values
+    if (WB.stat == 'T')
+     CrPNeg       = [];                       %-negative parametric p-values
+    end
     CrConScore   = [];                        %-converted score values. 
                                               % i.e. Z/X from T/F
     Q            = [];                        %-in mask indices for this plane
@@ -1146,12 +1163,13 @@ if ~isMat
         CrYWB             = [CrYWB,    YWB]; %#ok<AGROW>
         CrResWB           = [CrResWB,  resWB]; %#ok<AGROW>
         CrScore           = [CrScore,  score]; %#ok<AGROW>
-        CrP               = [CrP,      p]; %#ok<AGROW>
+        CrP               = [CrP,      -log10(p)]; %#ok<AGROW>
         if (SwE.WB.stat == 'T')
-            CrConScore    = [CrConScore, swe_invNcdf(p)];
+            CrConScore    = [CrConScore, swe_invNcdf(p)]; %#ok<AGROW>
+            CrPNeg        = [CrPNeg,   -log10(1-p)]; %#ok<AGROW>
         end
         if(SwE.WB.stat == 'F')
-            CrConScore    = [CrConScore, swe_invXcdf(1-p, 1)];
+            CrConScore    = [CrConScore, swe_invXcdf(p, 1)]; %#ok<AGROW>
         end
         
       end % (CrS)
@@ -1199,6 +1217,11 @@ if ~isMat
     %------------------------------------------------------------------
     if ~isempty(Q), jj(Q) = CrP; end
     Vp = spm_write_plane(Vp, jj, CrPl);
+    
+    if WB.stat=='T'
+        if ~isempty(Q), jj(Q) = CrPNeg; end
+        VpNeg = spm_write_plane(VpNeg, jj, CrPl);
+    end
     
     %-Write converted parametric score image of the original data
     %------------------------------------------------------------------
