@@ -272,15 +272,20 @@ try
 catch
     
     % If we're not doing wild bootstrap, ask for a contrast.
-    if ~isfield(SwE, 'WB') 
+    if ~isfield(SwE, 'WB')
         [Ic,xCon] = swe_conman(SwE,'T&F',Inf,...
                                '    Select contrasts...',' for conjunction',1);
     % Otherwise, we already have a contrast. We just need to record it.
     else
         Ic = 1;
-        xCon = struct('name', ['SPM', SwE_wb.WB.stat, '_0001'],...
-                      'STAT', SwE_wb.WB.stat,...
+        xCon = struct('name', ['swe_', SwE.WB.stat, '_0001'],...
+                      'STAT', SwE.WB.stat,...
                       'c', SwE.WB.con);
+        if SwE.WB.stat == 'T' 
+            if SwE.WB.clusterWise == 1
+                xCon.Vspm = struct('fname', '');
+            end 
+        end
     end
 end
 if isempty(xCon)
@@ -724,7 +729,7 @@ if ~isMat
       fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...for voxelFDR')  %-#
       switch STAT
           case 'T'
-              Ps = (1-spm_Ncdf(Zum)).^n; % Why is this Ncdf and not Tcdf?
+              Ps = (1-spm_Ncdf(Zum)).^n; 
           case 'F'
               Ps = (1-spm_Xcdf(Zum,df(2))).^n;
       end

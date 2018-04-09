@@ -1163,13 +1163,13 @@ if ~isMat
         CrYWB             = [CrYWB,    YWB]; %#ok<AGROW>
         CrResWB           = [CrResWB,  resWB]; %#ok<AGROW>
         CrScore           = [CrScore,  score]; %#ok<AGROW>
-        CrP               = [CrP,      -log10(p)]; %#ok<AGROW>
+        CrP               = [CrP,      -log10(1-p)]; %#ok<AGROW>
         if (SwE.WB.stat == 'T')
-            CrConScore    = [CrConScore, swe_invNcdf(p)]; %#ok<AGROW>
+            CrConScore    = [CrConScore, swe_invNcdf(1-p)]; %#ok<AGROW>
             CrPNeg        = [CrPNeg,   -log10(1-p)]; %#ok<AGROW>
         end
         if(SwE.WB.stat == 'F')
-            CrConScore    = [CrConScore, swe_invXcdf(p, 1)]; %#ok<AGROW>
+            CrConScore    = [CrConScore, spm_invXcdf(1-p, 1)]; %#ok<AGROW>
         end
         
       end % (CrS)
