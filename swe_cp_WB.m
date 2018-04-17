@@ -749,6 +749,40 @@ if ~isMat
       'pinfo',    [1 0 0]',...
       'descrip',  '-log10(FDR-corr. P, -ve)'));
     VlP_wb_FDR_neg=spm_create_vol(VlP_wb_FDR_neg);
+    
+    % In this case the Vscore images are Z images.
+    Vscore_wb_pos = deal(struct(...
+      'fname',    'swe_vox_Z-WB_c0001.img',...
+      'dim',      DIM',...
+      'dt',       [spm_type('float32') spm_platform('bigend')],...
+      'mat',      M,...
+      'pinfo',    [1 0 0]',...
+      'descrip',  'Z score image for wild bootstrap voxelwise results.'));
+    Vscore_wb_pos = spm_create_vol(Vscore_wb_pos);
+    
+    Vscore_wb_neg = deal(struct(...
+      'fname',    'swe_vox_Z-WB_c0001neg.img',...
+      'dim',      DIM',...
+      'dt',       [spm_type('float32') spm_platform('bigend')],...
+      'mat',      M,...
+      'pinfo',    [1 0 0]',...
+      'descrip',  'Z score image (negative) for wild bootstrap voxelwise results.'));
+    Vscore_wb_neg = spm_create_vol(Vscore_wb_neg);
+    
+  end
+  
+  if WB.stat=='F'
+    
+    % In this case the Vscore images are X images.
+    Vscore_wb_pos = deal(struct(...
+      'fname',    'swe_vox_X-WB_c0001.img',...
+      'dim',      DIM',...
+      'dt',       [spm_type('float32') spm_platform('bigend')],...
+      'mat',      M,...
+      'pinfo',    [1 0 0]',...
+      'descrip',  'X score image for wild bootstrap voxelwise results.'));
+    Vscore_wb_pos = spm_create_vol(Vscore_wb_pos);
+    
   end
   
   if WB.clusterWise == 1
@@ -2518,9 +2552,27 @@ else
   tmp(Q) = -log10(uncP);
   spm_write_vol(VlP_wb_pos, tmp);
   
+  % If it's F, write out an X map.
+  stat = nan(SwE.xVol.DIM');
+  if WB.stat == 'F'
+      stat(Q) = spm_invXcdf(1 - uncP,1);
+      spm_write_vol(Vscore_wb_pos, stat);
+  end
+  
+  % If it's T, write out a Z map.
   if WB.stat == 'T'
+      
+    % Positive map.
+    stat(Q) = swe_invNcdf(1 - uncP);
+    spm_write_vol(Vscore_wb_pos, stat);
+
+    % T is two tailed so we need a negative map as well.
+    stat_neg = nan(SwE.xVol.DIM');
     tmp(Q) = -log10(1 + 1/(WB.nB + 1) - uncP);
-    spm_write_vol(VlP_wb_neg, tmp);
+    
+    stat_neg(Q) = swe_invNcdf(uncP);
+    spm_write_vol(VlP_wb_neg, stat_neg);
+    spm_write_vol(Vscore_wb_neg, stat_neg);
   end
   
   %
