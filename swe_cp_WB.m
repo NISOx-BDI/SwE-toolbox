@@ -346,7 +346,8 @@ if dof_type == 0 % so naive estimation is used
       dof_cov(i) = nSubj_dof(iBeta_dof(i)) - ...
           pB_dof(iBeta_dof(i));    
   end
-  
+else
+    edf = NaN;
 end
 
 
@@ -933,38 +934,8 @@ if ~isMat
       %-Mask out voxels where data is constant in at least one separable
       % matrix design either in a visit category or within-subject (BG - 27/05/2016)
       %------------------------------------------------------------------
-      for g = 1:nGr_dof % first look data for each separable matrix design
-        if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)
-          Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1); % mask constant data within separable matrix design g (added by BG on 29/08/16)
-          if isfield(SwE.type,'modified') % added by BG on 29/08/16
-            for g2 = 1:nGr % then look data for each "homogeneous" group
-              % check if the data is contant over subject for each visit category
-              for k = 1:nVis_g(g2)
-                if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
-                  Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
-                  for kk = k:nVis_g(g2)
-                    if k ~= kk
-                      % extract the list of subject with both visit k and kk
-                      subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
-                      % look if some difference are observed within subject
-                      if ~isempty(subjList)
-                        diffVis = Cm(Cm) == 0;
-                        for i = 1:length(subjList)
-                          diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
-                        end
-                        Cm(Cm) = diffVis;
-                      end
-                    end
-                  end
-                end
-              end
-            end
-          end
-        end
-      end
-      clear diffVis
-      Y      = Y(:,Cm);                          %-Data within mask
-      CrS    = sum(Cm);                          %-# current voxels
+      [Cm, Y, CrS] = mask_seperable(SwE, Cm, Y, nGr_dof, iGr_dof, nGr, iGr, uGr, nVis_g,...
+                          uVis_g, iVis, iSubj);
       
       %==================================================================
       %-Proceed with General Linear Model (if there are voxels)
@@ -1091,47 +1062,10 @@ if ~isMat
           score = (conWB * beta) ./ sqrt(cCovBc);
           
           if (SwE.WB.clusterWise == 1)
-            % need to convert score into parametric p-values
-            p = zeros(1, CrS);
-            switch dof_type
-              case 0
-                 % We don't need to calculate the edf.
-              case 1
-                error('degrees of freedom type still not implemented for the WB')
-                
-              case 2
-                CovcCovBc = 0;
-                for g = 1:nGr
-                  %CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-                  CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-                end
-                edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
-                clear CovcCovBc cCovBc
-                
-                p  = spm_Tcdf(score, edf);
-              case 3
-                CovcCovBc = 0;
-                for g = 1:nGr
-                  CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-                end
-                edf = 2 * cCovBc.^2 ./ CovcCovBc;
-                clear CovcCovBc cCovBc
-            end
+
+            [p, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(score, nGr, Wg, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels, activatedVoxelsNeg)
+            clear CovcCovBc cCovBc
             
-            % Get the P values.
-            p  = spm_Tcdf(score, edf);
-            
-            % An F test of rank 1 is a two tailed T test.
-            if SwE.WB.stat == 'F'
-              score = score .^2;
-              activatedVoxels = [activatedVoxels, p > (1-WB.clusterInfo.primaryThreshold/2) | p < (WB.clusterInfo.primaryThreshold/2)];
-            end
-            
-            % If looking at a T test we do two one tailed tests.
-            if (SwE.WB.stat == 'T')
-              activatedVoxels = [activatedVoxels, p > (1-WB.clusterInfo.primaryThreshold)];
-              activatedVoxelsNeg = [activatedVoxelsNeg, p < WB.clusterInfo.primaryThreshold];
-            end
           end
           
           maxScore(1) = max(maxScore(1), max(score));
@@ -1368,39 +1302,9 @@ else % ".mat" format
   %-Mask out voxels where data is constant in at least one separable
   % matrix design either in a visit category or within-subject (BG - 27/05/2016)
   %------------------------------------------------------------------
-  for g = 1:nGr_dof % first look data for each separable matrix design
-    if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)
-      Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1); % mask constant data within separable matrix design g (added by BG on 29/08/16)
-      if isfield(SwE.type,'modified') % added by BG on 29/08/16
-        for g2 = 1:nGr % then look data for each "homogeneous" group
-          % check if the data is contant over subject for each visit category
-          for k = 1:nVis_g(g2)
-            if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
-              Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
-              for kk = k:nVis_g(g2)
-                if k ~= kk
-                  % extract the list of subject with both visit k and kk
-                  subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
-                  % look if some difference are observed within subject
-                  if ~isempty(subjList)
-                    diffVis = Cm(Cm) == 0;
-                    for i = 1:length(subjList)
-                      diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
-                    end
-                    Cm(Cm) = diffVis;
-                  end
-                end
-              end
-            end
-          end
-        end
-      end
-    end
-  end
-  clear diffVis
+  [Cm,Y,CrS] = mask_seperable(SwE, Cm, Y, nGr_dof, iGr_dof, nGr, iGr, uGr, nVis_g,...
+                      uVis_g, iVis, iSubj);
   
-  Y     = Y(:,Cm);                          %-Data within mask
-  CrS   = sum(Cm);                          %-# current voxels
   if isfield(SwE.WB.clusterInfo, 'Vxyz')
     XYZ   = XYZ(:,Cm);
   end
@@ -1529,67 +1433,10 @@ else % ".mat" format
       score = (conWB * beta) ./ sqrt(cCovBc);
       
       if (SwE.WB.clusterWise == 1)
-        % need to convert score into parametric p-values
-        p = zeros(1, CrS);
-        switch dof_type
-          case 0
-            if WB.stat == 'T'
-              if any(score > 0)
-                p(score > 0)  = spm_Tcdf(-score(score>0), edf);
-              end
-              if any(score <= 0)
-                p(score <= 0) = spm_Tcdf(score(score<=0), edf);
-              end
-            else
-              p = 2 * spm_Tcdf(-abs(score), edf);
-            end
-          case 1
-            error('degrees of freedom type still not implemented for the WB')
+        
+        [p, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(score, nGr, Wg, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels, activatedVoxelsNeg)
+        clear CovcCovBc cCovBc
             
-          case 2
-            CovcCovBc = 0;
-            for g = 1:nGr
-              %CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-              CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-            end
-            edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
-            clear CovcCovBc cCovBc
-            if WB.stat == 'T'
-              if any(score > 0)
-                p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-              end
-              if any(score <= 0)
-                p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-              end
-            else
-              p = 2 * spm_Tcdf(-abs(score), edf);
-            end
-          case 3
-            CovcCovBc = 0;
-            for g = 1:nGr
-              CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-            end
-            edf = 2 * cCovBc.^2 ./ CovcCovBc;
-            clear CovcCovBc cCovBc
-            
-            if WB.stat == 'T'
-              if any(score > 0)
-                p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-              end
-              if any(score <= 0)
-                p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-              end
-            else
-              p = 2 * spm_Tcdf(-abs(score), edf);
-            end
-        end
-        if SwE.WB.stat == 'F'
-          score = score .^2;
-        end
-        activatedVoxels = [activatedVoxels, p <= WB.clusterInfo.primaryThreshold & score > 0];
-        if (SwE.WB.stat == 'T')
-          activatedVoxelsNeg = [activatedVoxelsNeg, p <= WB.clusterInfo.primaryThreshold & score < 0];
-        end
       end
       
       maxScore(1) = max(score);
@@ -1976,69 +1823,11 @@ for b = 1:WB.nB
         clear beta
         
         if (WB.clusterWise == 1)
-          % need to convert score into parametric p-values
-          p = zeros(1, blksz);
-          switch dof_type
-            case 0
-              if WB.stat == 'T'
-                if any(score > 0)
-                  p(score > 0)  = spm_Tcdf(-score(score>0), edf);
-                end
-                if any(score <= 0)
-                  p(score <= 0) = spm_Tcdf(score(score<=0), edf);
-                end
-              else
-                p = 2 * spm_Tcdf(-abs(score), edf);
-              end
-            case 1
-              error('degrees of freedom type still not implemented for the WB')
-              
-            case 2
-              CovcCovBc = 0;
-              for g = 1:nGr
-                CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-              end
-              edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
-              clear CovcCovBc cCovBc
-              
-              if WB.stat == 'T'
-                if any(score > 0)
-                  p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-                end
-                if any(score <= 0)
-                  p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-                end
-              else
-                p = 2 * spm_Tcdf(-abs(score), edf);
-              end
-            case 3
-              CovcCovBc = 0;
-              for g = 1:nGr
-                CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-              end
-              edf = 2 * cCovBc.^2 ./ CovcCovBc;
-              clear CovcCovBc cCovBc
-              
-              if WB.stat == 'T'
-                if any(score > 0)
-                  p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-                end
-                if any(score <= 0)
-                  p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-                end
-              else
-                p = 2 * spm_Tcdf(-abs(score), edf);
-              end
-          end
-          if WB.stat == 'F'
-            score = score .^2;
-          end
-          activatedVoxels(index) = p <= WB.clusterInfo.primaryThreshold & score > 0;
-          if (WB.stat == 'T')
-            activatedVoxelsNeg(index) = p <= WB.clusterInfo.primaryThreshold & score < 0;
-          end
-        end
         
+            [~, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(score, nGr, Wg, dof_type, blksz, edf, cCovBc, Cov_vis, WB, dofMat)
+            clear CovcCovBc cCovBc
+            
+        end
         
         uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;
         
@@ -2191,68 +1980,9 @@ for b = 1:WB.nB
       
       clear beta
       
-      if (WB.clusterWise == 1)
-        % need to convert score into parametric p-values
-        p = zeros(1, S);
-        switch dof_type
-          case 0
-            if WB.stat == 'T'
-              if any(score > 0)
-                p(score > 0)  = spm_Tcdf(-score(score>0), edf);
-              end
-              if any(score <= 0)
-                p(score <= 0) = spm_Tcdf(score(score<=0), edf);
-              end
-            else
-              p = 2 * spm_Tcdf(-abs(score), edf);
-            end
-          case 1
-            error('degrees of freedom type still not implemented for the WB')
-            
-          case 2
-            CovcCovBc = 0;
-            for g = 1:nGr
-              CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-            end
-            edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
-            clear CovcCovBc cCovBc
-            
-            if WB.stat == 'T'
-              if any(score > 0)
-                p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-              end
-              if any(score <= 0)
-                p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-              end
-            else
-              p = 2 * spm_Tcdf(-abs(score), edf);
-            end
-          case 3
-            CovcCovBc = 0;
-            for g = 1:nGr
-              CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-            end
-            edf = 2 * cCovBc.^2 ./ CovcCovBc;
-            clear CovcCovBc cCovBc
-            
-            if WB.stat == 'T'
-              if any(score > 0)
-                p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-              end
-              if any(score <= 0)
-                p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-              end
-            else
-              p = 2 * spm_Tcdf(-abs(score), edf);
-            end
-        end
-        if WB.stat == 'F'
-          score = score .^2;
-        end
-        activatedVoxels = p <= WB.clusterInfo.primaryThreshold & score > 0;
-        if (WB.stat == 'T')
-          activatedVoxelsNeg = p <= WB.clusterInfo.primaryThreshold & score < 0;
-        end
+      if (WB.clusterWise == 1)        
+        [p, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(score, nGr, Wg, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat)
+        clear CovcCovBc cCovBc
       end
       
       uncP = uncP + (score >= originalScore) * 1;
@@ -2673,6 +2403,7 @@ else
     end
   end
 end
+      
 %==========================================================================
 %- E N D: Cleanup GUI
 %==========================================================================
@@ -2684,3 +2415,121 @@ fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done')                %-#
 %spm('FigName','Stats: done',Finter); spm('Pointer','Arrow')
 fprintf('%-40s: %30s\n','Completed',spm('time'))                        %-#
 fprintf('...use the saved images for assessment\n\n')
+
+end
+
+function [Cm,Y,CrS]=mask_seperable(SwE, Cm, Y, nGr_dof, iGr_dof, nGr, iGr, uGr, nVis_g,...
+                           uVis_g, iVis, iSubj)
+
+      %-Mask out voxels where data is constant in at least one separable
+      % matrix design either in a visit category or within-subject (BG - 27/05/2016)
+      %------------------------------------------------------------------
+      for g = 1:nGr_dof % first look data for each separable matrix design
+        if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)
+          Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1); % mask constant data within separable matrix design g (added by BG on 29/08/16)
+          if isfield(SwE.type,'modified') % added by BG on 29/08/16
+            for g2 = 1:nGr % then look data for each "homogeneous" group
+              % check if the data is contant over subject for each visit category
+              for k = 1:nVis_g(g2)
+                if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
+                  Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
+                  for kk = k:nVis_g(g2)
+                    if k ~= kk
+                      % extract the list of subject with both visit k and kk
+                      subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
+                      % look if some difference are observed within subject
+                      if ~isempty(subjList)
+                        diffVis = Cm(Cm) == 0;
+                        for i = 1:length(subjList)
+                          diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
+                        end
+                        Cm(Cm) = diffVis;
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+      
+      Y      = Y(:,Cm);                          %-Data within mask
+      CrS    = sum(Cm);                          %-# current voxels
+
+end
+
+function [p, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(score, nGr, Wg, dof_type, matSize, edf, cCovBc, Cov_vis, WB, dofMat, varargin)
+
+    % need to convert score into parametric p-values
+    p = zeros(1, matSize);
+    switch dof_type
+      case 0
+        if stat == 'T'
+          if any(score > 0)
+            p(score > 0)  = spm_Tcdf(-score(score>0), edf);
+          end
+          if any(score <= 0)
+            p(score <= 0) = spm_Tcdf(score(score<=0), edf);
+          end
+        else
+          p = 2 * spm_Tcdf(-abs(score), edf);
+        end
+      case 1
+        error('degrees of freedom type still not implemented for the WB')
+
+      case 2
+        CovcCovBc = 0;
+        for g = 1:nGr
+          CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(WB.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
+        end
+        edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
+        clear CovcCovBc cCovBc
+
+        if WB.stat == 'T'
+          if any(score > 0)
+            p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
+          end
+          if any(score <= 0)
+            p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
+          end
+        else
+          p = 2 * spm_Tcdf(-abs(score), edf);
+        end
+      case 3
+        CovcCovBc = 0;
+        for g = 1:nGr
+          CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
+        end
+        edf = 2 * cCovBc.^2 ./ CovcCovBc;
+        clear CovcCovBc cCovBc
+
+        if WB.stat == 'T'
+          if any(score > 0)
+            p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
+          end
+          if any(score <= 0)
+            p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
+          end
+        else
+          p = 2 * spm_Tcdf(-abs(score), edf);
+        end
+    end
+    if WB.stat == 'F'
+      score = score .^2;
+    end
+    
+    if nargin <=10
+        % We may wish to just record the activated voxels
+        activatedVoxels = p <= WB.clusterInfo.primaryThreshold & score > 0;
+        if (WB.stat == 'T')
+          activatedVoxelsNeg = p <= WB.clusterInfo.primaryThreshold & score < 0;
+        end
+    else
+        % Or we may wish to add the activatedVoxels to a pre-existing list.
+        activatedVoxels = [varargin{1}, p <= WB.clusterInfo.primaryThreshold & score > 0];
+        if (WB.stat == 'T')
+          activatedVoxelsNeg = [varargin{2}, p <= WB.clusterInfo.primaryThreshold & score < 0];
+        end
+    end
+end
