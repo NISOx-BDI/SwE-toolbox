@@ -620,29 +620,27 @@ if ~isMat
   %-Initialise residual images for the resampling
   %----------------------------------------------------------------------
   
-  if WB.RWB == 1
-    descrip = sprintf('adjusted restricted residuals (%04d)', i);
-  else
-    descrip = sprintf('adjusted unrestricted residuals (%04d)', i);
-  end
-  
   for i = 1:nScan
-      VResWB(i) = swe_create_vol('ResWB_%04d.img', DIM, M, descrip);
+      if WB.RWB == 1
+        descrip = sprintf('adjusted restricted residuals (%04d)', i);
+      else
+        descrip = sprintf('adjusted unrestricted residuals (%04d)', i);
+      end
+      VResWB(i) = swe_create_vol(sprintf('ResWB_%04d.img', i), DIM, M, descrip);
   end
   
   fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-#
   
   %-Initialise fitted data images for the resampling
   %----------------------------------------------------------------------
-
-  if WB.RWB == 1
-     descrip = sprintf('restricted fitted data  (%04d)', i);
-  else
-     descrip = sprintf('unrestricted fitted data (%04d)', i);
-  end
   
   for i = 1:nScan
-      VYWB(i) = swe_create_vol('YfittedWB_%04d.img', DIM, M, descrip);
+      if WB.RWB == 1
+         descrip = sprintf('restricted fitted data  (%04d)', i);
+      else
+         descrip = sprintf('unrestricted fitted data (%04d)', i);
+      end
+      VYWB(i) = swe_create_vol(sprintf('YfittedWB_%04d.img',i), DIM, M, descrip);
   end
   
   %-Initialise result images
@@ -977,39 +975,9 @@ if ~isMat
           maxScore(1) = max(maxScore(1), max(score));
           % save cluster information is needed
           if (SwE.WB.clusterWise == 1)
-            % need to convert score into parametric p-values
-            p = zeros(1, CrS);
-            switch dof_type
-              
-              case 1
-                error('degrees of freedom type still not implemented for the WB')
-                
-              case 2
-                CovcCovBc = 0;
-                for g = 1:nGr
-                  CovcCovBc = CovcCovBc + Wg_testII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-                end
-                edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
-                
-              case 3
-                CovcCovBc = 0;
-                for g = 1:nGr
-                  CovcCovBc = CovcCovBc + Wg_testIII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-                end
-                tmp = eye(nSizeCon);
-                edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
-                  (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
-            end
-            scoreTmp = (edf-rankCon+1) ./ edf .* score;
-            scoreTmp(scoreTmp < 0 ) = 0;
-            % spm_Fcdf can be inaccurate in some case --> fcdf
-            if dof_type == 0
-              p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
-            else
-              p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
-              p(scoreTmp == 0) = 1;
-            end
-            activatedVoxels = [activatedVoxels, p <= WB.clusterInfo.primaryThreshold];
+            
+            [~, score, activatedVoxels]=getParamPVals_rank2(score, nGr, Wg_testII, Wg_testIII, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels2);
+            
           end
         end
         
@@ -1740,41 +1708,11 @@ for b = 1:WB.nB
         score = score / rankCon;
         % save cluster information is needed
         if (WB.clusterWise == 1)
-          % need to convert score into parametric p-values
-          p = zeros(1, blksz);
-          switch dof_type
+        
+            [~, score, activatedVoxels(index)]=getParamPVals_rank2(score, nGr, Wg_testII, Wg_testIII, dof_type, blksz, edf, cCovBc, Cov_vis, WB, dofMat);
             
-            case 1
-              error('degrees of freedom type still not implemented for the WB')
-              
-            case 2
-              CovcCovBc = 0;
-              for g = 1:nGr
-                CovcCovBc = CovcCovBc + Wg_testII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-              end
-              edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
-              
-            case 3
-              CovcCovBc = 0;
-              for g = 1:nGr
-                CovcCovBc = CovcCovBc + Wg_testIII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-              end
-              tmp = eye(nSizeCon);
-              edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
-                (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
-              
-          end
-          scoreTmp = (edf-rankCon+1) ./ edf .* score;
-          scoreTmp(scoreTmp < 0 ) = 0;
-          if dof_type == 0
-            p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
-          else
-            p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
-            p(scoreTmp == 0) = 1;
-          end
-          
-          activatedVoxels(index) = p <= WB.clusterInfo.primaryThreshold;
         end
+        
         uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;
         
         maxScore(b+1) = max(maxScore(b+1), max(score));
@@ -1896,40 +1834,7 @@ for b = 1:WB.nB
       score = score / rankCon;
       % save cluster information is needed
       if (WB.clusterWise == 1)
-        % need to convert score into parametric p-values
-        p = zeros(1, S);
-        switch dof_type
-          
-          case 1
-            error('degrees of freedom type still not implemented for the WB')
-            
-          case 2
-            CovcCovBc = 0;
-            for g = 1:nGr
-              CovcCovBc = CovcCovBc + Wg_testII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-            end
-            edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
-            
-          case 3
-            CovcCovBc = 0;
-            for g = 1:nGr
-              CovcCovBc = CovcCovBc + Wg_testIII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-            end
-            tmp = eye(nSizeCon);
-            edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
-              (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
-            
-        end
-        scoreTmp = (edf-rankCon+1) ./ edf .* score;
-        scoreTmp(scoreTmp < 0 ) = 0;
-        if dof_type == 0
-          p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
-        else
-          p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
-          p(scoreTmp == 0) = 1;
-        end
-        
-        activatedVoxels = p <= WB.clusterInfo.primaryThreshold;
+        [~, score, activatedVoxels]=getParamPVals_rank2(score, nGr, Wg_testII, Wg_testIII, dof_type, S, edf, cCovBc, Cov_vis, WB, dofMat);
       end
       uncP = uncP + (score >= originalScore) * 1;
       
@@ -2420,6 +2325,50 @@ function [p, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(sco
           activatedVoxelsNeg = [varargin{2}, p <= WB.clusterInfo.primaryThreshold & score < 0];
         end
     end
+end
+
+function [p, score, activatedVoxels]=getParamPVals_rank2(score, nGr, Wg_2, Wg_3, dof_type, matSize, edf, cCovBc, Cov_vis, WB, dofMat, varargin)
+    
+      % need to convert score into parametric p-values
+      p = zeros(1, matSize);
+      nSizeCon = size(WB.con, 1);
+      rankCon = rank(WB.con);
+      switch dof_type
+
+        case 1
+          error('degrees of freedom type still not implemented for the WB')
+
+        case 2
+          CovcCovBc = 0;
+          for g = 1:nGr
+            CovcCovBc = CovcCovBc + Wg_2{g} * swe_vechCovVechV(Cov_vis(WB.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
+          end
+          edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
+
+        case 3
+          CovcCovBc = 0;
+          for g = 1:nGr
+            CovcCovBc = CovcCovBc + Wg_3{g} * swe_vechCovVechV(Cov_vis(WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
+          end
+          tmp = eye(nSizeCon);
+          edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
+            (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
+
+      end
+      scoreTmp = (edf-rankCon+1) ./ edf .* score;
+      scoreTmp(scoreTmp < 0 ) = 0;
+      if dof_type == 0
+        p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
+      else
+        p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
+        p(scoreTmp == 0) = 1;
+      end
+      
+      if nargin<=11
+          activatedVoxels = p <= WB.clusterInfo.primaryThreshold;
+      else
+          activatedVoxels = [varargin{1}, p <= WB.clusterInfo.primaryThreshold];
+      end
 end
 
 function vol=swe_create_vol(fname, dim, m, varargin)
