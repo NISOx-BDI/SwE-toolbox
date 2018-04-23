@@ -124,143 +124,13 @@ if isMat && WB.clusterWise == 1
   end
 end
   
-% small sample correction 
-if WB.RWB == 1
-  tmpR = (xX.X' * xX.X) \ conWB';
-  tmpR = tmpR / (conWB * tmpR);
-  tmpR2 = xX.X * (eye(nBeta) - tmpR * conWB);
-  HatR = xX.X * (pX - tmpR * conWB * pX);
-  
-  switch WB.SS
-    case 0 
-      corrWB = ones(nScan,1);
-    case 1
-      corrWB  = repmat(sqrt(nScan/(nScan - nBeta + rankCon)),nScan,1); % residual correction (type 1) 
-    case 2
-      corrWB  = (1-diag(HatR)).^(-0.5); % residual correction (type 2)
-    case 3
-      corrWB  = (1-diag(HatR)).^(-1); % residual correction (type 3)
-    case 4
-      corrWB =cell(nSubj,1);
-      I_Hat = eye(nScan) - HatR;
-      for i = 1:nSubj
-        tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-        tmp = (tmp + tmp')/2;
-        [tmpV, tmpE] = eig(tmp);
-        corrWB{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV';
-      end
-      clear I_Hat tmp
-    case 5
-      corrWB  = cell(nSubj,1);
-      I_Hat = eye(nScan) - HatR;
-      for i = 1:nSubj
-          tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-          tmp = (tmp + tmp')/2;
-          corrWB{i} = inv(tmp); 
-      end
-      clear I_Hat tmp
-  end
-else 
-  Hat = xX.X*(pX); % Hat matrix
-  switch WB.SS
-    case 0
-      corrWB = ones(nScan,1);
-    case 1
-      corrWB  = repmat(sqrt(nScan/(nScan-nBeta)),nScan,1); % residual correction (type 1)
-    case 2
-      corrWB  = (1-diag(Hat)).^(-0.5); % residual correction (type 2)
-    case 3
-      corrWB  = (1-diag(Hat)).^(-1); % residual correction (type 3)
-    case 4
-      corrWB  = cell(nSubj,1);
-      I_Hat = eye(nScan) - Hat;
-      for i = 1:nSubj
-        tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-        tmp = (tmp + tmp')/2;
-        [tmpV, tmpE] = eig(tmp);
-        corrWB{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV';
-      end
-      clear I_Hat tmp
-    case 5
-      corrWB  = cell(nSubj,1);
-      I_Hat = eye(nScan) - Hat;
-      for i = 1:nSubj
-        tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-        tmp = (tmp + tmp')/2;
-        corrWB{i} = inv(tmp);
-      end
-      clear I_Hat tmp
-  end
-end
+% small sample correction (for WB)
+[corrWB, tmpR2] = residualCorrection(WB.RWB, WB.SS, xX, pX, conWB, nScan, nBeta, iSubj, uSubj,... 
+                                            nSubj, rankCon);
 
-if WB.RSwE == 1
-  tmpR = (xX.X' * xX.X) \ conWB';
-  tmpR = tmpR / (conWB * tmpR);
-  tmpR2 = xX.X * (eye(nBeta) - tmpR * conWB);
-  HatR = xX.X * (pX - tmpR * conWB * pX);
-  
-  switch SwE.SS
-    case 0
-      corr = ones(nScan,1);
-    case 1
-      corr  = repmat(sqrt(nScan/(nScan - nBeta + rankCon)),nScan,1); % residual correction (type 1)
-    case 2
-      corr  = (1-diag(HatR)).^(-0.5); % residual correction (type 2)
-    case 3
-      corr  = (1-diag(HatR)).^(-1); % residual correction (type 3)
-    case 4
-      corr =cell(nSubj,1);
-      I_Hat = eye(nScan) - HatR;
-      for i = 1:nSubj
-        tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-        tmp = (tmp + tmp')/2;
-        [tmpV, tmpE] = eig(tmp);
-        corr{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV';
-      end
-      clear I_Hat tmp
-    case 5
-      corr  = cell(nSubj,1);
-      I_Hat = eye(nScan) - HatR;
-      for i = 1:nSubj
-        tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-        tmp = (tmp + tmp')/2;
-        corr{i} = inv(tmp);
-      end
-      clear I_Hat tmp
-  end
-else
-  Hat = xX.X*(pX); % Hat matrix
-  switch SwE.SS
-    case 0
-      corr = ones(nScan,1);
-    case 1
-      corr  = repmat(sqrt(nScan/(nScan-nBeta)),nScan,1); % residual correction (type 1)
-    case 2
-      corr  = (1-diag(Hat)).^(-0.5); % residual correction (type 2)
-    case 3
-      corr  = (1-diag(Hat)).^(-1); % residual correction (type 3)
-    case 4
-      corr  = cell(nSubj,1);
-      I_Hat = eye(nScan) - Hat;
-      for i = 1:nSubj
-        tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-        tmp = (tmp + tmp')/2;
-        [tmpV, tmpE] = eig(tmp);
-        corr{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV';
-      end
-      clear I_Hat tmp
-    case 5
-      corr  = cell(nSubj,1);
-      I_Hat = eye(nScan) - Hat;
-      for i = 1:nSubj
-        tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-        tmp = (tmp + tmp')/2;
-        corr{i} = inv(tmp);
-      end
-      clear I_Hat tmp
-  end
-end
-
+% small sample correction (for parametric)
+[corr, tmpR2] = residualCorrection(WB.RSwE, SwE.SS, xX, pX, conWB, nScan, nBeta, iSubj, uSubj,... 
+                                            nSubj, rankCon, tmpR2);
 
 %-detect if the design matrix is separable (a little bit messy, but seems to do the job)
 %
@@ -350,8 +220,6 @@ else
     edf = NaN;
 end
 
-
-
 %-preprocessing for the modified SwE
 if isfield(SwE.type,'modified')
   iVis      = SwE.Vis.iVis;
@@ -435,6 +303,7 @@ if isfield(SwE.type,'modified')
 %-compute the effective dof from each homogeneous group if dof_type
     switch dof_type
       case 1
+        dofMat = NaN;
         edof_Gr = zeros(1,nGr);
         nSubj_g = zeros(1,nGr);
         for g = 1:nGr
@@ -582,16 +451,13 @@ if ~isMat
   %----------------------------------------------------------------------
 
   if WB.stat=='T'
-      
       Vscore = swe_create_vol('swe_vox_T_c0001.img', DIM, M,...
                               'Original parametric T statistic data.');
   end
   
   if WB.stat=='F'
-
       Vscore = swe_create_vol('swe_vox_F_c0001.img', DIM, M,...
-                              'Original parametric F statistic data.');
-                          
+                              'Original parametric F statistic data.');      
   end
   
   %-Initialise parametric P-Value image
@@ -976,7 +842,7 @@ if ~isMat
           % save cluster information is needed
           if (SwE.WB.clusterWise == 1)
             
-            [~, score, activatedVoxels]=getParamPVals_rank2(score, nGr, Wg_testII, Wg_testIII, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels2);
+            [p, score, activatedVoxels]=getParamPVals_rank2(score, nGr, Wg_testII, Wg_testIII, iGr_Cov_vis_g, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels);
             
           end
         end
@@ -1708,9 +1574,7 @@ for b = 1:WB.nB
         score = score / rankCon;
         % save cluster information is needed
         if (WB.clusterWise == 1)
-        
-            [~, score, activatedVoxels(index)]=getParamPVals_rank2(score, nGr, Wg_testII, Wg_testIII, dof_type, blksz, edf, cCovBc, Cov_vis, WB, dofMat);
-            
+            [~, score, activatedVoxels(index)]=getParamPVals_rank2(score, nGr, Wg_testII, Wg_testIII, iGr_Cov_vis_g, dof_type, blksz, edf, cCovBc, Cov_vis, WB, dofMat);
         end
         
         uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;
@@ -1834,7 +1698,7 @@ for b = 1:WB.nB
       score = score / rankCon;
       % save cluster information is needed
       if (WB.clusterWise == 1)
-        [~, score, activatedVoxels]=getParamPVals_rank2(score, nGr, Wg_testII, Wg_testIII, dof_type, S, edf, cCovBc, Cov_vis, WB, dofMat);
+        [~, score, activatedVoxels]=getParamPVals_rank2(score, nGr, Wg_testII, Wg_testIII, iGr_Cov_vis_g, dof_type, S, edf, cCovBc, Cov_vis, WB, dofMat);
       end
       uncP = uncP + (score >= originalScore) * 1;
       
@@ -1900,7 +1764,6 @@ for b = 1:WB.nB
   spm_progress_bar('Set',100 * b / WB.nB);
 end
 
-
 %==========================================================================
 %- produce results images
 %==========================================================================
@@ -1912,7 +1775,6 @@ if isMat
   lUncP_pos = -log10(uncP);
   save('lUncP_pos.mat', 'lUncP_pos');
   clear lUncP_pos
-  
   
   if WB.stat == 'T'
     uncP_neg = 1 + 1/(WB.nB + 1) - uncP_pos;
@@ -2277,7 +2139,6 @@ function [p, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(sco
           CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(WB.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
         end
         edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
-        clear CovcCovBc cCovBc
 
         if WB.stat == 'T'
           if any(score > 0)
@@ -2295,7 +2156,6 @@ function [p, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(sco
           CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
         end
         edf = 2 * cCovBc.^2 ./ CovcCovBc;
-        clear CovcCovBc cCovBc
 
         if WB.stat == 'T'
           if any(score > 0)
@@ -2327,7 +2187,7 @@ function [p, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(sco
     end
 end
 
-function [p, score, activatedVoxels]=getParamPVals_rank2(score, nGr, Wg_2, Wg_3, dof_type, matSize, edf, cCovBc, Cov_vis, WB, dofMat, varargin)
+function [p, score, activatedVoxels]=getParamPVals_rank2(score, nGr, Wg_2, Wg_3, iGr_Cov_vis_g, dof_type, matSize, edf, cCovBc, Cov_vis, WB, dofMat, varargin)
     
       % need to convert score into parametric p-values
       p = zeros(1, matSize);
@@ -2341,14 +2201,14 @@ function [p, score, activatedVoxels]=getParamPVals_rank2(score, nGr, Wg_2, Wg_3,
         case 2
           CovcCovBc = 0;
           for g = 1:nGr
-            CovcCovBc = CovcCovBc + Wg_2{g} * swe_vechCovVechV(Cov_vis(WB.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
+            CovcCovBc = CovcCovBc + Wg_2{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
           end
           edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
 
         case 3
           CovcCovBc = 0;
           for g = 1:nGr
-            CovcCovBc = CovcCovBc + Wg_3{g} * swe_vechCovVechV(Cov_vis(WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
+            CovcCovBc = CovcCovBc + Wg_3{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
           end
           tmp = eye(nSizeCon);
           edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
@@ -2364,7 +2224,7 @@ function [p, score, activatedVoxels]=getParamPVals_rank2(score, nGr, Wg_2, Wg_3,
         p(scoreTmp == 0) = 1;
       end
       
-      if nargin<=11
+      if nargin<=12
           activatedVoxels = p <= WB.clusterInfo.primaryThreshold;
       else
           activatedVoxels = [varargin{1}, p <= WB.clusterInfo.primaryThreshold];
@@ -2390,3 +2250,55 @@ function vol=swe_create_vol(fname, dim, m, varargin)
     vol = spm_create_vol(vol);
 
 end 
+
+function [corr, tmpR2] = residualCorrection(restric, switchRestric, xX, pX, conWB, nScan, nBeta, iSubj, uSubj,... 
+                                            nSubj, rankCon, varargin)
+    
+    % This is to prevent tmpR2 being overwritten.
+    if nargin <= 11
+        tmpR2 = false;
+    else
+        tmpR2 = varargin{1};
+    end
+    
+    if restric == 1
+      tmpR = (xX.X' * xX.X) \ conWB';
+      tmpR = tmpR / (conWB * tmpR);
+      tmpR2 = xX.X * (eye(nBeta) - tmpR * conWB);
+      Hat = xX.X * (pX - tmpR * conWB * pX); % Restricted Hat matrix
+    else
+      Hat = xX.X*(pX); % Hat matrix
+    end
+
+    switch switchRestric
+        case 0
+          corr = ones(nScan,1);
+        case 1
+          if WB.RSwE == 1
+            corr  = repmat(sqrt(nScan/(nScan - nBeta + rankCon)),nScan,1); % residual correction (type 1)
+          else
+            corr  = repmat(sqrt(nScan/(nScan-nBeta)),nScan,1); 
+          end
+        case 2
+          corr  = (1-diag(Hat)).^(-0.5); % residual correction (type 2)
+        case 3
+          corr  = (1-diag(Hat)).^(-1); % residual correction (type 3)
+        case 4
+          corr =cell(nSubj,1);
+          I_Hat = eye(nScan) - Hat;
+          for i = 1:nSubj
+            tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
+            tmp = (tmp + tmp')/2;
+            [tmpV, tmpE] = eig(tmp);
+            corr{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV';
+          end
+        case 5
+          corr  = cell(nSubj,1);
+          I_Hat = eye(nScan) - Hat;
+          for i = 1:nSubj
+            tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
+            tmp = (tmp + tmp')/2;
+            corr{i} = inv(tmp);
+          end
+    end
+end
