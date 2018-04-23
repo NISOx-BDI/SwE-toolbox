@@ -592,8 +592,8 @@ if ~isMat
   if (WB.clusterWise == 1)
     activatedVoxels = false(0);
     maxClusterSize = nan(1, WB.nB + 1);
+    activatedVoxelsNeg = false(0);
     if (WB.stat == 'T')
-      activatedVoxelsNeg = false(0);
       maxClusterSizeNeg = nan(1, WB.nB + 1);
     end
   end
@@ -1155,7 +1155,7 @@ else % ".mat" format
       
       if (SwE.WB.clusterWise == 1)
         
-        [p, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(score, nGr, Wg, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels, activatedVoxelsNeg);
+        [~, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(score, nGr, Wg, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels, activatedVoxelsNeg);
         clear CovcCovBc cCovBc
             
       end
@@ -2119,17 +2119,6 @@ function [p, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(sco
     % need to convert score into parametric p-values
     p = zeros(1, matSize);
     switch dof_type
-      case 0
-        if stat == 'T'
-          if any(score > 0)
-            p(score > 0)  = spm_Tcdf(-score(score>0), edf);
-          end
-          if any(score <= 0)
-            p(score <= 0) = spm_Tcdf(score(score<=0), edf);
-          end
-        else
-          p = 2 * spm_Tcdf(-abs(score), edf);
-        end
       case 1
         error('degrees of freedom type still not implemented for the WB')
 
@@ -2140,49 +2129,39 @@ function [p, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(sco
         end
         edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
 
-        if WB.stat == 'T'
-          if any(score > 0)
-            p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-          end
-          if any(score <= 0)
-            p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-          end
-        else
-          p = 2 * spm_Tcdf(-abs(score), edf);
-        end
       case 3
         CovcCovBc = 0;
         for g = 1:nGr
           CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
         end
         edf = 2 * cCovBc.^2 ./ CovcCovBc;
-
-        if WB.stat == 'T'
-          if any(score > 0)
-            p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-          end
-          if any(score <= 0)
-            p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-          end
-        else
-          p = 2 * spm_Tcdf(-abs(score), edf);
-        end
+    
     end
+    
+    % Get the P values.
+    p  = spm_Tcdf(score, edf);
+
     if WB.stat == 'F'
       score = score .^2;
     end
     
     if nargin <=10
-        % We may wish to just record the activated voxels
-        activatedVoxels = p <= WB.clusterInfo.primaryThreshold & score > 0;
+        % We may wish to just record the activated voxels. This would be
+        % two one tailed tests on the T score for a T test or one two
+        % tailed test on the T score for an F test.
         if (WB.stat == 'T')
-          activatedVoxelsNeg = p <= WB.clusterInfo.primaryThreshold & score < 0;
+            activatedVoxels = p <= WB.clusterInfo.primaryThreshold & score > 0;
+            activatedVoxelsNeg = p <= WB.clusterInfo.primaryThreshold & score < 0;
+        else
+            activatedVoxels = (p > (1-WB.clusterInfo.primaryThreshold/2) | p < (WB.clusterInfo.primaryThreshold/2));
         end
     else
         % Or we may wish to add the activatedVoxels to a pre-existing list.
-        activatedVoxels = [varargin{1}, p <= WB.clusterInfo.primaryThreshold & score > 0];
         if (WB.stat == 'T')
-          activatedVoxelsNeg = [varargin{2}, p <= WB.clusterInfo.primaryThreshold & score < 0];
+            activatedVoxels = [varargin{1}, p <= WB.clusterInfo.primaryThreshold & score > 0];
+            activatedVoxelsNeg = [varargin{2}, p <= WB.clusterInfo.primaryThreshold & score < 0];
+        else
+            activatedVoxels = [varargin{1}, p > (1-WB.clusterInfo.primaryThreshold/2) | p < (WB.clusterInfo.primaryThreshold/2)];
         end
     end
 end
