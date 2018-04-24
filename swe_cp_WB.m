@@ -125,11 +125,11 @@ if isMat && WB.clusterWise == 1
 end
   
 % small sample correction (for WB)
-[corrWB, tmpR2] = residualCorrection(WB.RWB, WB.SS, xX, pX, conWB, nScan, nBeta, iSubj, uSubj,... 
+[corrWB, tmpR2] = swe_resid_corr(WB.RWB, WB.SS, xX, pX, conWB, nScan, nBeta, iSubj, uSubj,... 
                                             nSubj, rankCon);
 
 % small sample correction (for parametric)
-[corr, tmpR2] = residualCorrection(WB.RSwE, SwE.SS, xX, pX, conWB, nScan, nBeta, iSubj, uSubj,... 
+[corr, tmpR2] = swe_resid_corr(WB.RSwE, SwE.SS, xX, pX, conWB, nScan, nBeta, iSubj, uSubj,... 
                                             nSubj, rankCon, tmpR2);
 
 %-detect if the design matrix is separable (a little bit messy, but seems to do the job)
@@ -701,51 +701,17 @@ if ~isMat
         
         % restricted fitted data
         if WB.RWB == 1
-          YWB = tmpR2 * beta;
-          if SwE.WB.SS >= 4 % SC2 or SC3
-            resWB = zeros(size(Y));
-            for i = 1:nSubj
-              resWB(iSubj==uSubj(i),:) = corrWB{i} *...
-                (Y(iSubj==uSubj(i),:)-YWB(iSubj==uSubj(i),:));
-            end
-          else
-            resWB  = diag(corrWB) * (Y-YWB);
-          end
-        else
-          YWB = xX.X * beta;
-          if SwE.WB.SS >= 4 % SC2 or SC3
-            resWB = zeros(size(Y));
-            for i = 1:nSubj
-              resWB(iSubj==uSubj(i),:) = corrWB{i} *...
-                (Y(iSubj==uSubj(i),:)-YWB(iSubj==uSubj(i),:));
-            end
-          else
-            resWB  = diag(corrWB) * (Y-YWB);
-          end
+            [resWB, YWB]=swe_fit(Y, tmpR2, corrWB, beta, iSubj, uSubj, nSubj, SwE.WB.SS);
+        else 
+            [resWB, YWB]=swe_fit(Y, xX.X, corrWB, beta, iSubj, uSubj, nSubj, SwE.WB.SS);
         end
-        
+
         if WB.RSwE == 1
-          if SwE.SS >= 4  % Cluster-wise adjustments
-            res = zeros(size(Y));
-            for i = 1:nSubj
-              res(iSubj==uSubj(i),:) = corr{i} *...
-                (Y(iSubj==uSubj(i),:)-tmpR2(iSubj==uSubj(i),:)*beta);
-            end
-          else
-            res = diag(corr) * (Y - tmpR2 * beta); %-Corrected residuals
-          end
-        else
-          if SwE.SS >= 4  % Cluster-wise adjustments
-            res = zeros(size(Y));
-            for i = 1:nSubj
-              res(iSubj==uSubj(i),:) = corr{i} *...
-                (Y(iSubj==uSubj(i),:)-xX.X(iSubj==uSubj(i),:)*beta);
-            end
-          else
-            res = diag(corr) * (Y-xX.X*beta); %-Corrected residuals
-          end
+            res=swe_fit(Y, tmpR2, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
+        else 
+            res=swe_fit(Y, xX.X, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
         end
-        
+
         clear Y                           %-Clear to save memory
         %-Estimation of the data variance-covariance components (modified SwE)
         %-SwE estimation (classic version)
@@ -814,7 +780,7 @@ if ~isMat
           
           if (SwE.WB.clusterWise == 1)
 
-            [p, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(score, nGr, Wg, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels, activatedVoxelsNeg);
+            [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(score, nGr, Wg, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels, activatedVoxelsNeg);
             clear CovcCovBc cCovBc
             
           end
@@ -842,7 +808,7 @@ if ~isMat
           % save cluster information is needed
           if (SwE.WB.clusterWise == 1)
             
-            [p, score, activatedVoxels]=getParamPVals_rank2(score, nGr, Wg_testII, Wg_testIII, iGr_Cov_vis_g, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels);
+            [p, score, activatedVoxels]=swe_hyptest_rank2(score, nGr, Wg_testII, Wg_testIII, iGr_Cov_vis_g, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels);
             
           end
         end
@@ -1040,51 +1006,16 @@ else % ".mat" format
     
     beta  = pX*Y;                     %-Parameter estimates
     
-    % restricted fitted data
     if WB.RWB == 1
-      YWB = tmpR2 * beta;
-      if SwE.WB.SS >= 4 % SC2 or SC3
-        resWB = zeros(size(Y));
-        for i = 1:nSubj
-          resWB(iSubj==uSubj(i),:) = corrWB{i} *...
-            (Y(iSubj==uSubj(i),:)-YWB(iSubj==uSubj(i),:));
-        end
-      else
-        resWB  = diag(corrWB) * (Y-YWB);
-      end
-    else
-      YWB = xX.X * beta;
-      if SwE.WB.SS >= 4 % SC2 or SC3
-        resWB = zeros(size(Y));
-        for i = 1:nSubj
-          resWB(iSubj==uSubj(i),:) = corrWB{i} *...
-            (Y(iSubj==uSubj(i),:)-YWB(iSubj==uSubj(i),:));
-        end
-      else
-        resWB  = diag(corrWB) * (Y-YWB);
-      end
+        [resWB, YWB]=swe_fit(Y, tmpR2, corrWB, beta, iSubj, uSubj, nSubj, SwE.WB.SS);
+    else 
+        [resWB, YWB]=swe_fit(Y, xX.X, corrWB, beta, iSubj, uSubj, nSubj, SwE.WB.SS);
     end
     
     if WB.RSwE == 1
-      if SwE.SS >= 4  % Cluster-wise adjustments
-        res = zeros(size(Y));
-        for i = 1:nSubj
-          res(iSubj==uSubj(i),:) = corr{i} *...
-            (Y(iSubj==uSubj(i),:)-tmpR2(iSubj==uSubj(i),:)*beta);
-        end
-      else
-        res = diag(corr) * (Y - tmpR2 * beta); %-Corrected residuals
-      end
-    else
-      if SwE.SS >= 4  % Cluster-wise adjustments
-        res = zeros(size(Y));
-        for i = 1:nSubj
-          res(iSubj==uSubj(i),:) = corr{i} *...
-            (Y(iSubj==uSubj(i),:)-xX.X(iSubj==uSubj(i),:)*beta);
-        end
-      else
-        res = diag(corr) * (Y-xX.X*beta); %-Corrected residuals
-      end
+        res=swe_fit(Y, tmpR2, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
+    else 
+        res=swe_fit(Y, xX.X, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
     end
     
     clear Y                           %-Clear to save memory
@@ -1155,7 +1086,7 @@ else % ".mat" format
       
       if (SwE.WB.clusterWise == 1)
         
-        [~, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(score, nGr, Wg, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels, activatedVoxelsNeg);
+        [~, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(score, nGr, Wg, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels, activatedVoxelsNeg);
         clear CovcCovBc cCovBc
             
       end
@@ -1467,26 +1398,10 @@ for b = 1:WB.nB
         spm_get_data(VResWB, XYZ(:,index),false) .* repmat(resamplingMatrix(:,b),1,blksz);
       
       beta  = pX * Y_b;                     %-Parameter estimates
-      if WB.RSwE == 0 % U-SwE
-        if SwE.SS >= 4  % Cluster-wise adjustments SC2 or SC3
-          res = zeros(size(Y_b));
-          for i = 1:nSubj
-            res(iSubj==uSubj(i),:) = corr{i} *...
-              (Y_b(iSubj==uSubj(i),:) - xX.X(iSubj==uSubj(i),:) * beta);
-          end
-        else
-          res = diag(corr) * (Y_b - xX.X * beta); %-Corrected residuals
-        end
-      else % R-SwE
-        if SwE.SS >= 4  % Cluster-wise adjustments SC2 or SC3
-          res = zeros(size(Y_b));
-          for i = 1:nSubj
-            res(iSubj==uSubj(i),:) = corr{i} *...
-              (Y_b(iSubj==uSubj(i),:) - tmpR2(iSubj==uSubj(i),:) * beta);
-          end
-        else
-          res = diag(corr) * (Y_b - tmpR2 * beta); %-Corrected residuals
-        end
+      if WB.RSwE == 0
+        res=swe_fit(Y, tmpR2, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
+      else 
+        res=swe_fit(Y, xX.X, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
       end
       
       clear Y_b
@@ -1546,7 +1461,7 @@ for b = 1:WB.nB
         if (WB.clusterWise == 1)
         
             [~, score, activatedVoxels(index), activatedVoxelsNeg(index)]=...
-                getParamPVals_rank1(score, nGr, Wg, dof_type, blksz, edf, cCovBc, Cov_vis, WB, dofMat);
+                swe_hyptest_rank1(score, nGr, Wg, dof_type, blksz, edf, cCovBc, Cov_vis, WB, dofMat);
             clear CovcCovBc cCovBc
             
         end
@@ -1574,7 +1489,7 @@ for b = 1:WB.nB
         score = score / rankCon;
         % save cluster information is needed
         if (WB.clusterWise == 1)
-            [~, score, activatedVoxels(index)]=getParamPVals_rank2(score, nGr, Wg_testII, Wg_testIII, iGr_Cov_vis_g, dof_type, blksz, edf, cCovBc, Cov_vis, WB, dofMat);
+            [~, score, activatedVoxels(index)]=swe_hyptest_rank2(score, nGr, Wg_testII, Wg_testIII, iGr_Cov_vis_g, dof_type, blksz, edf, cCovBc, Cov_vis, WB, dofMat);
         end
         
         uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;
@@ -1594,28 +1509,12 @@ for b = 1:WB.nB
     Y_b = YWB + resWB .* repmat(resamplingMatrix(:,b),1,S);
     
     beta  = pX * Y_b;                     %-Parameter estimates
-    if WB.RSwE == 0 % U-SwE
-      if SwE.SS >= 4  % Cluster-wise adjustments SC2 or SC3
-        res = zeros(size(Y_b));
-        for i = 1:nSubj
-          res(iSubj==uSubj(i),:) = corr{i} *...
-            (Y_b(iSubj==uSubj(i),:) - xX.X(iSubj==uSubj(i),:) * beta);
-        end
-      else
-        res = diag(corr) * (Y_b - xX.X * beta); %-Corrected residuals
-      end
-    else % R-SwE
-      if SwE.SS >= 4  % Cluster-wise adjustments SC2 or SC3
-        res = zeros(size(Y_b));
-        for i = 1:nSubj
-          res(iSubj==uSubj(i),:) = corr{i} *...
-            (Y_b(iSubj==uSubj(i),:) - tmpR2(iSubj==uSubj(i),:) * beta);
-        end
-      else
-        res = diag(corr) * (Y_b - tmpR2 * beta); %-Corrected residuals
-      end
+    if WB.RSwE == 0
+      res=swe_fit(Y, tmpR2, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
+    else 
+      res=swe_fit(Y, xX.X, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
     end
-    
+
     clear Y_b
     
     %-Estimation of the data variance-covariance components (modified SwE)
@@ -1671,7 +1570,7 @@ for b = 1:WB.nB
       clear beta
       
       if (WB.clusterWise == 1)        
-        [p, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(score, nGr, Wg, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat);
+        [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(score, nGr, Wg, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat);
         clear CovcCovBc cCovBc
       end
       
@@ -1698,7 +1597,7 @@ for b = 1:WB.nB
       score = score / rankCon;
       % save cluster information is needed
       if (WB.clusterWise == 1)
-        [~, score, activatedVoxels]=getParamPVals_rank2(score, nGr, Wg_testII, Wg_testIII, iGr_Cov_vis_g, dof_type, S, edf, cCovBc, Cov_vis, WB, dofMat);
+        [~, score, activatedVoxels]=swe_hyptest_rank2(score, nGr, Wg_testII, Wg_testIII, iGr_Cov_vis_g, dof_type, S, edf, cCovBc, Cov_vis, WB, dofMat);
       end
       uncP = uncP + (score >= originalScore) * 1;
       
@@ -2114,7 +2013,7 @@ function [Cm,Y,CrS]=mask_seperable(SwE, Cm, Y, nGr_dof, iGr_dof, nGr, iGr, uGr, 
 
 end
 
-function [p, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(score, nGr, Wg, dof_type, matSize, edf, cCovBc, Cov_vis, WB, dofMat, varargin)
+function [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(score, nGr, Wg, dof_type, matSize, edf, cCovBc, Cov_vis, WB, dofMat, varargin)
 
     % need to convert score into parametric p-values
     p = zeros(1, matSize);
@@ -2166,7 +2065,7 @@ function [p, score, activatedVoxels, activatedVoxelsNeg]=getParamPVals_rank1(sco
     end
 end
 
-function [p, score, activatedVoxels]=getParamPVals_rank2(score, nGr, Wg_2, Wg_3, iGr_Cov_vis_g, dof_type, matSize, edf, cCovBc, Cov_vis, WB, dofMat, varargin)
+function [p, score, activatedVoxels]=swe_hyptest_rank2(score, nGr, Wg_2, Wg_3, iGr_Cov_vis_g, dof_type, matSize, edf, cCovBc, Cov_vis, WB, dofMat, varargin)
     
       % need to convert score into parametric p-values
       p = zeros(1, matSize);
@@ -2230,7 +2129,7 @@ function vol=swe_create_vol(fname, dim, m, varargin)
 
 end 
 
-function [corr, tmpR2] = residualCorrection(restric, switchRestric, xX, pX, conWB, nScan, nBeta, iSubj, uSubj,... 
+function [corr, tmpR2] = swe_resid_corr(restric, switchRestric, xX, pX, conWB, nScan, nBeta, iSubj, uSubj,... 
                                             nSubj, rankCon, varargin)
     
     % This is to prevent tmpR2 being overwritten.
@@ -2280,4 +2179,19 @@ function [corr, tmpR2] = residualCorrection(restric, switchRestric, xX, pX, conW
             corr{i} = inv(tmp);
           end
     end
+end
+
+function [res, Y_est]=swe_fit(Y, crctX, corr, beta, iSubj, uSubj, nSubj, ss)
+    
+    Y_est = crctX * beta;
+    if ss >= 4 % SC2 or SC3
+      res = zeros(size(Y));
+      for i = 1:nSubj
+        res(iSubj==uSubj(i),:) = corr{i} *...
+            (Y(iSubj==uSubj(i),:)-Y_est(iSubj==uSubj(i),:));
+      end
+    else
+      res  = diag(corr) * (Y-Y_est);
+    end
+    
 end
