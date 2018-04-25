@@ -275,8 +275,8 @@ if isfield(SwE.type,'modified')
     end
   end
   
-  % Record igr_Cov_vis_g (we only need this in the WB object).
-  WB.iGr_Cov_vis_g = iGr_Cov_vis_g;
+  % Record igr_Cov_vis_g.
+  SwE.WB.iGr_Cov_vis_g = iGr_Cov_vis_g;
   
   % weights for the vectorised SwE
   weight = NaN(nCov_beta,nCov_vis);
@@ -794,7 +794,7 @@ if ~isMat
           
           if (SwE.WB.clusterWise == 1)
 
-            [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(score, nGr, Wg, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels, activatedVoxelsNeg);
+            [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
             clear CovcCovBc cCovBc
             
           end
@@ -822,7 +822,7 @@ if ~isMat
           % save cluster information is needed
           if (SwE.WB.clusterWise == 1)
             
-            [p, score, activatedVoxels]=swe_hyptest_rank2(score, nGr, Wg_testII, Wg_testIII, iGr_Cov_vis_g, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels);
+            [p, score, activatedVoxels]=swe_hyptest_rank2(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
             
           end
         end
@@ -898,8 +898,10 @@ if ~isMat
     if ~isempty(Q), jj(Q) = CrConScore; end
     VcScore = spm_write_plane(VcScore, jj, CrPl);
     
-    if ~isempty(Q), jj(Q) = CrConScoreNeg; end
-    VcScoreNeg = spm_write_plane(VcScoreNeg, jj, CrPl);
+    if WB.stat=='T'
+        if ~isempty(Q), jj(Q) = CrConScoreNeg; end
+        VcScoreNeg = spm_write_plane(VcScoreNeg, jj, CrPl);
+    end
     
     %-Report progress
     %----------------------------------------------------------------------
@@ -1104,7 +1106,7 @@ else % ".mat" format
       
       if (SwE.WB.clusterWise == 1)
         
-        [~, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(score, nGr, Wg, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat, activatedVoxels, activatedVoxelsNeg);
+        [~, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
         clear CovcCovBc cCovBc
             
       end
@@ -1473,7 +1475,7 @@ for b = 1:WB.nB
         if (WB.clusterWise == 1)
         
             [~, score, activatedVoxels(index), activatedVoxelsNeg(index)]=...
-                swe_hyptest_rank1(score, nGr, Wg, dof_type, blksz, edf, cCovBc, Cov_vis, WB, dofMat);
+                swe_hyptest_rank1(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
             clear CovcCovBc cCovBc
             
         end
@@ -1501,7 +1503,7 @@ for b = 1:WB.nB
         score = score / rankCon;
         % save cluster information is needed
         if (WB.clusterWise == 1)
-            [~, score, activatedVoxels(index)]=swe_hyptest_rank2(score, nGr, Wg_testII, Wg_testIII, iGr_Cov_vis_g, dof_type, blksz, edf, cCovBc, Cov_vis, WB, dofMat);
+            [~, score, activatedVoxels(index)]=swe_hyptest_rank2(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
         end
         
         uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;
@@ -1582,7 +1584,7 @@ for b = 1:WB.nB
       clear beta
       
       if (WB.clusterWise == 1)        
-        [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(score, nGr, Wg, dof_type, CrS, edf, cCovBc, Cov_vis, WB, dofMat);
+        [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
         clear CovcCovBc cCovBc
       end
       
@@ -1609,7 +1611,7 @@ for b = 1:WB.nB
       score = score / rankCon;
       % save cluster information is needed
       if (WB.clusterWise == 1)
-        [~, score, activatedVoxels]=swe_hyptest_rank2(score, nGr, Wg_testII, Wg_testIII, iGr_Cov_vis_g, dof_type, S, edf, cCovBc, Cov_vis, WB, dofMat);
+        [~, score, activatedVoxels]=swe_hyptest_rank2(SwE, score, S, edf, cCovBc, Cov_vis, dofMat);
       end
       uncP = uncP + (score >= originalScore) * 1;
       
@@ -2025,10 +2027,19 @@ function [Cm,Y,CrS]=mask_seperable(SwE, Cm, Y, nGr_dof, iGr_dof, nGr, iGr, uGr, 
 
 end
 
-function [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(score, nGr, Wg, dof_type, matSize, edf, cCovBc, Cov_vis, WB, dofMat, varargin)
+function [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
 
-    % need to convert score into parametric p-values
+    % Setup
     p = zeros(1, matSize);
+    Wg = SwE.WB.Wg{1};
+    nGr = length(unique(SwE.Gr.iGr));
+    if isfield(SwE.type,'modified')
+        dof_type = SwE.type.modified.dof_mo;
+    else
+        dof_type = SwE.type.classic.dof_cl;        
+    end
+    
+    % Convert P values.
     switch dof_type
       case 1
         error('degrees of freedom type still not implemented for the WB')
@@ -2036,14 +2047,14 @@ function [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(score
       case 2
         CovcCovBc = 0;
         for g = 1:nGr
-          CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(WB.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
+          CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
         end
         edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
 
       case 3
         CovcCovBc = 0;
         for g = 1:nGr
-          CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
+          CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
         end
         edf = 2 * cCovBc.^2 ./ CovcCovBc;
     
@@ -2052,37 +2063,47 @@ function [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(score
     % Get the P values.
     p  = spm_Tcdf(score, edf);
 
-    if WB.stat == 'F'
+    if SwE.WB.stat == 'F'
       score = score .^2;
     end
     
-    if nargin <=10
+    if nargin <=7
         % We may wish to just record the activated voxels. This would be
         % two one tailed tests on the T score for a T test or one two
         % tailed test on the T score for an F test.
-        if (WB.stat == 'T')
-            activatedVoxels = p > (1-WB.clusterInfo.primaryThreshold/2);
-            activatedVoxelsNeg = p < (WB.clusterInfo.primaryThreshold/2);
+        if (SwE.WB.stat == 'T')
+            activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold/2);
+            activatedVoxelsNeg = p < (SwE.WB.clusterInfo.primaryThreshold/2);
         else
-            activatedVoxels = (p > (1-WB.clusterInfo.primaryThreshold/2) | p < (WB.clusterInfo.primaryThreshold/2));
+            activatedVoxels = (p > (1-SwE.WB.clusterInfo.primaryThreshold/2) | p < (SwE.WB.clusterInfo.primaryThreshold/2));
         end
     else
         % Or we may wish to add the activatedVoxels to a pre-existing list.
-        if (WB.stat == 'T')
-            activatedVoxels = [varargin{1}, p > (1-WB.clusterInfo.primaryThreshold/2)];
-            activatedVoxelsNeg = [varargin{2}, p < (WB.clusterInfo.primaryThreshold/2)];
+        if (SwE.WB.stat == 'T')
+            activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold/2)];
+            activatedVoxelsNeg = [varargin{2}, p < (SwE.WB.clusterInfo.primaryThreshold/2)];
         else
-            activatedVoxels = [varargin{1}, p > (1-WB.clusterInfo.primaryThreshold/2) | p < (WB.clusterInfo.primaryThreshold/2)];
+            activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold/2) | p < (SwE.WB.clusterInfo.primaryThreshold/2)];
         end
     end
 end
 
-function [p, score, activatedVoxels]=swe_hyptest_rank2(score, nGr, Wg_2, Wg_3, iGr_Cov_vis_g, dof_type, matSize, edf, cCovBc, Cov_vis, WB, dofMat, varargin)
+function [p, score, activatedVoxels]=swe_hyptest_rank2(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
     
-      % need to convert score into parametric p-values
+      % setup
       p = zeros(1, matSize);
-      nSizeCon = size(WB.con, 1);
-      rankCon = rank(WB.con);
+      Wg_2 = SwE.WB.Wg{2};
+      Wg_3 = SwE.WB.Wg{3};
+      nGr = length(unique(SwE.Gr.iGr));
+      nSizeCon = size(SwE.WB.con,1);
+      rankCon = rank(SwE.WB.con);
+      
+      if isfield(SwE.type,'modified')
+         dof_type = SwE.type.modified.dof_mo;
+      else
+         dof_type = SwE.type.classic.dof_cl;        
+      end     
+      
       switch dof_type
 
         case 1
@@ -2091,14 +2112,14 @@ function [p, score, activatedVoxels]=swe_hyptest_rank2(score, nGr, Wg_2, Wg_3, i
         case 2
           CovcCovBc = 0;
           for g = 1:nGr
-            CovcCovBc = CovcCovBc + Wg_2{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
+            CovcCovBc = CovcCovBc + Wg_2{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
           end
           edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
 
         case 3
           CovcCovBc = 0;
           for g = 1:nGr
-            CovcCovBc = CovcCovBc + Wg_3{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
+            CovcCovBc = CovcCovBc + Wg_3{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
           end
           tmp = eye(nSizeCon);
           edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
@@ -2114,10 +2135,10 @@ function [p, score, activatedVoxels]=swe_hyptest_rank2(score, nGr, Wg_2, Wg_3, i
         p(scoreTmp == 0) = 1;
       end
       
-      if nargin<=12
-          activatedVoxels = p <= WB.clusterInfo.primaryThreshold;
+      if nargin<=7
+          activatedVoxels = p <= SwE.WB.clusterInfo.primaryThreshold;
       else
-          activatedVoxels = [varargin{1}, p <= WB.clusterInfo.primaryThreshold];
+          activatedVoxels = [varargin{1}, p <= SwE.WB.clusterInfo.primaryThreshold];
       end
 end
 
@@ -2149,6 +2170,7 @@ function [corr, tmpR2] = swe_resid_corr(SwE, restric, ss, pX, varargin)
     iSubj = SwE.Subj.iSubj;
     nSubj = SwE.Subj.nSubj;
     uSubj = SwE.Subj.uSubj;
+    rankCon = rank(SwE.WB.con);
 
     % This is to prevent tmpR2 being overwritten.
     if nargin <= 4
