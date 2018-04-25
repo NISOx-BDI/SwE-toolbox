@@ -84,6 +84,9 @@ iSubj         = SwE.Subj.iSubj;
 uSubj         = unique(iSubj);
 nSubj         = length(uSubj);
 
+SwE.Subj.uSubj = uSubj;
+SwE.Subj.nSubj = nSubj;
+
 %-WB variables
 %
 WB = SwE.WB;
@@ -125,12 +128,10 @@ if isMat && WB.clusterWise == 1
 end
   
 % small sample correction (for WB)
-[corrWB, tmpR2] = swe_resid_corr(WB.RWB, WB.SS, xX, pX, conWB, nScan, nBeta, iSubj, uSubj,... 
-                                            nSubj, rankCon);
+[corrWB, tmpR2] = swe_resid_corr(SwE, WB.RWB, WB.SS, pX);
 
 % small sample correction (for parametric)
-[corr, tmpR2] = swe_resid_corr(WB.RSwE, SwE.SS, xX, pX, conWB, nScan, nBeta, iSubj, uSubj,... 
-                                            nSubj, rankCon, tmpR2);
+[corr, tmpR2] = swe_resid_corr(SwE, WB.RSwE, SwE.SS, pX, tmpR2);
 
 %-detect if the design matrix is separable (a little bit messy, but seems to do the job)
 %
@@ -701,15 +702,15 @@ if ~isMat
         
         % restricted fitted data
         if WB.RWB == 1
-            [resWB, YWB]=swe_fit(Y, tmpR2, corrWB, beta, iSubj, uSubj, nSubj, SwE.WB.SS);
+            [resWB, YWB]=swe_fit(SwE, Y, tmpR2, corrWB, beta, SwE.WB.SS);
         else 
-            [resWB, YWB]=swe_fit(Y, xX.X, corrWB, beta, iSubj, uSubj, nSubj, SwE.WB.SS);
+            [resWB, YWB]=swe_fit(SwE, Y, xX.X, corrWB, beta, SwE.WB.SS);
         end
 
         if WB.RSwE == 1
-            res=swe_fit(Y, tmpR2, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
+            res=swe_fit(SwE, Y, tmpR2, corr, beta, SwE.SS);
         else 
-            res=swe_fit(Y, xX.X, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
+            res=swe_fit(SwE, Y, xX.X, corr, beta, SwE.SS);
         end
 
         clear Y                           %-Clear to save memory
@@ -1007,15 +1008,15 @@ else % ".mat" format
     beta  = pX*Y;                     %-Parameter estimates
     
     if WB.RWB == 1
-        [resWB, YWB]=swe_fit(Y, tmpR2, corrWB, beta, iSubj, uSubj, nSubj, SwE.WB.SS);
+        [resWB, YWB]=swe_fit(SwE, Y, tmpR2, corrWB, beta, SwE.WB.SS);
     else 
-        [resWB, YWB]=swe_fit(Y, xX.X, corrWB, beta, iSubj, uSubj, nSubj, SwE.WB.SS);
+        [resWB, YWB]=swe_fit(SwE, Y, xX.X, corrWB, beta, SwE.WB.SS);
     end
     
     if WB.RSwE == 1
-        res=swe_fit(Y, tmpR2, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
+        res=swe_fit(SwE, Y, tmpR2, corr, beta, SwE.SS);
     else 
-        res=swe_fit(Y, xX.X, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
+        res=swe_fit(SwE, Y, xX.X, corr, beta, SwE.SS);
     end
     
     clear Y                           %-Clear to save memory
@@ -1294,9 +1295,6 @@ SwE.xM         = xM;                %-mask structure
 
 SwE.swd        = pwd;
 
-SwE.Subj.uSubj = uSubj;
-SwE.Subj.nSubj = nSubj;
-
 if isfield(SwE.type,'modified')
   
   SwE.Vis.uVis_g = uVis_g;
@@ -1399,9 +1397,9 @@ for b = 1:WB.nB
       
       beta  = pX * Y_b;                     %-Parameter estimates
       if WB.RSwE == 0
-        res=swe_fit(Y, tmpR2, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
+        res=swe_fit(SwE, Y_b, xX.X, corr, beta, SwE.SS);
       else 
-        res=swe_fit(Y, xX.X, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
+        res=swe_fit(SwE, Y_b, tmpR2, corr, beta, SwE.SS);
       end
       
       clear Y_b
@@ -1510,9 +1508,9 @@ for b = 1:WB.nB
     
     beta  = pX * Y_b;                     %-Parameter estimates
     if WB.RSwE == 0
-      res=swe_fit(Y, tmpR2, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
+      res=swe_fit(SwE, Y_b, xX.X, corr, beta, SwE.SS);
     else 
-      res=swe_fit(Y, xX.X, corr, beta, iSubj, uSubj, nSubj, SwE.SS);
+      res=swe_fit(SwE, Y_b, tmpR2, corr, beta, SwE.SS);
     end
 
     clear Y_b
@@ -2129,11 +2127,17 @@ function vol=swe_create_vol(fname, dim, m, varargin)
 
 end 
 
-function [corr, tmpR2] = swe_resid_corr(restric, switchRestric, xX, pX, conWB, nScan, nBeta, iSubj, uSubj,... 
-                                            nSubj, rankCon, varargin)
-    
+function [corr, tmpR2] = swe_resid_corr(SwE, restric, ss, pX, varargin)
+
+    xX = SwE.xX;
+    [nScan, nBeta] = size(xX.X);
+    conWB = SwE.WB.con;
+    iSubj = SwE.Subj.iSubj;
+    nSubj = SwE.Subj.nSubj;
+    uSubj = SwE.Subj.uSubj;
+
     % This is to prevent tmpR2 being overwritten.
-    if nargin <= 11
+    if nargin <= 4
         tmpR2 = false;
     else
         tmpR2 = varargin{1};
@@ -2148,7 +2152,7 @@ function [corr, tmpR2] = swe_resid_corr(restric, switchRestric, xX, pX, conWB, n
       Hat = xX.X*(pX); % Hat matrix
     end
 
-    switch switchRestric
+    switch ss
         case 0
           corr = ones(nScan,1);
         case 1
@@ -2181,14 +2185,15 @@ function [corr, tmpR2] = swe_resid_corr(restric, switchRestric, xX, pX, conWB, n
     end
 end
 
-function [res, Y_est]=swe_fit(Y, crctX, corr, beta, iSubj, uSubj, nSubj, ss)
+function [res, Y_est]=swe_fit(SwE, Y, crctX, corr, beta, ss)
     
     Y_est = crctX * beta;
     if ss >= 4 % SC2 or SC3
       res = zeros(size(Y));
-      for i = 1:nSubj
-        res(iSubj==uSubj(i),:) = corr{i} *...
-            (Y(iSubj==uSubj(i),:)-Y_est(iSubj==uSubj(i),:));
+      for i = 1:SwE.Subj.nSubj
+        res(SwE.Subj.iSubj==SwE.Subj.uSubj(i),:) = corr{i} *...
+            (Y(SwE.Subj.iSubj==SwE.Subj.uSubj(i),:)-...
+            Y_est(SwE.Subj.iSubj==SwE.Subj.uSubj(i),:));
       end
     else
       res  = diag(corr) * (Y-Y_est);
