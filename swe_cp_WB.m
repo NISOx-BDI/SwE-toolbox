@@ -227,6 +227,8 @@ if isfield(SwE.type,'modified')
   iGr       = SwE.Gr.iGr;
   uGr       = unique(iGr);
   nGr       = length(uGr);
+  SwE.Gr.uGr       = uGr;
+  SwE.Gr.nGr       = nGr;
   
   % info specific for each group
   uVis_g = cell(1,nGr); % unique visits for each group
@@ -272,6 +274,10 @@ if isfield(SwE.type,'modified')
       end
     end
   end
+  
+  % Record igr_Cov_vis_g (we only need this in the WB object).
+  WB.iGr_Cov_vis_g = iGr_Cov_vis_g;
+  
   % weights for the vectorised SwE
   weight = NaN(nCov_beta,nCov_vis);
 
@@ -288,7 +294,7 @@ if isfield(SwE.type,'modified')
       end
     end
   end
-  % Weigth giving only the contrasted SwE (WB)
+  % Weight giving only the contrasted SwE (WB)
   weightR = pinv(swe_duplication_matrix(nSizeCon)) * kron(conWB,conWB) * swe_duplication_matrix(nBeta) * weight; % used to compute the R SwE R' 
   Wg = cell(nGr,1);
   Wg_testII = cell(nGr,1);
@@ -301,6 +307,10 @@ if isfield(SwE.type,'modified')
     Wg_testIII{g} = tmp(:)' * (kron(swe_duplication_matrix(nSizeCon),swe_duplication_matrix(nSizeCon))) * Wg{g};
   end
    
+  SwE.WB.Wg{1} = Wg;
+  SwE.WB.Wg{2} = Wg_testII;
+  SwE.WB.Wg{3} = Wg_testIII;
+  
 %-compute the effective dof from each homogeneous group if dof_type
     switch dof_type
       case 1
@@ -477,6 +487,8 @@ if ~isMat
   if WB.stat=='T'
       VcScore = swe_create_vol('swe_vox_Z_c0001.img', DIM, M,...
                                'Parametric Z statistic data derived from T-Statistic data.');
+      VcScoreNeg = swe_create_vol('swe_vox_Z_c0001neg.img', DIM, M,...
+                               'Parametric Z statistic data derived from T-Statistic data.');
   end                    
                            
   if WB.stat=='F'
@@ -615,6 +627,7 @@ if ~isMat
     CrP          = [];                        %-parametric p-values
     if (WB.stat == 'T')
      CrPNeg       = [];                       %-negative parametric p-values
+     CrConScoreNeg = [];                      %-negative converted score values. 
     end
     CrConScore   = [];                        %-converted score values. 
                                               % i.e. Z/X from T/F
@@ -819,13 +832,14 @@ if ~isMat
         CrYWB             = [CrYWB,    YWB]; %#ok<AGROW>
         CrResWB           = [CrResWB,  resWB]; %#ok<AGROW>
         CrScore           = [CrScore,  score]; %#ok<AGROW>
-        CrP               = [CrP,      -log10(1-p)]; %#ok<AGROW>
+        CrP               = [CrP,      -log10(p)]; %#ok<AGROW>
         if (SwE.WB.stat == 'T')
-            CrConScore    = [CrConScore, swe_invNcdf(1-p)]; %#ok<AGROW>
+            CrConScore    = [CrConScore, swe_invNcdf(p)]; %#ok<AGROW>
+            CrConScoreNeg = [CrConScoreNeg, swe_invNcdf(1-p)]; %#ok<AGROW>
             CrPNeg        = [CrPNeg,   -log10(1-p)]; %#ok<AGROW>
         end
         if(SwE.WB.stat == 'F')
-            CrConScore    = [CrConScore, spm_invXcdf(1-p, 1)]; %#ok<AGROW>
+            CrConScore    = [CrConScore, spm_invXcdf(p, 1)]; %#ok<AGROW>
         end
         
       end % (CrS)
@@ -883,6 +897,9 @@ if ~isMat
     %------------------------------------------------------------------
     if ~isempty(Q), jj(Q) = CrConScore; end
     VcScore = spm_write_plane(VcScore, jj, CrPl);
+    
+    if ~isempty(Q), jj(Q) = CrConScoreNeg; end
+    VcScoreNeg = spm_write_plane(VcScoreNeg, jj, CrPl);
     
     %-Report progress
     %----------------------------------------------------------------------
@@ -1286,7 +1303,6 @@ if isfield(SwE.type,'modified')
   SwE.WB.Ind_corr_diag = Ind_corr_diag;
   SwE.WB.Flagk      = Flagk;
   SwE.WB.Flagkk     = Flagkk;
-  SwE.WB.iGr_Cov_vis_g = iGr_Cov_vis_g;
 end
 SwE.VM         = VM;                %-Filehandle - Mask
 
@@ -1301,9 +1317,7 @@ if isfield(SwE.type,'modified')
   SwE.Vis.nVis_g = nVis_g;
   SwE.Vis.nCov_vis_g = nCov_vis_g;
   SwE.Vis.nCov_vis = nCov_vis;
-  
-  SwE.Gr.uGr       = uGr;
-  SwE.Gr.nGr       = nGr;
+
   SwE.Gr.nSubj_g   = nSubj_g;
   SwE.Gr.uSubj_g   = uSubj_g;
   
@@ -2047,16 +2061,16 @@ function [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(score
         % two one tailed tests on the T score for a T test or one two
         % tailed test on the T score for an F test.
         if (WB.stat == 'T')
-            activatedVoxels = p <= WB.clusterInfo.primaryThreshold & score > 0;
-            activatedVoxelsNeg = p <= WB.clusterInfo.primaryThreshold & score < 0;
+            activatedVoxels = p > (1-WB.clusterInfo.primaryThreshold/2);
+            activatedVoxelsNeg = p < (WB.clusterInfo.primaryThreshold/2);
         else
             activatedVoxels = (p > (1-WB.clusterInfo.primaryThreshold/2) | p < (WB.clusterInfo.primaryThreshold/2));
         end
     else
         % Or we may wish to add the activatedVoxels to a pre-existing list.
         if (WB.stat == 'T')
-            activatedVoxels = [varargin{1}, p <= WB.clusterInfo.primaryThreshold & score > 0];
-            activatedVoxelsNeg = [varargin{2}, p <= WB.clusterInfo.primaryThreshold & score < 0];
+            activatedVoxels = [varargin{1}, p > (1-WB.clusterInfo.primaryThreshold/2)];
+            activatedVoxelsNeg = [varargin{2}, p < (WB.clusterInfo.primaryThreshold/2)];
         else
             activatedVoxels = [varargin{1}, p > (1-WB.clusterInfo.primaryThreshold/2) | p < (WB.clusterInfo.primaryThreshold/2)];
         end
