@@ -244,6 +244,10 @@ if isfield(SwE.type,'modified')
   nCov_vis_g  = nVis_g.*(nVis_g+1)/2; % number of covariance elements to be estimated for each group
   nCov_vis    = sum(nCov_vis_g); % total number of covariance elements to be estimated
   
+  % Save nVis_g and uVis_g.
+  SwE.Vis.uVis_g = uVis_g;
+  SwE.Vis.nVis_g = nVis_g;
+  
   % Flags matrices indicating which residuals have to be used for each covariance element
   Flagk  = false(nCov_vis,nScan); % Flag indicating scans corresponding to visit k for each covariance element
   Flagkk = false(nCov_vis,nScan); % Flag indicating scans corresponding to visit kk for each covariance element
@@ -699,8 +703,7 @@ if ~isMat
       %-Mask out voxels where data is constant in at least one separable
       % matrix design either in a visit category or within-subject (BG - 27/05/2016)
       %------------------------------------------------------------------
-      [Cm, Y, CrS] = mask_seperable(SwE, Cm, Y, nGr_dof, iGr_dof, nGr, iGr, uGr, nVis_g,...
-                          uVis_g, iVis, iSubj);
+      [Cm, Y, CrS] = mask_seperable(SwE, Cm, Y, iGr_dof);
       
       %==================================================================
       %-Proceed with General Linear Model (if there are voxels)
@@ -775,6 +778,7 @@ if ~isMat
               end
             end
           end
+          cCovBc = weightR * Cov_vis;
         else
           cCovBc = 0;
           for i = 1:nSubj
@@ -786,15 +790,12 @@ if ~isMat
         
         % compute the score
         if (nSizeCon == 1)
-          if isfield(SwE.type,'modified')
-            cCovBc = weightR * Cov_vis;
-          end
           
           score = (conWB * beta) ./ sqrt(cCovBc);
           
           if (SwE.WB.clusterWise == 1)
 
-            [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+            [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
             clear CovcCovBc cCovBc
             
           end
@@ -806,9 +807,6 @@ if ~isMat
           end
         else
           % need to loop at every voxel
-          if isfield(SwE.type,'modified')
-            cCovBc = weightR * Cov_vis;
-          end
           cBeta = conWB * beta;
           score = zeros(1, CrS);
           for iVox = 1:CrS
@@ -822,7 +820,7 @@ if ~isMat
           % save cluster information is needed
           if (SwE.WB.clusterWise == 1)
             
-            [p, score, activatedVoxels]=swe_hyptest_rank2(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
+            [p, activatedVoxels]=swe_hyptest_F(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
             
           end
         end
@@ -1009,8 +1007,7 @@ else % ".mat" format
   %-Mask out voxels where data is constant in at least one separable
   % matrix design either in a visit category or within-subject (BG - 27/05/2016)
   %------------------------------------------------------------------
-  [Cm,Y,CrS] = mask_seperable(SwE, Cm, Y, nGr_dof, iGr_dof, nGr, iGr, uGr, nVis_g,...
-                      uVis_g, iVis, iSubj);
+  [Cm,Y,CrS] = mask_seperable(SwE, Cm, Y, iGr_dof);
   
   if isfield(SwE.WB.clusterInfo, 'Vxyz')
     XYZ   = XYZ(:,Cm);
@@ -1087,6 +1084,7 @@ else % ".mat" format
           end
         end
       end
+      cCovBc = weightR * Cov_vis;
     else
       cCovBc = 0;
       for i = 1:nSubj
@@ -1098,15 +1096,12 @@ else % ".mat" format
     
     % compute the score
     if (nSizeCon == 1)
-      if isfield(SwE.type,'modified')
-        cCovBc = weightR * Cov_vis;
-      end
       
       score = (conWB * beta) ./ sqrt(cCovBc);
       
       if (SwE.WB.clusterWise == 1)
         
-        [~, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+        [~, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
         clear CovcCovBc cCovBc
             
       end
@@ -1118,9 +1113,6 @@ else % ".mat" format
       end
     else
       % need to loop at every voxel
-      if isfield(SwE.type,'modified')
-        cCovBc = weightR * Cov_vis;
-      end
       cBeta = conWB * beta;
       score = zeros(1, CrS);
       for iVox = 1:CrS
@@ -1133,40 +1125,9 @@ else % ".mat" format
       maxScore(1) = max(score);
       % save cluster information is needed
       if (SwE.WB.clusterWise == 1)
-        % need to convert score into parametric p-values
-        p = zeros(1, CrS);
-        switch dof_type
-          
-          case 1
-            error('degrees of freedom type still not implemented for the WB')
-            
-          case 2
-            CovcCovBc = 0;
-            for g = 1:nGr
-              CovcCovBc = CovcCovBc + Wg_testII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-            end
-            edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
-            
-          case 3
-            CovcCovBc = 0;
-            for g = 1:nGr
-              CovcCovBc = CovcCovBc + Wg_testIII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-            end
-            tmp = eye(nSizeCon);
-            edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
-              (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
-        end
-        scoreTmp = (edf-rankCon+1) ./ edf .* score;
-        scoreTmp(scoreTmp < 0 ) = 0;
-        % spm_Fcdf can be inaccurate in some case --> fcdf
-        if dof_type == 0
-          p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
-        else
-          p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
-          p(scoreTmp == 0) = 1;
-        end
-        activatedVoxels = [activatedVoxels, p <= WB.clusterInfo.primaryThreshold];
+        [~, activatedVoxels] = swe_hyptest_F(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
       end
+      
     end
     
   end % (CrS)
@@ -1315,8 +1276,6 @@ SwE.swd        = pwd;
 
 if isfield(SwE.type,'modified')
   
-  SwE.Vis.uVis_g = uVis_g;
-  SwE.Vis.nVis_g = nVis_g;
   SwE.Vis.nCov_vis_g = nCov_vis_g;
   SwE.Vis.nCov_vis = nCov_vis;
 
@@ -1454,6 +1413,7 @@ for b = 1:WB.nB
             end
           end
         end
+        cCovBc = weightR * Cov_vis;
       else
         cCovBc = 0;
         for i = 1:nSubj
@@ -1465,9 +1425,7 @@ for b = 1:WB.nB
       
       % compute the score
       if (nSizeCon == 1)
-        if isfield(SwE.type,'modified')
-          cCovBc = weightR * Cov_vis;
-        end
+          
         score = (conWB * beta) ./ sqrt(cCovBc);
         
         clear beta
@@ -1475,22 +1433,18 @@ for b = 1:WB.nB
         if (WB.clusterWise == 1)
         
             [~, score, activatedVoxels(index), activatedVoxelsNeg(index)]=...
-                swe_hyptest_rank1(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
+                swe_hyptest_T(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
             clear CovcCovBc cCovBc
             
         end
         
         uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;
         
-        maxScore(b+1) = max(maxScore(b+1), max(score));
         if (WB.stat == 'T')
           minScore(b+1) = min(minScore(b+1), min(score));
         end
       else
-        % need to loop at every voxel
-        if isfield(SwE.type,'modified')
-          cCovBc = weightR * Cov_vis;
-        end
+
         cBeta = conWB * beta;
         clear beta
         score = zeros(1, blksz);
@@ -1503,15 +1457,15 @@ for b = 1:WB.nB
         score = score / rankCon;
         % save cluster information is needed
         if (WB.clusterWise == 1)
-            [~, score, activatedVoxels(index)]=swe_hyptest_rank2(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
+            [~, activatedVoxels(index)]=swe_hyptest_F(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
         end
         
         uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;
         
-        maxScore(b+1) = max(maxScore(b+1), max(score));
       end
       
     end % (bch)
+    maxScore(b+1) = max(maxScore(b+1), max(score));
   else
     
     %-Print progress information in command window
@@ -1565,6 +1519,7 @@ for b = 1:WB.nB
           end
         end
       end
+      cCovBc = weightR * Cov_vis;
     else
       cCovBc = 0;
       for i = 1:nSubj
@@ -1576,29 +1531,23 @@ for b = 1:WB.nB
     
     % compute the score
     if (nSizeCon == 1)
-      if isfield(SwE.type,'modified')
-        cCovBc = weightR * Cov_vis;
-      end
+
       score = (conWB * beta) ./ sqrt(cCovBc);
       
       clear beta
       
       if (WB.clusterWise == 1)        
-        [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
+        [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
         clear CovcCovBc cCovBc
       end
       
       uncP = uncP + (score >= originalScore) * 1;
       
-      maxScore(b+1) = max(score);
       if (WB.stat == 'T')
         minScore(b+1) = min(score);
       end
     else
-      % need to loop at every voxel
-      if isfield(SwE.type,'modified')
-        cCovBc = weightR * Cov_vis;
-      end
+      
       cBeta = conWB * beta;
       clear beta
       score = zeros(1, S);
@@ -1611,14 +1560,13 @@ for b = 1:WB.nB
       score = score / rankCon;
       % save cluster information is needed
       if (WB.clusterWise == 1)
-        [~, score, activatedVoxels]=swe_hyptest_rank2(SwE, score, S, edf, cCovBc, Cov_vis, dofMat);
+        [~, activatedVoxels]=swe_hyptest_F(SwE, score, S, edf, cCovBc, Cov_vis, dofMat);
       end
-      uncP = uncP + (score >= originalScore) * 1;
-      
-      maxScore(b+1) = max(score);
+      uncP = uncP + (score >= originalScore) * 1;      
     end
     
   end
+  maxScore(b+1) = max(score);
   
   % compute the max cluster size if needed (so many ways this can be
   % done... Not sure this solution is the best)
@@ -1986,9 +1934,18 @@ fprintf('...use the saved images for assessment\n\n')
 
 end
 
-function [Cm,Y,CrS]=mask_seperable(SwE, Cm, Y, nGr_dof, iGr_dof, nGr, iGr, uGr, nVis_g,...
-                           uVis_g, iVis, iSubj)
-
+function [Cm,Y,CrS]=mask_seperable(SwE, Cm, Y, iGr_dof)
+    
+      % Setup
+      nGr_dof = length(unique(iGr_dof));
+      nGr = SwE.Gr.nGr;
+      iGr = SwE.Gr.iGr;
+      uGr = SwE.Gr.uGr;
+      iVis = SwE.Vis.iVis;
+      iSubj = SwE.Subj.iSubj;
+      nVis_g = SwE.Vis.nVis_g;
+      uVis_g = SwE.Vis.uVis_g;
+      
       %-Mask out voxels where data is constant in at least one separable
       % matrix design either in a visit category or within-subject (BG - 27/05/2016)
       %------------------------------------------------------------------
@@ -2027,7 +1984,7 @@ function [Cm,Y,CrS]=mask_seperable(SwE, Cm, Y, nGr_dof, iGr_dof, nGr, iGr, uGr, 
 
 end
 
-function [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
+function [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
 
     % Setup
     p = zeros(1, matSize);
@@ -2088,7 +2045,7 @@ function [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_rank1(SwE, 
     end
 end
 
-function [p, score, activatedVoxels]=swe_hyptest_rank2(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
+function [p, activatedVoxels]=swe_hyptest_F(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
     
       % setup
       p = zeros(1, matSize);
