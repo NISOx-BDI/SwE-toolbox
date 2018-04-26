@@ -829,11 +829,11 @@ if ~isMat
         CrYWB             = [CrYWB,    YWB]; %#ok<AGROW>
         CrResWB           = [CrResWB,  resWB]; %#ok<AGROW>
         CrScore           = [CrScore,  score]; %#ok<AGROW>
-        CrP               = [CrP,      -log10(p)]; %#ok<AGROW>
+        CrP               = [CrP,      -log10(1-p)]; %#ok<AGROW>
         if (SwE.WB.stat == 'T')
             CrConScore    = [CrConScore, swe_invNcdf(p)]; %#ok<AGROW>
             CrConScoreNeg = [CrConScoreNeg, swe_invNcdf(1-p)]; %#ok<AGROW>
-            CrPNeg        = [CrPNeg,   -log10(1-p)]; %#ok<AGROW>
+            CrPNeg        = [CrPNeg,   -log10(p)]; %#ok<AGROW>
         end
         if(SwE.WB.stat == 'F')
             CrConScore    = [CrConScore, spm_invXcdf(p, 1)]; %#ok<AGROW>
@@ -2035,17 +2035,17 @@ function [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSiz
 	   	  scoreTmp = (edf-rankCon+1) ./ edf .* score;
 	      scoreTmp(scoreTmp < 0 ) = 0;
 	      if dof_type == 0
-	        p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
+	        p(scoreTmp>0) = 1-betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
 	      else
-	        p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
-	        p(scoreTmp == 0) = 1;
+	        p(scoreTmp>0) = 1-betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
+	        p(scoreTmp == 0) = 0;
           end
 
           if SwE.WB.clusterWise~=0
               if nargin<=7
-                  activatedVoxels = p <= SwE.WB.clusterInfo.primaryThreshold;
+                  activatedVoxels = p >= SwE.WB.clusterInfo.primaryThreshold;
               else
-                  activatedVoxels = [varargin{1}, p <= SwE.WB.clusterInfo.primaryThreshold];
+                  activatedVoxels = [varargin{1}, p >= SwE.WB.clusterInfo.primaryThreshold];
               end
           end
 	   end
