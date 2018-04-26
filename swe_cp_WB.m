@@ -789,22 +789,16 @@ if ~isMat
         end
         
         % compute the score
-        if (nSizeCon == 1)
+        if (SwE.WB.stat == 'T')
           
           score = (conWB * beta) ./ sqrt(cCovBc);
           
           if (SwE.WB.clusterWise == 1)
-
-            [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+            [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
             clear CovcCovBc cCovBc
-            
           end
           
-          maxScore(1) = max(maxScore(1), max(score));
-          
-          if (SwE.WB.stat == 'T')
-            minScore(1) = min(minScore(1), min(score));
-          end
+          minScore(1) = min(minScore(1), min(score));
         else
           % need to loop at every voxel
           cBeta = conWB * beta;
@@ -816,14 +810,14 @@ if ~isMat
             score(iVox) = cBeta(:,iVox)' / cCovBc_vox * cBeta(:,iVox);
           end
           score = score / rankCon;
-          maxScore(1) = max(maxScore(1), max(score));
+          
           % save cluster information is needed
           if (SwE.WB.clusterWise == 1)
-            
             [p, activatedVoxels]=swe_hyptest_F(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
-            
           end
         end
+        
+        maxScore(1) = max(maxScore(1), max(score));
         
         %-Save betas etc. for current plane as we go along
         %----------------------------------------------------------
@@ -1095,22 +1089,16 @@ else % ".mat" format
     end
     
     % compute the score
-    if (nSizeCon == 1)
+    if (SwE.WB.stat == 'T')
       
       score = (conWB * beta) ./ sqrt(cCovBc);
       
       if (SwE.WB.clusterWise == 1)
-        
-        [~, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+        [~, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
         clear CovcCovBc cCovBc
-            
       end
       
-      maxScore(1) = max(score);
-      
-      if (SwE.WB.stat == 'T')
-        minScore(1) = min(score);
-      end
+      minScore(1) = min(score);
     else
       % need to loop at every voxel
       cBeta = conWB * beta;
@@ -1122,13 +1110,12 @@ else % ".mat" format
         score(iVox) = cBeta(:,iVox)' / cCovBc_vox * cBeta(:,iVox);
       end
       score = score / rankCon;
-      maxScore(1) = max(score);
-      % save cluster information is needed
+      % Perform hypothesis test for activated regions.
       if (SwE.WB.clusterWise == 1)
         [~, activatedVoxels] = swe_hyptest_F(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
       end
-      
     end
+    maxScore(1) = max(score);
     
   end % (CrS)
   M           = [];
@@ -1424,7 +1411,7 @@ for b = 1:WB.nB
       end
       
       % compute the score
-      if (nSizeCon == 1)
+      if (SwE.WB.stat == 'T')
           
         score = (conWB * beta) ./ sqrt(cCovBc);
         
@@ -1432,17 +1419,14 @@ for b = 1:WB.nB
         
         if (WB.clusterWise == 1)
         
-            [~, score, activatedVoxels(index), activatedVoxelsNeg(index)]=...
-                swe_hyptest_T(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
+            [~, activatedVoxels(index), activatedVoxelsNeg(index)]=swe_hyptest_T(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
             clear CovcCovBc cCovBc
             
         end
         
         uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;
+        minScore(b+1) = min(minScore(b+1), min(score));
         
-        if (WB.stat == 'T')
-          minScore(b+1) = min(minScore(b+1), min(score));
-        end
       else
 
         cBeta = conWB * beta;
@@ -1463,9 +1447,9 @@ for b = 1:WB.nB
         uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;
         
       end
+      maxScore(b+1) = max(maxScore(b+1), max(score));
       
     end % (bch)
-    maxScore(b+1) = max(maxScore(b+1), max(score));
   else
     
     %-Print progress information in command window
@@ -1530,22 +1514,19 @@ for b = 1:WB.nB
     end
     
     % compute the score
-    if (nSizeCon == 1)
+    if (SwE.WB.stat == 'T')
 
       score = (conWB * beta) ./ sqrt(cCovBc);
       
       clear beta
       
       if (WB.clusterWise == 1)        
-        [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
+        [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
         clear CovcCovBc cCovBc
       end
       
       uncP = uncP + (score >= originalScore) * 1;
-      
-      if (WB.stat == 'T')
-        minScore(b+1) = min(score);
-      end
+      minScore(b+1) = min(score);
     else
       
       cBeta = conWB * beta;
@@ -1564,9 +1545,9 @@ for b = 1:WB.nB
       end
       uncP = uncP + (score >= originalScore) * 1;      
     end
+    maxScore(b+1) = max(score);
     
   end
-  maxScore(b+1) = max(score);
   
   % compute the max cluster size if needed (so many ways this can be
   % done... Not sure this solution is the best)
@@ -1984,7 +1965,7 @@ function [Cm,Y,CrS]=mask_seperable(SwE, Cm, Y, iGr_dof)
 
 end
 
-function [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
+function [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
 
     % Setup
     p = zeros(1, matSize);
@@ -2019,29 +2000,15 @@ function [p, score, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, scor
     
     % Get the P values.
     p  = spm_Tcdf(score, edf);
-
-    if SwE.WB.stat == 'F'
-      score = score .^2;
-    end
     
     if nargin <=7
-        % We may wish to just record the activated voxels. This would be
-        % two one tailed tests on the T score for a T test or one two
-        % tailed test on the T score for an F test.
-        if (SwE.WB.stat == 'T')
-            activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold/2);
-            activatedVoxelsNeg = p < (SwE.WB.clusterInfo.primaryThreshold/2);
-        else
-            activatedVoxels = (p > (1-SwE.WB.clusterInfo.primaryThreshold/2) | p < (SwE.WB.clusterInfo.primaryThreshold/2));
-        end
+        % We may wish to just record the activated voxels. 
+        activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold/2);
+        activatedVoxelsNeg = p < (SwE.WB.clusterInfo.primaryThreshold/2);
     else
         % Or we may wish to add the activatedVoxels to a pre-existing list.
-        if (SwE.WB.stat == 'T')
-            activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold/2)];
-            activatedVoxelsNeg = [varargin{2}, p < (SwE.WB.clusterInfo.primaryThreshold/2)];
-        else
-            activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold/2) | p < (SwE.WB.clusterInfo.primaryThreshold/2)];
-        end
+        activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold/2)];
+        activatedVoxelsNeg = [varargin{2}, p < (SwE.WB.clusterInfo.primaryThreshold/2)];
     end
 end
 
