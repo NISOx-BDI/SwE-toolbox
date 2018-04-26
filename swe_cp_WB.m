@@ -1796,7 +1796,7 @@ else
     tmp(Q) = -log10(1 + 1/(WB.nB + 1) - uncP);
     
     stat_neg(Q) = swe_invNcdf(uncP);
-    spm_write_vol(VlP_wb_neg, stat_neg);
+    spm_write_vol(VlP_wb_neg, tmp);
     spm_write_vol(Vscore_wb_neg, stat_neg);
   end
   
