@@ -703,7 +703,7 @@ if ~isMat
       %-Mask out voxels where data is constant in at least one separable
       % matrix design either in a visit category or within-subject (BG - 27/05/2016)
       %------------------------------------------------------------------
-      [Cm, Y, CrS] = mask_seperable(SwE, Cm, Y, iGr_dof);
+      [Cm, Y, CrS] = swe_mask_seperable(SwE, Cm, Y, iGr_dof);
       
       %==================================================================
       %-Proceed with General Linear Model (if there are voxels)
@@ -793,9 +793,12 @@ if ~isMat
           
           score = (conWB * beta) ./ sqrt(cCovBc);
           
+          % hypothesis test, using clusterwise threshold if available.
           if (SwE.WB.clusterWise == 1)
-            [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+            [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
             clear CovcCovBc cCovBc
+          else
+            p=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
           end
           
           minScore(1) = min(minScore(1), min(score));
@@ -811,9 +814,11 @@ if ~isMat
           end
           score = score / rankCon;
           
-          % save cluster information is needed
+          % hypothesis test, using clusterwise threshold if available.
           if (SwE.WB.clusterWise == 1)
-            [p, activatedVoxels]=swe_hyptest_F(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
+            [p, activatedVoxels]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
+          else
+            p=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
           end
         end
         
@@ -1001,7 +1006,7 @@ else % ".mat" format
   %-Mask out voxels where data is constant in at least one separable
   % matrix design either in a visit category or within-subject (BG - 27/05/2016)
   %------------------------------------------------------------------
-  [Cm,Y,CrS] = mask_seperable(SwE, Cm, Y, iGr_dof);
+  [Cm,Y,CrS] = swe_mask_seperable(SwE, Cm, Y, iGr_dof);
   
   if isfield(SwE.WB.clusterInfo, 'Vxyz')
     XYZ   = XYZ(:,Cm);
@@ -1094,7 +1099,7 @@ else % ".mat" format
       score = (conWB * beta) ./ sqrt(cCovBc);
       
       if (SwE.WB.clusterWise == 1)
-        [~, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+        [~, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
         clear CovcCovBc cCovBc
       end
       
@@ -1112,7 +1117,7 @@ else % ".mat" format
       score = score / rankCon;
       % Perform hypothesis test for activated regions.
       if (SwE.WB.clusterWise == 1)
-        [~, activatedVoxels] = swe_hyptest_F(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
+        [~, activatedVoxels] = swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
       end
     end
     maxScore(1) = max(score);
@@ -1206,7 +1211,7 @@ fprintf('%-40s: %30s','Saving results','...writing');
 
 %-place fields in SwE
 %--------------------------------------------------------------------------
-if isfield(SwE.WB.clusterInfo, 'Vfaces')
+if isfield(SwE.WB, 'clusterInfo') && isfield(SwE.WB.clusterInfo, 'Vfaces')
   XYZ = [];
 end
 
@@ -1414,18 +1419,7 @@ for b = 1:WB.nB
       if (SwE.WB.stat == 'T')
           
         score = (conWB * beta) ./ sqrt(cCovBc);
-        
         clear beta
-        
-        if (WB.clusterWise == 1)
-        
-            [~, activatedVoxels(index), activatedVoxelsNeg(index)]=swe_hyptest_T(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
-            clear CovcCovBc cCovBc
-            
-        end
-        
-        uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;
-        minScore(b+1) = min(minScore(b+1), min(score));
         
       else
 
@@ -1439,15 +1433,20 @@ for b = 1:WB.nB
           score(iVox) = cBeta(:,iVox)' / cCovBc_vox * cBeta(:,iVox);
         end
         score = score / rankCon;
-        % save cluster information is needed
-        if (WB.clusterWise == 1)
-            [~, activatedVoxels(index)]=swe_hyptest_F(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
-        end
-        
-        uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;
         
       end
+      
+      % hypothesis test
+      if (WB.clusterWise == 1)
+        [~, activatedVoxels(index)]=swe_hyptest(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
+        clear cCovBc
+      end
+      uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;
+          
       maxScore(b+1) = max(maxScore(b+1), max(score));
+      if (SwE.WB.stat == 'T')
+         minScore(b+1) = min(score);
+      end
       
     end % (bch)
   else
@@ -1517,16 +1516,8 @@ for b = 1:WB.nB
     if (SwE.WB.stat == 'T')
 
       score = (conWB * beta) ./ sqrt(cCovBc);
-      
       clear beta
       
-      if (WB.clusterWise == 1)        
-        [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
-        clear CovcCovBc cCovBc
-      end
-      
-      uncP = uncP + (score >= originalScore) * 1;
-      minScore(b+1) = min(score);
     else
       
       cBeta = conWB * beta;
@@ -1538,14 +1529,21 @@ for b = 1:WB.nB
         cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
         score(iVox) = cBeta(:,iVox)' / cCovBc_vox * cBeta(:,iVox);
       end
-      score = score / rankCon;
-      % save cluster information is needed
-      if (WB.clusterWise == 1)
-        [~, activatedVoxels]=swe_hyptest_F(SwE, score, S, edf, cCovBc, Cov_vis, dofMat);
-      end
-      uncP = uncP + (score >= originalScore) * 1;      
+      score = score / rankCon;     
     end
+    
+    % hypothesis test
+    if (WB.clusterWise == 1)
+        [~, activatedVoxels]=swe_hyptest(SwE, score, S, edf, cCovBc, Cov_vis, dofMat);
+        clear cCovBc
+    end
+    uncP = uncP + (score >= originalScore) * 1; 
+    
     maxScore(b+1) = max(score);
+    if (SwE.WB.stat == 'T')
+      minScore(b+1) = min(score);
+    end
+        
     
   end
   
@@ -1915,7 +1913,7 @@ fprintf('...use the saved images for assessment\n\n')
 
 end
 
-function [Cm,Y,CrS]=mask_seperable(SwE, Cm, Y, iGr_dof)
+function [Cm,Y,CrS]=swe_mask_seperable(SwE, Cm, Y, iGr_dof)
     
       % Setup
       nGr_dof = length(unique(iGr_dof));
@@ -1965,105 +1963,93 @@ function [Cm,Y,CrS]=mask_seperable(SwE, Cm, Y, iGr_dof)
 
 end
 
-function [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest_T(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
+function [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
 
-    % Setup
-    p = zeros(1, matSize);
-    Wg = SwE.WB.Wg{1};
-    nGr = length(unique(SwE.Gr.iGr));
-    if isfield(SwE.type,'modified')
-        dof_type = SwE.type.modified.dof_mo;
-    else
-        dof_type = SwE.type.classic.dof_cl;        
-    end
-    
-    % Convert P values.
-    switch dof_type
-      case 1
-        error('degrees of freedom type still not implemented for the WB')
-
-      case 2
-        CovcCovBc = 0;
-        for g = 1:nGr
-          CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-        end
-        edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
-
-      case 3
-        CovcCovBc = 0;
-        for g = 1:nGr
-          CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-        end
-        edf = 2 * cCovBc.^2 ./ CovcCovBc;
-    
-    end
-    
-    % Get the P values.
-    p  = spm_Tcdf(score, edf);
-    
-    if nargin <=7
-        % We may wish to just record the activated voxels. 
-        activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold/2);
-        activatedVoxelsNeg = p < (SwE.WB.clusterInfo.primaryThreshold/2);
-    else
-        % Or we may wish to add the activatedVoxels to a pre-existing list.
-        activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold/2)];
-        activatedVoxelsNeg = [varargin{2}, p < (SwE.WB.clusterInfo.primaryThreshold/2)];
-    end
-end
-
-function [p, activatedVoxels]=swe_hyptest_F(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
-    
       % setup
       p = zeros(1, matSize);
-      Wg_2 = SwE.WB.Wg{2};
-      Wg_3 = SwE.WB.Wg{3};
       nGr = length(unique(SwE.Gr.iGr));
       nSizeCon = size(SwE.WB.con,1);
       rankCon = rank(SwE.WB.con);
-      
+
+      if nSizeCon == 1
+          Wg_2 = SwE.WB.Wg{1};
+	      Wg_3 = SwE.WB.Wg{1};
+      else
+	      Wg_2 = SwE.WB.Wg{2};
+	      Wg_3 = SwE.WB.Wg{3};
+      end
+
       if isfield(SwE.type,'modified')
          dof_type = SwE.type.modified.dof_mo;
       else
          dof_type = SwE.type.classic.dof_cl;        
-      end     
-      
-      switch dof_type
+      end
 
-        case 1
-          error('degrees of freedom type still not implemented for the WB')
+      % Convert P values.
+	  switch dof_type
+	     case 1
+	        error('degrees of freedom type still not implemented for the WB')
 
-        case 2
-          CovcCovBc = 0;
-          for g = 1:nGr
-            CovcCovBc = CovcCovBc + Wg_2{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
+	     case 2
+	        CovcCovBc = 0;
+	        for g = 1:nGr
+	          CovcCovBc = CovcCovBc + Wg_2{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
+	        end
+	        if (SwE.WB.stat == 'T')
+	           edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
+	        else
+	           edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
+	        end
+
+	     case 3
+	        CovcCovBc = 0;
+	        for g = 1:nGr
+	          CovcCovBc = CovcCovBc + Wg_3{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
+	        end
+	        if (SwE.WB.stat == 'T')
+    	       edf = 2 * cCovBc.^2 ./ CovcCovBc;
+    	    else
+			   tmp = eye(nSizeCon);
+               edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
+                     (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
+    	    end
+	   end
+
+	   % P values and activated voxels (if clusterwise).
+	   if (SwE.WB.stat == 'T')
+    	  p  = spm_Tcdf(score, edf);
+          
+          if SwE.WB.clusterWise~=0
+              if nargin <=7
+                % We may wish to just record the activated voxels. 
+                activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold/2);
+                activatedVoxelsNeg = p < (SwE.WB.clusterInfo.primaryThreshold/2);
+              else
+                % Or we may wish to add the activatedVoxels to a pre-existing list.
+                activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold/2)];
+                activatedVoxelsNeg = [varargin{2}, p < (SwE.WB.clusterInfo.primaryThreshold/2)];
+              end
           end
-          edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
 
-        case 3
-          CovcCovBc = 0;
-          for g = 1:nGr
-            CovcCovBc = CovcCovBc + Wg_3{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
+	   else
+	   	  scoreTmp = (edf-rankCon+1) ./ edf .* score;
+	      scoreTmp(scoreTmp < 0 ) = 0;
+	      if dof_type == 0
+	        p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
+	      else
+	        p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
+	        p(scoreTmp == 0) = 1;
           end
-          tmp = eye(nSizeCon);
-          edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
-            (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
 
-      end
-      scoreTmp = (edf-rankCon+1) ./ edf .* score;
-      scoreTmp(scoreTmp < 0 ) = 0;
-      if dof_type == 0
-        p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
-      else
-        p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
-        p(scoreTmp == 0) = 1;
-      end
-      
-      if nargin<=7
-          activatedVoxels = p <= SwE.WB.clusterInfo.primaryThreshold;
-      else
-          activatedVoxels = [varargin{1}, p <= SwE.WB.clusterInfo.primaryThreshold];
-      end
+          if SwE.WB.clusterWise~=0
+              if nargin<=7
+                  activatedVoxels = p <= SwE.WB.clusterInfo.primaryThreshold;
+              else
+                  activatedVoxels = [varargin{1}, p <= SwE.WB.clusterInfo.primaryThreshold];
+              end
+          end
+	   end
+
 end
 
 function vol=swe_create_vol(fname, dim, m, varargin)
