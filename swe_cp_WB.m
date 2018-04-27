@@ -482,7 +482,7 @@ if ~isMat
                       'Original parametric -log10(P) value data (positive).');
   
   if WB.stat=='T'
-        VpNeg = swe_create_vol('swe_vox_lp_c0001Neg.img', DIM, M,...
+        VpNeg = swe_create_vol('swe_vox_lp_c0001neg.img', DIM, M,...
                                'Original parametric -log10(P) value data (negative).');
   end
   
@@ -490,8 +490,6 @@ if ~isMat
   %----------------------------------------------------------------------
   if WB.stat=='T'
       VcScore = swe_create_vol('swe_vox_Z_c0001.img', DIM, M,...
-                               'Parametric Z statistic data derived from T-Statistic data.');
-      VcScoreNeg = swe_create_vol('swe_vox_Z_c0001neg.img', DIM, M,...
                                'Parametric Z statistic data derived from T-Statistic data.');
   end                    
                            
@@ -550,9 +548,6 @@ if ~isMat
     % In this case the Vscore images are Z images.
     Vscore_wb_pos = swe_create_vol('swe_vox_Z-WB_c0001.img', DIM, M,...
                                    'Z score image for wild bootstrap voxelwise results.');
-    
-    Vscore_wb_neg = swe_create_vol('swe_vox_Z-WB_c0001neg.img', DIM, M,...
-                                   'Z score image (negative) for wild bootstrap voxelwise results.');
     
   end
   
@@ -894,11 +889,6 @@ if ~isMat
     %------------------------------------------------------------------
     if ~isempty(Q), jj(Q) = CrConScore; end
     VcScore = spm_write_plane(VcScore, jj, CrPl);
-    
-    if WB.stat=='T'
-        if ~isempty(Q), jj(Q) = CrConScoreNeg; end
-        VcScoreNeg = spm_write_plane(VcScoreNeg, jj, CrPl);
-    end
     
     %-Report progress
     %----------------------------------------------------------------------
@@ -1792,12 +1782,8 @@ else
     spm_write_vol(Vscore_wb_pos, stat);
 
     % T is two tailed so we need a negative map as well.
-    stat_neg = nan(SwE.xVol.DIM');
     tmp(Q) = -log10(1 + 1/(WB.nB + 1) - uncP);
-    
-    stat_neg(Q) = swe_invNcdf(uncP);
     spm_write_vol(VlP_wb_neg, tmp);
-    spm_write_vol(Vscore_wb_neg, stat_neg);
   end
   
   %
