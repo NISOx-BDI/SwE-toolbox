@@ -898,7 +898,7 @@ if ~isMat
   
   fprintf('\n');                                                          %-#
   spm_progress_bar('Clear')
-  clear beta res Cov_vis CrYR CrResR CrCov_vis jj%-Clear to save memory
+  clear beta res Cov_vis CrScore CrYWB CrResWB Q jj%-Clear to save memory
   
   XYZ   = XYZ(:,1:S); % remove all the data not used
   
@@ -1167,7 +1167,7 @@ else % ".mat" format
   
   fprintf('\n');                                                          %-#
   spm_progress_bar('Clear')
-  clear res Cov_vis CrYR CrResR CrCov_vis jj%-Clear to save memory
+  clear res Cov_vis jj%-Clear to save memory
     
   % compute the max cluster size if needed (so many ways this can be
   % done... Not sure this solution is the best)
