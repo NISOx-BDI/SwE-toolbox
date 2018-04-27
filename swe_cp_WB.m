@@ -1127,10 +1127,17 @@ else % ".mat" format
   
   tmp = score;
   score = nan(1, nVox);
-  score(:,Cm) = tmp;
-  save(Vscore, 'score');
-  score = tmp;
-  clear tmp
+  if (SwE.WB.stat == 'T')
+      VT(:,Cm) = tmp;
+      save(Vscore, 'VT');
+      score = tmp;
+      clear tmp VT
+  else
+      VF(:,Cm) = tmp;
+      save(Vscore, 'VF');
+      score = tmp;
+      clear tmp VF
+  end
   
   VlP = nan(1, nVox);
   VlP(:,Cm) = -log10(1-p);
@@ -1145,16 +1152,16 @@ else % ".mat" format
        clear VlP_neg
        
        z_map = nan(1, nVox);
-       z_map(:,Cm) =  swe_invNcdf(p);
-       save('swe_vox_Z_c0001.mat', 'z_map');
-       clear z_map
+       VZ(:,Cm) =  swe_invNcdf(p);
+       save('swe_vox_Z_c0001.mat', 'VZ');
+       clear VZ
   
   else
       
        x_map = nan(1, nVox);
-       x_map(:,Cm) =  spm_invXcdf(p, 1);
-       save('swe_vox_X_c0001.mat', 'x_map');
-       clear x_map
+       VX(:,Cm) =  spm_invXcdf(p, 1);
+       save('swe_vox_X_c0001.mat', 'VX');
+       clear VX
        
   end
   
