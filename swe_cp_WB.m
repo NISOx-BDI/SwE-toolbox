@@ -621,8 +621,8 @@ if ~isMat
     CrPl         = z:min(z+nbz-1,zdim);       %-plane list
     zords        = CrPl(:)*ones(1,xdim*ydim); %-plane Z coordinates
     CrScore      = [];                        %-scores
-    CrYWB         = [];                        %-fitted data under H0
-    CrResWB       = [];                        %-residuals
+    CrYWB         = [];                       %-fitted data under H0
+    CrResWB       = [];                       %-residuals
     CrP          = [];                        %-parametric p-values
     if (WB.stat == 'T')
      CrPNeg       = [];                       %-negative parametric p-values
