@@ -478,11 +478,11 @@ if ~isMat
   %-Initialise parametric P-Value image
   %----------------------------------------------------------------------
   
-  Vp = swe_create_vol('swe_vox_lp_c0001.img', DIM, M,...
+  VlP = swe_create_vol('swe_vox_lp_c0001.img', DIM, M,...
                       'Original parametric -log10(P) value data (positive).');
   
   if WB.stat=='T'
-        VpNeg = swe_create_vol('swe_vox_lp_c0001neg.img', DIM, M,...
+        VlP_Neg = swe_create_vol('swe_vox_lp_c0001neg.img', DIM, M,...
                                'Original parametric -log10(P) value data (negative).');
   end
   
@@ -626,7 +626,6 @@ if ~isMat
     CrP          = [];                        %-parametric p-values
     if (WB.stat == 'T')
      CrPNeg       = [];                       %-negative parametric p-values
-     CrConScoreNeg = [];                      %-negative converted score values. 
     end
     CrConScore   = [];                        %-converted score values. 
                                               % i.e. Z/X from T/F
@@ -827,7 +826,6 @@ if ~isMat
         CrP               = [CrP,      -log10(1-p)]; %#ok<AGROW>
         if (SwE.WB.stat == 'T')
             CrConScore    = [CrConScore, swe_invNcdf(p)]; %#ok<AGROW>
-            CrConScoreNeg = [CrConScoreNeg, swe_invNcdf(1-p)]; %#ok<AGROW>
             CrPNeg        = [CrPNeg,   -log10(p)]; %#ok<AGROW>
         end
         if(SwE.WB.stat == 'F')
@@ -878,11 +876,11 @@ if ~isMat
     %-Write parametric p-value image
     %------------------------------------------------------------------
     if ~isempty(Q), jj(Q) = CrP; end
-    Vp = spm_write_plane(Vp, jj, CrPl);
+    VlP = spm_write_plane(VlP, jj, CrPl);
     
     if WB.stat=='T'
         if ~isempty(Q), jj(Q) = CrPNeg; end
-        VpNeg = spm_write_plane(VpNeg, jj, CrPl);
+        VlP_Neg = spm_write_plane(VlP_Neg, jj, CrPl);
     end
     
     %-Write converted parametric score image of the original data
@@ -1089,7 +1087,7 @@ else % ".mat" format
       score = (conWB * beta) ./ sqrt(cCovBc);
       
       if (SwE.WB.clusterWise == 1)
-        [~, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+        [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
         clear CovcCovBc cCovBc
       end
       
@@ -1107,7 +1105,7 @@ else % ".mat" format
       score = score / rankCon;
       % Perform hypothesis test for activated regions.
       if (SwE.WB.clusterWise == 1)
-        [~, activatedVoxels] = swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
+        [p, activatedVoxels] = swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
       end
     end
     maxScore(1) = max(score);
@@ -1117,26 +1115,48 @@ else % ".mat" format
   DIM         = [];
   S           = CrS;  
   VM          = 'mask.mat';
-  Vbeta       = 'beta.mat';
-  Vscore      = 'score.mat';
+  if (SwE.WB.stat == 'T')
+    Vscore      = 'swe_vox_T_c0001.mat';
+  else
+    Vscore      = 'swe_vox_F_c0001.mat';
+  end
 
   mask = Cm;       
   save('mask.mat', 'mask');
   clear mask
   
-  tmp = beta;
-  beta = nan(nBeta, nVox);
-  beta(:,Cm) = tmp;
-  save('beta.mat', 'beta');
-  clear beta tmp
-  
   tmp = score;
   score = nan(1, nVox);
   score(:,Cm) = tmp;
-  save('score.mat', 'score');
+  save(Vscore, 'score');
   score = tmp;
   clear tmp
   
+  VlP = nan(1, nVox);
+  VlP(:,Cm) = -log10(1-p);
+  save('swe_vox_lp_c0001.mat', 'VlP');
+  clear VlP
+
+  if (SwE.WB.stat == 'T')
+      
+       VlP_neg = nan(1, nVox);
+       VlP_neg(:,Cm) =  -log10(p);
+       save('swe_vox_lp_c0001neg.mat', 'VlP_neg');
+       clear VlP_neg
+       
+       z_map = nan(1, nVox);
+       z_map(:,Cm) =  swe_invNcdf(p);
+       save('swe_vox_Z_c0001.mat', 'z_map');
+       clear z_map
+  
+  else
+      
+       x_map = nan(1, nVox);
+       x_map(:,Cm) =  spm_invXcdf(p, 1);
+       save('swe_vox_X_c0001.mat', 'x_map');
+       clear x_map
+       
+  end
   
   fprintf('\n');                                                          %-#
   spm_progress_bar('Clear')
@@ -1272,19 +1292,6 @@ if spm_matlab_version_chk('7') >=0
   save('SwE','SwE','-V6');
 else
   save('SwE','SwE');
-end
-
-%-Save analysis original max min in files
-%--------------------------------------------------------------------------
-save('maxScore.mat', 'maxScore');
-if (SwE.WB.clusterWise == 1)
-  save('maxClusterSize.mat', 'maxClusterSize');
-end
-if (SwE.WB.stat == 'T')
-  save('minScore.mat', 'minScore');
-  if (SwE.WB.clusterWise == 1)
-    save('maxClusterSizeNeg.mat', 'maxClusterSizeNeg');
-  end
 end
 
 %==========================================================================
@@ -1578,18 +1585,6 @@ for b = 1:WB.nB
       end
     end
   end
-  %-Save analysis original max min in files
-  %--------------------------------------------------------------------------
-  save('maxScore.mat', 'maxScore');
-  if (WB.clusterWise == 1)
-    save('maxClusterSize.mat', 'maxClusterSize');
-  end
-  if (WB.stat == 'T')
-    save('minScore.mat', 'minScore');
-    if (WB.clusterWise == 1)
-      save('maxClusterSizeNeg.mat', 'maxClusterSizeNeg');
-    end
-  end
   toc
   spm_progress_bar('Set',100 * b / WB.nB);
 end
@@ -1601,17 +1596,26 @@ if isMat
   uncP = uncP / (WB.nB + 1);
   uncP_pos = nan(1, nVox);
   uncP_pos(:,Cm) = uncP;
-  save('uncP_pos.mat', 'uncP_pos');
-  lUncP_pos = -log10(uncP);
-  save('lUncP_pos.mat', 'lUncP_pos');
-  clear lUncP_pos
+  VlP_wb_pos = -log10(uncP);
+  save('swe_vox_lp-WB_c0001.mat', 'VlP_wb_pos');
+  clear VlP_wb_pos
   
   if WB.stat == 'T'
     uncP_neg = 1 + 1/(WB.nB + 1) - uncP_pos;
-    save('uncP_neg.mat', 'uncP_neg');
-    lUncP_neg = -log10(uncP_neg);
-    save('lUncP_neg.mat', 'lUncP_neg');
-    clear lUncP_neg
+    VlP_wb_neg = -log10(uncP_neg);
+    save('swe_vox_lp-WB_c0001neg.mat', 'VlP_wb_neg');
+    clear VlP_wb_neg
+    
+    VZ_wb = swe_invNcdf(1 - uncP);
+    save('swe_vox_Z-WB_c0001.mat', 'VZ_wb');
+    clear VZ_wb
+    
+  else
+      
+    VX_wb = spm_invXcdf(1 - uncP,1);
+    save('swe_vox_X-WB_c0001.mat', 'VX_wb');
+    clear VX_wb
+    
   end
   
   %
@@ -1631,10 +1635,9 @@ if isMat
   FWERP = FWERP / (WB.nB + 1);
   fwerP_pos = nan(1, nVox);
   fwerP_pos(:,Cm) = FWERP;
-  save('fwerP_pos.mat', 'fwerP_pos');
-  lFwerP_pos = -log10(fwerP_pos);
-  save('lFwerP_pos.mat', 'lFwerP_pos');
-  clear lFwerP_pos fwerP_pos FWERP
+  VlP_wb_FWE_pos = -log10(fwerP_pos);
+  save('swe_vox_lpFWE-WB_c0001.mat', 'VlP_wb_FWE_pos');
+  clear VlP_wb_FWE_pos fwerP_pos FWERP
   
   
   if WB.stat == 'T'
@@ -1650,10 +1653,9 @@ if isMat
     FWERPNeg = FWERPNeg / (WB.nB + 1);
     fwerP_neg = nan(1, nVox);
     fwerP_neg(:,Cm) = FWERPNeg;
-    save('fwerP_neg.mat', 'fwerP_neg');
-    lFwerP_neg = -log10(fwerP_neg);
-    save('lFwerP_neg.mat', 'lFwerP_neg');
-    clear lFwerP_neg fwerP_neg
+    VlP_wb_FWE_neg = -log10(fwerP_neg);
+    save('swe_vox_lpFWE-WB_c0001neg.mat', 'VlP_wb_FWE_neg');
+    clear VlP_wb_FWE_neg fwerP_neg
   end
   
   %
@@ -1666,10 +1668,9 @@ if isMat
   end
   fdrP_pos = nan(1, nVox);
   fdrP_pos(:,Cm) = fdrP;
-  save('fdrP_pos.mat', 'fdrP_pos');
-  lFdrP_pos = -log10(fdrP_pos);
-  save('lFdrP_pos.mat', 'lFdrP_pos');
-  clear lFdrP_pos fdrP_pos fdrP
+  VlP_wb_FDR_pos = -log10(fdrP_pos);
+  save('swe_vox_lpFDR-WB_c0001.mat', 'VlP_wb_FDR_pos');
+  clear VlP_wb_FDR_pos fdrP_pos fdrP
   
   if WB.stat =='T'
     try
@@ -1679,10 +1680,9 @@ if isMat
     end
     fdrP_neg = nan(1, nVox);
     fdrP_neg(:,Cm) = fdrP;
-    save('fdrP_neg.mat', 'fdrP_neg');
-    lFdrP_neg = -log10(fdrP_neg);
-    save('lFdrP_neg.mat', 'lFdrP_neg');
-    clear lFdrP_neg fdrP_neg fdrP
+    VlP_wb_FDR_neg = -log10(fdrP_neg);
+    save('swe_vox_lpFDR-WB_c0001neg.mat', 'VlP_wb_FDR_neg');
+    clear VlP_wb_FDR_neg fdrP_neg fdrP
   end
   
   if WB.clusterWise == 1
@@ -1690,17 +1690,13 @@ if isMat
     % For now, -log(p_{cluster-wise FWER}) image with nan for non-surviving
     % voxels after the thresholding of the original data
     
-    clusterFWERP = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
+    clusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
     if (~isempty(SwE.WB.clusterInfo.clusterSize))
       for b = 1:WB.nB
-        clusterFWERP = clusterFWERP + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize) * 1;
+        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize) * 1;
       end
-      clusterFWERP = clusterFWERP / (WB.nB + 1);
+      clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster / (WB.nB + 1);
     end
-    clusterFwerP_pos_perCluster   = clusterFWERP;
-    lClusterFwerP_pos_perCluster  = -log10(clusterFwerP_pos_perCluster);
-    save('clusterFwerP_pos_perCluster.mat', 'clusterFwerP_pos_perCluster');
-    save('lClusterFwerP_pos_perCluster.mat', 'lClusterFwerP_pos_perCluster');
     
     clusterFwerP_pos_perElement = nan(1, nVox);
     if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')      
@@ -1717,23 +1713,18 @@ if isMat
       end
       clusterFwerP_pos_perElement(SwE.WB.clusterInfo.LocActivatedVoxels) = tmp3;
     end
-    lClusterFwerP_pos_perElement  = -log10(clusterFwerP_pos_perElement);
-    save('clusterFwerP_pos_perElement.mat', 'clusterFwerP_pos_perElement');
-    save('lClusterFwerP_pos_perElement.mat', 'lClusterFwerP_pos_perElement');
+    VlP_wb_clusterFWE_pos  = -log10(clusterFwerP_pos_perElement);
+    save('swe_clus_lpFWE-WB_c0001.mat', 'VlP_wb_clusterFWE_pos');
     
     if WB.stat =='T'
       
-      clusterFWERPNeg = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
+      clusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
       if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
         for b = 1:WB.nB
-          clusterFWERPNeg = clusterFWERPNeg + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg) * 1;
+          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg) * 1;
         end
-        clusterFWERPNeg = clusterFWERPNeg / (WB.nB + 1);
+        clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster / (WB.nB + 1);
       end
-      clusterFwerP_neg_perCluster   = clusterFWERPNeg;
-      lClusterFwerP_neg_perCluster  = -log10(clusterFwerP_neg_perCluster);
-      save('clusterFwerP_neg_perCluster.mat', 'clusterFwerP_neg_perCluster');
-      save('lClusterFwerP_neg_perCluster.mat', 'lClusterFwerP_neg_perCluster');
       
       clusterFwerP_neg_perElement = nan(1, nVox);
       if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')
@@ -1750,9 +1741,8 @@ if isMat
         end
         clusterFwerP_neg_perElement(SwE.WB.clusterInfo.LocActivatedVoxelsNeg) = tmp3;
       end
-      lClusterFwerP_neg_perElement  = -log10(clusterFwerP_neg_perElement);
-      save('clusterFwerP_neg_perElement.mat', 'clusterFwerP_neg_perElement');
-      save('lClusterFwerP_neg_perElement.mat', 'lClusterFwerP_neg_perElement');
+      VlP_wb_clusterFWE_neg  = -log10(clusterFwerP_neg_perElement);
+      save('swe_clus_lpFWE-WB_c0001neg.mat', 'VlP_wb_clusterFWE_neg');
     end
   end
 else
@@ -1846,14 +1836,14 @@ else
       sum(cumprod(SwE.xVol.DIM(1:2)'));
     tmp= nan(SwE.xVol.DIM');
     
-    clusterFWERP = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
+    clusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
     if (~isempty(SwE.WB.clusterInfo.clusterSize))
       for b = 1:WB.nB
-        clusterFWERP = clusterFWERP + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize) * 1;
+        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize) * 1;
       end
-      clusterFWERP = clusterFWERP / (WB.nB + 1);
+      clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster / (WB.nB + 1);
     end
-    tmp2 = -log10(clusterFWERP);
+    tmp2 = -log10(clusterFwerP_pos_perCluster);
     
     tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
     for iC = 1:SwE.WB.clusterInfo.nCluster
@@ -1866,14 +1856,14 @@ else
         sum(cumprod(SwE.xVol.DIM(1:2)'));
       tmp= nan(SwE.xVol.DIM');
       
-      clusterFWERPNeg = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
+      clusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
       if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
         for b = 1:WB.nB
-          clusterFWERPNeg = clusterFWERPNeg + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg) * 1;
+          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg) * 1;
         end
-        clusterFWERPNeg = clusterFWERPNeg / (WB.nB + 1);
+        clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster / (WB.nB + 1);
       end
-      tmp2 = -log10(clusterFWERPNeg);
+      tmp2 = -log10(clusterFwerP_neg_perCluster);
       
       tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg, 2));
       for iC = 1:SwE.WB.clusterInfo.nClusterNeg
@@ -1901,6 +1891,8 @@ fprintf('...use the saved images for assessment\n\n')
 
 end
 
+%-Mask out voxels where data is constant in at least one separable
+% matrix design either in a visit category or within-subject (BG - 27/05/2016)
 function [Cm,Y,CrS]=swe_mask_seperable(SwE, Cm, Y, iGr_dof)
     
       % Setup
@@ -1913,9 +1905,6 @@ function [Cm,Y,CrS]=swe_mask_seperable(SwE, Cm, Y, iGr_dof)
       nVis_g = SwE.Vis.nVis_g;
       uVis_g = SwE.Vis.uVis_g;
       
-      %-Mask out voxels where data is constant in at least one separable
-      % matrix design either in a visit category or within-subject (BG - 27/05/2016)
-      %------------------------------------------------------------------
       for g = 1:nGr_dof % first look data for each separable matrix design
         if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)
           Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1); % mask constant data within separable matrix design g (added by BG on 29/08/16)
@@ -1951,6 +1940,9 @@ function [Cm,Y,CrS]=swe_mask_seperable(SwE, Cm, Y, iGr_dof)
 
 end
 
+% This function performs a hypothesis test using the threshold given as the
+% primary threshold in the SwE cluster info. If this is not available it
+% returns unthresholded p values only.
 function [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
 
       % setup
@@ -2040,6 +2032,7 @@ function [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSiz
 
 end
 
+% This function creates volumes.
 function vol=swe_create_vol(fname, dim, m, varargin)
     
     if nargin > 3
@@ -2060,6 +2053,8 @@ function vol=swe_create_vol(fname, dim, m, varargin)
 
 end 
 
+% This function performs the users requested residual corrections and
+% calculates tmpR2 (the adjusted xX.X).
 function [corr, tmpR2] = swe_resid_corr(SwE, restric, ss, pX, varargin)
 
     xX = SwE.xX;
@@ -2119,6 +2114,7 @@ function [corr, tmpR2] = swe_resid_corr(SwE, restric, ss, pX, varargin)
     end
 end
 
+% This function obtains Y estimates and residuals from fitting data.
 function [res, Y_est]=swe_fit(SwE, Y, crctX, corr, beta, ss)
     
     Y_est = crctX * beta;
