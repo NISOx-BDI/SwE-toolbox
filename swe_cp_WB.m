@@ -1889,9 +1889,11 @@ end
 %- E N D: Cleanup GUI
 %==========================================================================
 
-% Remove residual and Y images now we are done with them:
-cellfun(@(x) delete(x, strrep(x, '.img', '.hdr')), {VResWB.fname VYWB.fname}, 'UniformOutput', false);
-
+if ~isMat
+    % Remove residual and Y images now we are done with them:
+    cellfun(@(x) delete(x, strrep(x, '.img', '.hdr')), {VResWB.fname VYWB.fname}, 'UniformOutput', false);
+end
+    
 fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done')                %-#
 %spm('FigName','Stats: done',Finter); spm('Pointer','Arrow')
 fprintf('%-40s: %30s\n','Completed',spm('time'))                        %-#
