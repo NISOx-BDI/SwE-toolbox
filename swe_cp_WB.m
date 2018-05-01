@@ -1184,10 +1184,6 @@ else % ".mat" format
         clusterAssignment = [];
       end
     end
-    disp('activated voxels (num)')
-    disp(sum(activatedVoxels))
-    disp('clusterAssignment (sum)')
-    disp(sum(clusterAssignment))
     nCluster     = max(clusterAssignment);
     clusterSize = histc(clusterAssignment,1:nCluster);
     
@@ -1569,10 +1565,6 @@ for b = 1:WB.nB
     end
     nCluster     = max(clusterAssignment);
     clusterSize = histc(clusterAssignment,1:nCluster);
-    disp('activated voxels (num)')
-    disp(sum(activatedVoxels))
-    disp('clusterAssignment (sum)')
-    disp(sum(clusterAssignment))
     if isempty(clusterSize)
       maxClusterSize(b+1) = 0;
     else
