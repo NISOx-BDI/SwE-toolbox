@@ -2009,12 +2009,12 @@ function [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSiz
           if SwE.WB.clusterWise~=0
               if nargin <=7
                 % We may wish to just record the activated voxels. 
-                activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold/2);
-                activatedVoxelsNeg = p < (SwE.WB.clusterInfo.primaryThreshold/2);
+                activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold);
+                activatedVoxelsNeg = p < (SwE.WB.clusterInfo.primaryThreshold);
               else
                 % Or we may wish to add the activatedVoxels to a pre-existing list.
-                activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold/2)];
-                activatedVoxelsNeg = [varargin{2}, p < (SwE.WB.clusterInfo.primaryThreshold/2)];
+                activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold)];
+                activatedVoxelsNeg = [varargin{2}, p < (SwE.WB.clusterInfo.primaryThreshold)];
               end
           end
 
