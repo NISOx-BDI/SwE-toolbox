@@ -44,7 +44,7 @@ function setup()
     end
     
     % Move into a file named data for cleaner pathnames.
-    if exist(fullfile(unzipped_data, '..', 'data'))==7
+    if exist(fullfile(unzipped_data, '..', 'data'), 'dir')
         rmdir(fullfile(unzipped_data, '..', 'data'), 's');
     end
     movefile(fullfile(unzipped_data, 'cons_informed'),...
