@@ -1184,6 +1184,10 @@ else % ".mat" format
         clusterAssignment = [];
       end
     end
+    disp('activated voxels (num)')
+    disp(sum(activatedVoxels))
+    disp('clusterAssignment (sum)')
+    disp(sum(clusterAssignment))
     nCluster     = max(clusterAssignment);
     clusterSize = histc(clusterAssignment,1:nCluster);
     
@@ -1538,7 +1542,7 @@ for b = 1:WB.nB
     
     % hypothesis test
     if (WB.clusterWise == 1)
-        [~, activatedVoxels]=swe_hyptest(SwE, score, S, edf, cCovBc, Cov_vis, dofMat);
+        [~, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, S, edf, cCovBc, Cov_vis, dofMat);
         clear cCovBc
     end
     uncP = uncP + (score >= originalScore) * 1; 
@@ -1565,13 +1569,17 @@ for b = 1:WB.nB
     end
     nCluster     = max(clusterAssignment);
     clusterSize = histc(clusterAssignment,1:nCluster);
+    disp('activated voxels (num)')
+    disp(sum(activatedVoxels))
+    disp('clusterAssignment (sum)')
+    disp(sum(clusterAssignment))
     if isempty(clusterSize)
       maxClusterSize(b+1) = 0;
     else
       maxClusterSize(b+1) = max(clusterSize);
     end
     if (WB.stat == 'T')
-      if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')      
+      if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz') 
         LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);
         clusterAssignmentNeg = spm_clusters(LocActivatedVoxelsNeg);
       else %surface data
@@ -2035,6 +2043,9 @@ function [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSiz
                   activatedVoxels = [varargin{1}, p >= SwE.WB.clusterInfo.primaryThreshold];
               end
           end
+          
+          activatedVoxelsNeg = NaN;
+          
 	   end
 
 end
