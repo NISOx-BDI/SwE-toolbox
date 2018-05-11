@@ -2034,27 +2034,6 @@ function [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSiz
 
 end
 
-% This function creates volumes.
-function vol=swe_create_vol(fname, dim, m, varargin)
-    
-    if nargin > 3
-        descrip = varargin{1};
-    else
-        descrip = '';
-    end
-
-    % In this case the Vscore images are X images.
-    vol = deal(struct(...
-      'fname',    fname,...
-      'dim',      dim',...
-      'dt',       [spm_type('float32') spm_platform('bigend')],...
-      'mat',      m,...
-      'pinfo',    [1 0 0]',...
-      'descrip',  descrip));
-    vol = spm_create_vol(vol);
-
-end 
-
 % This function performs the users requested residual corrections and
 % calculates tmpR2 (the adjusted xX.X).
 function [corr, tmpR2] = swe_resid_corr(SwE, restric, ss, pX, varargin)
