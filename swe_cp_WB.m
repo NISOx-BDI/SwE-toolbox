@@ -462,18 +462,11 @@ if ~isMat
     'descrip','swe_cp_WB:resultant analysis mask');
   VM    = spm_create_vol(VM);
   
-  %-Initialise original parametric score image
+  %-Initialise original parametric score image, T or F
   %----------------------------------------------------------------------
 
-  if WB.stat=='T'
-      Vscore = swe_create_vol('swe_vox_T_c0001.img', DIM, M,...
-                              'Original parametric T statistic data.');
-  end
-  
-  if WB.stat=='F'
-      Vscore = swe_create_vol('swe_vox_F_c0001.img', DIM, M,...
-                              'Original parametric F statistic data.');      
-  end
+  Vscore = swe_create_vol(['swe_vox_' WB.stat '_c0001.img'], DIM, M,...
+			  ['Original parametric ' WB.stat ' statistic data.']);
   
   %-Initialise parametric P-Value image
   %----------------------------------------------------------------------
@@ -489,14 +482,13 @@ if ~isMat
   %-Initialise converted parametric score image
   %----------------------------------------------------------------------
   if WB.stat=='T'
-      VcScore = swe_create_vol('swe_vox_Z_c0001.img', DIM, M,...
-                               'Parametric Z statistic data derived from T-Statistic data.');
-  end                    
-                           
-  if WB.stat=='F'
-      VcScore = swe_create_vol('swe_vox_X_c0001.img', DIM, M,...
-                               'Parametric X statistic data derived from F-Statistic data.');
+    OutStat='Z';
+  else % F stat
+    OutStat='X';
   end
+  VcScore = swe_create_vol(['swe_vox_' OutStat '_c0001.img'], DIM, M,...
+			   ['Parametric ' OutStat ' statistic data derived from ' ...
+  		            WB.stat '-Statistic data.']);
   
   %-Initialise residual images for the resampling
   %----------------------------------------------------------------------
