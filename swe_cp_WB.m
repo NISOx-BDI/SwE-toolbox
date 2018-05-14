@@ -1437,7 +1437,7 @@ for b = 1:WB.nB
         [~, activatedVoxels(index)]=swe_hyptest(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
         clear cCovBc
       end
-      uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;
+      uncP(index) = uncP(index) + (score >= originalScore(index));
           
       maxScore(b+1) = max(maxScore(b+1), max(score));
       if (SwE.WB.stat == 'T')
@@ -1533,7 +1533,7 @@ for b = 1:WB.nB
         [~, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, S, edf, cCovBc, Cov_vis, dofMat);
         clear cCovBc
     end
-    uncP = uncP + (score >= originalScore) * 1; 
+    uncP = uncP + (score >= originalScore); 
     
     maxScore(b+1) = max(score);
     if (SwE.WB.stat == 'T')
@@ -1629,7 +1629,7 @@ if isMat
     % equal to statistic.
     %-Use a > b -tol rather than a >= b to avoid comparing
     % two reals for equality.
-    FWERP = FWERP + (maxScore(b+1) > originalScore - tol) * 1;
+    FWERP = FWERP + (maxScore(b+1) > originalScore - tol);
   end
   FWERP = FWERP / (WB.nB + 1);
   fwerP_pos = nan(1, nVox);
@@ -1647,7 +1647,7 @@ if isMat
       % equal to statistic.
       %-Use a > b -tol rather than a >= b to avoid comparing
       % two reals for equality.
-      FWERPNeg = FWERPNeg + (minScore(b+1) < originalScore + tol) * 1;
+      FWERPNeg = FWERPNeg + (minScore(b+1) < originalScore + tol);
     end
     FWERPNeg = FWERPNeg / (WB.nB + 1);
     fwerP_neg = nan(1, nVox);
@@ -1692,7 +1692,7 @@ if isMat
     clusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
     if (~isempty(SwE.WB.clusterInfo.clusterSize))
       for b = 1:WB.nB
-        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize) * 1;
+        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize);
       end
       clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster / (WB.nB + 1);
     end
@@ -1720,7 +1720,7 @@ if isMat
       clusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
       if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
         for b = 1:WB.nB
-          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg) * 1;
+          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg);
         end
         clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster / (WB.nB + 1);
       end
@@ -1787,7 +1787,7 @@ else
     % equal to statistic.
     %-Use a > b -tol rather than a >= b to avoid comparing
     % two reals for equality.
-    FWERP = FWERP + (maxScore(b+1) > originalScore - tol) * 1;
+    FWERP = FWERP + (maxScore(b+1) > originalScore - tol);
   end
   FWERP = FWERP / (WB.nB + 1);
   tmp(Q) = -log10(FWERP);
@@ -1801,7 +1801,7 @@ else
       % equal to statistic.
       %-Use a > b -tol rather than a >= b to avoid comparing
       % two reals for equality.
-      FWERPNeg = FWERPNeg + (minScore(b+1) < originalScore + tol) * 1;
+      FWERPNeg = FWERPNeg + (minScore(b+1) < originalScore + tol);
     end
     FWERPNeg = FWERPNeg / (WB.nB + 1);
     tmp(Q) = -log10(FWERPNeg);
@@ -1838,7 +1838,7 @@ else
     clusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
     if (~isempty(SwE.WB.clusterInfo.clusterSize))
       for b = 1:WB.nB
-        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize) * 1;
+        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize);
       end
       clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster / (WB.nB + 1);
     end
@@ -1858,7 +1858,7 @@ else
       clusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
       if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
         for b = 1:WB.nB
-          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg) * 1;
+          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg);
         end
         clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster / (WB.nB + 1);
       end
