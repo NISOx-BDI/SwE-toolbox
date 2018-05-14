@@ -462,18 +462,11 @@ if ~isMat
     'descrip','swe_cp_WB:resultant analysis mask');
   VM    = spm_create_vol(VM);
   
-  %-Initialise original parametric score image
+  %-Initialise original parametric score image, T or F
   %----------------------------------------------------------------------
 
-  if WB.stat=='T'
-      Vscore = swe_create_vol('swe_vox_T_c0001.img', DIM, M,...
-                              'Original parametric T statistic data.');
-  end
-  
-  if WB.stat=='F'
-      Vscore = swe_create_vol('swe_vox_F_c0001.img', DIM, M,...
-                              'Original parametric F statistic data.');      
-  end
+  Vscore = swe_create_vol(['swe_vox_' WB.stat '_c0001.img'], DIM, M,...
+			  ['Original parametric ' WB.stat ' statistic data.']);
   
   %-Initialise parametric P-Value image
   %----------------------------------------------------------------------
@@ -489,14 +482,13 @@ if ~isMat
   %-Initialise converted parametric score image
   %----------------------------------------------------------------------
   if WB.stat=='T'
-      VcScore = swe_create_vol('swe_vox_Z_c0001.img', DIM, M,...
-                               'Parametric Z statistic data derived from T-Statistic data.');
-  end                    
-                           
-  if WB.stat=='F'
-      VcScore = swe_create_vol('swe_vox_X_c0001.img', DIM, M,...
-                               'Parametric X statistic data derived from F-Statistic data.');
+    OutStat='Z';
+  else % F stat
+    OutStat='X';
   end
+  VcScore = swe_create_vol(['swe_vox_' OutStat '_c0001.img'], DIM, M,...
+			   ['Parametric ' OutStat ' statistic data derived from ' ...
+  		            WB.stat '-Statistic data.']);
   
   %-Initialise residual images for the resampling
   %----------------------------------------------------------------------
@@ -2054,27 +2046,6 @@ function [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSiz
 	   end
 
 end
-
-% This function creates volumes.
-function vol=swe_create_vol(fname, dim, m, varargin)
-    
-    if nargin > 3
-        descrip = varargin{1};
-    else
-        descrip = '';
-    end
-
-    % In this case the Vscore images are X images.
-    vol = deal(struct(...
-      'fname',    fname,...
-      'dim',      dim',...
-      'dt',       [spm_type('float32') spm_platform('bigend')],...
-      'mat',      m,...
-      'pinfo',    [1 0 0]',...
-      'descrip',  descrip));
-    vol = spm_create_vol(vol);
-
-end 
 
 % This function performs the users requested residual corrections and
 % calculates tmpR2 (the adjusted xX.X).
