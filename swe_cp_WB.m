@@ -1588,6 +1588,19 @@ for b = 1:WB.nB
   spm_progress_bar('Set',100 * b / WB.nB);
 end
 
+%-Save analysis original max min in SwE structure
+%--------------------------------------------------------------------------
+SwE.WB.maxScore = maxScore;
+if (WB.clusterWise == 1)
+    SwE.WB.clusterInfo.maxClusterSize = maxClusterSize;
+end
+if (WB.stat == 'T')
+    SwE.WB.minScore = minScore;
+    if (WB.clusterWise == 1)
+        SwE.WB.clusterInfo.maxClusterSizeNeg = maxClusterSizeNeg;
+    end
+end
+
 %==========================================================================
 %- produce results images
 %==========================================================================
