@@ -80,9 +80,9 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % .thresDesc - description of height threshold (string)
 %
 % In addition, the xCon structure is updated. For newly evaluated
-% contrasts, SwE images (spmT_????.{img,hdr}) are written, along with
-% contrast (con_????.{img,hdr}) images for SwE{T}'s, or Extra
-% Sum-of-Squares images (ess_????.{img,hdr}) for SwE{F}'s.
+% contrasts, SwE images (spmT_????) are written, along with
+% contrast (con_????) images for SwE{T}'s, or Extra
+% Sum-of-Squares images (ess_????}) for SwE{F}'s.
 %
 % The contrast images are the weighted sum of the parameter images,
 % where the weights are the contrast weights, and are uniquely

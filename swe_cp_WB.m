@@ -1893,9 +1893,15 @@ end
 
 if ~isMat
     % Remove residual and Y images now we are done with them:
-    cellfun(@(x) delete(x, strrep(x, '.img', '.hdr')), {VResWB.fname VYWB.fname}, 'UniformOutput', false);
+    files = {'^ResWB_.{4}\..{3}$','^YfittedWB_.{4}\..{3}$'};
+    for i = 1:numel(files)
+      j = cellstr(spm_select('FPList',SwE.swd,files{i}));
+      for k = 1:numel(j)
+        spm_unlink(j{k});
+      end
+    end
 end
-    
+
 fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done')                %-#
 %spm('FigName','Stats: done',Finter); spm('Pointer','Arrow')
 fprintf('%-40s: %30s\n','Completed',spm('time'))                        %-#
