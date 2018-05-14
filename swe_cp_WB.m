@@ -84,6 +84,9 @@ iSubj         = SwE.Subj.iSubj;
 uSubj         = unique(iSubj);
 nSubj         = length(uSubj);
 
+SwE.Subj.uSubj = uSubj;
+SwE.Subj.nSubj = nSubj;
+
 %-WB variables
 %
 WB = SwE.WB;
@@ -124,143 +127,11 @@ if isMat && WB.clusterWise == 1
   end
 end
   
-% small sample correction 
-if WB.RWB == 1
-  tmpR = (xX.X' * xX.X) \ conWB';
-  tmpR = tmpR / (conWB * tmpR);
-  tmpR2 = xX.X * (eye(nBeta) - tmpR * conWB);
-  HatR = xX.X * (pX - tmpR * conWB * pX);
-  
-  switch WB.SS
-    case 0 
-      corrWB = ones(nScan,1);
-    case 1
-      corrWB  = repmat(sqrt(nScan/(nScan - nBeta + rankCon)),nScan,1); % residual correction (type 1) 
-    case 2
-      corrWB  = (1-diag(HatR)).^(-0.5); % residual correction (type 2)
-    case 3
-      corrWB  = (1-diag(HatR)).^(-1); % residual correction (type 3)
-    case 4
-      corrWB =cell(nSubj,1);
-      I_Hat = eye(nScan) - HatR;
-      for i = 1:nSubj
-        tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-        tmp = (tmp + tmp')/2;
-        [tmpV, tmpE] = eig(tmp);
-        corrWB{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV';
-      end
-      clear I_Hat tmp
-    case 5
-      corrWB  = cell(nSubj,1);
-      I_Hat = eye(nScan) - HatR;
-      for i = 1:nSubj
-          tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-          tmp = (tmp + tmp')/2;
-          corrWB{i} = inv(tmp); 
-      end
-      clear I_Hat tmp
-  end
-else 
-  Hat = xX.X*(pX); % Hat matrix
-  switch WB.SS
-    case 0
-      corrWB = ones(nScan,1);
-    case 1
-      corrWB  = repmat(sqrt(nScan/(nScan-nBeta)),nScan,1); % residual correction (type 1)
-    case 2
-      corrWB  = (1-diag(Hat)).^(-0.5); % residual correction (type 2)
-    case 3
-      corrWB  = (1-diag(Hat)).^(-1); % residual correction (type 3)
-    case 4
-      corrWB  = cell(nSubj,1);
-      I_Hat = eye(nScan) - Hat;
-      for i = 1:nSubj
-        tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-        tmp = (tmp + tmp')/2;
-        [tmpV, tmpE] = eig(tmp);
-        corrWB{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV';
-      end
-      clear I_Hat tmp
-    case 5
-      corrWB  = cell(nSubj,1);
-      I_Hat = eye(nScan) - Hat;
-      for i = 1:nSubj
-        tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-        tmp = (tmp + tmp')/2;
-        corrWB{i} = inv(tmp);
-      end
-      clear I_Hat tmp
-  end
-end
+% small sample correction (for WB)
+[corrWB, tmpR2] = swe_resid_corr(SwE, WB.RWB, WB.SS, pX);
 
-if WB.RSwE == 1
-  tmpR = (xX.X' * xX.X) \ conWB';
-  tmpR = tmpR / (conWB * tmpR);
-  tmpR2 = xX.X * (eye(nBeta) - tmpR * conWB);
-  HatR = xX.X * (pX - tmpR * conWB * pX);
-  
-  switch SwE.SS
-    case 0
-      corr = ones(nScan,1);
-    case 1
-      corr  = repmat(sqrt(nScan/(nScan - nBeta + rankCon)),nScan,1); % residual correction (type 1)
-    case 2
-      corr  = (1-diag(HatR)).^(-0.5); % residual correction (type 2)
-    case 3
-      corr  = (1-diag(HatR)).^(-1); % residual correction (type 3)
-    case 4
-      corr =cell(nSubj,1);
-      I_Hat = eye(nScan) - HatR;
-      for i = 1:nSubj
-        tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-        tmp = (tmp + tmp')/2;
-        [tmpV, tmpE] = eig(tmp);
-        corr{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV';
-      end
-      clear I_Hat tmp
-    case 5
-      corr  = cell(nSubj,1);
-      I_Hat = eye(nScan) - HatR;
-      for i = 1:nSubj
-        tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-        tmp = (tmp + tmp')/2;
-        corr{i} = inv(tmp);
-      end
-      clear I_Hat tmp
-  end
-else
-  Hat = xX.X*(pX); % Hat matrix
-  switch SwE.SS
-    case 0
-      corr = ones(nScan,1);
-    case 1
-      corr  = repmat(sqrt(nScan/(nScan-nBeta)),nScan,1); % residual correction (type 1)
-    case 2
-      corr  = (1-diag(Hat)).^(-0.5); % residual correction (type 2)
-    case 3
-      corr  = (1-diag(Hat)).^(-1); % residual correction (type 3)
-    case 4
-      corr  = cell(nSubj,1);
-      I_Hat = eye(nScan) - Hat;
-      for i = 1:nSubj
-        tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-        tmp = (tmp + tmp')/2;
-        [tmpV, tmpE] = eig(tmp);
-        corr{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV';
-      end
-      clear I_Hat tmp
-    case 5
-      corr  = cell(nSubj,1);
-      I_Hat = eye(nScan) - Hat;
-      for i = 1:nSubj
-        tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-        tmp = (tmp + tmp')/2;
-        corr{i} = inv(tmp);
-      end
-      clear I_Hat tmp
-  end
-end
-
+% small sample correction (for parametric)
+[corr, tmpR2] = swe_resid_corr(SwE, WB.RSwE, SwE.SS, pX, tmpR2);
 
 %-detect if the design matrix is separable (a little bit messy, but seems to do the job)
 %
@@ -346,10 +217,9 @@ if dof_type == 0 % so naive estimation is used
       dof_cov(i) = nSubj_dof(iBeta_dof(i)) - ...
           pB_dof(iBeta_dof(i));    
   end
-  
+else
+    edf = NaN;
 end
-
-
 
 %-preprocessing for the modified SwE
 if isfield(SwE.type,'modified')
@@ -357,6 +227,8 @@ if isfield(SwE.type,'modified')
   iGr       = SwE.Gr.iGr;
   uGr       = unique(iGr);
   nGr       = length(uGr);
+  SwE.Gr.uGr       = uGr;
+  SwE.Gr.nGr       = nGr;
   
   % info specific for each group
   uVis_g = cell(1,nGr); % unique visits for each group
@@ -371,6 +243,10 @@ if isfield(SwE.type,'modified')
   end
   nCov_vis_g  = nVis_g.*(nVis_g+1)/2; % number of covariance elements to be estimated for each group
   nCov_vis    = sum(nCov_vis_g); % total number of covariance elements to be estimated
+  
+  % Save nVis_g and uVis_g.
+  SwE.Vis.uVis_g = uVis_g;
+  SwE.Vis.nVis_g = nVis_g;
   
   % Flags matrices indicating which residuals have to be used for each covariance element
   Flagk  = false(nCov_vis,nScan); % Flag indicating scans corresponding to visit k for each covariance element
@@ -402,6 +278,10 @@ if isfield(SwE.type,'modified')
       end
     end
   end
+  
+  % Record igr_Cov_vis_g.
+  SwE.WB.iGr_Cov_vis_g = iGr_Cov_vis_g;
+  
   % weights for the vectorised SwE
   weight = NaN(nCov_beta,nCov_vis);
 
@@ -418,7 +298,7 @@ if isfield(SwE.type,'modified')
       end
     end
   end
-  % Weigth giving only the contrasted SwE (WB)
+  % Weight giving only the contrasted SwE (WB)
   weightR = pinv(swe_duplication_matrix(nSizeCon)) * kron(conWB,conWB) * swe_duplication_matrix(nBeta) * weight; % used to compute the R SwE R' 
   Wg = cell(nGr,1);
   Wg_testII = cell(nGr,1);
@@ -431,9 +311,14 @@ if isfield(SwE.type,'modified')
     Wg_testIII{g} = tmp(:)' * (kron(swe_duplication_matrix(nSizeCon),swe_duplication_matrix(nSizeCon))) * Wg{g};
   end
    
+  SwE.WB.Wg{1} = Wg;
+  SwE.WB.Wg{2} = Wg_testII;
+  SwE.WB.Wg{3} = Wg_testIII;
+  
 %-compute the effective dof from each homogeneous group if dof_type
     switch dof_type
       case 1
+        dofMat = NaN;
         edof_Gr = zeros(1,nGr);
         nSubj_g = zeros(1,nGr);
         for g = 1:nGr
@@ -577,139 +462,104 @@ if ~isMat
     'descrip','swe_cp_WB:resultant analysis mask');
   VM    = spm_create_vol(VM);
   
-  %-Initialise original score image
+  %-Initialise original parametric score image, T or F
+  %----------------------------------------------------------------------
+
+  Vscore = swe_create_vol(['swe_vox_' WB.stat '_c0001.img'], DIM, M,...
+			  ['Original parametric ' WB.stat ' statistic data.']);
+  
+  %-Initialise parametric P-Value image
   %----------------------------------------------------------------------
   
-  Vscore = deal(struct(...
-    'fname',    [],...
-    'dim',      DIM',...
-    'dt',       [spm_type('float32') spm_platform('bigend')],...
-    'mat',      M,...
-    'pinfo',    [1 0 0]',...
-    'descrip',  ''));
+  VlP = swe_create_vol('swe_vox_lp_c0001.img', DIM, M,...
+                      'Original parametric -log10(P) value data (positive).');
   
-  Vscore.fname   = sprintf('score.img');
-  Vscore.descrip = sprintf('score original data');
-  Vscore = spm_create_vol(Vscore);
+  if WB.stat=='T'
+        VlP_Neg = swe_create_vol('swe_vox_lp_c0001neg.img', DIM, M,...
+                               'Original parametric -log10(P) value data (negative).');
+  end
+  
+  %-Initialise converted parametric score image
+  %----------------------------------------------------------------------
+  if WB.stat=='T'
+    OutStat='Z';
+  else % F stat
+    OutStat='X';
+  end
+  VcScore = swe_create_vol(['swe_vox_' OutStat '_c0001.img'], DIM, M,...
+			   ['Parametric ' OutStat ' statistic data derived from ' ...
+  		            WB.stat '-Statistic data.']);
   
   %-Initialise residual images for the resampling
   %----------------------------------------------------------------------
-  VResWB(1:nScan) = deal(struct(...
-    'fname',    [],...
-    'dim',      DIM',...
-    'dt',       [spm_type('float32') spm_platform('bigend')],...
-    'mat',      M,...
-    'pinfo',    [1 0 0]',...
-    'descrip',  ''));
   
   for i = 1:nScan
-    VResWB(i).fname   = sprintf('ResWB_%04d.img', i);
-    if WB.RWB == 1
-      VResWB(i).descrip = sprintf('adjusted restricted residuals (%04d)', i);
-    else
-      VResWB(i).descrip = sprintf('adjusted unrestricted residuals (%04d)', i);
-    end
+      if WB.RWB == 1
+        descrip = sprintf('adjusted restricted residuals (%04d)', i);
+      else
+        descrip = sprintf('adjusted unrestricted residuals (%04d)', i);
+      end
+      VResWB(i) = swe_create_vol(sprintf('ResWB_%04d.img', i), DIM, M, descrip);
   end
-  VResWB = spm_create_vol(VResWB);
+  
   fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-#
   
   %-Initialise fitted data images for the resampling
   %----------------------------------------------------------------------
-  VYWB(1:nScan) = deal(struct(...
-    'fname',    [],...
-    'dim',      DIM',...
-    'dt',       [spm_type('float32') spm_platform('bigend')],...
-    'mat',      M,...
-    'pinfo',    [1 0 0]',...
-    'descrip',  ''));
   
   for i = 1:nScan
-    VYWB(i).fname   = sprintf('YfittedWB_%04d.img', i);
-    if WB.RWB == 1
-      VYWB(i).descrip = sprintf('restricted fitted data  (%04d)', i);
-    else
-      VResWB(i).descrip = sprintf('unrestricted fitted data (%04d)', i);
-    end
+      if WB.RWB == 1
+         descrip = sprintf('restricted fitted data  (%04d)', i);
+      else
+         descrip = sprintf('unrestricted fitted data (%04d)', i);
+      end
+      VYWB(i) = swe_create_vol(sprintf('YfittedWB_%04d.img',i), DIM, M, descrip);
   end
-  VYWB = spm_create_vol(VYWB);
   
   %-Initialise result images
   %----------------------------------------------------------------------
-  VlP_pos = deal(struct(...
-    'fname',    'lP+.img',...
-    'dim',      DIM',...
-    'dt',       [spm_type('float32') spm_platform('bigend')],...
-    'mat',      M,...
-    'pinfo',    [1 0 0]',...
-    'descrip',  '-log10(uncor. non-para. P, +ve)'));
-  VlP_pos = spm_create_vol(VlP_pos);
+  VlP_wb_pos = swe_create_vol('swe_vox_lp-WB_c0001.img', DIM, M,...
+                              '-log10(uncor. non-para. P, +ve)');
+
+  VlP_wb_FWE_pos = swe_create_vol('swe_vox_lpFWE-WB_c0001.img', DIM, M,...
+                                  '-log10(FWE-corr. P, +ve)');
   
-  VlP_FWE_pos = deal(struct(...
-    'fname',    'lP_FWE+.img',...
-    'dim',      DIM',...
-    'dt',       [spm_type('float32') spm_platform('bigend')],...
-    'mat',      M,...
-    'pinfo',    [1 0 0]',...
-    'descrip',  '-log10(FWE-corr. P, +ve)'));
-  VlP_FWE_pos = spm_create_vol(VlP_FWE_pos);
-  
-  VlP_FDR_pos = deal(struct(...
-    'fname',    'lP_FDR+.img',...
-    'dim',      DIM',...
-    'dt',       [spm_type('float32') spm_platform('bigend')],...
-    'mat',      M,...
-    'pinfo',    [1 0 0]',...
-    'descrip',  '-log10(FDR-corr. P, +ve)'));
-  VlP_FDR_pos=spm_create_vol(VlP_FDR_pos);
-  
+  VlP_wb_FDR_pos = swe_create_vol('swe_vox_lpFDR-WB_c0001.img', DIM, M,...
+                                  '-log10(FDR-corr. P, +ve)');
+
   if WB.stat=='T'
-    VlP_neg = deal(struct(...
-      'fname',    'lP-.img',...
-      'dim',      DIM',...
-      'dt',       [spm_type('float32') spm_platform('bigend')],...
-      'mat',      M,...
-      'pinfo',    [1 0 0]',...
-      'descrip',  '-log10(uncor. non-para. P, -ve)'));
-    VlP_neg=spm_create_vol(VlP_neg);
+    VlP_wb_neg = swe_create_vol('swe_vox_lp-WB_c0001neg.img', DIM, M,...
+                              '-log10(uncor. non-para. P, -ve)');
     
-    VlP_FWE_neg = deal(struct(...
-      'fname',    'lP_FWE-.img',...
-      'dim',      DIM',...
-      'dt',       [spm_type('float32') spm_platform('bigend')],...
-      'mat',      M,...
-      'pinfo',    [1 0 0]',...
-      'descrip',  '-log10(FWE-corr. P, -ve)'));
-    VlP_FWE_neg = spm_create_vol(VlP_FWE_neg);
+    VlP_wb_FWE_neg = swe_create_vol('swe_vox_lpFWE-WB_c0001neg.img', DIM, M,...
+                                     '-log10(FWE-corr. P, -ve)');
     
-    VlP_FDR_neg = deal(struct(...
-      'fname',    'lP_FDR-.img',...
-      'dim',      DIM',...
-      'dt',       [spm_type('float32') spm_platform('bigend')],...
-      'mat',      M,...
-      'pinfo',    [1 0 0]',...
-      'descrip',  '-log10(FDR-corr. P, -ve)'));
-    VlP_FDR_neg=spm_create_vol(VlP_FDR_neg);
+    VlP_wb_FDR_neg = swe_create_vol('swe_vox_lpFDR-WB_c0001neg.img', DIM, M,...
+                                     '-log10(FDR-corr. P, -ve)');
+    
+    % In this case the Vscore images are Z images.
+    Vscore_wb_pos = swe_create_vol('swe_vox_Z-WB_c0001.img', DIM, M,...
+                                   'Z score image for wild bootstrap voxelwise results.');
+    
+  end
+  
+  if WB.stat=='F'
+    
+    % In this case the Vscore images are X images.
+    Vscore_wb_pos = swe_create_vol('swe_vox_X-WB_c0001.img', DIM, M,...
+                                   'X score image for wild bootstrap voxelwise results.');
+    
   end
   
   if WB.clusterWise == 1
-    VlP_clusterFWE_pos = deal(struct(...
-      'fname',    'lP_clusterFWE+.img',...
-      'dim',      DIM',...
-      'dt',       [spm_type('float32') spm_platform('bigend')],...
-      'mat',      M,...
-      'pinfo',    [1 0 0]',...
-      'descrip',  '-log10(clusterFWE-corr. P, +ve)'));
-    VlP_clusterFWE_pos = spm_create_vol(VlP_clusterFWE_pos);
+      
+    % We also need cluster p value maps here.
+    VlP_wb_clusterFWE_pos = swe_create_vol('swe_clus_lpFWE-WB_c0001.img', DIM, M,...
+                                           '-log10(clusterFWE-corr. P, +ve)');
     
     if WB.stat=='T'
-      VlP_clusterFWE_neg = deal(struct(...
-        'fname',    'lP_clusterFWE-.img',...
-        'dim',      DIM',...
-        'dt',       [spm_type('float32') spm_platform('bigend')],...
-        'mat',      M,...
-        'pinfo',    [1 0 0]',...
-        'descrip',  '-log10(clusterFWE-corr. P, -ve)'));
-      VlP_clusterFWE_neg = spm_create_vol(VlP_clusterFWE_neg);
+      VlP_wb_clusterFWE_neg = swe_create_vol('swe_clus_lpFWE-WB_c0001neg.img', DIM, M,...
+                                             '-log10(clusterFWE-corr. P, -ve)');
     end
   end
   
@@ -746,8 +596,8 @@ if ~isMat
   if (WB.clusterWise == 1)
     activatedVoxels = false(0);
     maxClusterSize = nan(1, WB.nB + 1);
+    activatedVoxelsNeg = false(0);
     if (WB.stat == 'T')
-      activatedVoxelsNeg = false(0);
       maxClusterSizeNeg = nan(1, WB.nB + 1);
     end
   end
@@ -763,8 +613,14 @@ if ~isMat
     CrPl         = z:min(z+nbz-1,zdim);       %-plane list
     zords        = CrPl(:)*ones(1,xdim*ydim); %-plane Z coordinates
     CrScore      = [];                        %-scores
-    CrYWB        = [];                        %-fitted data under H0
-    CrResWB      = [];                        %-residuals
+    CrYWB         = [];                       %-fitted data under H0
+    CrResWB       = [];                       %-residuals
+    CrP          = [];                        %-parametric p-values
+    if (WB.stat == 'T')
+     CrPNeg       = [];                       %-negative parametric p-values
+    end
+    CrConScore   = [];                        %-converted score values. 
+                                              % i.e. Z/X from T/F
     Q            = [];                        %-in mask indices for this plane
     
     for bch = 1:nbch                     %-loop over blocks
@@ -833,38 +689,7 @@ if ~isMat
       %-Mask out voxels where data is constant in at least one separable
       % matrix design either in a visit category or within-subject (BG - 27/05/2016)
       %------------------------------------------------------------------
-      for g = 1:nGr_dof % first look data for each separable matrix design
-        if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)
-          Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1); % mask constant data within separable matrix design g (added by BG on 29/08/16)
-          if isfield(SwE.type,'modified') % added by BG on 29/08/16
-            for g2 = 1:nGr % then look data for each "homogeneous" group
-              % check if the data is contant over subject for each visit category
-              for k = 1:nVis_g(g2)
-                if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
-                  Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
-                  for kk = k:nVis_g(g2)
-                    if k ~= kk
-                      % extract the list of subject with both visit k and kk
-                      subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
-                      % look if some difference are observed within subject
-                      if ~isempty(subjList)
-                        diffVis = Cm(Cm) == 0;
-                        for i = 1:length(subjList)
-                          diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
-                        end
-                        Cm(Cm) = diffVis;
-                      end
-                    end
-                  end
-                end
-              end
-            end
-          end
-        end
-      end
-      clear diffVis
-      Y      = Y(:,Cm);                          %-Data within mask
-      CrS    = sum(Cm);                          %-# current voxels
+      [Cm, Y, CrS] = swe_mask_seperable(SwE, Cm, Y, iGr_dof);
       
       %==================================================================
       %-Proceed with General Linear Model (if there are voxels)
@@ -879,51 +704,17 @@ if ~isMat
         
         % restricted fitted data
         if WB.RWB == 1
-          YWB = tmpR2 * beta;
-          if SwE.WB.SS >= 4 % SC2 or SC3
-            resWB = zeros(size(Y));
-            for i = 1:nSubj
-              resWB(iSubj==uSubj(i),:) = corrWB{i} *...
-                (Y(iSubj==uSubj(i),:)-YWB(iSubj==uSubj(i),:));
-            end
-          else
-            resWB  = diag(corrWB) * (Y-YWB);
-          end
-        else
-          YWB = xX.X * beta;
-          if SwE.WB.SS >= 4 % SC2 or SC3
-            resWB = zeros(size(Y));
-            for i = 1:nSubj
-              resWB(iSubj==uSubj(i),:) = corrWB{i} *...
-                (Y(iSubj==uSubj(i),:)-YWB(iSubj==uSubj(i),:));
-            end
-          else
-            resWB  = diag(corrWB) * (Y-YWB);
-          end
+            [resWB, YWB]=swe_fit(SwE, Y, tmpR2, corrWB, beta, SwE.WB.SS);
+        else 
+            [resWB, YWB]=swe_fit(SwE, Y, xX.X, corrWB, beta, SwE.WB.SS);
         end
-        
+
         if WB.RSwE == 1
-          if SwE.SS >= 4  % Cluster-wise adjustments
-            res = zeros(size(Y));
-            for i = 1:nSubj
-              res(iSubj==uSubj(i),:) = corr{i} *...
-                (Y(iSubj==uSubj(i),:)-tmpR2(iSubj==uSubj(i),:)*beta);
-            end
-          else
-            res = diag(corr) * (Y - tmpR2 * beta); %-Corrected residuals
-          end
-        else
-          if SwE.SS >= 4  % Cluster-wise adjustments
-            res = zeros(size(Y));
-            for i = 1:nSubj
-              res(iSubj==uSubj(i),:) = corr{i} *...
-                (Y(iSubj==uSubj(i),:)-xX.X(iSubj==uSubj(i),:)*beta);
-            end
-          else
-            res = diag(corr) * (Y-xX.X*beta); %-Corrected residuals
-          end
+            res=swe_fit(SwE, Y, tmpR2, corr, beta, SwE.SS);
+        else 
+            res=swe_fit(SwE, Y, xX.X, corr, beta, SwE.SS);
         end
-        
+
         clear Y                           %-Clear to save memory
         %-Estimation of the data variance-covariance components (modified SwE)
         %-SwE estimation (classic version)
@@ -973,6 +764,7 @@ if ~isMat
               end
             end
           end
+          cCovBc = weightR * Cov_vis;
         else
           cCovBc = 0;
           for i = 1:nSubj
@@ -983,87 +775,21 @@ if ~isMat
         end
         
         % compute the score
-        if (nSizeCon == 1)
-          if isfield(SwE.type,'modified')
-            cCovBc = weightR * Cov_vis;
-          end
+        if (SwE.WB.stat == 'T')
           
           score = (conWB * beta) ./ sqrt(cCovBc);
           
+          % hypothesis test, using clusterwise threshold if available.
           if (SwE.WB.clusterWise == 1)
-            % need to convert score into parametric p-values
-            p = zeros(1, CrS);
-            switch dof_type
-              case 0
-                if WB.stat == 'T'
-                  if any(score > 0)
-                    p(score > 0)  = spm_Tcdf(-score(score>0), edf);
-                  end
-                  if any(score <= 0)
-                    p(score <= 0) = spm_Tcdf(score(score<=0), edf);
-                  end
-                else
-                  p = 2 * spm_Tcdf(-abs(score), edf);
-                end
-              case 1
-                error('degrees of freedom type still not implemented for the WB')
-                
-              case 2
-                CovcCovBc = 0;
-                for g = 1:nGr
-                  %CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-                  CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-                end
-                edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
-                clear CovcCovBc cCovBc
-                if WB.stat == 'T'
-                  if any(score > 0)
-                    p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-                  end
-                  if any(score <= 0)
-                    p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-                  end
-                else
-                  p = 2 * spm_Tcdf(-abs(score), edf);
-                end
-              case 3
-                CovcCovBc = 0;
-                for g = 1:nGr
-                  CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-                end
-                edf = 2 * cCovBc.^2 ./ CovcCovBc;
-                clear CovcCovBc cCovBc
-                
-                if WB.stat == 'T'
-                  if any(score > 0)
-                    p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-                  end
-                  if any(score <= 0)
-                    p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-                  end
-                else
-                  p = 2 * spm_Tcdf(-abs(score), edf);
-                end
-            end
-            if SwE.WB.stat == 'F'
-              score = score .^2;
-            end
-            activatedVoxels = [activatedVoxels, p <= WB.clusterInfo.primaryThreshold & score > 0];
-            if (SwE.WB.stat == 'T')
-              activatedVoxelsNeg = [activatedVoxelsNeg, p <= WB.clusterInfo.primaryThreshold & score < 0];
-            end
+            [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+            clear CovcCovBc cCovBc
+          else
+            p=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
           end
           
-          maxScore(1) = max(maxScore(1), max(score));
-          
-          if (SwE.WB.stat == 'T')
-            minScore(1) = min(minScore(1), min(score));
-          end
+          minScore(1) = min(minScore(1), min(score));
         else
           % need to loop at every voxel
-          if isfield(SwE.type,'modified')
-            cCovBc = weightR * Cov_vis;
-          end
           cBeta = conWB * beta;
           score = zeros(1, CrS);
           for iVox = 1:CrS
@@ -1073,50 +799,30 @@ if ~isMat
             score(iVox) = cBeta(:,iVox)' / cCovBc_vox * cBeta(:,iVox);
           end
           score = score / rankCon;
-          maxScore(1) = max(maxScore(1), max(score));
-          % save cluster information is needed
+          
+          % hypothesis test, using clusterwise threshold if available.
           if (SwE.WB.clusterWise == 1)
-            % need to convert score into parametric p-values
-            p = zeros(1, CrS);
-            switch dof_type
-              
-              case 1
-                error('degrees of freedom type still not implemented for the WB')
-                
-              case 2
-                CovcCovBc = 0;
-                for g = 1:nGr
-                  CovcCovBc = CovcCovBc + Wg_testII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-                end
-                edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
-                
-              case 3
-                CovcCovBc = 0;
-                for g = 1:nGr
-                  CovcCovBc = CovcCovBc + Wg_testIII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-                end
-                tmp = eye(nSizeCon);
-                edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
-                  (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
-            end
-            scoreTmp = (edf-rankCon+1) ./ edf .* score;
-            scoreTmp(scoreTmp < 0 ) = 0;
-            % spm_Fcdf can be inaccurate in some case --> fcdf
-            if dof_type == 0
-              p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
-            else
-              p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
-              p(scoreTmp == 0) = 1;
-            end
-            activatedVoxels = [activatedVoxels, p <= WB.clusterInfo.primaryThreshold];
+            [p, activatedVoxels]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
+          else
+            p=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
           end
         end
+        
+        maxScore(1) = max(maxScore(1), max(score));
         
         %-Save betas etc. for current plane as we go along
         %----------------------------------------------------------
         CrYWB             = [CrYWB,    YWB]; %#ok<AGROW>
         CrResWB           = [CrResWB,  resWB]; %#ok<AGROW>
         CrScore           = [CrScore,  score]; %#ok<AGROW>
+        CrP               = [CrP,      -log10(1-p)]; %#ok<AGROW>
+        if (SwE.WB.stat == 'T')
+            CrConScore    = [CrConScore, swe_invNcdf(p)]; %#ok<AGROW>
+            CrPNeg        = [CrPNeg,   -log10(p)]; %#ok<AGROW>
+        end
+        if(SwE.WB.stat == 'F')
+            CrConScore    = [CrConScore, spm_invXcdf(p, 1)]; %#ok<AGROW>
+        end
         
       end % (CrS)
       
@@ -1154,10 +860,25 @@ if ~isMat
       VResWB(i) = spm_write_plane(VResWB(i), jj, CrPl);
     end
     
-    %-Write score image of the original data
+    %-Write parametric score image of the original data
     %------------------------------------------------------------------
     if ~isempty(Q), jj(Q) = CrScore; end
     Vscore = spm_write_plane(Vscore, jj, CrPl);
+    
+    %-Write parametric p-value image
+    %------------------------------------------------------------------
+    if ~isempty(Q), jj(Q) = CrP; end
+    VlP = spm_write_plane(VlP, jj, CrPl);
+    
+    if WB.stat=='T'
+        if ~isempty(Q), jj(Q) = CrPNeg; end
+        VlP_Neg = spm_write_plane(VlP_Neg, jj, CrPl);
+    end
+    
+    %-Write converted parametric score image of the original data
+    %------------------------------------------------------------------
+    if ~isempty(Q), jj(Q) = CrConScore; end
+    VcScore = spm_write_plane(VcScore, jj, CrPl);
     
     %-Report progress
     %----------------------------------------------------------------------
@@ -1265,39 +986,8 @@ else % ".mat" format
   %-Mask out voxels where data is constant in at least one separable
   % matrix design either in a visit category or within-subject (BG - 27/05/2016)
   %------------------------------------------------------------------
-  for g = 1:nGr_dof % first look data for each separable matrix design
-    if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)
-      Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1); % mask constant data within separable matrix design g (added by BG on 29/08/16)
-      if isfield(SwE.type,'modified') % added by BG on 29/08/16
-        for g2 = 1:nGr % then look data for each "homogeneous" group
-          % check if the data is contant over subject for each visit category
-          for k = 1:nVis_g(g2)
-            if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
-              Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
-              for kk = k:nVis_g(g2)
-                if k ~= kk
-                  % extract the list of subject with both visit k and kk
-                  subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
-                  % look if some difference are observed within subject
-                  if ~isempty(subjList)
-                    diffVis = Cm(Cm) == 0;
-                    for i = 1:length(subjList)
-                      diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
-                    end
-                    Cm(Cm) = diffVis;
-                  end
-                end
-              end
-            end
-          end
-        end
-      end
-    end
-  end
-  clear diffVis
+  [Cm,Y,CrS] = swe_mask_seperable(SwE, Cm, Y, iGr_dof);
   
-  Y     = Y(:,Cm);                          %-Data within mask
-  CrS   = sum(Cm);                          %-# current voxels
   if isfield(SwE.WB.clusterInfo, 'Vxyz')
     XYZ   = XYZ(:,Cm);
   end
@@ -1312,51 +1002,16 @@ else % ".mat" format
     
     beta  = pX*Y;                     %-Parameter estimates
     
-    % restricted fitted data
     if WB.RWB == 1
-      YWB = tmpR2 * beta;
-      if SwE.WB.SS >= 4 % SC2 or SC3
-        resWB = zeros(size(Y));
-        for i = 1:nSubj
-          resWB(iSubj==uSubj(i),:) = corrWB{i} *...
-            (Y(iSubj==uSubj(i),:)-YWB(iSubj==uSubj(i),:));
-        end
-      else
-        resWB  = diag(corrWB) * (Y-YWB);
-      end
-    else
-      YWB = xX.X * beta;
-      if SwE.WB.SS >= 4 % SC2 or SC3
-        resWB = zeros(size(Y));
-        for i = 1:nSubj
-          resWB(iSubj==uSubj(i),:) = corrWB{i} *...
-            (Y(iSubj==uSubj(i),:)-YWB(iSubj==uSubj(i),:));
-        end
-      else
-        resWB  = diag(corrWB) * (Y-YWB);
-      end
+        [resWB, YWB]=swe_fit(SwE, Y, tmpR2, corrWB, beta, SwE.WB.SS);
+    else 
+        [resWB, YWB]=swe_fit(SwE, Y, xX.X, corrWB, beta, SwE.WB.SS);
     end
     
     if WB.RSwE == 1
-      if SwE.SS >= 4  % Cluster-wise adjustments
-        res = zeros(size(Y));
-        for i = 1:nSubj
-          res(iSubj==uSubj(i),:) = corr{i} *...
-            (Y(iSubj==uSubj(i),:)-tmpR2(iSubj==uSubj(i),:)*beta);
-        end
-      else
-        res = diag(corr) * (Y - tmpR2 * beta); %-Corrected residuals
-      end
-    else
-      if SwE.SS >= 4  % Cluster-wise adjustments
-        res = zeros(size(Y));
-        for i = 1:nSubj
-          res(iSubj==uSubj(i),:) = corr{i} *...
-            (Y(iSubj==uSubj(i),:)-xX.X(iSubj==uSubj(i),:)*beta);
-        end
-      else
-        res = diag(corr) * (Y-xX.X*beta); %-Corrected residuals
-      end
+        res=swe_fit(SwE, Y, tmpR2, corr, beta, SwE.SS);
+    else 
+        res=swe_fit(SwE, Y, xX.X, corr, beta, SwE.SS);
     end
     
     clear Y                           %-Clear to save memory
@@ -1408,6 +1063,7 @@ else % ".mat" format
           end
         end
       end
+      cCovBc = weightR * Cov_vis;
     else
       cCovBc = 0;
       for i = 1:nSubj
@@ -1418,87 +1074,18 @@ else % ".mat" format
     end
     
     % compute the score
-    if (nSizeCon == 1)
-      if isfield(SwE.type,'modified')
-        cCovBc = weightR * Cov_vis;
-      end
+    if (SwE.WB.stat == 'T')
       
       score = (conWB * beta) ./ sqrt(cCovBc);
       
       if (SwE.WB.clusterWise == 1)
-        % need to convert score into parametric p-values
-        p = zeros(1, CrS);
-        switch dof_type
-          case 0
-            if WB.stat == 'T'
-              if any(score > 0)
-                p(score > 0)  = spm_Tcdf(-score(score>0), edf);
-              end
-              if any(score <= 0)
-                p(score <= 0) = spm_Tcdf(score(score<=0), edf);
-              end
-            else
-              p = 2 * spm_Tcdf(-abs(score), edf);
-            end
-          case 1
-            error('degrees of freedom type still not implemented for the WB')
-            
-          case 2
-            CovcCovBc = 0;
-            for g = 1:nGr
-              %CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-              CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-            end
-            edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
-            clear CovcCovBc cCovBc
-            if WB.stat == 'T'
-              if any(score > 0)
-                p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-              end
-              if any(score <= 0)
-                p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-              end
-            else
-              p = 2 * spm_Tcdf(-abs(score), edf);
-            end
-          case 3
-            CovcCovBc = 0;
-            for g = 1:nGr
-              CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-            end
-            edf = 2 * cCovBc.^2 ./ CovcCovBc;
-            clear CovcCovBc cCovBc
-            
-            if WB.stat == 'T'
-              if any(score > 0)
-                p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-              end
-              if any(score <= 0)
-                p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-              end
-            else
-              p = 2 * spm_Tcdf(-abs(score), edf);
-            end
-        end
-        if SwE.WB.stat == 'F'
-          score = score .^2;
-        end
-        activatedVoxels = [activatedVoxels, p <= WB.clusterInfo.primaryThreshold & score > 0];
-        if (SwE.WB.stat == 'T')
-          activatedVoxelsNeg = [activatedVoxelsNeg, p <= WB.clusterInfo.primaryThreshold & score < 0];
-        end
+        [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+        clear CovcCovBc cCovBc
       end
       
-      maxScore(1) = max(score);
-      
-      if (SwE.WB.stat == 'T')
-        minScore(1) = min(score);
-      end
+      minScore(1) = min(score);
     else
       % need to loop at every voxel
-      if isfield(SwE.type,'modified')
-        cCovBc = weightR * Cov_vis;
-      end
       cBeta = conWB * beta;
       score = zeros(1, CrS);
       for iVox = 1:CrS
@@ -1508,70 +1095,67 @@ else % ".mat" format
         score(iVox) = cBeta(:,iVox)' / cCovBc_vox * cBeta(:,iVox);
       end
       score = score / rankCon;
-      maxScore(1) = max(score);
-      % save cluster information is needed
+      % Perform hypothesis test for activated regions.
       if (SwE.WB.clusterWise == 1)
-        % need to convert score into parametric p-values
-        p = zeros(1, CrS);
-        switch dof_type
-          
-          case 1
-            error('degrees of freedom type still not implemented for the WB')
-            
-          case 2
-            CovcCovBc = 0;
-            for g = 1:nGr
-              CovcCovBc = CovcCovBc + Wg_testII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-            end
-            edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
-            
-          case 3
-            CovcCovBc = 0;
-            for g = 1:nGr
-              CovcCovBc = CovcCovBc + Wg_testIII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-            end
-            tmp = eye(nSizeCon);
-            edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
-              (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
-        end
-        scoreTmp = (edf-rankCon+1) ./ edf .* score;
-        scoreTmp(scoreTmp < 0 ) = 0;
-        % spm_Fcdf can be inaccurate in some case --> fcdf
-        if dof_type == 0
-          p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
-        else
-          p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
-          p(scoreTmp == 0) = 1;
-        end
-        activatedVoxels = [activatedVoxels, p <= WB.clusterInfo.primaryThreshold];
+        [p, activatedVoxels] = swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
       end
     end
+    maxScore(1) = max(score);
     
   end % (CrS)
   M           = [];
   DIM         = [];
   S           = CrS;  
   VM          = 'mask.mat';
-  Vbeta       = 'beta.mat';
-  Vscore      = 'score.mat';
+  if (SwE.WB.stat == 'T')
+    Vscore      = 'swe_vox_T_c0001.mat';
+  else
+    Vscore      = 'swe_vox_F_c0001.mat';
+  end
 
   mask = Cm;       
   save('mask.mat', 'mask');
   clear mask
   
-  tmp = beta;
-  beta = nan(nBeta, nVox);
-  beta(:,Cm) = tmp;
-  save('beta.mat', 'beta');
-  clear beta tmp
-  
   tmp = score;
   score = nan(1, nVox);
-  score(:,Cm) = tmp;
-  save('score.mat', 'score');
-  score = tmp;
-  clear tmp
+  if (SwE.WB.stat == 'T')
+      VT(:,Cm) = tmp;
+      save(Vscore, 'VT');
+      score = tmp;
+      clear tmp VT
+  else
+      VF(:,Cm) = tmp;
+      save(Vscore, 'VF');
+      score = tmp;
+      clear tmp VF
+  end
   
+  VlP = nan(1, nVox);
+  VlP(:,Cm) = -log10(1-p);
+  save('swe_vox_lp_c0001.mat', 'VlP');
+  clear VlP
+
+  if (SwE.WB.stat == 'T')
+      
+       VlP_neg = nan(1, nVox);
+       VlP_neg(:,Cm) =  -log10(p);
+       save('swe_vox_lp_c0001neg.mat', 'VlP_neg');
+       clear VlP_neg
+       
+       z_map = nan(1, nVox);
+       VZ(:,Cm) =  swe_invNcdf(p);
+       save('swe_vox_Z_c0001.mat', 'VZ');
+       clear VZ
+  
+  else
+      
+       x_map = nan(1, nVox);
+       VX(:,Cm) =  spm_invXcdf(p, 1);
+       save('swe_vox_X_c0001.mat', 'VX');
+       clear VX
+       
+  end
   
   fprintf('\n');                                                          %-#
   spm_progress_bar('Clear')
@@ -1636,7 +1220,7 @@ fprintf('%-40s: %30s','Saving results','...writing');
 
 %-place fields in SwE
 %--------------------------------------------------------------------------
-if isfield(SwE.WB.clusterInfo, 'Vfaces')
+if isfield(SwE.WB, 'clusterInfo') && isfield(SwE.WB.clusterInfo, 'Vfaces')
   XYZ = [];
 end
 
@@ -1644,6 +1228,7 @@ SwE.xVol.XYZ   = XYZ;               %-InMask XYZ coords (voxels)
 SwE.xVol.M     = M;                 %-voxels -> mm
 SwE.xVol.iM    = inv(M);            %-mm -> voxels
 SwE.xVol.DIM   = DIM;               %-image dimensions
+SwE.xVol.S     = S;
 SwE.xVol.units = {'mm' 'mm' 'mm'};
 
 if ~isMat
@@ -1682,7 +1267,6 @@ if isfield(SwE.type,'modified')
   SwE.WB.Ind_corr_diag = Ind_corr_diag;
   SwE.WB.Flagk      = Flagk;
   SwE.WB.Flagkk     = Flagkk;
-  SwE.WB.iGr_Cov_vis_g = iGr_Cov_vis_g;
 end
 SwE.VM         = VM;                %-Filehandle - Mask
 
@@ -1691,18 +1275,11 @@ SwE.xM         = xM;                %-mask structure
 
 SwE.swd        = pwd;
 
-SwE.Subj.uSubj = uSubj;
-SwE.Subj.nSubj = nSubj;
-
 if isfield(SwE.type,'modified')
   
-  SwE.Vis.uVis_g = uVis_g;
-  SwE.Vis.nVis_g = nVis_g;
   SwE.Vis.nCov_vis_g = nCov_vis_g;
   SwE.Vis.nCov_vis = nCov_vis;
-  
-  SwE.Gr.uGr       = uGr;
-  SwE.Gr.nGr       = nGr;
+
   SwE.Gr.nSubj_g   = nSubj_g;
   SwE.Gr.uSubj_g   = uSubj_g;
   
@@ -1714,19 +1291,6 @@ if spm_matlab_version_chk('7') >=0
   save('SwE','SwE','-V6');
 else
   save('SwE','SwE');
-end
-
-%-Save analysis original max min in files
-%--------------------------------------------------------------------------
-save('maxScore.mat', 'maxScore');
-if (SwE.WB.clusterWise == 1)
-  save('maxClusterSize.mat', 'maxClusterSize');
-end
-if (SwE.WB.stat == 'T')
-  save('minScore.mat', 'minScore');
-  if (SwE.WB.clusterWise == 1)
-    save('maxClusterSizeNeg.mat', 'maxClusterSizeNeg');
-  end
 end
 
 %==========================================================================
@@ -1795,26 +1359,10 @@ for b = 1:WB.nB
         spm_get_data(VResWB, XYZ(:,index),false) .* repmat(resamplingMatrix(:,b),1,blksz);
       
       beta  = pX * Y_b;                     %-Parameter estimates
-      if WB.RSwE == 0 % U-SwE
-        if SwE.SS >= 4  % Cluster-wise adjustments SC2 or SC3
-          res = zeros(size(Y_b));
-          for i = 1:nSubj
-            res(iSubj==uSubj(i),:) = corr{i} *...
-              (Y_b(iSubj==uSubj(i),:) - xX.X(iSubj==uSubj(i),:) * beta);
-          end
-        else
-          res = diag(corr) * (Y_b - xX.X * beta); %-Corrected residuals
-        end
-      else % R-SwE
-        if SwE.SS >= 4  % Cluster-wise adjustments SC2 or SC3
-          res = zeros(size(Y_b));
-          for i = 1:nSubj
-            res(iSubj==uSubj(i),:) = corr{i} *...
-              (Y_b(iSubj==uSubj(i),:) - tmpR2(iSubj==uSubj(i),:) * beta);
-          end
-        else
-          res = diag(corr) * (Y_b - tmpR2 * beta); %-Corrected residuals
-        end
+      if WB.RSwE == 0
+        res=swe_fit(SwE, Y_b, xX.X, corr, beta, SwE.SS);
+      else 
+        res=swe_fit(SwE, Y_b, tmpR2, corr, beta, SwE.SS);
       end
       
       clear Y_b
@@ -1853,6 +1401,7 @@ for b = 1:WB.nB
             end
           end
         end
+        cCovBc = weightR * Cov_vis;
       else
         cCovBc = 0;
         for i = 1:nSubj
@@ -1863,90 +1412,13 @@ for b = 1:WB.nB
       end
       
       % compute the score
-      if (nSizeCon == 1)
-        if isfield(SwE.type,'modified')
-          cCovBc = weightR * Cov_vis;
-        end
+      if (SwE.WB.stat == 'T')
+          
         score = (conWB * beta) ./ sqrt(cCovBc);
-        
         clear beta
         
-        if (WB.clusterWise == 1)
-          % need to convert score into parametric p-values
-          p = zeros(1, blksz);
-          switch dof_type
-            case 0
-              if WB.stat == 'T'
-                if any(score > 0)
-                  p(score > 0)  = spm_Tcdf(-score(score>0), edf);
-                end
-                if any(score <= 0)
-                  p(score <= 0) = spm_Tcdf(score(score<=0), edf);
-                end
-              else
-                p = 2 * spm_Tcdf(-abs(score), edf);
-              end
-            case 1
-              error('degrees of freedom type still not implemented for the WB')
-              
-            case 2
-              CovcCovBc = 0;
-              for g = 1:nGr
-                CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-              end
-              edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
-              clear CovcCovBc cCovBc
-              
-              if WB.stat == 'T'
-                if any(score > 0)
-                  p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-                end
-                if any(score <= 0)
-                  p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-                end
-              else
-                p = 2 * spm_Tcdf(-abs(score), edf);
-              end
-            case 3
-              CovcCovBc = 0;
-              for g = 1:nGr
-                CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-              end
-              edf = 2 * cCovBc.^2 ./ CovcCovBc;
-              clear CovcCovBc cCovBc
-              
-              if WB.stat == 'T'
-                if any(score > 0)
-                  p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-                end
-                if any(score <= 0)
-                  p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-                end
-              else
-                p = 2 * spm_Tcdf(-abs(score), edf);
-              end
-          end
-          if WB.stat == 'F'
-            score = score .^2;
-          end
-          activatedVoxels(index) = p <= WB.clusterInfo.primaryThreshold & score > 0;
-          if (WB.stat == 'T')
-            activatedVoxelsNeg(index) = p <= WB.clusterInfo.primaryThreshold & score < 0;
-          end
-        end
-        
-        
-        uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;
-        
-        maxScore(b+1) = max(maxScore(b+1), max(score));
-        if (WB.stat == 'T')
-          minScore(b+1) = min(minScore(b+1), min(score));
-        end
       else
-        % need to loop at every voxel
-        if isfield(SwE.type,'modified')
-          cCovBc = weightR * Cov_vis;
-        end
+
         cBeta = conWB * beta;
         clear beta
         score = zeros(1, blksz);
@@ -1957,46 +1429,19 @@ for b = 1:WB.nB
           score(iVox) = cBeta(:,iVox)' / cCovBc_vox * cBeta(:,iVox);
         end
         score = score / rankCon;
-        % save cluster information is needed
-        if (WB.clusterWise == 1)
-          % need to convert score into parametric p-values
-          p = zeros(1, blksz);
-          switch dof_type
-            
-            case 1
-              error('degrees of freedom type still not implemented for the WB')
-              
-            case 2
-              CovcCovBc = 0;
-              for g = 1:nGr
-                CovcCovBc = CovcCovBc + Wg_testII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-              end
-              edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
-              
-            case 3
-              CovcCovBc = 0;
-              for g = 1:nGr
-                CovcCovBc = CovcCovBc + Wg_testIII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-              end
-              tmp = eye(nSizeCon);
-              edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
-                (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
-              
-          end
-          scoreTmp = (edf-rankCon+1) ./ edf .* score;
-          scoreTmp(scoreTmp < 0 ) = 0;
-          if dof_type == 0
-            p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
-          else
-            p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
-            p(scoreTmp == 0) = 1;
-          end
-          
-          activatedVoxels(index) = p <= WB.clusterInfo.primaryThreshold;
-        end
-        uncP(index) = uncP(index) + (score >= originalScore(index)) * 1;
         
-        maxScore(b+1) = max(maxScore(b+1), max(score));
+      end
+      
+      % hypothesis test
+      if (WB.clusterWise == 1)
+        [~, activatedVoxels(index)]=swe_hyptest(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
+        clear cCovBc
+      end
+      uncP(index) = uncP(index) + (score >= originalScore(index));
+          
+      maxScore(b+1) = max(maxScore(b+1), max(score));
+      if (SwE.WB.stat == 'T')
+         minScore(b+1) = min(score);
       end
       
     end % (bch)
@@ -2011,28 +1456,12 @@ for b = 1:WB.nB
     Y_b = YWB + resWB .* repmat(resamplingMatrix(:,b),1,S);
     
     beta  = pX * Y_b;                     %-Parameter estimates
-    if WB.RSwE == 0 % U-SwE
-      if SwE.SS >= 4  % Cluster-wise adjustments SC2 or SC3
-        res = zeros(size(Y_b));
-        for i = 1:nSubj
-          res(iSubj==uSubj(i),:) = corr{i} *...
-            (Y_b(iSubj==uSubj(i),:) - xX.X(iSubj==uSubj(i),:) * beta);
-        end
-      else
-        res = diag(corr) * (Y_b - xX.X * beta); %-Corrected residuals
-      end
-    else % R-SwE
-      if SwE.SS >= 4  % Cluster-wise adjustments SC2 or SC3
-        res = zeros(size(Y_b));
-        for i = 1:nSubj
-          res(iSubj==uSubj(i),:) = corr{i} *...
-            (Y_b(iSubj==uSubj(i),:) - tmpR2(iSubj==uSubj(i),:) * beta);
-        end
-      else
-        res = diag(corr) * (Y_b - tmpR2 * beta); %-Corrected residuals
-      end
+    if WB.RSwE == 0
+      res=swe_fit(SwE, Y_b, xX.X, corr, beta, SwE.SS);
+    else 
+      res=swe_fit(SwE, Y_b, tmpR2, corr, beta, SwE.SS);
     end
-    
+
     clear Y_b
     
     %-Estimation of the data variance-covariance components (modified SwE)
@@ -2069,6 +1498,7 @@ for b = 1:WB.nB
           end
         end
       end
+      cCovBc = weightR * Cov_vis;
     else
       cCovBc = 0;
       for i = 1:nSubj
@@ -2079,89 +1509,13 @@ for b = 1:WB.nB
     end
     
     % compute the score
-    if (nSizeCon == 1)
-      if isfield(SwE.type,'modified')
-        cCovBc = weightR * Cov_vis;
-      end
+    if (SwE.WB.stat == 'T')
+
       score = (conWB * beta) ./ sqrt(cCovBc);
-      
       clear beta
       
-      if (WB.clusterWise == 1)
-        % need to convert score into parametric p-values
-        p = zeros(1, S);
-        switch dof_type
-          case 0
-            if WB.stat == 'T'
-              if any(score > 0)
-                p(score > 0)  = spm_Tcdf(-score(score>0), edf);
-              end
-              if any(score <= 0)
-                p(score <= 0) = spm_Tcdf(score(score<=0), edf);
-              end
-            else
-              p = 2 * spm_Tcdf(-abs(score), edf);
-            end
-          case 1
-            error('degrees of freedom type still not implemented for the WB')
-            
-          case 2
-            CovcCovBc = 0;
-            for g = 1:nGr
-              CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-            end
-            edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
-            clear CovcCovBc cCovBc
-            
-            if WB.stat == 'T'
-              if any(score > 0)
-                p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-              end
-              if any(score <= 0)
-                p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-              end
-            else
-              p = 2 * spm_Tcdf(-abs(score), edf);
-            end
-          case 3
-            CovcCovBc = 0;
-            for g = 1:nGr
-              CovcCovBc = CovcCovBc + Wg{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-            end
-            edf = 2 * cCovBc.^2 ./ CovcCovBc;
-            clear CovcCovBc cCovBc
-            
-            if WB.stat == 'T'
-              if any(score > 0)
-                p(score > 0)  = spm_Tcdf(-score(score>0), edf(score>0));
-              end
-              if any(score <= 0)
-                p(score <= 0) = spm_Tcdf(score(score<=0), edf(score<=0));
-              end
-            else
-              p = 2 * spm_Tcdf(-abs(score), edf);
-            end
-        end
-        if WB.stat == 'F'
-          score = score .^2;
-        end
-        activatedVoxels = p <= WB.clusterInfo.primaryThreshold & score > 0;
-        if (WB.stat == 'T')
-          activatedVoxelsNeg = p <= WB.clusterInfo.primaryThreshold & score < 0;
-        end
-      end
-      
-      uncP = uncP + (score >= originalScore) * 1;
-      
-      maxScore(b+1) = max(score);
-      if (WB.stat == 'T')
-        minScore(b+1) = min(score);
-      end
     else
-      % need to loop at every voxel
-      if isfield(SwE.type,'modified')
-        cCovBc = weightR * Cov_vis;
-      end
+      
       cBeta = conWB * beta;
       clear beta
       score = zeros(1, S);
@@ -2171,48 +1525,21 @@ for b = 1:WB.nB
         cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
         score(iVox) = cBeta(:,iVox)' / cCovBc_vox * cBeta(:,iVox);
       end
-      score = score / rankCon;
-      % save cluster information is needed
-      if (WB.clusterWise == 1)
-        % need to convert score into parametric p-values
-        p = zeros(1, S);
-        switch dof_type
-          
-          case 1
-            error('degrees of freedom type still not implemented for the WB')
-            
-          case 2
-            CovcCovBc = 0;
-            for g = 1:nGr
-              CovcCovBc = CovcCovBc + Wg_testII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-            end
-            edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
-            
-          case 3
-            CovcCovBc = 0;
-            for g = 1:nGr
-              CovcCovBc = CovcCovBc + Wg_testIII{g} * swe_vechCovVechV(Cov_vis(iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-            end
-            tmp = eye(nSizeCon);
-            edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
-              (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
-            
-        end
-        scoreTmp = (edf-rankCon+1) ./ edf .* score;
-        scoreTmp(scoreTmp < 0 ) = 0;
-        if dof_type == 0
-          p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
-        else
-          p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
-          p(scoreTmp == 0) = 1;
-        end
-        
-        activatedVoxels = p <= WB.clusterInfo.primaryThreshold;
-      end
-      uncP = uncP + (score >= originalScore) * 1;
-      
-      maxScore(b+1) = max(score);
+      score = score / rankCon;     
     end
+    
+    % hypothesis test
+    if (WB.clusterWise == 1)
+        [~, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, S, edf, cCovBc, Cov_vis, dofMat);
+        clear cCovBc
+    end
+    uncP = uncP + (score >= originalScore); 
+    
+    maxScore(b+1) = max(score);
+    if (SwE.WB.stat == 'T')
+      minScore(b+1) = min(score);
+    end
+        
     
   end
   
@@ -2236,7 +1563,7 @@ for b = 1:WB.nB
       maxClusterSize(b+1) = max(clusterSize);
     end
     if (WB.stat == 'T')
-      if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')      
+      if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz') 
         LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);
         clusterAssignmentNeg = spm_clusters(LocActivatedVoxelsNeg);
       else %surface data
@@ -2257,22 +1584,22 @@ for b = 1:WB.nB
       end
     end
   end
-  %-Save analysis original max min in files
-  %--------------------------------------------------------------------------
-  save('maxScore.mat', 'maxScore');
-  if (WB.clusterWise == 1)
-    save('maxClusterSize.mat', 'maxClusterSize');
-  end
-  if (WB.stat == 'T')
-    save('minScore.mat', 'minScore');
-    if (WB.clusterWise == 1)
-      save('maxClusterSizeNeg.mat', 'maxClusterSizeNeg');
-    end
-  end
   toc
   spm_progress_bar('Set',100 * b / WB.nB);
 end
 
+%-Save analysis original max min in SwE structure
+%--------------------------------------------------------------------------
+SwE.WB.maxScore = maxScore;
+if (WB.clusterWise == 1)
+    SwE.WB.clusterInfo.maxClusterSize = maxClusterSize;
+end
+if (WB.stat == 'T')
+    SwE.WB.minScore = minScore;
+    if (WB.clusterWise == 1)
+        SwE.WB.clusterInfo.maxClusterSizeNeg = maxClusterSizeNeg;
+    end
+end
 
 %==========================================================================
 %- produce results images
@@ -2281,18 +1608,26 @@ if isMat
   uncP = uncP / (WB.nB + 1);
   uncP_pos = nan(1, nVox);
   uncP_pos(:,Cm) = uncP;
-  save('uncP_pos.mat', 'uncP_pos');
-  lUncP_pos = -log10(uncP);
-  save('lUncP_pos.mat', 'lUncP_pos');
-  clear lUncP_pos
-  
+  VlP_wb_pos = -log10(uncP);
+  save('swe_vox_lp-WB_c0001.mat', 'VlP_wb_pos');
+  clear VlP_wb_pos
   
   if WB.stat == 'T'
     uncP_neg = 1 + 1/(WB.nB + 1) - uncP_pos;
-    save('uncP_neg.mat', 'uncP_neg');
-    lUncP_neg = -log10(uncP_neg);
-    save('lUncP_neg.mat', 'lUncP_neg');
-    clear lUncP_neg
+    VlP_wb_neg = -log10(uncP_neg);
+    save('swe_vox_lp-WB_c0001neg.mat', 'VlP_wb_neg');
+    clear VlP_wb_neg
+    
+    VZ_wb = swe_invNcdf(1 - uncP);
+    save('swe_vox_Z-WB_c0001.mat', 'VZ_wb');
+    clear VZ_wb
+    
+  else
+      
+    VX_wb = spm_invXcdf(1 - uncP,1);
+    save('swe_vox_X-WB_c0001.mat', 'VX_wb');
+    clear VX_wb
+    
   end
   
   %
@@ -2307,15 +1642,14 @@ if isMat
     % equal to statistic.
     %-Use a > b -tol rather than a >= b to avoid comparing
     % two reals for equality.
-    FWERP = FWERP + (maxScore(b+1) > originalScore - tol) * 1;
+    FWERP = FWERP + (maxScore(b+1) > originalScore - tol);
   end
   FWERP = FWERP / (WB.nB + 1);
   fwerP_pos = nan(1, nVox);
   fwerP_pos(:,Cm) = FWERP;
-  save('fwerP_pos.mat', 'fwerP_pos');
-  lFwerP_pos = -log10(fwerP_pos);
-  save('lFwerP_pos.mat', 'lFwerP_pos');
-  clear lFwerP_pos fwerP_pos FWERP
+  VlP_wb_FWE_pos = -log10(fwerP_pos);
+  save('swe_vox_lpFWE-WB_c0001.mat', 'VlP_wb_FWE_pos');
+  clear VlP_wb_FWE_pos fwerP_pos FWERP
   
   
   if WB.stat == 'T'
@@ -2326,15 +1660,14 @@ if isMat
       % equal to statistic.
       %-Use a > b -tol rather than a >= b to avoid comparing
       % two reals for equality.
-      FWERPNeg = FWERPNeg + (minScore(b+1) < originalScore + tol) * 1;
+      FWERPNeg = FWERPNeg + (minScore(b+1) < originalScore + tol);
     end
     FWERPNeg = FWERPNeg / (WB.nB + 1);
     fwerP_neg = nan(1, nVox);
     fwerP_neg(:,Cm) = FWERPNeg;
-    save('fwerP_neg.mat', 'fwerP_neg');
-    lFwerP_neg = -log10(fwerP_neg);
-    save('lFwerP_neg.mat', 'lFwerP_neg');
-    clear lFwerP_neg fwerP_neg
+    VlP_wb_FWE_neg = -log10(fwerP_neg);
+    save('swe_vox_lpFWE-WB_c0001neg.mat', 'VlP_wb_FWE_neg');
+    clear VlP_wb_FWE_neg fwerP_neg
   end
   
   %
@@ -2347,10 +1680,9 @@ if isMat
   end
   fdrP_pos = nan(1, nVox);
   fdrP_pos(:,Cm) = fdrP;
-  save('fdrP_pos.mat', 'fdrP_pos');
-  lFdrP_pos = -log10(fdrP_pos);
-  save('lFdrP_pos.mat', 'lFdrP_pos');
-  clear lFdrP_pos fdrP_pos fdrP
+  VlP_wb_FDR_pos = -log10(fdrP_pos);
+  save('swe_vox_lpFDR-WB_c0001.mat', 'VlP_wb_FDR_pos');
+  clear VlP_wb_FDR_pos fdrP_pos fdrP
   
   if WB.stat =='T'
     try
@@ -2360,10 +1692,9 @@ if isMat
     end
     fdrP_neg = nan(1, nVox);
     fdrP_neg(:,Cm) = fdrP;
-    save('fdrP_neg.mat', 'fdrP_neg');
-    lFdrP_neg = -log10(fdrP_neg);
-    save('lFdrP_neg.mat', 'lFdrP_neg');
-    clear lFdrP_neg fdrP_neg fdrP
+    VlP_wb_FDR_neg = -log10(fdrP_neg);
+    save('swe_vox_lpFDR-WB_c0001neg.mat', 'VlP_wb_FDR_neg');
+    clear VlP_wb_FDR_neg fdrP_neg fdrP
   end
   
   if WB.clusterWise == 1
@@ -2371,17 +1702,13 @@ if isMat
     % For now, -log(p_{cluster-wise FWER}) image with nan for non-surviving
     % voxels after the thresholding of the original data
     
-    clusterFWERP = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
+    clusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
     if (~isempty(SwE.WB.clusterInfo.clusterSize))
       for b = 1:WB.nB
-        clusterFWERP = clusterFWERP + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize) * 1;
+        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize);
       end
-      clusterFWERP = clusterFWERP / (WB.nB + 1);
+      clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster / (WB.nB + 1);
     end
-    clusterFwerP_pos_perCluster   = clusterFWERP;
-    lClusterFwerP_pos_perCluster  = -log10(clusterFwerP_pos_perCluster);
-    save('clusterFwerP_pos_perCluster.mat', 'clusterFwerP_pos_perCluster');
-    save('lClusterFwerP_pos_perCluster.mat', 'lClusterFwerP_pos_perCluster');
     
     clusterFwerP_pos_perElement = nan(1, nVox);
     if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')      
@@ -2398,23 +1725,18 @@ if isMat
       end
       clusterFwerP_pos_perElement(SwE.WB.clusterInfo.LocActivatedVoxels) = tmp3;
     end
-    lClusterFwerP_pos_perElement  = -log10(clusterFwerP_pos_perElement);
-    save('clusterFwerP_pos_perElement.mat', 'clusterFwerP_pos_perElement');
-    save('lClusterFwerP_pos_perElement.mat', 'lClusterFwerP_pos_perElement');
+    VlP_wb_clusterFWE_pos  = -log10(clusterFwerP_pos_perElement);
+    save('swe_clus_lpFWE-WB_c0001.mat', 'VlP_wb_clusterFWE_pos');
     
     if WB.stat =='T'
       
-      clusterFWERPNeg = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
+      clusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
       if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
         for b = 1:WB.nB
-          clusterFWERPNeg = clusterFWERPNeg + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg) * 1;
+          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg);
         end
-        clusterFWERPNeg = clusterFWERPNeg / (WB.nB + 1);
+        clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster / (WB.nB + 1);
       end
-      clusterFwerP_neg_perCluster   = clusterFWERPNeg;
-      lClusterFwerP_neg_perCluster  = -log10(clusterFwerP_neg_perCluster);
-      save('clusterFwerP_neg_perCluster.mat', 'clusterFwerP_neg_perCluster');
-      save('lClusterFwerP_neg_perCluster.mat', 'lClusterFwerP_neg_perCluster');
       
       clusterFwerP_neg_perElement = nan(1, nVox);
       if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')
@@ -2431,9 +1753,8 @@ if isMat
         end
         clusterFwerP_neg_perElement(SwE.WB.clusterInfo.LocActivatedVoxelsNeg) = tmp3;
       end
-      lClusterFwerP_neg_perElement  = -log10(clusterFwerP_neg_perElement);
-      save('clusterFwerP_neg_perElement.mat', 'clusterFwerP_neg_perElement');
-      save('lClusterFwerP_neg_perElement.mat', 'lClusterFwerP_neg_perElement');
+      VlP_wb_clusterFWE_neg  = -log10(clusterFwerP_neg_perElement);
+      save('swe_clus_lpFWE-WB_c0001neg.mat', 'VlP_wb_clusterFWE_neg');
     end
   end
 else
@@ -2446,11 +1767,25 @@ else
   uncP = uncP / (WB.nB + 1);
   tmp= nan(SwE.xVol.DIM');
   tmp(Q) = -log10(uncP);
-  spm_write_vol(VlP_pos, tmp);
+  spm_write_vol(VlP_wb_pos, tmp);
   
+  % If it's F, write out an X map.
+  stat = nan(SwE.xVol.DIM');
+  if WB.stat == 'F'
+      stat(Q) = spm_invXcdf(1 - uncP,1);
+      spm_write_vol(Vscore_wb_pos, stat);
+  end
+  
+  % If it's T, write out a Z map.
   if WB.stat == 'T'
+      
+    % Positive map.
+    stat(Q) = swe_invNcdf(1 - uncP);
+    spm_write_vol(Vscore_wb_pos, stat);
+
+    % T is two tailed so we need a negative map as well.
     tmp(Q) = -log10(1 + 1/(WB.nB + 1) - uncP);
-    spm_write_vol(VlP_neg, tmp);
+    spm_write_vol(VlP_wb_neg, tmp);
   end
   
   %
@@ -2465,11 +1800,11 @@ else
     % equal to statistic.
     %-Use a > b -tol rather than a >= b to avoid comparing
     % two reals for equality.
-    FWERP = FWERP + (maxScore(b+1) > originalScore - tol) * 1;
+    FWERP = FWERP + (maxScore(b+1) > originalScore - tol);
   end
   FWERP = FWERP / (WB.nB + 1);
   tmp(Q) = -log10(FWERP);
-  spm_write_vol(VlP_FWE_pos, tmp);
+  spm_write_vol(VlP_wb_FWE_pos, tmp);
   
   if WB.stat == 'T'
     FWERPNeg = ones(1, S); % 1 because the original maxScore is always > original Score
@@ -2479,11 +1814,11 @@ else
       % equal to statistic.
       %-Use a > b -tol rather than a >= b to avoid comparing
       % two reals for equality.
-      FWERPNeg = FWERPNeg + (minScore(b+1) < originalScore + tol) * 1;
+      FWERPNeg = FWERPNeg + (minScore(b+1) < originalScore + tol);
     end
     FWERPNeg = FWERPNeg / (WB.nB + 1);
     tmp(Q) = -log10(FWERPNeg);
-    spm_write_vol(VlP_FWE_neg, tmp);
+    spm_write_vol(VlP_wb_FWE_neg, tmp);
   end
   
   %
@@ -2494,7 +1829,7 @@ else
   catch
     tmp(Q) = -log10(spm_P_FDR(uncP,[],'P',[],sort(uncP)'));
   end
-  spm_write_vol(VlP_FDR_pos, tmp);
+  spm_write_vol(VlP_wb_FDR_pos, tmp);
   
   if WB.stat =='T'
     try
@@ -2502,7 +1837,7 @@ else
     catch
       tmp(Q) = -log10(spm_P_FDR(1 + 1/(WB.nB + 1) - uncP,[],'P',[],sort(1 + 1/(WB.nB + 1) - uncP)'));
     end
-    spm_write_vol(VlP_FDR_neg, tmp);
+    spm_write_vol(VlP_wb_FDR_neg, tmp);
   end
   
   if WB.clusterWise == 1
@@ -2513,48 +1848,285 @@ else
       sum(cumprod(SwE.xVol.DIM(1:2)'));
     tmp= nan(SwE.xVol.DIM');
     
-    clusterFWERP = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
+    clusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
     if (~isempty(SwE.WB.clusterInfo.clusterSize))
       for b = 1:WB.nB
-        clusterFWERP = clusterFWERP + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize) * 1;
+        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize);
       end
-      clusterFWERP = clusterFWERP / (WB.nB + 1);
+      clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster / (WB.nB + 1);
     end
-    tmp2 = -log10(clusterFWERP);
+    tmp2 = -log10(clusterFwerP_pos_perCluster);
     
     tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
     for iC = 1:SwE.WB.clusterInfo.nCluster
       tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = tmp2(iC);
     end
     tmp(Q) = tmp3;
-    spm_write_vol(VlP_clusterFWE_pos, tmp);
+    spm_write_vol(VlP_wb_clusterFWE_pos, tmp);
     if WB.stat =='T'
       Q = cumprod([1,SwE.xVol.DIM(1:2)']) * SwE.WB.clusterInfo.LocActivatedVoxelsNeg - ...
         sum(cumprod(SwE.xVol.DIM(1:2)'));
       tmp= nan(SwE.xVol.DIM');
       
-      clusterFWERPNeg = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
+      clusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
       if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
         for b = 1:WB.nB
-          clusterFWERPNeg = clusterFWERPNeg + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg) * 1;
+          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg);
         end
-        clusterFWERPNeg = clusterFWERPNeg / (WB.nB + 1);
+        clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster / (WB.nB + 1);
       end
-      tmp2 = -log10(clusterFWERPNeg);
+      tmp2 = -log10(clusterFwerP_neg_perCluster);
       
       tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg, 2));
       for iC = 1:SwE.WB.clusterInfo.nClusterNeg
         tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = tmp2(iC);
       end
       tmp(Q) = tmp3;
-      spm_write_vol(VlP_clusterFWE_neg, tmp);
+      spm_write_vol(VlP_wb_clusterFWE_neg, tmp);
     end
   end
 end
+      
 %==========================================================================
 %- E N D: Cleanup GUI
 %==========================================================================
+
+if ~isMat
+    % Remove residual and Y images now we are done with them:
+    files = {'^ResWB_.{4}\..{3}$','^YfittedWB_.{4}\..{3}$'};
+    for i = 1:numel(files)
+      j = cellstr(spm_select('FPList',SwE.swd,files{i}));
+      for k = 1:numel(j)
+        spm_unlink(j{k});
+      end
+    end
+end
+
 fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done')                %-#
 %spm('FigName','Stats: done',Finter); spm('Pointer','Arrow')
 fprintf('%-40s: %30s\n','Completed',spm('time'))                        %-#
 fprintf('...use the saved images for assessment\n\n')
+
+end
+
+%-Mask out voxels where data is constant in at least one separable
+% matrix design either in a visit category or within-subject (BG - 27/05/2016)
+function [Cm,Y,CrS]=swe_mask_seperable(SwE, Cm, Y, iGr_dof)
+    
+      % Setup
+      nGr_dof = length(unique(iGr_dof));
+      nGr = SwE.Gr.nGr;
+      iGr = SwE.Gr.iGr;
+      uGr = SwE.Gr.uGr;
+      iVis = SwE.Vis.iVis;
+      iSubj = SwE.Subj.iSubj;
+      nVis_g = SwE.Vis.nVis_g;
+      uVis_g = SwE.Vis.uVis_g;
+      
+      for g = 1:nGr_dof % first look data for each separable matrix design
+        if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)
+          Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1); % mask constant data within separable matrix design g (added by BG on 29/08/16)
+          if isfield(SwE.type,'modified') % added by BG on 29/08/16
+            for g2 = 1:nGr % then look data for each "homogeneous" group
+              % check if the data is contant over subject for each visit category
+              for k = 1:nVis_g(g2)
+                if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
+                  Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
+                  for kk = k:nVis_g(g2)
+                    if k ~= kk
+                      % extract the list of subject with both visit k and kk
+                      subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
+                      % look if some difference are observed within subject
+                      if ~isempty(subjList)
+                        diffVis = Cm(Cm) == 0;
+                        for i = 1:length(subjList)
+                          diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
+                        end
+                        Cm(Cm) = diffVis;
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+      
+      Y      = Y(:,Cm);                          %-Data within mask
+      CrS    = sum(Cm);                          %-# current voxels
+
+end
+
+% This function performs a hypothesis test using the threshold given as the
+% primary threshold in the SwE cluster info. If this is not available it
+% returns unthresholded p values only.
+function [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
+
+      % setup
+      p = zeros(1, matSize);
+      nGr = length(unique(SwE.Gr.iGr));
+      nSizeCon = size(SwE.WB.con,1);
+      rankCon = rank(SwE.WB.con);
+
+      if nSizeCon == 1
+          Wg_2 = SwE.WB.Wg{1};
+	      Wg_3 = SwE.WB.Wg{1};
+      else
+	      Wg_2 = SwE.WB.Wg{2};
+	      Wg_3 = SwE.WB.Wg{3};
+      end
+
+      if isfield(SwE.type,'modified')
+         dof_type = SwE.type.modified.dof_mo;
+      else
+         dof_type = SwE.type.classic.dof_cl;        
+      end
+
+      % Convert P values.
+	  switch dof_type
+	     case 1
+	        error('degrees of freedom type still not implemented for the WB')
+
+	     case 2
+	        CovcCovBc = 0;
+	        for g = 1:nGr
+	          CovcCovBc = CovcCovBc + Wg_2{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
+	        end
+	        if (SwE.WB.stat == 'T')
+	           edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
+	        else
+	           edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
+	        end
+
+	     case 3
+	        CovcCovBc = 0;
+	        for g = 1:nGr
+	          CovcCovBc = CovcCovBc + Wg_3{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
+	        end
+	        if (SwE.WB.stat == 'T')
+    	       edf = 2 * cCovBc.^2 ./ CovcCovBc;
+    	    else
+			   tmp = eye(nSizeCon);
+               edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
+                     (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
+    	    end
+	   end
+
+	   % P values and activated voxels (if clusterwise).
+	   if (SwE.WB.stat == 'T')
+    	  p  = spm_Tcdf(score, edf);
+          
+          if SwE.WB.clusterWise~=0
+              if nargin <=7
+                % We may wish to just record the activated voxels. 
+                activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold);
+                activatedVoxelsNeg = p < (SwE.WB.clusterInfo.primaryThreshold);
+              else
+                % Or we may wish to add the activatedVoxels to a pre-existing list.
+                activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold)];
+                activatedVoxelsNeg = [varargin{2}, p < (SwE.WB.clusterInfo.primaryThreshold)];
+              end
+          end
+
+	   else
+	   	  scoreTmp = (edf-rankCon+1) ./ edf .* score;
+	      scoreTmp(scoreTmp < 0 ) = 0;
+	      if dof_type == 0
+	        p(scoreTmp>0) = 1-betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
+	      else
+	        p(scoreTmp>0) = 1-betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
+	        p(scoreTmp == 0) = 0;
+          end
+
+          if SwE.WB.clusterWise~=0
+              if nargin<=7
+                  activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold);
+              else
+                  activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold)];
+              end
+          end
+          
+          activatedVoxelsNeg = NaN;
+          
+	   end
+
+end
+
+% This function performs the users requested residual corrections and
+% calculates tmpR2 (the adjusted xX.X).
+function [corr, tmpR2] = swe_resid_corr(SwE, restric, ss, pX, varargin)
+
+    xX = SwE.xX;
+    [nScan, nBeta] = size(xX.X);
+    conWB = SwE.WB.con;
+    iSubj = SwE.Subj.iSubj;
+    nSubj = SwE.Subj.nSubj;
+    uSubj = SwE.Subj.uSubj;
+    rankCon = rank(SwE.WB.con);
+
+    % This is to prevent tmpR2 being overwritten.
+    if nargin <= 4
+        tmpR2 = false;
+    else
+        tmpR2 = varargin{1};
+    end
+    
+    if restric == 1
+      tmpR = (xX.X' * xX.X) \ conWB';
+      tmpR = tmpR / (conWB * tmpR);
+      tmpR2 = xX.X * (eye(nBeta) - tmpR * conWB);
+      Hat = xX.X * (pX - tmpR * conWB * pX); % Restricted Hat matrix
+    else
+      Hat = xX.X*(pX); % Hat matrix
+    end
+
+    switch ss
+        case 0
+          corr = ones(nScan,1);
+        case 1
+          if WB.RSwE == 1
+            corr  = repmat(sqrt(nScan/(nScan - nBeta + rankCon)),nScan,1); % residual correction (type 1)
+          else
+            corr  = repmat(sqrt(nScan/(nScan-nBeta)),nScan,1); 
+          end
+        case 2
+          corr  = (1-diag(Hat)).^(-0.5); % residual correction (type 2)
+        case 3
+          corr  = (1-diag(Hat)).^(-1); % residual correction (type 3)
+        case 4
+          corr =cell(nSubj,1);
+          I_Hat = eye(nScan) - Hat;
+          for i = 1:nSubj
+            tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
+            tmp = (tmp + tmp')/2;
+            [tmpV, tmpE] = eig(tmp);
+            corr{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV';
+          end
+        case 5
+          corr  = cell(nSubj,1);
+          I_Hat = eye(nScan) - Hat;
+          for i = 1:nSubj
+            tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
+            tmp = (tmp + tmp')/2;
+            corr{i} = inv(tmp);
+          end
+    end
+end
+
+% This function obtains Y estimates and residuals from fitting data.
+function [res, Y_est]=swe_fit(SwE, Y, crctX, corr, beta, ss)
+    
+    Y_est = crctX * beta;
+    if ss >= 4 % SC2 or SC3
+      res = zeros(size(Y));
+      for i = 1:SwE.Subj.nSubj
+        res(SwE.Subj.iSubj==SwE.Subj.uSubj(i),:) = corr{i} *...
+            (Y(SwE.Subj.iSubj==SwE.Subj.uSubj(i),:)-...
+            Y_est(SwE.Subj.iSubj==SwE.Subj.uSubj(i),:));
+      end
+    else
+      res  = diag(corr) * (Y-Y_est);
+    end
+    
+end
