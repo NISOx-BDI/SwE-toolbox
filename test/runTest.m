@@ -8,6 +8,10 @@ function runTest()
     
     setup();
     
+    %Run all tests.
+    tests = matlab.unittest.TestSuite.fromFile(which('test_swe_run'));
+    result = run(tests)
+    
 end
 
 function setup()

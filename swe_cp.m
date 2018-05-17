@@ -24,6 +24,11 @@ if nargin == 0
     end
     return
 end
+% If this is a WB analysis we need to use swe_cp_WB.
+if isfield(SwE, 'WB')
+     swe_cp_WB(SwE);
+     return
+end
 %-Change to SwE.swd if specified
 %--------------------------------------------------------------------------
 try
