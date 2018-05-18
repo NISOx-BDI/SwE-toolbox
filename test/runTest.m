@@ -46,13 +46,16 @@ function setup()
     % Move into a file named data for cleaner pathnames.
     if exist(fullfile(unzipped_data, '..', 'data'), 'dir')
         rmdir(fullfile(unzipped_data, '..', 'data'), 's');
+	mkdir(fullfile(unzipped_data, '..', 'data'));
     end
     movefile(fullfile(unzipped_data, 'cons_informed'),...
              fullfile(unzipped_data, '..', 'data', 'img_input'));
     
     % Download the '.mat' test data (timeout for download might have to be
     % set a little higher than normal).
-    weboptions('Timeout',10);
+    if ~exist('OCTAVE_VERSION', 'builtin')
+       weboptions('Timeout',10);
+    end
     mkdir(fullfile(unzipped_data, '..', 'data', 'mat_input'));
     urlwrite(['https://drive.google.com/uc?export=download&id=1RXHFtnB1'...
              'N14-FcOuda8139zgR5dnjcly'],...
