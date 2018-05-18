@@ -8,11 +8,15 @@ set(Finter,'vis','on')
 
 %-Change to SwE.swd if specified
 %--------------------------------------------------------------------------
+disp('0')
+disp(SwE)
 try
   cd(SwE.swd);
 catch %#ok<*CTCH>
   SwE.swd = pwd;
 end
+
+disp('1')
 
 %-Ensure data are assigned
 %--------------------------------------------------------------------------
@@ -23,6 +27,8 @@ catch
   spm('FigName','Stats: done',Finter); spm('Pointer','Arrow')
   return
 end
+
+disp('2')
 
 %-Check if we have data in a.mat format and set some variables accordingly
 %--------------------------------------------------------------------------
@@ -55,6 +61,8 @@ if exist(fullfile(SwE.swd,'mask.img'),'file') == 2
     try SwE = rmfield(SwE,'xVol'); end %#ok<TRYNC>
   end
 end
+
+disp('3')
 
 files = {'^mask\..{3}$','^ResMS\..{3}$','^RPV\..{3}$',...
     '^beta_.{4}\..{3}$','^con_.{4}\..{3}$','^ResI_.{4}\..{3}$',...
@@ -124,6 +132,9 @@ if isMat && WB.clusterWise == 1
   end
 end
   
+
+disp('4')
+
 % small sample correction 
 if WB.RWB == 1
   tmpR = (xX.X' * xX.X) \ conWB';
@@ -193,6 +204,8 @@ else
   end
 end
 
+disp('5')
+
 if WB.RSwE == 1
   tmpR = (xX.X' * xX.X) \ conWB';
   tmpR = tmpR / (conWB * tmpR);
@@ -261,6 +274,7 @@ else
   end
 end
 
+disp('6')
 
 %-detect if the design matrix is separable (a little bit messy, but seems to do the job)
 %
@@ -319,6 +333,8 @@ for i=1:nBeta
     end
 end
 
+disp('7')
+
 %-effective dof for each subject
 edof_Subj = zeros(1,nSubj);
 for i = 1:nSubj
@@ -349,6 +365,7 @@ if dof_type == 0 % so naive estimation is used
   
 end
 
+disp('8')
 
 
 %-preprocessing for the modified SwE
@@ -431,6 +448,9 @@ if isfield(SwE.type,'modified')
     Wg_testIII{g} = tmp(:)' * (kron(swe_duplication_matrix(nSizeCon),swe_duplication_matrix(nSizeCon))) * Wg{g};
   end
    
+
+disp('9')
+
 %-compute the effective dof from each homogeneous group if dof_type
     switch dof_type
       case 1
@@ -482,6 +502,8 @@ if isfield(SwE.type,'modified')
     end
 end
 
+disp('10')
+
 %-preprocessing for the classic SwE
 if isfield(SwE.type,'classic')
   nVis_i        = zeros(1,nSubj);
@@ -524,6 +546,8 @@ if isfield(SwE.type,'classic')
 %   end
   weightR = pinv(swe_duplication_matrix(nSizeCon)) * kron(conWB,conWB) * swe_duplication_matrix(nBeta) * weight; % used to compute the R SwE R' 
 end
+
+disp('11')
 
 %-If xM is not a structure then assume it's a vector of thresholds
 %--------------------------------------------------------------------------
@@ -644,6 +668,7 @@ if ~isMat
     'descrip',  '-log10(uncor. non-para. P, +ve)'));
   VlP_pos = spm_create_vol(VlP_pos);
   
+disp('12')
   VlP_FWE_pos = deal(struct(...
     'fname',    'lP_FWE+.img',...
     'dim',      DIM',...
@@ -737,6 +762,7 @@ if ~isMat
   %--------------------------------------------------------------------------
   XYZ   = zeros(3,xdim*ydim*zdim);
   
+disp('13')
   %-Cycle over bunches blocks within planes to avoid memory problems
   %==========================================================================
   str   = 'parameter estimation';
@@ -811,7 +837,9 @@ if ~isMat
         
         %-Load mask image within current mask & update mask
         %--------------------------------------------------------------
+	disp('Before')
         Cm(Cm) = spm_get_data(xM.VM(i),j(:,Cm),false) > 0;
+	disp('After')
       end
       
       %-Get the data in mask, compute threshold & implicit masks
@@ -924,6 +952,7 @@ if ~isMat
           end
         end
         
+disp('14')
         clear Y                           %-Clear to save memory
         %-Estimation of the data variance-covariance components (modified SwE)
         %-SwE estimation (classic version)
@@ -1128,6 +1157,7 @@ if ~isMat
       
     end % (bch)
     
+disp('15')
     %-Plane complete, write plane to image files (unless 1st pass)
     %======================================================================
     
@@ -1138,8 +1168,10 @@ if ~isMat
     %-Write Mask image
     %------------------------------------------------------------------
     if ~isempty(Q), jj(Q) = 1; end
+	disp('lol')
     VM    = spm_write_plane(VM, ~isnan(jj), CrPl);
-    
+	disp('lol2')    
+
     %-Write WB fitted data images
     %------------------------------------------------------------------
     for i = 1:nScan
@@ -1205,7 +1237,7 @@ else % ".mat" format
   YNaNrep = 0;
     
   fprintf('%-40s: %30s','Output images','...initialising');           %-#
-  
+  disp('16')
   
   fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-#
   %==========================================================================
