@@ -1710,7 +1710,9 @@ end
 
 %-Save analysis parameters in SwE.mat file
 %--------------------------------------------------------------------------
-if spm_matlab_version_chk('7') >=0
+if exist('OCTAVE_VERSION','builtin')
+  save('SwE','SwE');
+elseif spm_matlab_version_chk('7') >=0
   save('SwE','SwE','-V6');
 else
   save('SwE','SwE');
