@@ -5,9 +5,10 @@ mv ./mat2file.mex code/spm12/\@file_array/private/
 cd swe
 
 # Testing install
-cd MOxUnit
+ls
+cd ./test/MOxUnit
 make install
-cd ..
+cd ../..
 
 # Octave commands
 octave --no-window-system --eval \
