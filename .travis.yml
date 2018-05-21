@@ -19,7 +19,7 @@ install:
  - git lfs install  
  # Download data.
  - cd SwE-toolbox/test
- - git lfs clone https://github.com/TomMaullin/SwE-toolbox-testdata.git data
+ - git clone https://github.com/TomMaullin/SwE-toolbox-testdata.git data
  - cd ..
 script:  
  - docker version
