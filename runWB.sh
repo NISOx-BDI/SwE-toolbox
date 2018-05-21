@@ -5,7 +5,7 @@ cd swe
 octave --no-window-system --eval \
 "addpath(genpath(pwd));"\
 "load('test/data/seed.mat')"\
-"rand('state','seed')"\
+"rand('state',seed)"\
 "load('test/data/design.mat');"\
 "swe_run_design(design);"\
 "load('SwE.mat');"\
