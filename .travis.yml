@@ -20,9 +20,9 @@ install:
  # Download data.
  - cd SwE-toolbox/test
  - git clone https://github.com/TomMaullin/SwE-toolbox-testdata.git data
+ - ls data
  - cd ..
-script:  
- - docker version
+script:
  # Run docker snapshot of dev octave (until 4.4 is released)
  - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
  # Run tests in Octave
