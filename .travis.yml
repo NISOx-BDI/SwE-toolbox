@@ -16,7 +16,7 @@ install:
  - cd ..
  - curl -sLo - https://github.com/github/git-lfs/releases/download/v1.4.1/git-lfs-linux-amd64-1.4.1.tar.gz | tar xzvf -
  - export PATH=$PATH:`pwd`/git-lfs-1.4.1
- - git lfs install 
+ - git lfs install  
  # Download data.
  - cd SwE-toolbox/test
  - git lfs clone https://github.com/TomMaullin/SwE-toolbox-testdata.git data
