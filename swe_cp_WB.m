@@ -554,11 +554,11 @@ if ~isMat
   if WB.clusterWise == 1
       
     % We also need cluster p value maps here.
-    VlP_wb_clusterFWE_pos = swe_create_vol('swe_clus_lpFWE-WB_c0001.img', DIM, M,...
+    VlP_wb_clusterFWE_pos = swe_create_vol('swe_clustere_lpFWE-WB_c0001.img', DIM, M,...
                                            '-log10(clusterFWE-corr. P, +ve)');
     
     if WB.stat=='T'
-      VlP_wb_clusterFWE_neg = swe_create_vol('swe_clus_lpFWE-WB_c0001neg.img', DIM, M,...
+      VlP_wb_clusterFWE_neg = swe_create_vol('swe_clustere_lpFWE-WB_c0001neg.img', DIM, M,...
                                              '-log10(clusterFWE-corr. P, -ve)');
     end
   end
@@ -1726,7 +1726,7 @@ if isMat
       clusterFwerP_pos_perElement(SwE.WB.clusterInfo.LocActivatedVoxels) = tmp3;
     end
     VlP_wb_clusterFWE_pos  = -log10(clusterFwerP_pos_perElement);
-    save('swe_clus_lpFWE-WB_c0001.mat', 'VlP_wb_clusterFWE_pos');
+    save('swe_clustere_lpFWE-WB_c0001.mat', 'VlP_wb_clusterFWE_pos');
     
     if WB.stat =='T'
       
@@ -1754,7 +1754,7 @@ if isMat
         clusterFwerP_neg_perElement(SwE.WB.clusterInfo.LocActivatedVoxelsNeg) = tmp3;
       end
       VlP_wb_clusterFWE_neg  = -log10(clusterFwerP_neg_perElement);
-      save('swe_clus_lpFWE-WB_c0001neg.mat', 'VlP_wb_clusterFWE_neg');
+      save('swe_clustere_lpFWE-WB_c0001neg.mat', 'VlP_wb_clusterFWE_neg');
     end
   end
 else
