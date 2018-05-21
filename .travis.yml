@@ -12,6 +12,15 @@ bundler_args: --retry 9
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: 
  - ls
+ # Install git-lfs
+ - cd ..
+ - curl -sLo - https://github.com/github/git-lfs/releases/download/v1.4.1/git-lfs-linux-amd64-1.4.1.tar.gz | tar xzvf -
+ - export PATH=$PATH:`pwd`/git-lfs-1.4.1
+ - git lfs install 
+ # Download data.
+ - cd SwE-toolbox/test
+ - git lfs clone https://github.com/TomMaullin/SwE-toolbox-testdata.git data
+ - cd ..
 script:  
  - docker version
  # Run docker snapshot of dev octave (until 4.4 is released)
