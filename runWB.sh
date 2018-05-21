@@ -7,7 +7,7 @@ cd swe
 # Testing install
 ls
 cd ./test/MOxUnit
-make install
+make install-octave
 cd ../..
 
 # Octave commands
