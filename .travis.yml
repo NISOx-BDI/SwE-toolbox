@@ -11,7 +11,6 @@ python:
 bundler_args: --retry 9
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: 
- - ls
  # Install git-lfs
  - cd ..
  - curl -sLo - https://github.com/github/git-lfs/releases/download/v1.4.1/git-lfs-linux-amd64-1.4.1.tar.gz | tar xzvf -
@@ -20,7 +19,8 @@ install:
  # Download data.
  - cd SwE-toolbox/test
  - git clone https://github.com/TomMaullin/SwE-toolbox-testdata.git data
- - ls data
+ # Download testing tools
+ - git clone https://github.com/MOxUnit/MOxUnit.git
  - cd ..
 script:
  # Run docker snapshot of dev octave (until 4.4 is released)
