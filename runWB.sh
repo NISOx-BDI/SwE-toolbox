@@ -15,7 +15,7 @@ octave --no-window-system --eval \
 "addpath(genpath(pwd));"\
 "load('test/data/seed.mat');"\
 "rand('state',seed);"\
-"load('test/data/design.mat');"\
+"load('test/data/test_wb_t_img/design.mat');"\
 "swe_run_design(design);"\
 "load('SwE.mat');"\
 "swe_cp_WB(SwE);"

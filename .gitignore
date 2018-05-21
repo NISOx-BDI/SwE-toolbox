@@ -1,2 +1,4 @@
 # Test data
 test/data/*
+# Autosaves
+*.asv
