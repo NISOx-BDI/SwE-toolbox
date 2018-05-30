@@ -464,30 +464,30 @@ if ~isMat
   
   %-Initialise original parametric score image, T or F
   %----------------------------------------------------------------------
-
-  Vscore = swe_create_vol(sprintf('swe_vox_%cstat_c01%s', WB.stat, file_ext), DIM, M,...
+  if WB.stat=='T'
+    eSTAT='z';
+  else % F stat
+    eSTAT='x';
+  end
+  
+  Vscore = swe_create_vol(sprintf('swe_vox_%cstat_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
 			  sprintf('Original parametric %c statistic data.', WB.stat));
   
   %-Initialise parametric P-Value image
   %----------------------------------------------------------------------
   
-  VlP = swe_create_vol(sprintf('swe_vox_%cstat_lp_c01%s', WB.stat, file_ext), DIM, M,...
+  VlP = swe_create_vol(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
                       'Original parametric -log10(P) value data (positive).');
   
   if WB.stat=='T'
-        VlP_Neg = swe_create_vol(sprintf('swe_vox_%cstat_lp_c02%s', WB.stat, file_ext), DIM, M,...
+        VlP_Neg = swe_create_vol(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
                                'Original parametric -log10(P) value data (negative).');
   end
   
   %-Initialise converted parametric score image
   %----------------------------------------------------------------------
-  if WB.stat=='T'
-    OutStat='z';
-  else % F stat
-    OutStat='x';
-  end
-  VcScore = swe_create_vol(sprintf('swe_vox_%c%cstat_c01%s', OutStat, WB.stat, file_ext), DIM, M,...
-			   sprintf('Parametric %c statistic data derived from %c-Statistic data.', OutStat, WB.stat));
+  VcScore = swe_create_vol(sprintf('swe_vox_%c%cstat_c%02d%s', eSTAT, WB.stat, 1, file_ext), DIM, M,...
+			   sprintf('Parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat));
   
   %-Initialise residual images for the resampling
   %----------------------------------------------------------------------
@@ -517,47 +517,39 @@ if ~isMat
   
   %-Initialise result images
   %----------------------------------------------------------------------
-  VlP_wb_pos = swe_create_vol(sprintf('swe_vox_%cstat_lp-WB_c01%s', WB.stat, file_ext), DIM, M,...
+  VlP_wb_pos = swe_create_vol(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
                               '-log10(uncor. non-para. P, +ve)');
 
-  VlP_wb_FWE_pos = swe_create_vol(sprintf('swe_vox_%cstat_lpFWE-WB_c01%s', WB.stat, file_ext), DIM, M,...
+  VlP_wb_FWE_pos = swe_create_vol(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
                                   '-log10(FWE-corr. P, +ve)');
   
-  VlP_wb_FDR_pos = swe_create_vol(sprintf('swe_vox_%cstat_lpFDR-WB_c01%s', WB.stat, file_ext), DIM, M,...
+  VlP_wb_FDR_pos = swe_create_vol(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
                                   '-log10(FDR-corr. P, +ve)');
 
   if WB.stat=='T'
-    VlP_wb_neg = swe_create_vol(sprintf('swe_vox_%cstat_lp-WB_c02%s', WB.stat, file_ext), DIM, M,...
+    VlP_wb_neg = swe_create_vol(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
                               '-log10(uncor. non-para. P, -ve)');
     
-    VlP_wb_FWE_neg = swe_create_vol(sprintf('swe_vox_%cstat_lpFWE-WB_c02%s', WB.stat, file_ext), DIM, M,...
+    VlP_wb_FWE_neg = swe_create_vol(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
                                      '-log10(FWE-corr. P, -ve)');
     
-    VlP_wb_FDR_neg = swe_create_vol(sprintf('swe_vox_%cstat_lpFDR-WB_c02%s', WB.stat, file_ext), DIM, M,...
+    VlP_wb_FDR_neg = swe_create_vol(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
                                      '-log10(FDR-corr. P, -ve)');
-    
-    % In this case the Vscore images are Z images.
-    Vscore_wb_pos = swe_create_vol(sprintf('swe_vox_zTstat-WB_c01%s', file_ext), DIM, M,...
-                                   'Z score image for wild bootstrap voxelwise results.');
-    
+
   end
   
-  if WB.stat=='F'
-    
-    % In this case the Vscore images are X images.
-    Vscore_wb_pos = swe_create_vol(sprintf('swe_vox_xFstat-WB_c01%s', file_ext), DIM, M,...
-                                   'X score image for wild bootstrap voxelwise results.');
-    
-  end
+  % Converted score for WB.
+  VcScore_wb_pos = swe_create_vol(sprintf('swe_vox_%c%cstat-WB_c%02d%s', eSTAT, WB.stat, 1, file_ext), DIM, M,...
+                                 'Z score image for wild bootstrap voxelwise results.');
   
   if WB.clusterWise == 1
       
     % We also need cluster p value maps here.
-    VlP_wb_clusterFWE_pos = swe_create_vol(sprintf('swe_clustere_%cstat_lpFWE-WB_c01%s', WB.stat, file_ext), DIM, M,...
+    VlP_wb_clusterFWE_pos = swe_create_vol(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
                                            '-log10(clusterFWE-corr. P, +ve)');
     
     if WB.stat=='T'
-      VlP_wb_clusterFWE_neg = swe_create_vol(sprintf('swe_clustere_%cstat_lpFWE-WB_c02%s', WB.stat, file_ext), DIM, M,...
+      VlP_wb_clusterFWE_neg = swe_create_vol(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
                                              '-log10(clusterFWE-corr. P, -ve)');
     end
   end
@@ -1106,11 +1098,7 @@ else % ".mat" format
   DIM         = [];
   S           = CrS;  
   VM          = sprintf('swe_vox_mask%s', file_ext);
-  if (SwE.WB.stat == 'T')
-    Vscore      = sprintf('swe_vox_Tstat_c01%s', file_ext);
-  else
-    Vscore      = sprintf('swe_vox_Fstat_c01%s', file_ext);
-  end
+  Vscore      = sprintf('swe_vox_%cstat_c%02d%s', WB.stat, 1, file_ext);
 
   mask = Cm;       
   save(sprintf('swe_vox_mask%s',  file_ext), 'mask');
@@ -1132,31 +1120,31 @@ else % ".mat" format
   
   VlP = nan(1, nVox);
   VlP(:,Cm) = -log10(1-p);
-  save(sprintf('swe_vox_%cstat_lp_c01%s', WB.stat, file_ext), 'VlP');
+  save(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 1, file_ext), 'VlP');
   clear VlP
 
   if (SwE.WB.stat == 'T')
       
        VlP_neg = nan(1, nVox);
        VlP_neg(:,Cm) =  -log10(p);
-       save(sprintf('swe_vox_%cstat_lp_c02%s', WB.stat, file_ext), 'VlP_neg');
+       save(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 2, file_ext), 'VlP_neg');
        clear VlP_neg
        
        z_map = nan(1, nVox);
        VZ(:,Cm) =  swe_invNcdf(p);
-       save(sprintf('swe_vox_zTstat_c01%s', file_ext), 'VZ');
+       save(sprintf('swe_vox_z%cstat_c%02d%s', WB.stat, 1, file_ext), 'VZ');
        clear VZ
   
   else
       
        x_map = nan(1, nVox);
        VX(:,Cm) =  spm_invXcdf(p, 1);
-       save(sprintf('swe_vox_xFstat_c01%s', file_ext), 'VX');
+       save(sprintf('swe_vox_x%cstat_c%02d%s', WB.stat, 1, file_ext), 'VX');
        clear VX
        
   end
   
-  fprintf('\n');                                                          %-#
+  fprintf('\n');                                                        %-#
   spm_progress_bar('Clear')
   clear res Cov_vis jj%-Clear to save memory
     
@@ -1608,23 +1596,23 @@ if isMat
   uncP_pos = nan(1, nVox);
   uncP_pos(:,Cm) = uncP;
   VlP_wb_pos = -log10(uncP);
-  save(sprintf('swe_vox_%cstat_lp-WB_c01%s', WB.stat, file_ext), 'VlP_wb_pos');
+  save(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 1, file_ext), 'VlP_wb_pos');
   clear VlP_wb_pos
   
   if WB.stat == 'T'
     uncP_neg = 1 + 1/(WB.nB + 1) - uncP_pos;
     VlP_wb_neg = -log10(uncP_neg);
-    save(sprintf('swe_vox_%cstat_lp-WB_c02%s', WB.stat, file_ext), 'VlP_wb_neg');
+    save(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 2, file_ext), 'VlP_wb_neg');
     clear VlP_wb_neg
     
     VZ_wb = swe_invNcdf(1 - uncP);
-    save(sprintf('swe_vox_zTstat-WB_c01%s', file_ext), 'VZ_wb');
+    save(sprintf('swe_vox_z%cstat-WB_c%02d%s', WB.stat, 1, file_ext), 'VZ_wb');
     clear VZ_wb
     
   else
       
     VX_wb = spm_invXcdf(1 - uncP,1);
-    save(sprintf('swe_vox_xFstat-WB_c01%s', file_ext), 'VX_wb');
+    save(sprintf('swe_vox_x%cstat-WB_c%02d%s', WB.stat, 1, file_ext), 'VX_wb');
     clear VX_wb
     
   end
@@ -1647,7 +1635,7 @@ if isMat
   fwerP_pos = nan(1, nVox);
   fwerP_pos(:,Cm) = FWERP;
   VlP_wb_FWE_pos = -log10(fwerP_pos);
-  save(sprintf('swe_vox_%cstat_lpFWE-WB_c01%s',WB.stat,file_ext), 'VlP_wb_FWE_pos');
+  save(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s',WB.stat,1,file_ext), 'VlP_wb_FWE_pos');
   clear VlP_wb_FWE_pos fwerP_pos FWERP
   
   
@@ -1665,7 +1653,7 @@ if isMat
     fwerP_neg = nan(1, nVox);
     fwerP_neg(:,Cm) = FWERPNeg;
     VlP_wb_FWE_neg = -log10(fwerP_neg);
-    save(sprintf('swe_vox_%cstat_lpFWE-WB_c02%s',WB.stat,file_ext), 'VlP_wb_FWE_neg');
+    save(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s',WB.stat,2,file_ext), 'VlP_wb_FWE_neg');
     clear VlP_wb_FWE_neg fwerP_neg
   end
   
@@ -1680,7 +1668,7 @@ if isMat
   fdrP_pos = nan(1, nVox);
   fdrP_pos(:,Cm) = fdrP;
   VlP_wb_FDR_pos = -log10(fdrP_pos);
-  save(sprintf('swe_vox_%cstat_lpFDR-WB_c01%s',WB.stat,file_ext), 'VlP_wb_FDR_pos');
+  save(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s',WB.stat,1,file_ext), 'VlP_wb_FDR_pos');
   clear VlP_wb_FDR_pos fdrP_pos fdrP
   
   if WB.stat =='T'
@@ -1692,7 +1680,7 @@ if isMat
     fdrP_neg = nan(1, nVox);
     fdrP_neg(:,Cm) = fdrP;
     VlP_wb_FDR_neg = -log10(fdrP_neg);
-    save(sprintf('swe_vox_%cstat_lpFDR-WB_c02%s',WB.stat,file_ext), 'VlP_wb_FDR_neg');
+    save(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s',WB.stat,2,file_ext), 'VlP_wb_FDR_neg');
     clear VlP_wb_FDR_neg fdrP_neg fdrP
   end
   
@@ -1725,7 +1713,7 @@ if isMat
       clusterFwerP_pos_perElement(SwE.WB.clusterInfo.LocActivatedVoxels) = tmp3;
     end
     VlP_wb_clusterFWE_pos  = -log10(clusterFwerP_pos_perElement);
-    save(sprintf('swe_clustere_%cstat_lpFWE-WB_c01%s',WB.stat,file_ext), 'VlP_wb_clusterFWE_pos');
+    save(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s',WB.stat,1,file_ext), 'VlP_wb_clusterFWE_pos');
     
     if WB.stat =='T'
       
@@ -1753,7 +1741,7 @@ if isMat
         clusterFwerP_neg_perElement(SwE.WB.clusterInfo.LocActivatedVoxelsNeg) = tmp3;
       end
       VlP_wb_clusterFWE_neg  = -log10(clusterFwerP_neg_perElement);
-      save(sprintf('swe_clustere_%cstat_lpFWE-WB_c02%s',WB.stat,file_ext), 'VlP_wb_clusterFWE_neg');
+      save(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s',WB.stat,2,file_ext), 'VlP_wb_clusterFWE_neg');
     end
   end
 else
@@ -1772,7 +1760,7 @@ else
   stat = nan(SwE.xVol.DIM');
   if WB.stat == 'F'
       stat(Q) = spm_invXcdf(1 - uncP,1);
-      spm_write_vol(Vscore_wb_pos, stat);
+      spm_write_vol(VcScore_wb_pos, stat);
   end
   
   % If it's T, write out a Z map.
@@ -1780,7 +1768,7 @@ else
       
     % Positive map.
     stat(Q) = swe_invNcdf(1 - uncP);
-    spm_write_vol(Vscore_wb_pos, stat);
+    spm_write_vol(VcScore_wb_pos, stat);
 
     % T is two tailed so we need a negative map as well.
     tmp(Q) = -log10(1 + 1/(WB.nB + 1) - uncP);
