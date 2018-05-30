@@ -114,7 +114,7 @@ for i = 1:length(Ic)
             if isMat
               %-save contrasted beta
               %------------------------------------------------------
-              xCon(ic).Vcon = sprintf('con_%04d.mat',ic);
+              xCon(ic).Vcon = sprintf('swe_vox_beta_c%04d.mat',ic);
               save(xCon(ic).Vcon, 'cBeta')
             else
               %-Prepare handle for contrast image
@@ -534,6 +534,7 @@ for i = 1:length(Ic)
                     spm_progress_bar('Set',100);
                 end
         end
+        luncP = -log10(uncP);
         spm_progress_bar('Clear')
         clear cCovBc cB tmp
         
@@ -546,11 +547,11 @@ for i = 1:length(Ic)
         equivalentScore (equivalentScore < -realmax('single')) = -realmax('single');
         
         if isMat
-          xCon(ic).Vspm = sprintf('spm%c_%04d.mat',eSTAT,ic);
+          xCon(ic).Vspm = sprintf('swe_vox_%c%cstat_c%04d.mat',lower(eSTAT),xCon(ic).STAT,ic);
           save(xCon(ic).Vspm, 'equivalentScore');
         else
-          xCon(ic).Vspm = swe_create_vol(sprintf('spm%c_%04d.img',...
-                                                 eSTAT,ic),...
+          xCon(ic).Vspm = swe_create_vol(sprintf('swe_vox_%c%cstat_c%04d.img',...
+                                                 lower(eSTAT),xCon(ic).STAT,ic),...
                                  SwE.xVol.DIM, SwE.xVol.M,...
                                  sprintf('spm{%c} - contrast %d: %s',...
                                          eSTAT,ic,xCon(ic).name));
@@ -571,10 +572,10 @@ for i = 1:length(Ic)
         fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...writing');      %-#
 
         if isMat
-          xCon(ic).Vspm2 = sprintf('spm%c_%04d.mat',xCon(ic).STAT,ic);
+          xCon(ic).Vspm2 = sprintf('swe_vox_%cstat_c%04d.mat',xCon(ic).STAT,ic);
           save(xCon(ic).Vspm2, 'score');
         else
-          xCon(ic).Vspm2 = swe_create_vol(sprintf('spm%c_%04d.img',...
+          xCon(ic).Vspm2 = swe_create_vol(sprintf('swe_vox_%cstat_c%04d.img',...
                                                     xCon(ic).STAT,ic),...
                                   SwE.xVol.DIM, SwE.xVol.M,...
                                   sprintf('spm{%c} - contrast %d: %s',...
@@ -595,19 +596,19 @@ for i = 1:length(Ic)
         
         % save raw uncorrected p-values (new on 05/11/2017)
         if isMat
-          xCon(ic).VspmUncP = sprintf('spm%s_%04d.mat','UncP',ic);
-          save(xCon(ic).VspmUncP, 'uncP');
+          xCon(ic).VspmUncP = sprintf('swe_vox_%cstat_lp_c%04d.mat',xCon(ic).STAT,ic);
+          save(xCon(ic).VspmUncP, 'luncP');
         else
-          xCon(ic).VspmUncP = swe_create_vol(sprintf('spm%s_%04d.img','UncP',ic),...
+          xCon(ic).VspmUncP = swe_create_vol(sprintf('swe_vox_%cstat_lp_c%04d.img',xCon(ic).STAT,ic),...
                                              SwE.xVol.DIM, SwE.xVol.M,...
                                              sprintf('spm{%s} - contrast %d: %s',...
                                                      'UncP',ic,xCon(ic).name));
           
           tmp           = zeros(SwE.xVol.DIM');
-          tmp(Q)        = uncP;
+          tmp(Q)        = luncP;
           xCon(ic).VspmUncP = spm_write_vol(xCon(ic).VspmUncP,tmp);
         end
-        clear tmp uncP
+        clear tmp uncP luncP
         if isMat
           fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
             '...written %s',spm_str_manip(xCon(ic).VspmUncP,'t')));
@@ -618,7 +619,7 @@ for i = 1:length(Ic)
         
         if dof_type
           if isMat
-            xCon(ic).Vedf = sprintf('edf_%04d.mat',ic);
+            xCon(ic).Vedf = sprintf('swe_vox_edf_c%04d.mat',ic);
             save(xCon(ic).Vedf, 'edf');
           else
             xCon(ic).Vedf = swe_create_vol(sprintf('edf_%04d.img',ic),...

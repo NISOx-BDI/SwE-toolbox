@@ -421,6 +421,7 @@ if ~isMat
 
     %-Initialise new mask name: current mask & conditions on voxels
     %----------------------------------------------------------------------
+    disp(file_ext)
     VM    = swe_create_vol(['mask' file_ext], DIM, M,...
                            'swe_cp:resultant analysis mask', isMeshData);
 
@@ -1088,30 +1089,30 @@ else % matrix input
     fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...saving results'); %-#
 
     mask = Cm;       
-    save('mask.mat', 'mask');
+    save('swe_vox_mask.mat', 'mask');
     clear mask
 
     beta = NaN(nBeta, nVox);
     beta(:,Cm) = crBeta;
-    save('beta.mat', 'beta');
+    save('swe_vox_beta_bb.mat', 'beta');
     clear beta crBeta
 
     if isfield(SwE.type,'modified')
         cov_vis = NaN(nCov_vis, nVox);
         cov_vis(:,Cm) = crCov_vis;
-        save('cov_vis.mat', 'cov_vis');
+        save('swe_vox_cov_vv.mat', 'cov_vis');
         clear cov_vis crCov_vis
     end
 
     cov_beta = NaN(nCov_beta, nVox);
     cov_beta(:,Cm) = crCov_beta;
-    save('cov_beta.mat', 'cov_beta');
+    save('swe_vox_cov.mat', 'cov_beta');
     clear cov_beta crCov_beta
     if dof_type == 1
         nGr = nSubj;
         cov_beta_g = NaN(nGr, nCov_beta, nVox);
         cov_beta_g(:,:,Cm) = crCov_beta_i;
-        save('cov_beta_g.mat', 'cov_beta_g');
+        save('swe_vox_cov_g_bb.mat', 'cov_beta_g');
         clear cov_beta_g crCov_beta_i
     end
     fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');   
@@ -1122,11 +1123,11 @@ else % matrix input
     M           = [];
     DIM         = [];
     S           = CrS;
-    VM          = 'mask.mat';
-    Vbeta       = 'beta.mat';
-    Vcov_beta   = 'cov_beta.mat';
-    Vcov_vis    = 'cov_vis.mat';
-    Vcov_beta_g = 'cov_beta_g.mat';
+    VM          = 'swe_vox_mask.mat';
+    Vbeta       = 'swe_vox_beta_bb.mat';
+    Vcov_beta   = 'swe_vox_cov.mat';
+    Vcov_vis    = 'swe_vox_cov_vv.mat';
+    Vcov_beta_g = 'swe_vox_cov_g_bb.mat';
 end
 
 %-place fields in SwE
