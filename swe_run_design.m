@@ -714,7 +714,7 @@ end
 %==========================================================================
 SwE.xY.P      = P;            % filenames
 SwE.xY.VY     = VY;           % mapped data
-SwE.xY.isMat  = isMat
+SwE.xY.isMat  = isMat;
 SwE.nscan     = size(xX.X,1); % scan number
 SwE.xX        = xX;           % design structure
 SwE.xC        = xC;           % covariate structure
