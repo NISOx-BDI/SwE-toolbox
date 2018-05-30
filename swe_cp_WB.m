@@ -495,11 +495,11 @@ if ~isMat
   
   for i = 1:nScan
       if WB.RWB == 1
-        descrip = sprintf('adjusted restricted residuals (%04d)', i);
+        descrip = sprintf('adjusted restricted residuals (%02d)', i);
       else
-        descrip = sprintf('adjusted unrestricted residuals (%04d)', i);
+        descrip = sprintf('adjusted unrestricted residuals (%02d)', i);
       end
-      VResWB(i) = swe_create_vol(sprintf('ResWB_%04d%s', i, file_ext), DIM, M, descrip);
+      VResWB(i) = swe_create_vol(sprintf('ResWB_%02d%s', i, file_ext), DIM, M, descrip);
   end
   
   fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-#
