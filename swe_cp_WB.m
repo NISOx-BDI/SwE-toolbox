@@ -475,7 +475,7 @@ if ~isMat
                       'Original parametric -log10(P) value data (positive).');
   
   if WB.stat=='T'
-        VlP_Neg = swe_create_vol(['swe_vox_' WB.stat 'stat_lp_c0001neg.nii'], DIM, M,...
+        VlP_Neg = swe_create_vol(['swe_vox_' WB.stat 'stat_lp_c0002.nii'], DIM, M,...
                                'Original parametric -log10(P) value data (negative).');
   end
   
@@ -528,13 +528,13 @@ if ~isMat
                                   '-log10(FDR-corr. P, +ve)');
 
   if WB.stat=='T'
-    VlP_wb_neg = swe_create_vol(['swe_vox_' WB.stat 'stat_lp-WB_c0001neg.nii'], DIM, M,...
+    VlP_wb_neg = swe_create_vol(['swe_vox_' WB.stat 'stat_lp-WB_c0002.nii'], DIM, M,...
                               '-log10(uncor. non-para. P, -ve)');
     
-    VlP_wb_FWE_neg = swe_create_vol(['swe_vox_' WB.stat 'stat_lpFWE-WB_c0001neg.nii'], DIM, M,...
+    VlP_wb_FWE_neg = swe_create_vol(['swe_vox_' WB.stat 'stat_lpFWE-WB_c0002.nii'], DIM, M,...
                                      '-log10(FWE-corr. P, -ve)');
     
-    VlP_wb_FDR_neg = swe_create_vol(['swe_vox_' WB.stat 'stat_lpFDR-WB_c0001neg.nii'], DIM, M,...
+    VlP_wb_FDR_neg = swe_create_vol(['swe_vox_' WB.stat 'stat_lpFDR-WB_c0002.nii'], DIM, M,...
                                      '-log10(FDR-corr. P, -ve)');
     
     % In this case the Vscore images are Z images.
@@ -558,7 +558,7 @@ if ~isMat
                                            '-log10(clusterFWE-corr. P, +ve)');
     
     if WB.stat=='T'
-      VlP_wb_clusterFWE_neg = swe_create_vol(['swe_clustere_' WB.stat 'stat_lpFWE-WB_c0001neg.nii'], DIM, M,...
+      VlP_wb_clusterFWE_neg = swe_create_vol(['swe_clustere_' WB.stat 'stat_lpFWE-WB_c0002.nii'], DIM, M,...
                                              '-log10(clusterFWE-corr. P, -ve)');
     end
   end
@@ -1140,7 +1140,7 @@ else % ".mat" format
       
        VlP_neg = nan(1, nVox);
        VlP_neg(:,Cm) =  -log10(p);
-       save(['swe_vox_' WB.stat 'stat_lp_c0001neg.mat'], 'VlP_neg');
+       save(['swe_vox_' WB.stat 'stat_lp_c0002.mat'], 'VlP_neg');
        clear VlP_neg
        
        z_map = nan(1, nVox);
@@ -1615,7 +1615,7 @@ if isMat
   if WB.stat == 'T'
     uncP_neg = 1 + 1/(WB.nB + 1) - uncP_pos;
     VlP_wb_neg = -log10(uncP_neg);
-    save(['swe_vox_' WB.stat 'stat_lp-WB_c0001neg.mat'], 'VlP_wb_neg');
+    save(['swe_vox_' WB.stat 'stat_lp-WB_c0002.mat'], 'VlP_wb_neg');
     clear VlP_wb_neg
     
     VZ_wb = swe_invNcdf(1 - uncP);
@@ -1666,7 +1666,7 @@ if isMat
     fwerP_neg = nan(1, nVox);
     fwerP_neg(:,Cm) = FWERPNeg;
     VlP_wb_FWE_neg = -log10(fwerP_neg);
-    save(['swe_vox_' WB.stat 'stat_lpFWE-WB_c0001neg.mat'], 'VlP_wb_FWE_neg');
+    save(['swe_vox_' WB.stat 'stat_lpFWE-WB_c0002.mat'], 'VlP_wb_FWE_neg');
     clear VlP_wb_FWE_neg fwerP_neg
   end
   
@@ -1693,7 +1693,7 @@ if isMat
     fdrP_neg = nan(1, nVox);
     fdrP_neg(:,Cm) = fdrP;
     VlP_wb_FDR_neg = -log10(fdrP_neg);
-    save(['swe_vox_' WB.stat 'stat_lpFDR-WB_c0001neg.mat'], 'VlP_wb_FDR_neg');
+    save(['swe_vox_' WB.stat 'stat_lpFDR-WB_c0002.mat'], 'VlP_wb_FDR_neg');
     clear VlP_wb_FDR_neg fdrP_neg fdrP
   end
   
@@ -1754,7 +1754,7 @@ if isMat
         clusterFwerP_neg_perElement(SwE.WB.clusterInfo.LocActivatedVoxelsNeg) = tmp3;
       end
       VlP_wb_clusterFWE_neg  = -log10(clusterFwerP_neg_perElement);
-      save(['swe_clustere_' WB.stat '_lpFWE-WB_c0001neg.mat'], 'VlP_wb_clusterFWE_neg');
+      save(['swe_clustere_' WB.stat '_lpFWE-WB_c0002.mat'], 'VlP_wb_clusterFWE_neg');
     end
   end
 else
