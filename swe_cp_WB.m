@@ -498,7 +498,7 @@ if ~isMat
       else
         descrip = sprintf('adjusted unrestricted residuals (%04d)', i);
       end
-      VResWB(i) = swe_create_vol(sprintf('ResWB_%04d%s', i, file_ext), DIM, M, descrip);
+      VResWB(i) = swe_create_vol(sprintf('swe_vox_resid_y%04d%s', i, file_ext), DIM, M, descrip);
   end
   
   fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-#
@@ -512,7 +512,7 @@ if ~isMat
       else
          descrip = sprintf('unrestricted fitted data (%04d)', i);
       end
-      VYWB(i) = swe_create_vol(sprintf('YfittedWB_%04d%s',i,file_ext), DIM, M, descrip);
+      VYWB(i) = swe_create_vol(sprintf('swe_vox_fit_y%04d%s',i,file_ext), DIM, M, descrip);
   end
   
   %-Initialise result images
@@ -1880,7 +1880,7 @@ end
 
 if ~isMat
     % Remove residual and Y images now we are done with them:
-    files = {'^ResWB_.{4}\..{3}$','^YfittedWB_.{4}\..{3}$'};
+    files = {'^swe_vox_resid_y.{4}\..{3}$','^swe_vox_fit_y.{4}\..{3}$'};
     for i = 1:numel(files)
       j = cellstr(spm_select('FPList',SwE.swd,files{i}));
       for k = 1:numel(j)
