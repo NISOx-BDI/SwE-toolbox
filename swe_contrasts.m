@@ -39,6 +39,15 @@ end
 [~,~,file_ext] = fileparts(SwE.xY.P{1});
 isMat          = strcmpi(file_ext,'.mat');
 
+if ~isMat
+    isMeshData = spm_mesh_detect(SwE.xY.VY);
+    if isMeshData
+        file_ext = '.gii';
+    else
+        file_ext = spm_file_ext;
+    end
+end
+
 %-Map parameter files
 %--------------------------------------------------------------------------
     
@@ -114,13 +123,13 @@ for i = 1:length(Ic)
             if isMat
               %-save contrasted beta
               %------------------------------------------------------
-              xCon(ic).Vcon = sprintf('swe_vox_beta_c%04d.mat',ic);
+              xCon(ic).Vcon = sprintf('swe_vox_beta_c%04d%s',ic,file_ext);
               save(xCon(ic).Vcon, 'cBeta')
             else
               %-Prepare handle for contrast image
               %------------------------------------------------------
               xCon(ic).Vcon = struct(...
-                'fname',  sprintf('swe_vox_beta_c%04d.img',ic),...
+                'fname',  sprintf('swe_vox_beta_c%04d',ic,file_ext),...
                 'dim',    SwE.xVol.DIM',...
                 'dt',     [spm_type('float32') spm_platform('bigend')],...
                 'mat',    SwE.xVol.M,...
@@ -547,11 +556,11 @@ for i = 1:length(Ic)
         equivalentScore (equivalentScore < -realmax('single')) = -realmax('single');
         
         if isMat
-          xCon(ic).Vspm = sprintf('swe_vox_%c%cstat_c%04d.mat',lower(eSTAT),xCon(ic).STAT,ic);
+          xCon(ic).Vspm = sprintf('swe_vox_%c%cstat_c%04d%s',lower(eSTAT),xCon(ic).STAT,ic, file_ext);
           save(xCon(ic).Vspm, 'equivalentScore');
         else
-          xCon(ic).Vspm = swe_create_vol(sprintf('swe_vox_%c%cstat_c%04d.nii',...
-                                                 lower(eSTAT),xCon(ic).STAT,ic),...
+          xCon(ic).Vspm = swe_create_vol(sprintf('swe_vox_%c%cstat_c%04d%s',...
+                                                 lower(eSTAT),xCon(ic).STAT,ic,file_ext),...
                                  SwE.xVol.DIM, SwE.xVol.M,...
                                  sprintf('spm{%c} - contrast %d: %s',...
                                          eSTAT,ic,xCon(ic).name));
@@ -572,11 +581,11 @@ for i = 1:length(Ic)
         fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...writing');      %-#
 
         if isMat
-          xCon(ic).Vspm2 = sprintf('swe_vox_%cstat_c%04d.mat',xCon(ic).STAT,ic);
+          xCon(ic).Vspm2 = sprintf('swe_vox_%cstat_c%04d%s',xCon(ic).STAT,ic,file_ext);
           save(xCon(ic).Vspm2, 'score');
         else
-          xCon(ic).Vspm2 = swe_create_vol(sprintf('swe_vox_%cstat_c%04d.nii',...
-                                                    xCon(ic).STAT,ic),...
+          xCon(ic).Vspm2 = swe_create_vol(sprintf('swe_vox_%cstat_c%04d%s',...
+                                                    xCon(ic).STAT,ic,file_ext),...
                                   SwE.xVol.DIM, SwE.xVol.M,...
                                   sprintf('spm{%c} - contrast %d: %s',...
                                           xCon(ic).STAT,ic,xCon(ic).name));
@@ -596,10 +605,10 @@ for i = 1:length(Ic)
         
         % save raw uncorrected p-values (new on 05/11/2017)
         if isMat
-          xCon(ic).VspmUncP = sprintf('swe_vox_%cstat_lp_c%04d.mat',xCon(ic).STAT,ic);
+          xCon(ic).VspmUncP = sprintf('swe_vox_%cstat_lp_c%04d%s',xCon(ic).STAT,ic,file_ext);
           save(xCon(ic).VspmUncP, 'luncP');
         else
-          xCon(ic).VspmUncP = swe_create_vol(sprintf('swe_vox_%cstat_lp_c%04d.nii',xCon(ic).STAT,ic),...
+          xCon(ic).VspmUncP = swe_create_vol(sprintf('swe_vox_%cstat_lp_c%04d%s',xCon(ic).STAT,ic,file_ext),...
                                              SwE.xVol.DIM, SwE.xVol.M,...
                                              sprintf('spm{%s} - contrast %d: %s',...
                                                      'UncP',ic,xCon(ic).name));
@@ -619,10 +628,10 @@ for i = 1:length(Ic)
         
         if dof_type
           if isMat
-            xCon(ic).Vedf = sprintf('swe_vox_edf_c%04d.mat',ic);
+            xCon(ic).Vedf = sprintf('swe_vox_edf_c%04d%s',ic,file_ext);
             save(xCon(ic).Vedf, 'edf');
           else
-            xCon(ic).Vedf = swe_create_vol(sprintf('swe_vox_edf_c%04d.nii',ic),...
+            xCon(ic).Vedf = swe_create_vol(sprintf('swe_vox_edf_c%04d%s',ic,file_ext),...
                                            SwE.xVol.DIM, SwE.xVol.M,...
                                            sprintf('SwE effective degrees of freedom - %d: %s',ic,xCon(ic).name));
             tmp = NaN(SwE.xVol.DIM');

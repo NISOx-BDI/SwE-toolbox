@@ -1089,30 +1089,30 @@ else % matrix input
     fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...saving results'); %-#
 
     mask = Cm;       
-    save('swe_vox_mask.mat', 'mask');
+    save(['swe_vox_mask' file_ext], 'mask');
     clear mask
 
     beta = NaN(nBeta, nVox);
     beta(:,Cm) = crBeta;
-    save('swe_vox_beta_bb.mat', 'beta');
+    save(['swe_vox_beta_bb' file_ext], 'beta');
     clear beta crBeta
 
     if isfield(SwE.type,'modified')
         cov_vis = NaN(nCov_vis, nVox);
         cov_vis(:,Cm) = crCov_vis;
-        save('swe_vox_cov_vv.mat', 'cov_vis');
+        save(['swe_vox_cov_vv' file_ext], 'cov_vis');
         clear cov_vis crCov_vis
     end
 
     cov_beta = NaN(nCov_beta, nVox);
     cov_beta(:,Cm) = crCov_beta;
-    save('swe_vox_cov.mat', 'cov_beta');
+    save(['swe_vox_cov' file_ext], 'cov_beta');
     clear cov_beta crCov_beta
     if dof_type == 1
         nGr = nSubj;
         cov_beta_g = NaN(nGr, nCov_beta, nVox);
         cov_beta_g(:,:,Cm) = crCov_beta_i;
-        save('swe_vox_cov_g_bb.mat', 'cov_beta_g');
+        save(['swe_vox_cov_g_bb' file_ext], 'cov_beta_g');
         clear cov_beta_g crCov_beta_i
     end
     fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');   
@@ -1123,11 +1123,11 @@ else % matrix input
     M           = [];
     DIM         = [];
     S           = CrS;
-    VM          = 'swe_vox_mask.mat';
-    Vbeta       = 'swe_vox_beta_bb.mat';
-    Vcov_beta   = 'swe_vox_cov.mat';
-    Vcov_vis    = 'swe_vox_cov_vv.mat';
-    Vcov_beta_g = 'swe_vox_cov_g_bb.mat';
+    VM          = ['swe_vox_mask' file_ext];
+    Vbeta       = ['swe_vox_beta_bb' file_ext];
+    Vcov_beta   = ['swe_vox_cov' file_ext];
+    Vcov_vis    = ['swe_vox_cov_vv' file_ext];
+    Vcov_beta_g = ['swe_vox_cov_g_bb' file_ext];
 end
 
 %-place fields in SwE
