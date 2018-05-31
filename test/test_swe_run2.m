@@ -36,7 +36,7 @@ function mapsEqual = verifyMapsUnchanged()
 		result = ~any(file~=gt_file);
 
 		if result
-			disp('PASS'); 
+			disp('PASS');
 		else
 			disp('FAIL');
 		end
