@@ -1,3 +1,10 @@
+#!/bin/bash
+# =======================================================================
+# This file contains the setup for the SwE-toolbox CI travis tests which
+# MUST be done inside the docker container.
+#
+# Author: Tom Maullin (31/05/2018)
+# =======================================================================
 # Octave-SPM bug fix
 mv code/spm12/\@file_array/private/mat2file.mex .
 rm code/spm12/\@file_array/private/mat2file.* 
