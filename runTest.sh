@@ -11,4 +11,13 @@ make install-octave
 cd ..
 
 # Octave commands
-octave --no-window-system --eval "moxunit_runtests()";
+testresult=$(octave --no-window-system --eval "moxunit_runtests();")
+
+echo "$testresult"
+
+# If the tests failed, we need to let Travis know.
+if [[ $testresult = *"FAILED"* ]]; then
+  exit 1
+else
+  exit 0
+fi
