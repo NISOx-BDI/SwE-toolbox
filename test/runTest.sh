@@ -12,7 +12,6 @@ mv ./mat2file.mex code/spm12/\@file_array/private/
 cd swe
 
 # Testing install
-ls
 cd ./test/MOxUnit
 make install-octave
 cd ..
