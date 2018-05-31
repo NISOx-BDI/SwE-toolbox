@@ -8,15 +8,11 @@ set(Finter,'vis','on')
 
 %-Change to SwE.swd if specified
 %--------------------------------------------------------------------------
-disp('0')
-disp(SwE)
 try
   cd(SwE.swd);
 catch %#ok<*CTCH>
   SwE.swd = pwd;
 end
-
-disp('1')
 
 %-Ensure data are assigned
 %--------------------------------------------------------------------------
@@ -27,8 +23,6 @@ catch
   spm('FigName','Stats: done',Finter); spm('Pointer','Arrow')
   return
 end
-
-disp('2')
 
 %-Check if we have data in a.mat format and set some variables accordingly
 %--------------------------------------------------------------------------
@@ -61,8 +55,6 @@ if exist(fullfile(SwE.swd,sprintf('swe_vox_mask%s',file_ext)),'file') == 2
     try SwE = rmfield(SwE,'xVol'); end %#ok<TRYNC>
   end
 end
-
-disp('3')
 
 files = {'^mask\..{3}$','^ResMS\..{3}$','^RPV\..{3}$',...
     '^beta_.{4}\..{3}$','^con_.{4}\..{3}$','^ResI_.{4}\..{3}$',...
@@ -197,8 +189,6 @@ for i=1:nBeta
         pB_dof(iBeta_dof(i)) = pB_dof(iBeta_dof(i)) + 1;
     end
 end
-
-disp('7')
 
 %-effective dof for each subject
 edof_Subj = zeros(1,nSubj);
@@ -377,8 +367,6 @@ if isfield(SwE.type,'modified')
     end
 end
 
-disp('10')
-
 %-preprocessing for the classic SwE
 if isfield(SwE.type,'classic')
   nVis_i        = zeros(1,nSubj);
@@ -421,8 +409,6 @@ if isfield(SwE.type,'classic')
 %   end
   weightR = pinv(swe_duplication_matrix(nSizeCon)) * kron(conWB,conWB) * swe_duplication_matrix(nBeta) * weight; % used to compute the R SwE R' 
 end
-
-disp('11')
 
 %-If xM is not a structure then assume it's a vector of thresholds
 %--------------------------------------------------------------------------
@@ -592,7 +578,6 @@ if ~isMat
   %--------------------------------------------------------------------------
   XYZ   = zeros(3,xdim*ydim*zdim);
   
-disp('13')
   %-Cycle over bunches blocks within planes to avoid memory problems
   %==========================================================================
   str   = 'parameter estimation';
@@ -673,9 +658,9 @@ disp('13')
         
         %-Load mask image within current mask & update mask
         %--------------------------------------------------------------
-	disp('Before')
+
         Cm(Cm) = spm_get_data(xM.VM(i),j(:,Cm),false) > 0;
-	disp('After')
+
       end
       
       %-Get the data in mask, compute threshold & implicit masks
@@ -842,7 +827,7 @@ disp('13')
       
     end % (bch)
     
-disp('15')
+
     %-Plane complete, write plane to image files (unless 1st pass)
     %======================================================================
     
@@ -853,9 +838,8 @@ disp('15')
     %-Write Mask image
     %------------------------------------------------------------------
     if ~isempty(Q), jj(Q) = 1; end
-	disp('lol')
-    VM    = spm_write_plane(VM, ~isnan(jj), CrPl);
-	disp('lol2')    
+
+    VM    = spm_write_plane(VM, ~isnan(jj), CrPl);    
 
     %-Write WB fitted data images
     %------------------------------------------------------------------
@@ -937,7 +921,7 @@ else % ".mat" format
   YNaNrep = 0;
     
   fprintf('%-40s: %30s','Output images','...initialising');           %-#
-  disp('16')
+
   
   fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-#
   %==========================================================================

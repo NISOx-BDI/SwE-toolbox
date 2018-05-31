@@ -59,7 +59,7 @@ function test_wb_t_img()
 	% Move into the test folder and add the path to tests.
 	cd('/swe/test/data/test_wb_t_img');
 	addpath('/swe');
-	addpath('/swe/test')
+	addpath('/swe/test');
 
 	% Reset the seed
 	load('/swe/test/data/seed.mat');
