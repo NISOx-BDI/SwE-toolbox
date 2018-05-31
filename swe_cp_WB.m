@@ -1149,7 +1149,9 @@ else % ".mat" format
   end
   
   fprintf('\n');                                                        %-#
-  spm_progress_bar('Clear')
+  if ~exist('OCTAVE_VERSION','builtin')
+    spm_progress_bar('Clear')
+  end
   clear res Cov_vis jj%-Clear to save memory
     
   % compute the max cluster size if needed (so many ways this can be
@@ -1312,13 +1314,18 @@ end
 uncP = ones(1, S); % one because of the original score
 
 str   = sprintf('Parameter estimation\nBootstraping');
-spm_progress_bar('Init',100,str,'');
+
+if ~exist('OCTAVE_VERSION','builtin')
+  spm_progress_bar('Init',100,str,'');
+end
 
 fprintf('\n')
 for b = 1:WB.nB
   tic
   str   = sprintf('Parameter estimation\nBootstrap # %i', b);
-  spm_progress_bar('Set','xlabel', str)
+  if ~exist('OCTAVE_VERSION','builtin')
+    spm_progress_bar('Set','xlabel', str)
+  end
 
   % activated voxels for cluster-wise inference
   if (SwE.WB.clusterWise == 1)
@@ -1578,7 +1585,9 @@ for b = 1:WB.nB
     end
   end
   toc
-  spm_progress_bar('Set',100 * b / WB.nB);
+  if ~exist('OCTAVE_VERSION','builtin')
+    spm_progress_bar('Set',100 * b / WB.nB);
+  end
 end
 
 %-Save analysis original max min in SwE structure
