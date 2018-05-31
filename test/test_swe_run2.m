@@ -18,7 +18,7 @@ function mapsEqual = verifyMapsUnchanged()
 	for i = 1:size(files, 1)
 
 		% Get the filenames
-		file = files(1, :);
+		file = files(i, :);
 		gt_file = ['ground_truth' filesep file];
 		disp(['Testing file: ' file])
 
