@@ -6,12 +6,27 @@ function test_suite=my_test_of_abs
     initTestSuite;
 end
 
+function verifyMapsUnchanged(testLocation)
+
+	
+
+end
+
 function test_example
+	
+	% Move into the test folder and add the path to it.
+	cd('/swe/test/data/test_wb_t_img');
 	addpath(genpath('/swe/'));
-	load('test/data/seed.mat');
+
+	% Reset the seed
+	load('/swe/test/data/seed.mat');
 	rand('state',seed);
-	load('test/data/design.mat');
+
+	% Load the test design and run it.
+	load('design.mat');
 	swe_run_design(design);
+
+	% Load the generated SwE file and run it.
 	load('SwE.mat');
 	swe_cp_WB(SwE);
 
