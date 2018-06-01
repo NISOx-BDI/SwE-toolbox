@@ -13,8 +13,8 @@ function mapsEqual = verifyMapsUnchanged()
 		files = ls("*.nii");
 		filetype = 'nii';
 	else
-		files = ls(".img");
-		filetype = 'img'
+		files = ls(".mat");
+		filetype = 'mat'
 	end
 
 	% store whether maps are equal.
