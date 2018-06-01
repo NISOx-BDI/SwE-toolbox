@@ -13,6 +13,7 @@ function mapsEqual = verifyMapsUnchanged()
 		files = ls("*.nii");
 		filetype = 'nii';
 	else
+		delete('SwE.mat')
 		files = ls("*.mat");
 		filetype = 'mat'
 	end
