@@ -78,3 +78,30 @@ function test_wb_t_img()
 	assertEqual(mapsUnchanged, true);
 	
 end
+
+function test_wb_f_img()
+	
+	disp('Test case running: wb_f_img')
+
+	% Move into the test folder and add the path to tests.
+	cd('/swe/test/data/test_wb_f_img');
+	addpath('/swe');
+	addpath('/swe/test');
+
+	% Reset the seed
+	load('/swe/test/data/seed.mat');
+	rand('state',seed);
+
+	% Load the test design and run it.
+	load('design.mat');
+	swe_run_design(design);
+
+	% Load the generated SwE file and run it.
+	load('SwE.mat');
+	swe_cp_WB(SwE);
+
+	% Check against ground truth.
+	mapsUnchanged = verifyMapsUnchanged('/swe/test/data/test_wb_f_img');
+	assertEqual(mapsUnchanged, true);
+	
+end
