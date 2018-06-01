@@ -40,6 +40,12 @@ else
     isMeshData = false;
 end
 
+%-Prevent unnecessary octave warning
+%--------------------------------------------------------------------------
+if exist('OCTAVE_VERSION','builtin')
+   warning ("off", "histc: empty EDGES specified\n"); 
+end
+
 %-Delete files from previous analyses
 %--------------------------------------------------------------------------
 if exist(fullfile(SwE.swd,sprintf('swe_vox_mask%s',file_ext)),'file') == 2
