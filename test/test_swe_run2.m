@@ -8,8 +8,14 @@ end
 
 function mapsEqual = verifyMapsUnchanged()
 	
-	% List all niftis
-	files = ls("*.nii");
+	% List all files for testing
+	if ~isempty(strfind(pwd, 'nii'))
+		files = ls("*.nii");
+		filetype = 'nii';
+	else
+		files = ls(".img");
+		filetype = 'img'
+	end
 
 	% store whether maps are equal.
 	equalMaps = [];
@@ -22,11 +28,28 @@ function mapsEqual = verifyMapsUnchanged()
 		gt_file = ['ground_truth' filesep file];
 		disp(['Testing file: ' file])
 
-		% Read in the volumes
-		file = spm_vol(file);
-		file = spm_read_vols(file);
-		gt_file = spm_vol(gt_file);
-		gt_file = spm_read_vols(gt_file);
+		if strcmp(filetype, 'nii')
+
+			% Read in the volumes
+			file = spm_vol(file);
+			file = spm_read_vols(file);
+			gt_file = spm_vol(gt_file);
+			gt_file = spm_read_vols(gt_file);
+
+		else
+
+			% Read in the surface data.
+			file = load(file);
+			gt_file = load(gt_file);
+
+			% Retrieve field name.
+			fieldname = fieldnames(file){1};
+
+			% Retrieve data
+			file = getfield(file, fieldname);
+			gt_file = getfield(gt_file, fieldname);
+
+		end
 
 		% Remove NaN values
 		file = file(~isnan(file));
@@ -102,6 +125,33 @@ function test_wb_f_img()
 
 	% Check against ground truth.
 	mapsUnchanged = verifyMapsUnchanged('/swe/test/data/test_wb_f_img');
+	assertEqual(mapsUnchanged, true);
+	
+end
+
+function test_wb_t_mat()
+	
+	disp('Test case running: wb_t_mat')
+
+	% Move into the test folder and add the path to tests.
+	cd('/swe/test/data/test_wb_t_mat');
+	addpath('/swe');
+	addpath('/swe/test');
+
+	% Reset the seed
+	load('/swe/test/data/seed.mat');
+	rand('state',seed);
+
+	% Load the test design and run it.
+	load('design.mat');
+	swe_run_design(design);
+
+	% Load the generated SwE file and run it.
+	load('SwE.mat');
+	swe_cp_WB(SwE);
+
+	% Check against ground truth.
+	mapsUnchanged = verifyMapsUnchanged('/swe/test/data/test_wb_t_mat');
 	assertEqual(mapsUnchanged, true);
 	
 end
