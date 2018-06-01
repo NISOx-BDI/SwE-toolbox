@@ -282,14 +282,18 @@ try
     Ic        = xSwE.Ic;
 catch
     
-    % If we're not doing wild bootstrap, ask for a contrast.
-    if ~isfield(SwE, 'WB')
+    % If we're not doing wild bootstrap and not in octave, ask for a contrast.
+    if ~isfield(SwE, 'WB') & ~exist('OCTAVE_VERSION','builtin')
         [Ic,xCon] = swe_conman(SwE,'T&F',Inf,...
                                '    Select contrasts...',' for conjunction',1);
-    % Otherwise, we already have a contrast. We just need to record it.
+    % If we're in octave, assume we already have a contrast.
+    elseif exist('OCTAVE_VERSION','builtin')
+        Ic = 1;
+        xCon = SwE.xCon;
+    % If we're foing WB, we already have a contrast. We just need to record it.
     else
         Ic = 1;
-        xCon = struct('name', ['swe_', SwE.WB.stat, '_0001'],...
+        xCon = struct('name', ['swe_', SwE.WB.stat, 'stat-WB_01'],...
                       'STAT', SwE.WB.stat,...
                       'c', SwE.WB.con);
         if SwE.WB.stat == 'T' 
