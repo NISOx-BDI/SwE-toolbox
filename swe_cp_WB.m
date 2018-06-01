@@ -878,13 +878,17 @@ if ~isMat
     %-Report progress
     %----------------------------------------------------------------------
     fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');
-    spm_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
+    if ~exist('OCTAVE_VERSION','builtin')
+       spm_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
+    end
     
   end % (for z = 1:zdim)
   
   
   fprintf('\n');                                                          %-#
-  spm_progress_bar('Clear')
+  if ~exist('OCTAVE_VERSION','builtin')
+     spm_progress_bar('Clear')
+  end
   clear beta res Cov_vis CrScore CrYWB CrResWB Q jj%-Clear to save memory
   
   XYZ   = XYZ(:,1:S); % remove all the data not used
@@ -932,7 +936,9 @@ else % ".mat" format
   %-Cycle over bunches blocks within planes to avoid memory problems
   %==========================================================================
   str   = 'parameter estimation';
-  spm_progress_bar('Init',100,str,'');
+  if ~exist('OCTAVE_VERSION','builtin')
+     spm_progress_bar('Init',100,str,'');
+  end
   
   % activated voxels for cluster-wise inference
   if (WB.clusterWise == 1)
