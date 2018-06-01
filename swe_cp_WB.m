@@ -581,7 +581,9 @@ if ~isMat
   %-Cycle over bunches blocks within planes to avoid memory problems
   %==========================================================================
   str   = 'parameter estimation';
-  spm_progress_bar('Init',100,str,'');
+  if ~exist('OCTAVE_VERSION','builtin')
+     spm_progress_bar('Init',100,str,'');
+  end
   
   % activated voxels for cluster-wise inference
   if (WB.clusterWise == 1)
