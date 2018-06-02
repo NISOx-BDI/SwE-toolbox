@@ -9,7 +9,7 @@ end
 function mapsEqual = verifyMapsUnchanged()
 	
 	% List all files for testing
-	if ~isempty(strfind(pwd, 'nii'))
+	if ~isempty(strfind(pwd, 'img'))
 		files = ls("*.nii");
 		filetype = 'nii';
 	else
