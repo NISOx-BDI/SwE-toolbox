@@ -63,8 +63,7 @@ function mapsEqual = verifyMapsUnchanged()
 		% Check whether the remaining values are equal.
 		result = ~any(file~=gt_file);
 		
-		if any(file~=gt_file)
-		
+		if ~result
 			disp('Length file: ')
 			disp(size(file))
 			disp('Length gt_file: ')
@@ -78,7 +77,6 @@ function mapsEqual = verifyMapsUnchanged()
 			
 			disp('sum of disagrement (gt_file): ')
 			disp(sum(file(file~=gt_file))
-			
 		end
 
 		if result
