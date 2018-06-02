@@ -73,10 +73,10 @@ function mapsEqual = verifyMapsUnchanged()
 			disp(sum(file~=gt_file))
 			
 			disp('sum of disagrement (file): ')
-			disp(sum(file(file~=gt_file))
+			disp(sum(file(file~=gt_file)))
 			
 			disp('sum of disagrement (gt_file): ')
-			disp(sum(file(file~=gt_file))
+			disp(sum(file(file~=gt_file)))
 		end
 
 		if result
