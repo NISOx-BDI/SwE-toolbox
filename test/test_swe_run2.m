@@ -14,8 +14,13 @@ function mapsEqual = verifyMapsUnchanged()
 		filetype = 'nii';
 	else
 		files = ls("swe_*.mat");
-		filetype = 'mat'
+		filetype = 'mat';
 	end
+	
+	disp('filetype: ')
+	disp(filetype)
+	disp('files: ')
+	disp(files)
 
 	% store whether maps are equal.
 	equalMaps = [];
@@ -97,7 +102,7 @@ function test_wb_t_img()
 	swe_cp_WB(SwE);
 
 	% Check against ground truth.
-	mapsUnchanged = verifyMapsUnchanged('/swe/test/data/test_wb_t_img');
+	mapsUnchanged = verifyMapsUnchanged();
 	assertEqual(mapsUnchanged, true);
 	
 end
@@ -124,7 +129,7 @@ function test_wb_f_img()
 	swe_cp_WB(SwE);
 
 	% Check against ground truth.
-	mapsUnchanged = verifyMapsUnchanged('/swe/test/data/test_wb_f_img');
+	mapsUnchanged = verifyMapsUnchanged();
 	assertEqual(mapsUnchanged, true);
 	
 end
@@ -151,7 +156,7 @@ function test_wb_t_mat()
 	swe_cp_WB(SwE);
 
 	% Check against ground truth.
-	mapsUnchanged = verifyMapsUnchanged('/swe/test/data/test_wb_t_mat');
+	mapsUnchanged = verifyMapsUnchanged();
 	assertEqual(mapsUnchanged, true);
 	
 end
