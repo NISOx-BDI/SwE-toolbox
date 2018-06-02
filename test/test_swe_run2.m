@@ -62,6 +62,24 @@ function mapsEqual = verifyMapsUnchanged()
 
 		% Check whether the remaining values are equal.
 		result = ~any(file~=gt_file);
+		
+		if any(file~=gt_file)
+		
+			disp('Length file: ')
+			disp(size(file))
+			disp('Length gt_file: ')
+			disp(size(gt_file))
+			
+			disp('length disagreement values: ')
+			disp(sum(file~=gt_file))
+			
+			disp('sum of disagrement (file): ')
+			disp(sum(file(file~=gt_file))
+			
+			disp('sum of disagrement (gt_file): ')
+			disp(sum(file(file~=gt_file))
+			
+		end
 
 		if result
 			disp('PASS');
