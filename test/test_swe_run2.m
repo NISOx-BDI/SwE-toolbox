@@ -44,8 +44,8 @@ function mapsEqual = verifyMapsUnchanged()
 		else
 
 			% Read in the surface data.
-			file = load(file);
-			gt_file = load(gt_file);
+			file = load(strrep(file, " ", ""));
+			gt_file = load(strrep(gt_file, " ", ""));
 
 			% Retrieve field name.
 			fieldname = fieldnames(file){1};
