@@ -60,16 +60,19 @@ function mapsEqual = verifyMapsUnchanged()
 		file = file(~isnan(file));
 		gt_file = gt_file(~isnan(gt_file));
 
-		% Check whether the remaining values are equal.
-		result = ~any(file~=gt_file);
+		% Check whether the remaining values are within 
+		% machine tolerance.
+		result = ~any(mod(file-gt_file) > 5*eps);
 		
+		% Useful for debugging.
 		if ~result
 			disp('Length file: ')
 			disp(size(file))
+			
 			disp('Length gt_file: ')
 			disp(size(gt_file))
 			
-			disp('length disagreement values: ')
+			disp('size disagreement values: ')
 			disp(sum(file~=gt_file))
 			
 			disp('sum of disagreement (file): ')
@@ -78,27 +81,18 @@ function mapsEqual = verifyMapsUnchanged()
 			disp('sum of disagreement (gt_file): ')
 			disp(sum(gt_file(file~=gt_file)))
 			
-			disp('disagreement values (file): ')
-			disp(file(file~=gt_file))
-			
-			disp('disagreement values (gt_file): ')
-			disp(gt_file(file~=gt_file))
-			
-			disp('type (file)')
+			disp('disagreement values (file)')
 			d1 = file(file~=gt_file);
-			disp(sprintf('%.9f', typeinfo(d1(1))))
+			disp(sprintf('%.9f', d1(1)))
 			
-			disp('type (gt_file)')
+			disp('disagreement values (gt_file)')
 			d2 = gt_file(file~=gt_file);
-			disp(sprintf('%.9f', typeinfo(d2(1))))
+			disp(sprintf('%.9f', d2(1)))
 			
 			disp('diff')
 			disp(d2(1)-d1(1))
 			
 		end
-		
-		disp('epsilon')
-		disp(eps)
 
 		if result
 			disp('PASS');
