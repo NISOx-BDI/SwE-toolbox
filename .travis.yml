@@ -25,7 +25,12 @@ install:
 script:
  # Run docker snapshot of dev octave (until 4.4 is released)
  - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
- # Run tests in Octave
+ # Generate test data in Octave. Each display is created seperately here to prevent job timeouts.
+ - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe');addpath('/swe/test');setuptest('wb', 't', 'mat')"
+ - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe');addpath('/swe/test');setuptest('wb', 'f', 'mat')"
+ - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe');addpath('/swe/test');setuptest('wb', 't', 'img')"
+ - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe');addpath('/swe/test');setuptest('wb', 'f', 'img')"
+ # Run all tests verifying generated test data matches ground truth.
  - sudo docker exec -t -i $did bash -c "sudo chmod 755 /swe/test/runTest.sh; sudo /swe/test/runTest.sh"
 before_install:
  # Update docker version
