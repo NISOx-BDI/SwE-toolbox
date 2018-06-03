@@ -85,12 +85,16 @@ function mapsEqual = verifyMapsUnchanged()
 			disp(gt_file(file~=gt_file))
 			
 			disp('type (file)')
-			d = file(file~=gt_file);
-			disp(typeinfo(d(1)))
+			d1 = file(file~=gt_file);
+			disp(sprintf('%0.9d', typeinfo(d1(1))))
 			
 			disp('type (gt_file)')
-			d = gt_file(file~=gt_file);
-			disp(typeinfo(d(1)))
+			d2 = gt_file(file~=gt_file);
+			disp(sprintf('%0.9d', typeinfo(d2(1))))
+			
+			disp('diff')
+			disp(d2(1)-d1(1))
+			
 			
 		end
 
