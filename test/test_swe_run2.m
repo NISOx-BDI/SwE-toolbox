@@ -95,11 +95,10 @@ function mapsEqual = verifyMapsUnchanged()
 			disp('diff')
 			disp(d2(1)-d1(1))
 			
-			disp('epsilon')
-			disp(eps)
-			
-			
 		end
+		
+		disp('epsilon')
+		disp(eps)
 
 		if result
 			disp('PASS');
