@@ -62,7 +62,7 @@ function mapsEqual = verifyMapsUnchanged()
 
 		% Check whether the remaining values are within 
 		% machine tolerance.
-		result = ~any(mod(file-gt_file) > 5*eps);
+		result = ~any(abs(file-gt_file) > 5*eps);
 		
 		% Useful for debugging.
 		if ~result
