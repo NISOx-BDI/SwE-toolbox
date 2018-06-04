@@ -111,6 +111,19 @@ function mapsEqual = verifyMapsUnchanged()
 
 end
 
+function test_p_t_mat()
+	
+	disp('Test case running: p_t_mat')
+
+	% Move into the test folder and add the path to tests.
+	cd('/swe/test/data/test_p_t_mat');
+
+	% Check against ground truth.
+	mapsUnchanged = verifyMapsUnchanged();
+	assertEqual(mapsUnchanged, true);
+	
+end
+
 function test_wb_t_img()
 	
 	disp('Test case running: wb_t_img')

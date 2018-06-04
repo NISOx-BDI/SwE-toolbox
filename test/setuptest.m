@@ -17,8 +17,27 @@ function setuptest(porwb, torf, matorimg)
 	load('design.mat');
 	swe_run_design(design);
 
-	% Load the generated SwE file and run it.
-	load('SwE.mat');
-	swe_cp_WB(SwE);
+	if strcmp(porwb, 'wb')
+
+		% Load the generated SwE file and run it.
+		load('SwE.mat');
+		swe_cp_WB(SwE);
+
+	else
+
+		% Load the generated SwE file and run it.
+		load('SwE.mat');
+		swe_cp(SwE);
+
+		% Define a contrast.
+		load('SwE.mat');
+		load('xCon.mat');
+		SwE.xCon = xCon;
+	    save('SwE.mat', 'SwE');
+	    
+	    % Run swe_getSPM()
+	    swe_getSPM();
+
+	end
 
 end

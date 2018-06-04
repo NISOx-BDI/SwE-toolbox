@@ -659,10 +659,10 @@ SwE.xCon = xCon;
 
 % Check if SwE has changed. Save only if it has.
 %--------------------------------------------------------------------------
-if ~isequal(tmpSwE,SwE)
-    if spm_matlab_version_chk('7') >=0
-        save('SwE', 'SwE', '-V6');
-    else
-        save('SwE', 'SwE');
-    end
+if exist('OCTAVE_VERSION','builtin')
+    save('SwE.mat','SwE');
+elseif spm_matlab_version_chk('7') >=0
+    save('SwE','SwE','-V6');
+else
+    save('SwE','SwE');
 end
