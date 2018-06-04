@@ -1,4 +1,6 @@
 # Test data
 test/data/*
+# moxunit
+test/MOxUnit/*
 # Autosaves
 *.asv
