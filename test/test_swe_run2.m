@@ -117,20 +117,6 @@ function test_wb_t_img()
 
 	% Move into the test folder and add the path to tests.
 	cd('/swe/test/data/test_wb_t_img');
-	addpath('/swe');
-	addpath('/swe/test');
-
-	% Reset the seed
-	load('/swe/test/data/seed.mat');
-	rand('state',seed);
-
-	% Load the test design and run it.
-	load('design.mat');
-	swe_run_design(design);
-
-	% Load the generated SwE file and run it.
-	load('SwE.mat');
-	swe_cp_WB(SwE);
 
 	% Check against ground truth.
 	mapsUnchanged = verifyMapsUnchanged();
@@ -144,20 +130,6 @@ function test_wb_f_img()
 
 	% Move into the test folder and add the path to tests.
 	cd('/swe/test/data/test_wb_f_img');
-	addpath('/swe');
-	addpath('/swe/test');
-
-	% Reset the seed
-	load('/swe/test/data/seed.mat');
-	rand('state',seed);
-
-	% Load the test design and run it.
-	load('design.mat');
-	swe_run_design(design);
-
-	% Load the generated SwE file and run it.
-	load('SwE.mat');
-	swe_cp_WB(SwE);
 
 	% Check against ground truth.
 	mapsUnchanged = verifyMapsUnchanged();
@@ -166,25 +138,11 @@ function test_wb_f_img()
 end
 
 function test_wb_t_mat()
-	
+
 	disp('Test case running: wb_t_mat')
 
 	% Move into the test folder and add the path to tests.
 	cd('/swe/test/data/test_wb_t_mat');
-	addpath('/swe');
-	addpath('/swe/test');
-
-	% Reset the seed
-	load('/swe/test/data/seed.mat');
-	rand('state',seed);
-
-	% Load the test design and run it.
-	load('design.mat');
-	swe_run_design(design);
-
-	% Load the generated SwE file and run it.
-	load('SwE.mat');
-	swe_cp_WB(SwE);
 
 	% Check against ground truth.
 	mapsUnchanged = verifyMapsUnchanged();
@@ -192,29 +150,15 @@ function test_wb_t_mat()
 	
 end
 
-%function test_wb_f_mat()
+function test_wb_f_mat()
 	
-%	disp('Test case running: wb_f_mat')
+	disp('Test case running: wb_f_mat')
 
 	% Move into the test folder and add the path to tests.
-%	cd('/swe/test/data/test_wb_f_mat');
-%	addpath('/swe');
-%	addpath('/swe/test');
-
-	% Reset the seed
-%	load('/swe/test/data/seed.mat');
-%	rand('state',seed);
-
-	% Load the test design and run it.
-%	load('design.mat');
-%	swe_run_design(design);
-
-	% Load the generated SwE file and run it.
-%	load('SwE.mat');
-%	swe_cp_WB(SwE);
+	cd('/swe/test/data/test_wb_f_mat');
 
 	% Check against ground truth.
-%	mapsUnchanged = verifyMapsUnchanged();
-%	assertEqual(mapsUnchanged, true);
+	mapsUnchanged = verifyMapsUnchanged();
+	assertEqual(mapsUnchanged, true);
 	
-%end
+end
