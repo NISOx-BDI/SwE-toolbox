@@ -26,27 +26,20 @@ jobs:
   include:
     - stage: Results generation
     - script:
-      # Run docker snapshot of dev octave (until 4.4 is released)
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe');addpath('/swe/test');setuptest('p', 't', 'mat')"
     - script:
-      # Run docker snapshot of dev octave (until 4.4 is released)
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe');addpath('/swe/test');setuptest('wb', 't', 'mat')"
     - script:
-      # Run docker snapshot of dev octave (until 4.4 is released)
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe');addpath('/swe/test');setuptest('wb', 'f', 'mat')"
     - script:
-      # Run docker snapshot of dev octave (until 4.4 is released)
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe');addpath('/swe/test');setuptest('wb', 't', 'img')"
     - script:
-      # Run docker snapshot of dev octave (until 4.4 is released)
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe');addpath('/swe/test');setuptest('wb', 'f', 'img')"
- # Run all tests verifying generated test data matches ground truth.
- # - sudo docker exec -t -i $did bash -c "sudo chmod 755 /swe/test/runTest.sh; sudo /swe/test/runTest.sh" 
 before_install:
  # Update docker version
  - sudo apt-get update
