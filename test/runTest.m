@@ -5,7 +5,7 @@ function result=runTest(porwb, torf, matorimg)
 	disp(['Test case running: ' testname])
 
 	% Generate the results for the test.
-	generateData(testname);
+	generateData(porwb, torf, matorimg);
 	disp(['Test case ' testname ' has been run.'])
 
 	% Compare test results to ground truth.
@@ -14,10 +14,10 @@ function result=runTest(porwb, torf, matorimg)
 end
 
 
-function generateData(testname)
+function generateData(porwb, torf, matorimg)
 
 	% Move into the test folder and add the path to tests.
-	cd(['/swe/test/data/test_' testname]);
+	cd(['/swe/test/data/test_' porwb '_' torf '_' matorimg]);
 	addpath('/swe');
 	addpath('/swe/test');
 
