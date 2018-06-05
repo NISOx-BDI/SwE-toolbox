@@ -1,73 +1,167 @@
-%==========================================================================
-%This function runs the test_swe_run tests, which test whether various use
-%cases of the SwE toolbox run without error.
-%
-%Author: Thomas Maullin.
-%==========================================================================
-function runTest()
-    
-    setup();
-    
+function result=runTest(porwb, torf, matorimg)
+	
+	% Work out which test we are running.
+	testname = [porwb '_' torf '_' matorimg];
+	disp(['Test case running: ' testname])
+
+	% Generate the results for the test.
+	generateData(testname);
+	disp(['Test case ' testname ' has been run.'])
+
+	% Compare test results to ground truth.
+	result = verifyMapsUnchanged();
+
 end
 
-function setup()
-    
-    % Temporarily change path (in case currently in data directory).
-    current = pwd;
-    cd(fileparts(mfilename('fullpath')));
 
-    % Download the '.img' test data and unzip it.
-    zipped_data= urlwrite(['http://www.fil.ion.ucl.ac.uk/spm/download/data'...
-                        '/face_rfx/face_rfx.zip'],...
-                        fullfile(fileparts(mfilename('fullpath')),...
-                            'data', 'temp.zip'));
-    unzip(zipped_data, fileparts(mfilename('fullpath')));
-    delete(zipped_data);
-    
-    % Remove unnecessary test data.
-    unzipped_data = fullfile(fileparts(mfilename('fullpath')),'face_rfx');
-    rmdir(fullfile(unzipped_data, 'cons_can'), 's');
-    rmdir(fullfile(unzipped_data,'cons_fir'), 's');
-    
-    % We won't use all maps from con_informed.
-    for i = 39:74
-        delete(fullfile(unzipped_data,'cons_informed',...
-                        ['con_00' num2str(i) '.hdr']));
-        delete(fullfile(unzipped_data,'cons_informed',...
-                        ['con_00' num2str(i) '.img']));
+function generateData(testname)
+
+	% Move into the test folder and add the path to tests.
+	cd(['/swe/test/data/test_' testname]);
+	addpath('/swe');
+	addpath('/swe/test');
+
+	% Reset the seed
+	load('/swe/test/data/seed.mat');
+	rand('state',seed);
+
+	% Load the test design and run it.
+	load('design.mat');
+	swe_run_design(design);
+
+	if strcmp(porwb, 'wb')
+
+		% Load the generated SwE file and run it.
+		load('SwE.mat');
+		swe_cp_WB(SwE);
+
+	else
+
+		% Load the generated SwE file and run it.
+		load('SwE.mat');
+		swe_cp(SwE);
+
+		% Define a contrast.
+		load('SwE.mat');
+		load('xCon.mat');
+		SwE.xCon = xCon;
+	    save('SwE.mat', 'SwE');
+	    
+	    % Run swe_getSPM(). For the img
+	    % case we use the xSwE object to
+	    % avoid user input.
+	    if strcmp(matorimg, 'img')
+	    	load('xSwE.mat')
+	    	swe_getSPM(xSwE);
+	    else
+	    	swe_getSPM();
+	    end
+
+	end
+
+end
+
+function mapsEqual = verifyMapsUnchanged()
+	
+	% List all files for testing
+	if ~isempty(strfind(pwd, 'img'))
+		files = ls("*.nii");
+		filetype = 'nii';
+	else
+		files = ls("swe_*.mat");
+		filetype = 'mat';
+	end
+	
+	disp('filetype: ')
+	disp(filetype)
+	disp('files: ')
+	disp(files)
+
+	% store whether maps are equal.
+	equalMaps = [];
+
+	% Compare each file to ground truth
+	for i = 1:size(files, 1)
+
+		% Get the filenames
+		file = files(i, :);
+		gt_file = ['ground_truth' filesep file];
+		disp(['Testing file: ' file])
+
+		if strcmp(filetype, 'nii')
+
+			% Read in the volumes
+			file = spm_vol(file);
+			file = spm_read_vols(file);
+			gt_file = spm_vol(gt_file);
+			gt_file = spm_read_vols(gt_file);
+
+		else
+
+			% Read in the surface data.
+			file = load(strrep(file, " ", ""));
+			gt_file = load(strrep(gt_file, " ", ""));
+
+			% Retrieve field name.
+			fieldname = fieldnames(file){1};
+
+			% Retrieve data
+			file = getfield(file, fieldname);
+			gt_file = getfield(gt_file, fieldname);
+
+		end
+
+		% Remove NaN values
+		file = file(~isnan(file));
+		gt_file = gt_file(~isnan(gt_file));
+
+		% Check whether the remaining values are within 
+		% machine tolerance.
+		result = ~any(abs(file-gt_file) > 5*eps);
+		
+		% Useful for debugging.
+		if ~result
+			disp('Length file: ')
+			disp(size(file))
+			
+			disp('Length gt_file: ')
+			disp(size(gt_file))
+			
+			disp('size disagreement values: ')
+			disp(sum(file~=gt_file))
+			
+			disp('sum of disagreement (file): ')
+			disp(sum(file(file~=gt_file)))
+			
+			disp('sum of disagreement (gt_file): ')
+			disp(sum(gt_file(file~=gt_file)))
+			
+			disp('disagreement values (file)')
+			d1 = file(file~=gt_file);
+			disp(sprintf('%.9f', d1(1)))
+			
+			disp('disagreement values (gt_file)')
+			d2 = gt_file(file~=gt_file);
+			disp(sprintf('%.9f', d2(1)))
+			
+			disp('diff')
+			disp(d2(1)-d1(1))
+			
+		end
+
+		if result
+			disp('PASS');
+		else
+			disp('FAIL');
+		end
+
+		% Record result
+		equalMaps = [equalMaps result];
+
     end
-    
-    % We won't use any of the '.mat' files from here.
-    for i = 3:74
-        delete(fullfile(unzipped_data, 'cons_informed',...
-                        ['con_00' sprintf('%02d',i) '.mat']));
-    end
-    
-    % Move into a file named data for cleaner pathnames.
-    if exist(fullfile(unzipped_data, '..', 'data'), 'dir')
-        rmdir(fullfile(unzipped_data, '..', 'data'), 's');
-	mkdir(fullfile(unzipped_data, '..', 'data'));
-    end
-    movefile(fullfile(unzipped_data, 'cons_informed'),...
-             fullfile(unzipped_data, '..', 'data', 'img_input'));
-    
-    % Download the '.mat' test data (timeout for download might have to be
-    % set a little higher than normal).
-    if ~exist('OCTAVE_VERSION', 'builtin')
-       weboptions('Timeout',10);
-    end
-    mkdir(fullfile(unzipped_data, '..', 'data', 'mat_input'));
-    urlwrite(['https://drive.google.com/uc?export=download&id=1RXHFtnB1'...
-             'N14-FcOuda8139zgR5dnjcly'],...
-             fullfile(unzipped_data, '..', 'data', 'mat_input',...
-                     'subj_data.mat'));
-    urlwrite(['https://drive.google.com/uc?export=download&id=1vuHGkPvQMulp'...
-         'nqnRF0L-BOQV0RyF3dlD'],...
-         fullfile(unzipped_data, '..', 'data', 'mat_input',...
-                 'tri_data.mat'));
-     
-     % Remove thd old data location and change back to working directory.
-     rmdir(unzipped_data, 's');
-     cd(current);
-    
+
+    % return true if all maps were equal false otherwise.
+
+    mapsEqual = ~any(~equalMaps);
+
 end
