@@ -35,8 +35,15 @@ function setuptest(porwb, torf, matorimg)
 		SwE.xCon = xCon;
 	    save('SwE.mat', 'SwE');
 	    
-	    % Run swe_getSPM()
-	    swe_getSPM();
+	    % Run swe_getSPM(). For the img
+	    % case we use the xSwE object to
+	    % avoid user input.
+	    if strcmp(matorimg, 'img')
+	    	load('xSwE.mat')
+	    	swe_getSPM(xSwE);
+	    else
+	    	swe_getSPM();
+	    end
 
 	end
 

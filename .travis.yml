@@ -30,6 +30,12 @@ jobs:
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe');addpath('/swe/test');setuptest('p', 't', 'mat')"
     - script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe');addpath('/swe/test');setuptest('p', 'f', 'mat')"
+    - script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe');addpath('/swe/test');setuptest('p', 'f', 'img')"
+    - script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe');addpath('/swe/test');setuptest('wb', 't', 'mat')"
     - script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
