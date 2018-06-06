@@ -52,4 +52,4 @@ before_install:
  - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
  - git config --global user.name "TravisCI" 
  - git config --global user.email "travis@dummy.com"
- - docker pull cmaumet/octave-spm
+ - docker pull cmaumet/octave-spm 

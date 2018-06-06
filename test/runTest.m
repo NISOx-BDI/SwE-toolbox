@@ -154,7 +154,7 @@ function mapsEqual = verifyMapsUnchanged()
 			disp('PASS');
 		else
 			disp('FAIL');
-			error(['Test ' testname ' has failed.'])
+			error(['Test ' porwb '_' torf '_' matorimg ' has failed.'])
 		end
 
 		% Record result
