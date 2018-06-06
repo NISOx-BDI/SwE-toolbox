@@ -11,6 +11,10 @@ function result=runTest(porwb, torf, matorimg)
 	% Compare test results to ground truth.
 	result = verifyMapsUnchanged();
 
+	if ~result
+		error(['Test ' testname ' has failed.'])
+	end
+
 end
 
 
@@ -154,7 +158,6 @@ function mapsEqual = verifyMapsUnchanged()
 			disp('PASS');
 		else
 			disp('FAIL');
-			error(['Test ' porwb '_' torf '_' matorimg ' has failed.'])
 		end
 
 		% Record result
