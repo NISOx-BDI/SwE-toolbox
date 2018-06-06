@@ -153,6 +153,7 @@ function mapsEqual = verifyMapsUnchanged()
 			disp('PASS');
 		else
 			disp('FAIL');
+			error(['Test ' testname ' has failed.'])
 		end
 
 		% Record result
