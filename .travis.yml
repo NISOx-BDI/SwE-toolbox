@@ -21,7 +21,7 @@ install:
  - cd ..
 jobs:
   include:
-    - stage: Results generation
+    - stage: Results generation 
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'f', 'mat')"
