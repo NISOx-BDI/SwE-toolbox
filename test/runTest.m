@@ -24,6 +24,7 @@ function generateData(porwb, torf, matorimg)
 	% Reset the seed
 	load('/swe/test/data/seed.mat');
 	rand('state',seed);
+	randn('state', seed);
 
 	% Load the test design and run it.
 	load('design.mat');
