@@ -8,30 +8,30 @@ function result=runTest(porwb, torf, matorimg)
 
 	% Work out which test we are running.
 	testname = [porwb '_' torf '_' matorimg];
-	disp('==============================================================')
+	disp(sprintf('\n=============================================================='))
 	disp(['Test case running: ' testname])
-	disp('==============================================================')
+	disp(sprintf('==============================================================\n'))
 
 	% Generate the results for the test.
 	generateData(porwb, torf, matorimg);
-	disp('==============================================================')
+	disp(sprintf('\n=============================================================='))
 	disp(['Test case ' testname ' has been run.'])
 	disp('--------------------------------------------------------------')
 	disp('Verifying test results')
-	disp('==============================================================')
+	disp(sprintf('==============================================================\n'))
 
 	% Compare test results to ground truth.
 	result = verifyMapsUnchanged();
 
 
-	disp('==============================================================')
+	disp(sprintf('\n=============================================================='))
 	if ~result
 		disp('A test has failed!')
 		error(['Test ' testname ' has failed.'])
 	else
 		disp('All tests pass!!')
 	end
-	disp('==============================================================')
+	disp(sprintf('==============================================================\n'))
 
 end
 
