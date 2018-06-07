@@ -663,7 +663,7 @@ if ~isMat
 
                 %-General linear model: Ordinary least squares estimation
                 %--------------------------------------------------------------
-                fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...estimation');%-#
+                fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...estimation');%-#
 
                 beta  = pX*Y;                     %-Parameter estimates
                 if SwE.SS >= 4  % Cluster-wise adjustments
@@ -764,7 +764,7 @@ if ~isMat
         %-Plane complete, write plane to image files (unless 1st pass)
         %======================================================================
 
-        fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...saving plane'); %-#
+        fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...saving plane'); %-#
 
         jj = NaN(xdim,ydim,numel(CrPl));
 
@@ -1007,7 +1007,7 @@ else % matrix input
 
         %-General linear model: Ordinary least squares estimation
         %--------------------------------------------------------------
-        fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...estimation');%-#
+        fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...estimation');%-#
 
         crBeta  = pX*Y;                     %-Parameter estimates
 
