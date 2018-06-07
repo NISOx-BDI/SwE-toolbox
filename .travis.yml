@@ -5,7 +5,7 @@ services:
   - docker
 cache:
   timeout: 1000
-python: 
+python:
   - "3.5"
 bundler_args: --retry 9
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
