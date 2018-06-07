@@ -1,8 +1,10 @@
 function result=runTest(porwb, torf, matorimg)
 	
-	% These warnings occur as we cannot open the displays.
+	% These warnings occur as we cannot open the displays and octave reads
+	% throws warnings about how it reads in '.img' files.
 	warning('off', 'SPM:noDisplay');
 	warning('off','Octave:abbreviated-property-match');
+	warning('off','Octave:num-to-str');
 
 	% Work out which test we are running.
 	testname = [porwb '_' torf '_' matorimg];
