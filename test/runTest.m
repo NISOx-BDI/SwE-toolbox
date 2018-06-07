@@ -159,8 +159,10 @@ function mapsEqual = verifyMapsUnchanged(porwb, torf, matorimg)
 		% in octave. (Tom Maullin 07/06/2018)
 		if strcmp(matorimg, 'mat') && strcmp(porwb, 'p')
 			result = ~any(abs(file-gt_file) > 10^(-10));
+			indexWrong = abs(file-gt_file) > 10^(-10);
 		else
 			result = ~any(file~=gt_file)
+			indexWrong = file~=gt_file;
 		end
 		
 		% Useful for debugging.
@@ -172,20 +174,20 @@ function mapsEqual = verifyMapsUnchanged(porwb, torf, matorimg)
 			disp(size(gt_file))
 			
 			disp('size disagreement values: ')
-			disp(sum(file~=gt_file))
+			disp(sum(indexWrong))
 			
 			disp('sum of disagreement (file): ')
-			disp(sum(file(file~=gt_file)))
+			disp(sum(file(indexWrong)))
 			
 			disp('sum of disagreement (gt_file): ')
-			disp(sum(gt_file(file~=gt_file)))
+			disp(sum(gt_file(indexWrong)))
 			
 			disp('disagreement values (file)')
-			d1 = file(file~=gt_file);
+			d1 = file(indexWrong);
 			disp(sprintf('%.9f', d1(1)))
 			
 			disp('disagreement values (gt_file)')
-			d2 = gt_file(file~=gt_file);
+			d2 = gt_file(indexWrong);
 			disp(sprintf('%.9f', d2(1)))
 			
 			disp('diff')
