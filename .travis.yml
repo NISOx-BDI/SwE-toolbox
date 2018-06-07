@@ -22,28 +22,44 @@ install:
 jobs:
   include:
     - stage: Results generation 
+      env:
+      - testname='wb_f_mat'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'f', 'mat')"
-    - script:
+    - env:
+      - testname='wb_t_mat'
+      script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 't', 'mat')"
-    - script:
+    - env:
+      - testname='wb_f_img'
+      script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'f', 'img')"
-    - script:
+    - env:
+      - testname='wb_t_img'
+      script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 't', 'img')"
-    - script:
+    - env:
+      - testname='p_f_mat'
+      script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'f', 'mat')"
-    - script:
+    - env:
+      - testname='p_t_mat'
+      script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 't', 'mat')"
-    - script:
+    - env:
+      - testname='p_f_img'
+      script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'f', 'img')"
-    - script:
+    - env:
+      - testname='p_t_img'
+      script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 't', 'img')"
 before_install:
