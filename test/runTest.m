@@ -6,18 +6,30 @@ function result=runTest(porwb, torf, matorimg)
 
 	% Work out which test we are running.
 	testname = [porwb '_' torf '_' matorimg];
+	disp('==============================================================')
 	disp(['Test case running: ' testname])
+	disp('==============================================================')
 
 	% Generate the results for the test.
 	generateData(porwb, torf, matorimg);
+	disp('==============================================================')
 	disp(['Test case ' testname ' has been run.'])
+	disp('--------------------------------------------------------------')
+	disp('Verifying test results')
+	disp('==============================================================')
 
 	% Compare test results to ground truth.
 	result = verifyMapsUnchanged();
 
+
+	disp('==============================================================')
 	if ~result
+		disp('A test has failed!')
 		error(['Test ' testname ' has failed.'])
+	else
+		disp('All tests pass!!')
 	end
+	disp('==============================================================')
 
 end
 
@@ -83,11 +95,6 @@ function mapsEqual = verifyMapsUnchanged()
 		files = ls("swe_*.mat");
 		filetype = 'mat';
 	end
-	
-	disp('filetype: ')
-	disp(filetype)
-	disp('files: ')
-	disp(files)
 
 	% store whether maps are equal.
 	equalMaps = [];
