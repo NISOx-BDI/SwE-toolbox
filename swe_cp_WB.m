@@ -28,6 +28,7 @@ end
 %--------------------------------------------------------------------------
 [~,~,file_ext] = fileparts(SwE.xY.P{1});
 isMat          = strcmpi(file_ext,'.mat');
+isOctave = exist('OCTAVE_VERSION','builtin');
 
 if ~isMat
     isMeshData = spm_mesh_detect(SwE.xY.VY);
@@ -42,7 +43,7 @@ end
 
 %-Prevent unnecessary octave warning
 %--------------------------------------------------------------------------
-if exist('OCTAVE_VERSION','builtin')
+if isOctave
    warning ("off", "histc: empty EDGES specified\n"); 
 end
 
@@ -587,7 +588,7 @@ if ~isMat
   %-Cycle over bunches blocks within planes to avoid memory problems
   %==========================================================================
   str   = 'parameter estimation';
-  if ~exist('OCTAVE_VERSION','builtin')
+  if ~isOctave
      spm_progress_bar('Init',100,str,'');
   end
   
@@ -886,7 +887,7 @@ if ~isMat
     %-Report progress
     %----------------------------------------------------------------------
     fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');
-    if ~exist('OCTAVE_VERSION','builtin')
+    if ~isOctave
        spm_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
     end
     
@@ -894,7 +895,7 @@ if ~isMat
   
   
   fprintf('\n');                                                          %-#
-  if ~exist('OCTAVE_VERSION','builtin')
+  if ~isOctave
      spm_progress_bar('Clear')
   end
   clear beta res Cov_vis CrScore CrYWB CrResWB Q jj%-Clear to save memory
@@ -944,7 +945,7 @@ else % ".mat" format
   %-Cycle over bunches blocks within planes to avoid memory problems
   %==========================================================================
   str   = 'parameter estimation';
-  if ~exist('OCTAVE_VERSION','builtin')
+  if ~isOctave
      spm_progress_bar('Init',100,str,'');
   end
   
@@ -1163,7 +1164,7 @@ else % ".mat" format
   end
   
   fprintf('\n');                                                        %-#
-  if ~exist('OCTAVE_VERSION','builtin')
+  if ~isOctave
     spm_progress_bar('Clear')
   end
   clear res Cov_vis jj%-Clear to save memory
@@ -1294,7 +1295,7 @@ end
 
 %-Save analysis parameters in SwE.mat file
 %--------------------------------------------------------------------------
-if exist('OCTAVE_VERSION','builtin')
+if isOctave
   save('SwE','SwE');
 elseif spm_matlab_version_chk('7') >=0
   save('SwE','SwE','-V6');
@@ -1329,7 +1330,7 @@ uncP = ones(1, S); % one because of the original score
 
 str   = sprintf('Parameter estimation\nBootstraping');
 
-if ~exist('OCTAVE_VERSION','builtin')
+if ~isOctave
   spm_progress_bar('Init',100,str,'');
 end
 
@@ -1337,7 +1338,7 @@ fprintf('\n')
 for b = 1:WB.nB
   tic
   str   = sprintf('Parameter estimation\nBootstrap # %i', b);
-  if ~exist('OCTAVE_VERSION','builtin')
+  if ~isOctave
     spm_progress_bar('Set','xlabel', str)
   end
 
@@ -1599,7 +1600,7 @@ for b = 1:WB.nB
     end
   end
   toc
-  if ~exist('OCTAVE_VERSION','builtin')
+  if ~isOctave
     spm_progress_bar('Set',100 * b / WB.nB);
   end
 end

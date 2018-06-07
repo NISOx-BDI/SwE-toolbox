@@ -25,7 +25,7 @@ function generateData(porwb, torf, matorimg)
 	addpath('/swe');
 	addpath('/swe/test');
 
-	% Reset the seed
+	% Reset all seeds (in octave these are all different!!).
 	load('/swe/test/data/seed.mat');
 	rand('state',seed);
 	randn('state', seed);
