@@ -10,7 +10,7 @@ python:
 bundler_args: --retry 9
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: 
- # Install git-lfs
+ # Install git-lfs 
  - cd ..
  - curl -sLo - https://github.com/github/git-lfs/releases/download/v1.4.1/git-lfs-linux-amd64-1.4.1.tar.gz | tar xzvf -
  - export PATH=$PATH:`pwd`/git-lfs-1.4.1
