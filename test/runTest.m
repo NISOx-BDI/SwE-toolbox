@@ -1,19 +1,26 @@
 function result=runTest(porwb, torf, matorimg)
 	
-	% These warnings occur as we cannot open the displays and octave reads
-	% throws warnings about how it reads in '.img' files.
-	warning('off', 'SPM:noDisplay');
+	% Turn off warnings.
+	%
+	% (Footnote: These warnings occur as we cannot open the displays and octave reads
+	% throws warnings about how it reads in '.img' files.)
+	warning('off','SPM:noDisplay');
 	warning('off','Octave:abbreviated-property-match');
 	warning('off','Octave:num-to-str');
 
 	% Work out which test we are running.
 	testname = [porwb '_' torf '_' matorimg];
+
+	% Tell the user which test case we are running.
 	disp(sprintf('\n=============================================================='))
 	disp(['Test case running: ' testname])
 	disp(sprintf('==============================================================\n'))
 
 	% Generate the results for the test.
 	generateData(porwb, torf, matorimg);
+
+
+	% Tell the user we have run the test.
 	disp(sprintf('\n=============================================================='))
 	disp(['Test case ' testname ' has been run.'])
 	disp('--------------------------------------------------------------')
@@ -21,9 +28,9 @@ function result=runTest(porwb, torf, matorimg)
 	disp(sprintf('==============================================================\n'))
 
 	% Compare test results to ground truth.
-	result = verifyMapsUnchanged();
+	result = verifyMapsUnchanged(porwb, torf, matorimg);
 
-
+	%Tell the user whether the tests passed.
 	disp(sprintf('\n=============================================================='))
 	if ~result
 		disp('A test has failed!')
@@ -43,7 +50,8 @@ function generateData(porwb, torf, matorimg)
 	addpath('/swe');
 	addpath('/swe/test');
 
-	% Reset all seeds (in octave these are all different!!).
+	% Reset all seeds 
+	% (Footnote: In octave these are all different!!).
 	load('/swe/test/data/seed.mat');
 	rand('state',seed);
 	randn('state', seed);
@@ -87,10 +95,10 @@ function generateData(porwb, torf, matorimg)
 
 end
 
-function mapsEqual = verifyMapsUnchanged()
+function mapsEqual = verifyMapsUnchanged(porwb, torf, matorimg)
 	
 	% List all files for testing
-	if ~isempty(strfind(pwd, 'img'))
+	if strcmp(matorimg, 'img')
 		files = ls("*.nii");
 		filetype = 'nii';
 	else
@@ -136,9 +144,24 @@ function mapsEqual = verifyMapsUnchanged()
 		file = file(~isnan(file));
 		gt_file = gt_file(~isnan(gt_file));
 
-		% Check whether the remaining values are within 
-		% machine tolerance.
-		result = ~any(abs(file-gt_file) > 5*eps);
+		% Check whether the remaining values are equal.
+		%
+		% Footnote: There is some form of machine tolerance
+		% error with the p_*_img cases. Even with all seeds
+		% reset, differences in voxel values of around ~e16
+		% ~e16 can occur occasionally on runs. These errors 
+		% can propogate and grow as large as  ~e12. To 
+		% counter this, in these cases we just look to see
+		% if we are within e-10 of the ground truth.
+		% Suspected cause: The `beta` and `betainc` 
+		% functions which are only run in these cases and 
+		% are built on old fortran numeric approximations 
+		% in octave. (Tom Maullin 07/06/2018)
+		if strcmp(matorimg, 'img') && strcmp(porwb, 'p')
+			result = ~any(abs(file-gt_file) > 10^(-10));
+		else
+			result = ~any(file~=gt_file)
+		end
 		
 		% Useful for debugging.
 		if ~result
