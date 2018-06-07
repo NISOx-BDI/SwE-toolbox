@@ -147,7 +147,7 @@ function mapsEqual = verifyMapsUnchanged(porwb, torf, matorimg)
 		% Check whether the remaining values are equal.
 		%
 		% Footnote: There is some form of machine tolerance
-		% error with the p_*_mat cases. Even with all seeds
+		% error with the mat cases. Even with all seeds
 		% reset, differences in voxel values of around ~e16
 		% ~e16 can occur occasionally on runs. These errors 
 		% can propogate and grow as large as  ~e12. To 
@@ -157,7 +157,7 @@ function mapsEqual = verifyMapsUnchanged(porwb, torf, matorimg)
 		% functions which are only run in these cases and 
 		% are built on old fortran numeric approximations 
 		% in octave. (Tom Maullin 07/06/2018)
-		if strcmp(matorimg, 'mat') && strcmp(porwb, 'p')
+		if strcmp(matorimg, 'mat')
 			result = ~any(abs(file-gt_file) > 10^(-10));
 			indexWrong = abs(file-gt_file) > 10^(-10);
 		else
