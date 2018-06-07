@@ -1,5 +1,9 @@
 function result=runTest(porwb, torf, matorimg)
 	
+	% These warnings occur as we cannot open the displays.
+	warning('off', 'SPM:noDisplay');
+	warning('off','Octave:abbreviated-property-match');
+
 	% Work out which test we are running.
 	testname = [porwb '_' torf '_' matorimg];
 	disp(['Test case running: ' testname])
