@@ -150,7 +150,7 @@ function mapsEqual = verifyMapsUnchanged(porwb, torf, matorimg)
 		% error with the mat cases. Even with all seeds
 		% reset, differences in voxel values of around ~e16
 		% ~e16 can occur occasionally on runs. These errors 
-		% can propogate and grow as large as  ~e12. To 
+		% can propogate and grow as large as  ~e8. To 
 		% counter this, in these cases we just look to see
 		% if we are within e-10 of the ground truth.
 		% Suspected cause: The `beta` and `betainc` 
@@ -158,8 +158,8 @@ function mapsEqual = verifyMapsUnchanged(porwb, torf, matorimg)
 		% are built on old fortran numeric approximations 
 		% in octave. (Tom Maullin 07/06/2018)
 		if strcmp(matorimg, 'mat')
-			result = ~any(abs(file-gt_file) > 10^(-10));
-			indexWrong = abs(file-gt_file) > 10^(-10);
+			result = ~any(abs(file-gt_file) > 10^(-7));
+			indexWrong = abs(file-gt_file) > 10^(-7);
 		else
 			result = ~any(file~=gt_file)
 			indexWrong = file~=gt_file;
