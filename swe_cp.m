@@ -24,6 +24,11 @@ if nargin == 0
     end
     return
 end
+% If this is a WB analysis we need to use swe_cp_WB.
+if isfield(SwE, 'WB')
+     swe_cp_WB(SwE);
+     return
+end
 %-Change to SwE.swd if specified
 %--------------------------------------------------------------------------
 try
@@ -46,6 +51,7 @@ end
 %--------------------------------------------------------------------------
 [~,~,file_ext] = fileparts(SwE.xY.P{1});
 isMat          = strcmpi(file_ext,'.mat');
+isOctave       = exist('OCTAVE_VERSION','builtin');
 
 if ~isMat
     isMeshData = spm_mesh_detect(SwE.xY.VY);
@@ -527,7 +533,7 @@ if ~isMat
     %-Cycle over bunches blocks within planes to avoid memory problems
     %==========================================================================
     str   = 'parameter estimation';
-    spm_progress_bar('Init',100,str,'');
+    swe_progress_bar('Init',100,str,'');
 
     for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
 
@@ -655,7 +661,7 @@ if ~isMat
 
                 %-General linear model: Ordinary least squares estimation
                 %--------------------------------------------------------------
-                fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...estimation');%-#
+                fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...estimation');%-#
 
                 beta  = pX*Y;                     %-Parameter estimates
                 if SwE.SS >= 4  % Cluster-wise adjustments
@@ -756,7 +762,7 @@ if ~isMat
         %-Plane complete, write plane to image files (unless 1st pass)
         %======================================================================
 
-        fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...saving plane'); %-#
+        fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...saving plane'); %-#
 
         jj = NaN(xdim,ydim,numel(CrPl));
 
@@ -811,12 +817,13 @@ if ~isMat
 
         %-Report progress
         %----------------------------------------------------------------------
-        fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');   
-        spm_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
+        fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');  
+        swe_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
 
     end % (for z = 1:zdim)
-    fprintf('\n');                                                          %-#
-    spm_progress_bar('Clear')
+    fprintf('\n');  %-#
+    swe_progress_bar('Clear')
+
     clear beta res Cov_vis CrBl CrResI CrCov_vis jj%-Clear to save memory
     if isfield(SwE.type,'modified')
         clear Cov_vis CrCov_vis
@@ -866,7 +873,7 @@ if ~isMat
         disp('Working on the SwE computation...');
         %Computation of the SwE
         str   = 'SwE computation';
-        spm_progress_bar('Init',100,str,'');
+        swe_progress_bar('Init',100,str,'');
 
         S_z = 0;
         for z = 1:zdim                       %-loop over planes (2D or 3D data)       
@@ -887,11 +894,11 @@ if ~isMat
                             Vcov_beta_g(it)=spm_write_plane(Vcov_beta_g(it),jj, z);
                         end
                         Cov_beta = Cov_beta + Cov_beta_g;
-                        spm_progress_bar('Set',100*((z-1)/zdim + g/nGr/zdim));
+                        swe_progress_bar('Set',100*((z-1)/zdim + g/nGr/zdim));
                     end
                 case {0 2 3}
                     Cov_beta = weight * Cov_vis(:,(1+S_z):(S_z+s_z));
-                    spm_progress_bar('Set',100*(z/zdim));
+                    swe_progress_bar('Set',100*(z/zdim));
             end
             for i=1:nCov_beta
                 if ~isempty(Q_z), jj(Q_z)=Cov_beta(i,:); end
@@ -900,7 +907,8 @@ if ~isMat
             S_z = S_z + s_z;
         end% (for z = 1:zdim)
         fprintf('\n');                                                    %-#
-        spm_progress_bar('Clear')
+
+        swe_progress_bar('Clear')
 
     end
 
@@ -987,7 +995,7 @@ else % matrix input
 
         %-General linear model: Ordinary least squares estimation
         %--------------------------------------------------------------
-        fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...estimation');%-#
+        fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...estimation');%-#
 
         crBeta  = pX*Y;                     %-Parameter estimates
 
@@ -1203,7 +1211,9 @@ end
 
 %-Save analysis parameters in SwE.mat file
 %--------------------------------------------------------------------------
-if spm_matlab_version_chk('7') >=0
+if isOctave
+    save('SwE.mat','SwE');
+elseif spm_matlab_version_chk('7') >=0
     save('SwE','SwE','-V6');
 else
     save('SwE','SwE');

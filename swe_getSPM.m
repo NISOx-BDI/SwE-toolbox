@@ -198,8 +198,13 @@ try
     swd = xSwE.swd;
     sts = 1;
 catch
-    [spmmatfile, sts] = spm_select(1,'^SwE\.mat$','Select SwE.mat');
-    swd = spm_str_manip(spmmatfile,'H');
+    if ~exist('OCTAVE_VERSION','builtin')
+        [spmmatfile, sts] = spm_select(1,'^SwE\.mat$','Select SwE.mat');
+        swd = spm_str_manip(spmmatfile,'H');
+    else
+        sts = 1;
+        swd = '.';
+    end
 end
 if ~sts, SwE = []; xSwE = []; return; end
 
@@ -286,14 +291,18 @@ try
     Ic        = xSwE.Ic;
 catch
     
-    % If we're not doing wild bootstrap, ask for a contrast.
-    if ~isfield(SwE, 'WB')
+    % If we're not doing wild bootstrap and not in octave, ask for a contrast.
+    if ~isfield(SwE, 'WB') && ~exist('OCTAVE_VERSION','builtin')
         [Ic,xCon] = swe_conman(SwE,'T&F',Inf,...
                                '    Select contrasts...',' for conjunction',1);
-    % Otherwise, we already have a contrast. We just need to record it.
+    % If we're in octave, assume we already have a contrast.
+    elseif exist('OCTAVE_VERSION','builtin')
+        Ic = 1;
+        xCon = SwE.xCon;
+    % If we're doing WB, we already have a contrast. We just need to record it.
     else
         Ic = 1;
-        xCon = struct('name', ['swe_', SwE.WB.stat, '_0001'],...
+        xCon = struct('name', ['swe_', SwE.WB.stat, 'stat-WB_01'],...
                       'STAT', SwE.WB.stat,...
                       'c', SwE.WB.con);
         if SwE.WB.stat == 'T' 

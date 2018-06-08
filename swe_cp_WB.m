@@ -28,6 +28,7 @@ end
 %--------------------------------------------------------------------------
 [~,~,file_ext] = fileparts(SwE.xY.P{1});
 isMat          = strcmpi(file_ext,'.mat');
+isOctave = exist('OCTAVE_VERSION','builtin');
 
 if ~isMat
     isMeshData = spm_mesh_detect(SwE.xY.VY);
@@ -38,6 +39,12 @@ if ~isMat
     end
 else
     isMeshData = false;
+end
+
+%-Prevent unnecessary octave warning
+%--------------------------------------------------------------------------
+if isOctave
+   warning ("off", "histc: empty EDGES specified\n"); 
 end
 
 %-Delete files from previous analyses
@@ -126,7 +133,7 @@ if isMat && WB.clusterWise == 1
     error('clusterWise inference cannot be done without spatial information when inputs are in ".mat" format. Please supply faces coordinates (faces or tris) for surface data or voxel coordinates (XYZ_vox) for volumetric data');
   end
 end
-  
+
 % small sample correction (for WB)
 [corrWB, tmpR2] = swe_resid_corr(SwE, WB.RWB, WB.SS, pX);
 
@@ -581,7 +588,7 @@ if ~isMat
   %-Cycle over bunches blocks within planes to avoid memory problems
   %==========================================================================
   str   = 'parameter estimation';
-  spm_progress_bar('Init',100,str,'');
+  swe_progress_bar('Init',100,str,'');
   
   % activated voxels for cluster-wise inference
   if (WB.clusterWise == 1)
@@ -658,7 +665,9 @@ if ~isMat
         
         %-Load mask image within current mask & update mask
         %--------------------------------------------------------------
+
         Cm(Cm) = spm_get_data(xM.VM(i),j(:,Cm),false) > 0;
+
       end
       
       %-Get the data in mask, compute threshold & implicit masks
@@ -825,6 +834,7 @@ if ~isMat
       
     end % (bch)
     
+
     %-Plane complete, write plane to image files (unless 1st pass)
     %======================================================================
     
@@ -835,8 +845,9 @@ if ~isMat
     %-Write Mask image
     %------------------------------------------------------------------
     if ~isempty(Q), jj(Q) = 1; end
-    VM    = spm_write_plane(VM, ~isnan(jj), CrPl);
-    
+
+    VM    = spm_write_plane(VM, ~isnan(jj), CrPl);    
+
     %-Write WB fitted data images
     %------------------------------------------------------------------
     for i = 1:nScan
@@ -874,13 +885,14 @@ if ~isMat
     %-Report progress
     %----------------------------------------------------------------------
     fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');
-    spm_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
+    swe_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
     
   end % (for z = 1:zdim)
   
   
   fprintf('\n');                                                          %-#
-  spm_progress_bar('Clear')
+  swe_progress_bar('Clear')
+
   clear beta res Cov_vis CrScore CrYWB CrResWB Q jj%-Clear to save memory
   
   XYZ   = XYZ(:,1:S); % remove all the data not used
@@ -917,7 +929,7 @@ else % ".mat" format
   YNaNrep = 0;
     
   fprintf('%-40s: %30s','Output images','...initialising');           %-#
-  
+
   
   fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-#
   %==========================================================================
@@ -928,7 +940,7 @@ else % ".mat" format
   %-Cycle over bunches blocks within planes to avoid memory problems
   %==========================================================================
   str   = 'parameter estimation';
-  spm_progress_bar('Init',100,str,'');
+  swe_progress_bar('Init',100,str,'');
   
   % activated voxels for cluster-wise inference
   if (WB.clusterWise == 1)
@@ -1145,7 +1157,8 @@ else % ".mat" format
   end
   
   fprintf('\n');                                                        %-#
-  spm_progress_bar('Clear')
+  swe_progress_bar('Clear')
+
   clear res Cov_vis jj%-Clear to save memory
     
   % compute the max cluster size if needed (so many ways this can be
@@ -1274,7 +1287,9 @@ end
 
 %-Save analysis parameters in SwE.mat file
 %--------------------------------------------------------------------------
-if spm_matlab_version_chk('7') >=0
+if isOctave
+  save('SwE','SwE');
+elseif spm_matlab_version_chk('7') >=0
   save('SwE','SwE','-V6');
 else
   save('SwE','SwE');
@@ -1306,13 +1321,14 @@ end
 uncP = ones(1, S); % one because of the original score
 
 str   = sprintf('Parameter estimation\nBootstraping');
-spm_progress_bar('Init',100,str,'');
+
+swe_progress_bar('Init',100,str,'');
 
 fprintf('\n')
 for b = 1:WB.nB
   tic
   str   = sprintf('Parameter estimation\nBootstrap # %i', b);
-  spm_progress_bar('Set','xlabel', str)
+  swe_progress_bar('Set','xlabel', str)
 
   % activated voxels for cluster-wise inference
   if (SwE.WB.clusterWise == 1)
@@ -1572,7 +1588,7 @@ for b = 1:WB.nB
     end
   end
   toc
-  spm_progress_bar('Set',100 * b / WB.nB);
+  swe_progress_bar('Set',100 * b / WB.nB);
 end
 
 %-Save analysis original max min in SwE structure

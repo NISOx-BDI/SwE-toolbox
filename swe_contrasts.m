@@ -38,6 +38,7 @@ end
 %--------------------------------------------------------------------------
 [~,~,file_ext] = fileparts(SwE.xY.P{1});
 isMat          = strcmpi(file_ext,'.mat');
+isOctave = exist('OCTAVE_VERSION','builtin');
 
 if ~isMat
     isMeshData = spm_mesh_detect(SwE.xY.VY);
@@ -105,7 +106,7 @@ for i = 1:length(Ic)
             fprintf('\t%-32s: %30s',sprintf('contrast image %2d',ic),...
                 '...computing');                                %-#
             str   = 'contrast computation';
-            spm_progress_bar('Init',100,str,'');
+            swe_progress_bar('Init',100,str,'');
             if ~isMat
               V      = Vbeta(ind);
             end
@@ -116,9 +117,9 @@ for i = 1:length(Ic)
               else
                 cBeta = cBeta + Co(ind(j)) * spm_get_data(V(j),XYZ);
               end
-                spm_progress_bar('Set',100*(j/numel(ind)));
+                swe_progress_bar('Set',100*(j/numel(ind)));
             end
-            spm_progress_bar('Clear')
+            swe_progress_bar('Clear')
             
             if isMat
               %-save contrasted beta
@@ -152,7 +153,8 @@ for i = 1:length(Ic)
             fprintf('\t%-32s: %30s',sprintf('contrast image %2d',ic),...
                 '...computing');                                %-#
             str   = 'contrast computation';
-            spm_progress_bar('Init',100,str,'');
+            swe_progress_bar('Init',100,str,'');
+
             if ~isMat
               V      = Vbeta(ind);
             end
@@ -163,9 +165,9 @@ for i = 1:length(Ic)
               else
                 cBeta = cBeta + Co(ind(j),:)' * spm_get_data(V(j),XYZ);
               end
-                spm_progress_bar('Set',100*(j/numel(ind)));
+              swe_progress_bar('Set',100*(j/numel(ind)));
             end
-            spm_progress_bar('Clear')
+            swe_progress_bar('Clear')
         end     
         
         % clear beta for memory
@@ -179,7 +181,7 @@ for i = 1:length(Ic)
         fprintf('\t%-32s: %30s',sprintf('spm{%c} image %2d',xCon(ic).STAT,ic),...
             '...computing');                                %-#
         str   = 'contrasted beta covariance computation';
-        spm_progress_bar('Init',100,str,'');            
+        swe_progress_bar('Init',100,str,'');        
 
         it = 0;
         it2 = 0;
@@ -223,17 +225,17 @@ for i = 1:length(Ic)
                           cCovBc_g(:,:,g) = cCovBc_g(:,:,g) + weight *...
                             spm_get_data(Vcov_beta_g((g-1)*nCov_beta+it),XYZ);
                         end
-                        spm_progress_bar('Set',100*((it2-1+g/SwE.Gr.nGr)/length(ind)/(length(ind)+1)*2));
+                        swe_progress_bar('Set',100*((it2-1+g/SwE.Gr.nGr)/length(ind)/(length(ind)+1)*2));
                       end
                     end
-                    spm_progress_bar('Set',100*(it2/length(ind)/(length(ind)+1)*2));
+                    swe_progress_bar('Set',100*(it2/length(ind)/(length(ind)+1)*2));
                 end
             end
         end
-        spm_progress_bar('Clear')
+        swe_progress_bar('Clear')
 
         str   = 'spm computation';
-        spm_progress_bar('Init',100,str,'');
+        swe_progress_bar('Init',100,str,'');
         equivalentScore = nan(1,S);
         % add output of uncorrected p-values
         uncP            = nan(1,S);
@@ -242,17 +244,17 @@ for i = 1:length(Ic)
                 %----------------------------------------------------------
                 eSTAT = 'Z';
                 score = cBeta ./ sqrt(cCovBc);
-                spm_progress_bar('Set',100*(0.1));
+                swe_progress_bar('Set',100*(0.1));
                 switch dof_type 
                     case 1
                         tmp = 0;
                         for g = 1:SwE.Gr.nGr
                             tmp = tmp + cCovBc_g(:,:,g).^2/SwE.dof.edof_Gr(g);
-                            spm_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));
+                            swe_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));
                         end
                         clear cCovBc_g
                         edf = cCovBc.^2 ./ tmp;
-                        spm_progress_bar('Set',100*(0.2));
+                        swe_progress_bar('Set',100*(0.2));
                         % transform into Z-scores image
                         if any(score>0) % avoid to run the following line when all Z are < 0 (BG - 22/08/2016)
                           uncP(score>0)             = spm_Tcdf(-score(score>0),edf(score>0));
@@ -264,7 +266,7 @@ for i = 1:length(Ic)
                           uncP(score<0)             = 1 - uncP(score<0);
                         end
                         %Z = -log10(1-spm_Tcdf(Z,edf)); %transfo into -log10(p)
-                        spm_progress_bar('Set',100);
+                        swe_progress_bar('Set',100);
                     case 0
                         % transform into Z-scores image
                         if any(score>0) % avoid to run the following line when all Z are < 0 (BG - 22/08/2016)
@@ -278,7 +280,7 @@ for i = 1:length(Ic)
                         end
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Tcdf(Z,xCon(ic).edf));
-                        spm_progress_bar('Set',100);
+                        swe_progress_bar('Set',100);
                     case 2
                         CovcCovBc = 0;
                         if isMat
@@ -292,7 +294,7 @@ for i = 1:length(Ic)
                             else
                               CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},1);
                             end
-                            spm_progress_bar('Set',100*(0.1) + g*80/SwE.Gr.nGr);
+                            swe_progress_bar('Set',100*(0.1) + g*80/SwE.Gr.nGr);
                         end
                         clear Wg cov_vis
                         edf = 2 * cCovBc.^2 ./ CovcCovBc - 2; 
@@ -307,7 +309,7 @@ for i = 1:length(Ic)
                           uncP(score<0)             = 1 - uncP(score<0);
                         end
                         %Z = -log10(1-spm_Tcdf(Z,edf)); %transfo into -log10(p)
-                        spm_progress_bar('Set',100);
+                        swe_progress_bar('Set',100);
                     case 3
                         CovcCovBc = 0;                      
                         if isMat
@@ -321,7 +323,7 @@ for i = 1:length(Ic)
                           else
                             CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},2);
                           end
-                          spm_progress_bar('Set',100*(0.1) + g*80/SwE.Gr.nGr);
+                          swe_progress_bar('Set',100*(0.1) + g*80/SwE.Gr.nGr);
                         end
                         clear Wg cov_vis
                         edf = 2 * cCovBc.^2 ./ CovcCovBc;
@@ -337,7 +339,7 @@ for i = 1:length(Ic)
                           uncP(score<0)             = 1 - uncP(score<0);
                         end
                         %Z = -log10(1-spm_Tcdf(Z,edf)); %transfo into -log10(p)
-                        spm_progress_bar('Set',100);
+                        swe_progress_bar('Set',100);
                 end               
                 
             case 'F'                                 %-Compute spm{F} image
@@ -346,24 +348,24 @@ for i = 1:length(Ic)
                 if nSizeCon==1
                     score = abs(cBeta ./ sqrt(cCovBc));
                     indNotNan = ~isnan(score);
-                    spm_progress_bar('Set',100*(0.1));
+                    swe_progress_bar('Set',100*(0.1));
                     switch dof_type
                         case 1
                             tmp = 0;
                             for g = 1:SwE.Gr.nGr
                                 tmp = tmp + cCovBc_g(:,:,g).^2/SwE.dof.edof_Gr(g);
-                                spm_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));
+                                swe_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));
                             end
                             clear cCovBc_g
                             edf = cCovBc.^2 ./ tmp;
-                            spm_progress_bar('Set',100*(3/4));
+                            swe_progress_bar('Set',100*(3/4));
                             % transform into X-scores image
                             uncP(indNotNan) = spm_Tcdf(-abs(score(indNotNan)), edf(indNotNan));
                             equivalentScore(indNotNan) = (swe_invNcdf(uncP(indNotNan))).^2;
                             uncP(indNotNan) = 2 *  uncP(indNotNan);
                             % transform into -log10(p-values) image
                             %Z = -log10(1-spm_Fcdf(Z,1,edf));
-                            spm_progress_bar('Set',100);
+                            swe_progress_bar('Set',100);
                         case 0
                             % transform into X-scores image
                             uncP(indNotNan) = spm_Tcdf(-abs(score(indNotNan)),xCon(ic).edf);
@@ -371,7 +373,7 @@ for i = 1:length(Ic)
                             uncP(indNotNan) = 2 *  uncP(indNotNan);
                            % transform into -log10(p-values) image
                             %Z = -log10(1-spm_Fcdf(Z,1, xCon(ic).edf));
-                            spm_progress_bar('Set',100);
+                            swe_progress_bar('Set',100);
                         case 2
                             CovcCovBc = 0;
                             if isMat
@@ -385,19 +387,19 @@ for i = 1:length(Ic)
                                 else
                                   CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},1);
                                 end
-                                spm_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));
+                                swe_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));
                             end
                             clear Wg cov_vis
                             edf = 2 * cCovBc.^2 ./ CovcCovBc - 2; 
                             clear CovcCovBc
-                            spm_progress_bar('Set',100*(3/4));
+                            swe_progress_bar('Set',100*(3/4));
                             % transform into X-scores image
                             uncP(indNotNan) = spm_Tcdf(-abs(score(indNotNan)), edf(indNotNan));
                             equivalentScore(indNotNan) = (swe_invNcdf(uncP(indNotNan))).^2;
                             uncP(indNotNan) = 2 *  uncP(indNotNan);
                             % transform into -log10(p-values) image
                             %Z = -log10(1-spm_Fcdf(Z,1,edf));
-                            spm_progress_bar('Set',100);
+                            swe_progress_bar('Set',100);
                         case 3
                             CovcCovBc = 0;
                             if isMat
@@ -411,7 +413,7 @@ for i = 1:length(Ic)
                                 else
                                   CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},2);         
                                 end
-                                spm_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));                           
+                                swe_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));    
                             end  
                             clear Wg cov_vis
                             edf = 2 * cCovBc.^2 ./ CovcCovBc;
@@ -421,7 +423,7 @@ for i = 1:length(Ic)
                             uncP(indNotNan) = 2 *  uncP(indNotNan);
                             % transform into -log10(p-values) image
                             %Z = -log10(1-spm_Fcdf(Z,1,edf));
-                            spm_progress_bar('Set',100);
+                            swe_progress_bar('Set',100);
                             clear CovcCovBc
                     end
                     % need to transform in F-score, not in absolute t-score
@@ -496,7 +498,7 @@ for i = 1:length(Ic)
                         end
                         % update progress_bar only approx 80 times 
                         if (mod(iVox,updateEvery) == 0)
-                          spm_progress_bar('Set',10 + 80 * (iVox/S));
+                          swe_progress_bar('Set',10 + 80 * (iVox/S));
                         end
                       end
                     end
@@ -540,11 +542,11 @@ for i = 1:length(Ic)
                         % transform into -log10(p-values) image
                         %Z = -log10(1-spm_Fcdf(Z,xCon(ic).eidf,xCon(ic).edf));
                     end
-                    spm_progress_bar('Set',100);
+                    swe_progress_bar('Set',100);
                 end
         end
         luncP = -log10(uncP);
-        spm_progress_bar('Clear')
+        swe_progress_bar('Clear')
         clear cCovBc cB tmp
         
         
@@ -659,10 +661,10 @@ SwE.xCon = xCon;
 
 % Check if SwE has changed. Save only if it has.
 %--------------------------------------------------------------------------
-if ~isequal(tmpSwE,SwE)
-    if spm_matlab_version_chk('7') >=0
-        save('SwE', 'SwE', '-V6');
-    else
-        save('SwE', 'SwE');
-    end
+if isOctave
+    save('SwE.mat','SwE');
+elseif spm_matlab_version_chk('7') >=0
+    save('SwE','SwE','-V6');
+else
+    save('SwE','SwE');
 end

@@ -1,0 +1,71 @@
+language: python
+# use container-based infrastructure
+sudo: required
+services: 
+  - docker
+cache: 
+  timeout: 1000
+python:
+  - "3.5"
+bundler_args: --retry 9
+# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
+install: 
+ # Install git-lfs 
+ - cd ..
+ - curl -sLo - https://github.com/github/git-lfs/releases/download/v1.4.1/git-lfs-linux-amd64-1.4.1.tar.gz | tar xzvf -
+ - export PATH=$PATH:`pwd`/git-lfs-1.4.1
+ - git lfs install  
+ # Download data.
+ - cd SwE-toolbox/test
+ - git clone https://github.com/TomMaullin/SwE-toolbox-testdata.git data
+ - cd ..
+jobs:
+  include:
+    - stage: Results generation 
+      env:
+      - testname='wb_f_mat'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'f', 'mat')"
+    - env:
+      - testname='wb_t_mat'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 't', 'mat')"
+    - env:
+      - testname='wb_f_img'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'f', 'img')"
+    - env:
+      - testname='wb_t_img'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 't', 'img')"
+    - env:
+      - testname='p_f_mat'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'f', 'mat')"
+    - env:
+      - testname='p_t_mat'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 't', 'mat')"
+    - env:
+      - testname='p_f_img'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'f', 'img')"
+    - env:
+      - testname='p_t_img'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 't', 'img')"
+before_install:
+ # Update docker version
+ - sudo apt-get update
+ - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+ - git config --global user.name "TravisCI" 
+ - git config --global user.email "travis@dummy.com"
+ - docker pull cmaumet/octave-spm 
