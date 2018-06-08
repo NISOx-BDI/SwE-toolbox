@@ -6,7 +6,7 @@
 % Author: Tom Maullin (08/06/2018)
 % =========================================================================
 
-function [SwE] = swe_WB_contrasts(SwE)
+function [SwE] = swe_contrasts_WB(SwE)
 
     %-Get and change to results directory
     %----------------------------------------------------------------------
@@ -60,10 +60,15 @@ function [SwE] = swe_WB_contrasts(SwE)
     % Add the SwE volumes.
     %----------------------------------------------------------------------
     DxCon.Vspm = ['swe_vox_' eSTAT STAT 'stat' wbstring '_c01' file_ext];
-    DxCon.Vspm2 = ['swe_vox_' STAT 'stat' wbstring '_c01' file_ext]; %THIS DOESN'T EXIST - MUST FIX ASAP
+    DxCon.Vspm2 = ['swe_vox_' STAT 'stat' wbstring '_c01' file_ext]; %THIS DOESN'T EXIST FOR WB - MUST FIX ASAP
     DxCon.VspmUncP = ['swe_vox_' STAT 'stat_lp' wbstring '_c01' file_ext];
     
-    disp(DxCon);
-    
+    % Return SwE.
+    %----------------------------------------------------------------------
+    if ~isfield(SwE, 'xCon')
+        SwE.xCon = DxCon;
+    else
+        SwE.xCon = [SwE.xCon DxCon];
+    end
 
 end
