@@ -10,7 +10,7 @@
 % ===============================================================
 function swe_progress_bar(varargin)
 
-	if ~isOctave
+	if ~exist('OCTAVE_VERSION','builtin')
        spm_progress_bar(varargin{:});
     end
 
