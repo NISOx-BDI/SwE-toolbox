@@ -533,9 +533,7 @@ if ~isMat
     %-Cycle over bunches blocks within planes to avoid memory problems
     %==========================================================================
     str   = 'parameter estimation';
-    if ~isOctave
-       spm_progress_bar('Init',100,str,'');
-    end
+    swe_progress_bar('Init',100,str,'');
 
     for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
 
@@ -820,15 +818,12 @@ if ~isMat
         %-Report progress
         %----------------------------------------------------------------------
         fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');  
-        if ~isOctave 
-            spm_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
-        end
+        swe_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
 
     end % (for z = 1:zdim)
     fprintf('\n');  %-#
-    if ~isOctave
-        spm_progress_bar('Clear')
-    end
+    swe_progress_bar('Clear')
+
     clear beta res Cov_vis CrBl CrResI CrCov_vis jj%-Clear to save memory
     if isfield(SwE.type,'modified')
         clear Cov_vis CrCov_vis
@@ -878,9 +873,7 @@ if ~isMat
         disp('Working on the SwE computation...');
         %Computation of the SwE
         str   = 'SwE computation';
-        if ~isOctave
-            spm_progress_bar('Init',100,str,'');
-        end
+        swe_progress_bar('Init',100,str,'');
 
         S_z = 0;
         for z = 1:zdim                       %-loop over planes (2D or 3D data)       
@@ -901,15 +894,11 @@ if ~isMat
                             Vcov_beta_g(it)=spm_write_plane(Vcov_beta_g(it),jj, z);
                         end
                         Cov_beta = Cov_beta + Cov_beta_g;
-                        if ~isOctave
-                            spm_progress_bar('Set',100*((z-1)/zdim + g/nGr/zdim));
-                        end
+                        swe_progress_bar('Set',100*((z-1)/zdim + g/nGr/zdim));
                     end
                 case {0 2 3}
                     Cov_beta = weight * Cov_vis(:,(1+S_z):(S_z+s_z));
-                    if ~isOctave
-                        spm_progress_bar('Set',100*(z/zdim));
-                    end
+                    swe_progress_bar('Set',100*(z/zdim));
             end
             for i=1:nCov_beta
                 if ~isempty(Q_z), jj(Q_z)=Cov_beta(i,:); end
@@ -918,9 +907,8 @@ if ~isMat
             S_z = S_z + s_z;
         end% (for z = 1:zdim)
         fprintf('\n');                                                    %-#
-        if ~isOctave
-            spm_progress_bar('Clear')
-        end
+
+        swe_progress_bar('Clear')
 
     end
 

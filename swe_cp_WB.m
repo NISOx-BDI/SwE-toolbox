@@ -588,9 +588,7 @@ if ~isMat
   %-Cycle over bunches blocks within planes to avoid memory problems
   %==========================================================================
   str   = 'parameter estimation';
-  if ~isOctave
-     spm_progress_bar('Init',100,str,'');
-  end
+  swe_progress_bar('Init',100,str,'');
   
   % activated voxels for cluster-wise inference
   if (WB.clusterWise == 1)
@@ -887,17 +885,14 @@ if ~isMat
     %-Report progress
     %----------------------------------------------------------------------
     fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');
-    if ~isOctave
-       spm_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
-    end
+    swe_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
     
   end % (for z = 1:zdim)
   
   
   fprintf('\n');                                                          %-#
-  if ~isOctave
-     spm_progress_bar('Clear')
-  end
+  swe_progress_bar('Clear')
+
   clear beta res Cov_vis CrScore CrYWB CrResWB Q jj%-Clear to save memory
   
   XYZ   = XYZ(:,1:S); % remove all the data not used
@@ -945,9 +940,7 @@ else % ".mat" format
   %-Cycle over bunches blocks within planes to avoid memory problems
   %==========================================================================
   str   = 'parameter estimation';
-  if ~isOctave
-     spm_progress_bar('Init',100,str,'');
-  end
+  swe_progress_bar('Init',100,str,'');
   
   % activated voxels for cluster-wise inference
   if (WB.clusterWise == 1)
@@ -1164,9 +1157,8 @@ else % ".mat" format
   end
   
   fprintf('\n');                                                        %-#
-  if ~isOctave
-    spm_progress_bar('Clear')
-  end
+  swe_progress_bar('Clear')
+
   clear res Cov_vis jj%-Clear to save memory
     
   % compute the max cluster size if needed (so many ways this can be
@@ -1330,17 +1322,13 @@ uncP = ones(1, S); % one because of the original score
 
 str   = sprintf('Parameter estimation\nBootstraping');
 
-if ~isOctave
-  spm_progress_bar('Init',100,str,'');
-end
+swe_progress_bar('Init',100,str,'');
 
 fprintf('\n')
 for b = 1:WB.nB
   tic
   str   = sprintf('Parameter estimation\nBootstrap # %i', b);
-  if ~isOctave
-    spm_progress_bar('Set','xlabel', str)
-  end
+  swe_progress_bar('Set','xlabel', str)
 
   % activated voxels for cluster-wise inference
   if (SwE.WB.clusterWise == 1)
@@ -1600,9 +1588,7 @@ for b = 1:WB.nB
     end
   end
   toc
-  if ~isOctave
-    spm_progress_bar('Set',100 * b / WB.nB);
-  end
+  swe_progress_bar('Set',100 * b / WB.nB);
 end
 
 %-Save analysis original max min in SwE structure
