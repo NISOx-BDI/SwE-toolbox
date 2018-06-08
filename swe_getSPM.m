@@ -187,9 +187,7 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 %-GUI setup
 %--------------------------------------------------------------------------
 %spm_help('!ContextHelp',mfilename)
-if ~exist('OCTAVE_VERSION','builtin')
-  spm('Pointer','Arrow')
-end
+spm('Pointer','Arrow')
 
 %-Select SwE.mat & note SwE results directory
 %--------------------------------------------------------------------------
