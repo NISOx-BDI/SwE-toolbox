@@ -1,7 +1,11 @@
 % This function creates the missing 'xCon' needed for wild bootstrap SwE
-% objects.
+% objects. Note: Whilst contrasts are created in 'swe_contrasts.m', in 
+% 'swe_WB_contrasts.m' they are only recorded. They have already been
+% created by 'swe_cp_WB.m'.
 %
 % Author: Tom Maullin (08/06/2018)
+% =========================================================================
+
 function [SwE] = swe_WB_contrasts(SwE)
 
     %-Get and change to results directory
@@ -10,19 +14,56 @@ function [SwE] = swe_WB_contrasts(SwE)
         cd(SwE.swd);
     end
     
-    % Retrieve contrast details.
+    %-Get file extension
+    %----------------------------------------------------------------------
+    [~,~,file_ext] = fileparts(SwE.xY.P{1});
+    isMat          = strcmpi(file_ext,'.mat');
+
+    if ~isMat
+        isMeshData = spm_mesh_detect(SwE.xY.VY);
+        if isMeshData
+            file_ext = '.gii';
+        else
+            file_ext = spm_file_ext;
+        end
+    end
+    
+    %-Retrieve contrast details.
+    %----------------------------------------------------------------------
     STAT = SwE.WB.stat;
     c = SwE.WB.con;
     
-    % Retrieve design matrix.
+    %-Retrieve equivalent statistic details.
+    %----------------------------------------------------------------------
+    if strcmpi(STAT, 't')
+        eSTAT = 'z';
+    else
+        eSTAT = 'x';
+    end 
+    
+    %-Retrieve design matrix.
+    %----------------------------------------------------------------------
     X = SwE.xX.X;
     
-    % Create the xCon object.
+    %-Create the xCon object.
+    %----------------------------------------------------------------------
     DxCon = spm_FcUtil('Set', 'Contrast 1: Activation', STAT, 'c', c', X);
-    disp(DxCon);
+    
+    % Work out if we are in clusterwise bootstrap or not.
+    %----------------------------------------------------------------------
+    if SwE.WB.clusterWise
+        wbstring = '-WB';
+    else
+        wbstring = '';
+    end
     
     % Add the SwE volumes.
-    DxCon.Vedf = 
+    %----------------------------------------------------------------------
+    DxCon.Vspm = ['swe_vox_' eSTAT STAT 'stat' wbstring '_c01' file_ext];
+    DxCon.Vspm2 = ['swe_vox_' STAT 'stat' wbstring '_c01' file_ext]; %THIS DOESN'T EXIST - MUST FIX ASAP
+    DxCon.VspmUncP = ['swe_vox_' STAT 'stat_lp' wbstring '_c01' file_ext];
+    
+    disp(DxCon);
     
 
 end
