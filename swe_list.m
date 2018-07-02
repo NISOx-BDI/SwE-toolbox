@@ -193,7 +193,16 @@ case 'table'                                                        %-Table
     try, QPs  = xSwE.Ps; end
     try, QPp  = xSwE.Pp; end
     try, QPc  = xSwE.Pc; end
-        
+    
+    % For WB analyses we have already calculated the information for the
+    % table. We just need to read it in and put it in the table.
+    if xSwE.WB
+        VspmUncP = spm_read_vols(xSwE.VspmUncP);
+        VspmFDRP = spm_read_vols(xSwE.VspmFDRP);
+        VspmFWEP = spm_read_vols(xSwE.VspmFWEP);
+        VspmFWEP_clus = spm_read_vols(xSwE.VspmFWEP_clus);
+    end
+    
 %     if STAT~='P'
 %         R     = full(xSwE.R);
 %         FWHM  = full(xSwE.FWHM);
@@ -441,16 +450,31 @@ case 'table'                                                        %-Table
                   catch 
                     Pz      = 1-spm_Xcdf(U,1);
                   end
-            end                           
-            Pu      = [];
-            Qu      = [];
-            Pk      = [];
-            Pn      = [];
-            Qc      = [];
-            Qp      = [];
-            Qu      = spm_P_FDR(U,[1 1],STATe,n,QPs);    % voxel FDR-corrected
-            ws      = warning('off','SPM:outOfRangeNormal');
-            warning(ws);
+            end
+            
+            % If we are not running a wild bootstrap we need to calculate
+            % the FDR P value and leave the other values blank.
+            if ~xSwE.WB
+                Pu      = [];
+                Pk      = [];
+                Pn      = [];
+                Qc      = [];
+                Qp      = [];
+                Qu      = spm_P_FDR(U,[1 1],STATe,n,QPs);    % voxel FDR-corrected
+                ws      = warning('off','SPM:outOfRangeNormal');
+                warning(ws);
+            % If we are running a wild bootstrap we only need to read in
+            % results we calculated earlier.
+            else
+                Pu      = VspmFWEP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                Qu      = VspmFDRP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                Pk      = VspmFWEP_clus(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                Pn      = [];
+                Qc      = [];
+                Qp      = [];
+                ws      = warning('off','SPM:outOfRangeNormal');
+                warning(ws);
+            end
 %         end
         
         if topoFDR
@@ -486,6 +510,10 @@ case 'table'                                                        %-Table
 %                             Ze = swe_invNcdf(1 - Pz); 
 %                         end
 %                     else
+
+                    % If we are not running a wild bootstrap we need to calculate
+                    % the FDR P value and leave the other values blank.
+                    if ~xSwE.WB
                         Pz     = spm_Ncdf(-Z(d));
                         Pu     = [];
                         Qu     = [];
@@ -495,6 +523,20 @@ case 'table'                                                        %-Table
                         Ze     = swe_invNcdf(Z(d));
                         warning(ws);
 %                     end
+
+                    % If we are running a wild bootstrap we only need to read in
+                    % results we calculated earlier.
+                    else
+                        
+                        Pz      = spm_Ncdf(-Z(d));
+                        Pu      = VspmFWEP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                        Qu      = VspmFDRP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                        ws     = warning('off','SPM:outOfRangeNormal');
+                        Ze     = swe_invNcdf(Z(d));
+                        warning(ws);
+                        
+                    end
+                    
                     D     = [D d];
                     if topoFDR
                     [TabDat.dat{TabLin,7:12}] = ...
