@@ -39,11 +39,11 @@ function varargout = swe_list(varargin)
 % TabDat - Structure containing table data
 %        - fields are
 % .tit   - table title (string)
-% .hdr   - table header (2x12 cell array)
-% .fmt   - fprintf format strings for table data (1x12 cell array)
+% .hdr   - table header (2x11 cell array)
+% .fmt   - fprintf format strings for table data (1x11 cell array)
 % .str   - table filtering note (string)
 % .ftr   - table footnote information (5x2 cell array)
-% .dat   - table data (Nx12 cell array)
+% .dat   - table data (Nx11 cell array)
 %
 %                           ----------------
 %
@@ -251,9 +251,8 @@ case 'table'                                                        %-Table
         'peak',     'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
         'peak',     'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
         'peak',      STATe,         sprintf('\\it%c',STATe);...
-        'peak',     '',             '';...
         'peak',     'p(unc)',       '\itp\rm_{uncorr}';...
-        '',         'x,y,z {mm}',   [units{:}]}';...
+        ' ',         'x,y,z {mm}',   [units{:}]}';...
         
     %-Coordinate Precisions
     %----------------------------------------------------------------------
@@ -282,9 +281,9 @@ case 'table'                                                        %-Table
         end
         voxfmt = [tmpfmt{:}];
     end
-    TabDat.fmt = {  '%-0.3f','%g',...                          %-Set
+    TabDat.fmt = {'%-0.3f','%g',...                            %-Set
         '%0.3f', '%0.3f','%0.0f', '%0.3f',...                  %-Cluster
-        '%0.3f', '%0.3f', '%6.2f', '%5.2f', '%0.3f',...        %-Peak
+        '%0.3f', '%0.3f', '%6.2f', '%0.3f',...                 %-Peak
         xyzfmt};                                               %-XYZ
     
     %-Table filtering note
@@ -343,7 +342,7 @@ case 'table'                                                        %-Table
     % (sorted on Z values and grouped by regions)
     %----------------------------------------------------------------------
     if isempty(Z)
-        TabDat.dat = cell(0,12);
+        TabDat.dat = cell(0,11);
         varargout  = {TabDat};
         return
     end
@@ -466,9 +465,9 @@ case 'table'                                                        %-Table
             % If we are running a wild bootstrap we only need to read in
             % results we calculated earlier.
             else
-                Pu      = VspmFWEP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                Qu      = VspmFDRP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                Pk      = VspmFWEP_clus(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                Pu      = 10.^-VspmFWEP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                Qu      = 10.^-VspmFDRP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                Pk      = 10.^-VspmFWEP_clus(XYZ(1,i),XYZ(2,i),XYZ(3,i));
                 Pn      = [];
                 Qc      = [];
                 Qp      = [];
@@ -478,9 +477,9 @@ case 'table'                                                        %-Table
 %         end
         
         if topoFDR
-        [TabDat.dat{TabLin,3:12}] = deal(Pk,Qc,N(i),Pn,Pu,Qp,U,[],Pz,XYZmm(:,i));
+        [TabDat.dat{TabLin,3:11}] = deal(Pk,Qc,N(i),Pn,Pu,Qp,U,Pz,XYZmm(:,i));
         else
-        [TabDat.dat{TabLin,3:12}] = deal(Pk,Qc,N(i),Pn,Pu,Qu,U,[],Pz,XYZmm(:,i));
+        [TabDat.dat{TabLin,3:11}] = deal(Pk,Qc,N(i),Pn,Pu,Qu,U,Pz,XYZmm(:,i));
         end
         TabLin = TabLin + 1;
         
@@ -529,8 +528,8 @@ case 'table'                                                        %-Table
                     else
                         
                         Pz      = spm_Ncdf(-Z(d));
-                        Pu      = VspmFWEP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                        Qu      = VspmFDRP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                        Pu      = 10.^-VspmFWEP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                        Qu      = 10.^-VspmFDRP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
                         ws     = warning('off','SPM:outOfRangeNormal');
                         Ze     = swe_invNcdf(Z(d));
                         warning(ws);
@@ -539,11 +538,11 @@ case 'table'                                                        %-Table
                     
                     D     = [D d];
                     if topoFDR
-                    [TabDat.dat{TabLin,7:12}] = ...
-                        deal(Pu,Qp,Z(d),[],Pz,XYZmm(:,d));
+                    [TabDat.dat{TabLin,7:11}] = ...
+                        deal(Pu,Qp,Z(d),Pz,XYZmm(:,d));
                     else
-                    [TabDat.dat{TabLin,7:12}] = ...
-                        deal(Pu,Qu,Z(d),[],Pz,XYZmm(:,d));
+                    [TabDat.dat{TabLin,7:11}] = ...
+                        deal(Pu,Qu,Z(d),Pz,XYZmm(:,d));
                     end
                     TabLin = TabLin+1;
                 end
@@ -618,15 +617,14 @@ case 'table'                                                        %-Table
     h  = text(0.34,y-9*dy/8,    TabDat.hdr{3,5});              Hc = [Hc,h];
     h  = text(0.39,y-9*dy/8,    TabDat.hdr{3,6});              Hc = [Hc,h];
     
-    text(0.64,y, [TabDat.hdr{1,7} '-level'],'FontSize',FS(9));
-    line([0.48,0.88],[1,1]*(y-dy/4),'LineWidth',0.5,'Color','r');
+    text(0.59,y, [TabDat.hdr{1,7} '-level'],'FontSize',FS(9));
+    line([0.48,0.80],[1,1]*(y-dy/4),'LineWidth',0.5,'Color','r');
     h  = text(0.49,y-9*dy/8,    TabDat.hdr{3,7});              Hp = [Hp,h];
     h  = text(0.58,y-9*dy/8,    TabDat.hdr{3,8});              Hp = [Hp,h];
     h  = text(0.67,y-9*dy/8,    TabDat.hdr{3,9});              Hp = [Hp,h];
     h  = text(0.75,y-9*dy/8,    TabDat.hdr{3,10});             Hp = [Hp,h];
-    h  = text(0.82,y-9*dy/8,    TabDat.hdr{3,11});             Hp = [Hp,h];
     
-    text(0.92,y - dy/2,TabDat.hdr{3,12},'Fontsize',FS(8));
+    text(0.85,y - dy/2,TabDat.hdr{3,11},'Fontsize',FS(8));
 
     %-Move to next vertical position marker
     %----------------------------------------------------------------------
@@ -732,8 +730,8 @@ case 'table'                                                        %-Table
         
         % Specifically changed so it properly finds hMIPax
         %------------------------------------------------------------------
-        tXYZmm = TabDat.dat{i,12};
-        h      = text(tCol(12),y,sprintf(TabDat.fmt{12},tXYZmm),...
+        tXYZmm = TabDat.dat{i,11};
+        h      = text(tCol(11),y,sprintf(TabDat.fmt{11},tXYZmm),...
             'FontWeight',fw,...
             'Tag','ListXYZ',...
             'ButtonDownFcn',[...
@@ -866,7 +864,7 @@ case 'table'                                                        %-Table
             end
             fprintf('\n')
         end
-        for i=1:max(1,12-size(TabDat.dat,1)), fprintf('\n'), end
+        for i=1:max(1,11-size(TabDat.dat,1)), fprintf('\n'), end
         fprintf('%s\n',TabDat.str)
         fprintf('%c',repmat('-',1,80)), fprintf('\n')
 
@@ -907,7 +905,7 @@ case 'table'                                                        %-Table
         tmpfile = [tempname '.csv'];
         fid = fopen(tmpfile,'wt');
         fprintf(fid,[repmat('%s,',1,11) '%d,,\n'],TabDat.hdr{1,:});
-        fprintf(fid,[repmat('%s,',1,12) '\n'],TabDat.hdr{2,:});
+        fprintf(fid,[repmat('%s,',1,11) '\n'],TabDat.hdr{2,:});
         fmt = TabDat.fmt;
         [fmt{2,:}] = deal(','); fmt = [fmt{:}];
         fmt(end:end+1) = '\n'; fmt = strrep(fmt,' ',',');
