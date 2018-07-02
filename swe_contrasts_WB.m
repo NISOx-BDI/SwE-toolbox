@@ -59,7 +59,7 @@ function [SwE] = swe_contrasts_WB(SwE)
     
     % Add the SwE volumes.
     %----------------------------------------------------------------------
-    DxCon.Vspm = spm_vol(['swe_vox_' eSTAT STAT 'stat' wbstring '_c01' file_ext]);
+    DxCon.Vspm = spm_vol(['swe_vox_' eSTAT STAT 'stat_c01' file_ext]);
 %    DxCon.Vspm2 = spm_vol(['swe_vox_' STAT 'stat' wbstring '_c01' file_ext]); %THIS DOESN'T EXIST FOR WB - MUST FIX ASAP
     DxCon.VspmUncP = spm_vol(['swe_vox_' STAT 'stat_lp' wbstring '_c01' file_ext]);
     

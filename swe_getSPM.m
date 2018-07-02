@@ -669,124 +669,139 @@ if ~isMat
       try
           thresDesc = xSwE.thresDesc;
       catch
-            str = 'FDR|none';
-  %         if topoFDR
-  %             str = 'FWE|none';
-  %         else
-  %             str = 'FWE|FDR|none';
-  %         end
+          % For non WB we only have FDR.
+          if ~isfield(SwE, 'WB')
+              str = 'FDR|none';
+          else
+              str = 'FWE|FDR|none';
+          end
           thresDesc = spm_input('p value adjustment to control','+1','b',str,[],1);
       end
 
-      switch thresDesc
+      if ~isfield(SwE, 'WB')
+          switch thresDesc
 
-  %         case 'FWE' % Family-wise false positive rate
-  %             %--------------------------------------------------------------
-  %             try
-  %                 u = xSwE.u;
-  %             catch
-  %                 u = spm_input('p value (FWE)','+0','r',0.05,1,[0,1]);
-  %             end
-  %             thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
-  %             switch STAT
-  %                 case 'T'
-  %                     u   = spm_uc(u,[0,0],'Z',R,n,S);
-  %                 case 'F'
-  %                     u   = spm_uc(u,[0,1],'X',R,n,S);
-  %             end
+      %         case 'FWE' % Family-wise false positive rate
+      %             %--------------------------------------------------------------
+      %             try
+      %                 u = xSwE.u;
+      %             catch
+      %                 u = spm_input('p value (FWE)','+0','r',0.05,1,[0,1]);
+      %             end
+      %             thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
+      %             switch STAT
+      %                 case 'T'
+      %                     u   = spm_uc(u,[0,0],'Z',R,n,S);
+      %                 case 'F'
+      %                     u   = spm_uc(u,[0,1],'X',R,n,S);
+      %             end
 
 
-          case 'FDR' % False discovery rate
-              %--------------------------------------------------------------
-  %             if topoFDR,
-  %                 fprintf('\n');                                          %-#
-  %                 error('Change defaults.stats.topoFDR to use voxel FDR');
-  %             end
-              try
-                  u = xSwE.u;
-              catch
-                  u = spm_input('p value (FDR)','+0','r',0.05,1,[0,1]);
-              end
-              thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
-              switch STAT
-                  case 'T'
-                     u = spm_uc_FDR(u,df,'Z',n,VspmSv,0); 
-                  case 'F'
-                     u = spm_uc_FDR(u,df,'X',n,VspmSv,0); 
-              end
-
-          case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
-              %--------------------------------------------------------------
-              try
-                  u = xSwE.u;
-              catch
-                  u = spm_input(['threshold {',STAT,' or p value}'],'+0','r',0.001,1);
-              end
-              if u <= 1
-                  thresDesc = ['p<' num2str(u) ' (unc.)'];
+              case 'FDR' % False discovery rate
+                  %--------------------------------------------------------------
+      %             if topoFDR,
+      %                 fprintf('\n');                                          %-#
+      %                 error('Change defaults.stats.topoFDR to use voxel FDR');
+      %             end
+                  try
+                      u = xSwE.u;
+                  catch
+                      u = spm_input('p value (FDR)','+0','r',0.05,1,[0,1]);
+                  end
+                  thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
                   switch STAT
                       case 'T'
-                          u  = swe_invNcdf(1-u^(1/n));
+                         u = spm_uc_FDR(u,df,'Z',n,VspmSv,0); 
                       case 'F'
-                          u  = spm_invXcdf(1-u^(1/n),1);
+                         u = spm_uc_FDR(u,df,'X',n,VspmSv,0); 
                   end
-              else
-                  thresDesc = [STAT '=' num2str(u) ];
-              end
+
+              case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
+                  %--------------------------------------------------------------
+                  try
+                      u = xSwE.u;
+                  catch
+                      u = spm_input(['threshold {',STAT,' or p value}'],'+0','r',0.001,1);
+                  end
+                  if u <= 1
+                      thresDesc = ['p<' num2str(u) ' (unc.)'];
+                      switch STAT
+                          case 'T'
+                              u  = swe_invNcdf(1-u^(1/n));
+                          case 'F'
+                              u  = spm_invXcdf(1-u^(1/n),1);
+                      end
+                  else
+                      thresDesc = [STAT '=' num2str(u) ];
+                  end
 
 
 
-          otherwise
-              %--------------------------------------------------------------
-              fprintf('\n');                                              %-#
-              error('Unknown control method "%s".',thresDesc);
+              otherwise
+                  %--------------------------------------------------------------
+                  fprintf('\n');                                              %-#
+                  error('Unknown control method "%s".',thresDesc);
+                  
 
-      end % switch thresDesc
-      %-Compute p-values for topological and voxel-wise FDR (all search voxels)
-      %----------------------------------------------------------------------
-      fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...for voxelFDR')  %-#
-      switch STAT
-          case 'T'
-              Ps = (1-spm_Ncdf(Zum)).^n; 
-          case 'F'
-              Ps = (1-spm_Xcdf(Zum,df(2))).^n;
+          end % switch thresDesc
+          
+          %-Compute p-values for topological and voxel-wise FDR (all search voxels)
+          %----------------------------------------------------------------------
+          fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...for voxelFDR')  %-#
+          switch STAT
+              case 'T'
+                  Ps = (1-spm_Ncdf(Zum)).^n; 
+              case 'F'
+                  Ps = (1-spm_Xcdf(Zum,df(2))).^n;
+          end
+          %-Peak FDR
+          %----------------------------------------------------------------------
+      %     switch STAT
+      %         case 'T'
+      %             [up,Pp] = spm_uc_peakFDR(0.05,df,'Z',R,n,Zum,XYZum,u);
+      %         case 'F'
+      %             [up,Pp] = spm_uc_peakFDR(0.05,df,'X',R,n,Zum,XYZum,u);
+      %     end
+              up  = NaN;
+              Pp  = NaN;
+          %-Cluster FDR
+          %----------------------------------------------------------------------
+      %     if STAT == 'T' && n == 1
+      %         V2R        = 1/prod(SwE.xVol.FWHM(SwE.xVol.DIM > 1));
+      %         [uc,Pc,ue] = spm_uc_clusterFDR(0.05,df,STAT,R,n,Zum,XYZum,V2R,u);
+      %     else
+              uc  = NaN;
+              ue  = NaN;
+              Pc  = [];
+      %     end
+
+          %-Peak FWE
+          %----------------------------------------------------------------
+      %     switch STAT
+      %         case 'T'
+      %             uu      = spm_uc(0.05,[0 0],'Z',R,n,S);
+      %         case 'F'
+      %             uu      = spm_uc(0.05,[0 1],'X',R,n,S);
+      %     end
+          uu = [];
+          
+          %-Calculate height threshold filtering
+          %----------------------------------------------------------------
+          Q      = find(Z > u);
+      
+      % Here we are looking at Wild Bootstrap clusterwise results.
+      else
+          
+          % For WB we have performed our thresholding and worked out of 
+          % regions of activation. 
+          %(Note: Q Currently only set for activation).
+          locActVox = SwE.WB.clusterInfo.LocActivatedVoxels;
+          [~, index]=ismember(XYZ',locActVox','rows');
+          Q=find(index~=0);
+              
       end
-      %-Peak FDR
-      %----------------------------------------------------------------------
-  %     switch STAT
-  %         case 'T'
-  %             [up,Pp] = spm_uc_peakFDR(0.05,df,'Z',R,n,Zum,XYZum,u);
-  %         case 'F'
-  %             [up,Pp] = spm_uc_peakFDR(0.05,df,'X',R,n,Zum,XYZum,u);
-  %     end
-          up  = NaN;
-          Pp  = NaN;
-      %-Cluster FDR
-      %----------------------------------------------------------------------
-  %     if STAT == 'T' && n == 1
-  %         V2R        = 1/prod(SwE.xVol.FWHM(SwE.xVol.DIM > 1));
-  %         [uc,Pc,ue] = spm_uc_clusterFDR(0.05,df,STAT,R,n,Zum,XYZum,V2R,u);
-  %     else
-          uc  = NaN;
-          ue  = NaN;
-          Pc  = [];
-  %     end
-
-      %-Peak FWE
-      %----------------------------------------------------------------------
-  %     switch STAT
-  %         case 'T'
-  %             uu      = spm_uc(0.05,[0 0],'Z',R,n,S);
-  %         case 'F'
-  %             uu      = spm_uc(0.05,[0 1],'X',R,n,S);
-  %     end
-      uu = [];
 
   end
-
-  %-Calculate height threshold filtering
-  %--------------------------------------------------------------------------
-  Q      = find(Z > u);
 
   %-Apply height threshold
   %--------------------------------------------------------------------------
@@ -802,7 +817,7 @@ if ~isMat
 
   %-Extent threshold (disallowed for conjunctions)
   %--------------------------------------------------------------------------
-  if ~isempty(XYZ) && nc == 1
+  if ~isempty(XYZ) && nc == 1 && ~isfield(SwE, 'WB')
 
       fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...extent threshold')  %-#
 
