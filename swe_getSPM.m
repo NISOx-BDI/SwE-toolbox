@@ -590,21 +590,12 @@ else
     str = '';
 end
 
-% For WB we display equivalent statistics, else it is normal statistics.
-if ~isfield(SwE, 'WB')
-    switch STAT
-        case 'T' 
-            STATstr = sprintf('%c','T',str);
-        case 'F'
-            STATstr = sprintf('%c','F',str);
-    end
-else
-    switch STAT
-        case 'T' 
-            STATstr = sprintf('%c','Z',str);
-        case 'F'
-            STATstr = sprintf('%c','X',str);
-    end
+% We display the equivalent statistics.
+switch STAT
+    case 'T' 
+        STATstr = sprintf('%c','Z',str);
+    case 'F'
+        STATstr = sprintf('%c','X',str);
 end
 %-Compute (unfiltered) spm pointlist for masked conjunction requested
 %==========================================================================
@@ -829,7 +820,11 @@ if ~isMat
           % used.
           pu = SwE.WB.clusterInfo.primaryThreshold;
           thresDesc = ['p<' num2str(pu) ' (unc.)'];
-          u = norminv(1-pu);
+          if strcmp(STAT, 'T')
+              u = norminv(1-pu);
+          else
+              u = chi2inv(1-pu, 1);
+          end
               
       end
 
