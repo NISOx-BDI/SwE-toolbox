@@ -20,8 +20,8 @@ try
     cd(SwE.swd);
 end
 
-% For Wild Bootstrap we already recorded contrasts, we just need to record
-% them.
+% For Wild Bootstrap we already made contrast images, we just need to 
+% record them.
 %--------------------------------------------------------------------------
 if isfield(SwE, 'WB')
     SwE = swe_contrasts_WB(SwE);

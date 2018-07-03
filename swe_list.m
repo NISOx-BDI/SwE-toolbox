@@ -682,9 +682,9 @@ case 'table'                                                        %-Table
 
     %-Set-level p values {c} - do not display if reporting a single cluster
     %----------------------------------------------------------------------
-    if isempty(TabDat.dat{1,1}) % Pc
+     if isempty(TabDat.dat{1,1}) && isempty(TabDat.dat{1,2}) % Pc
         set(Hs,'Visible','off');
-    end
+     end
     
     if TabDat.dat{1,2} > 1 % c
         h     = text(tCol(1),y,sprintf(TabDat.fmt{1},TabDat.dat{1,1}),...
