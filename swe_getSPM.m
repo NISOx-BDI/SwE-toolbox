@@ -830,29 +830,43 @@ if ~isMat
                   % This is performed on the voxelwise FWE P value map
                   %--------------------------------------------------------
                   try
-                      u = xSwE.u;
+                      pu = xSwE.u;
                   catch
-                      u = spm_input('p value (FWE)','+0','r',0.05,1,[0,1]);
+                      pu = spm_input('p value (FWE)','+0','r',0.05,1,[0,1]);
                   end
-                  thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
+                  thresDesc = ['p<' num2str(pu) ' (' thresDesc ')'];
                   
                   FWE_ps = 10.^-spm_get_data(xCon(1).VspmFWEP,XYZum);
                   
-                  Q      = find(FWE_ps  < u);
+                  Q      = find(FWE_ps  < pu);
+                  
+                  % Obtain statistic threshold
+                  if strcmp(STAT, 'T')
+                      u = norminv(1-pu);
+                  else
+                      u = chi2inv(1-pu, 1);
+                  end
 
               case 'FDR' % False discovery rate
                   % This is performed on the FDR P value map
                   %--------------------------------------------------------
                   try
-                      u = xSwE.u;
+                      pu = xSwE.u;
                   catch
-                      u = spm_input('p value (FDR)','+0','r',0.05,1,[0,1]);
+                      pu = spm_input('p value (FDR)','+0','r',0.05,1,[0,1]);
                   end
-                  thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
+                  thresDesc = ['p<' num2str(pu) ' (' thresDesc ')'];
 
                   FDR_ps = 10.^-spm_get_data(xCon(1).VspmFDRP,XYZum);
                   
-                  Q      = find(FDR_ps  < u);
+                  Q      = find(FDR_ps  < pu);
+                  
+                  % Obtain statistic threshold
+                  if strcmp(STAT, 'T')
+                      u = norminv(1-pu);
+                  else
+                      u = chi2inv(1-pu, 1);
+                  end
                   
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
                   % This is performed in the normal manor on the Z map.

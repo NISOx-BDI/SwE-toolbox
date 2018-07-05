@@ -359,37 +359,6 @@ case 'table'                                                        %-Table
     c              = max(A);                           %-Number of clusters
     NONSTAT        = spm_get_defaults('stats.rft.nonstat');
     
-%     if STAT ~= 'P'
-%         if NONSTAT
-%             K      = zeros(c,1);
-%             for i  = 1:c
-%                 
-%                 %-Get LKC for voxels in i-th region
-%                 %----------------------------------------------------------
-%                 LKC = spm_get_data(VRpv,L{i});
-%                 
-%                 %-Compute average of valid LKC measures for i-th region
-%                 %----------------------------------------------------------
-%                 valid = ~isnan(LKC);
-%                 if any(valid)
-%                     LKC = sum(LKC(valid)) / sum(valid);
-%                 else
-%                     LKC = V2R; % fall back to whole-brain resel density
-%                 end
-%                 
-%                 %-Intrinsic volume (with surface correction)
-%                 %----------------------------------------------------------
-%                 IV   = spm_resels([1 1 1],L{i},'V');
-%                 IV   = IV*[1/2 2/3 2/3 1]';
-%                 K(i) = IV*LKC;
-%                 
-%             end
-%             K = K(A);
-%         else
-%             K = N*V2R;
-%         end
-%     end
-    
     %-Convert maxima locations from voxels to mm
     %----------------------------------------------------------------------
     XYZmm = M(1:3,:)*[XYZ; ones(1,size(XYZ,2))];
@@ -473,6 +442,14 @@ case 'table'                                                        %-Table
                 Qp      = [];
                 ws      = warning('off','SPM:outOfRangeNormal');
                 warning(ws);
+                
+                % It is possible to get the results window to display
+                % details about voxels that were thresholded out by the
+                % cluster-forming threshold used for the wild bootstrap.
+                % These regions will have NaN for the cluster FWE P-value
+                % when they should have one. So the below is necessary:
+                Pk(isnan(Pk)) = 1;
+                
             end
 %         end
         
