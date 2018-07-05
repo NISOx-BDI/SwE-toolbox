@@ -528,7 +528,7 @@ if ~isfield(SwE, 'WB')
     end
 end
 
-% For WB the only thing we haven't got is a contrast name.
+% Ask for a contrast name.
 if ~isMat
     if nc == 1
       str  = xCon(Ic).name;
@@ -549,6 +549,15 @@ if ~isMat
     Im = [];
     pm = [];
     Ex = [];
+end
+
+% Ask whether to do voxelwise or clusterwise inference.
+if ~isMat
+    if isfield(SwE, 'WB')
+        infType = spm_input('inference type','+1','b','voxelwise|clusterwise',[0,1],2);
+    else
+        infType = spm_input('inference type','+1','b','voxelwise|clusterwise',[0,1],1);
+    end
 end
 
 %-Compute & store contrast parameters, contrast/ESS images, & SwE images
@@ -673,53 +682,31 @@ end
 if ~isMat
   u   = -Inf;        % height threshold
   k   = 0;           % extent threshold {voxels}
-
+  clustWise = 'None';% Type of clusterwise inference
 
   %-Height threshold - classical inference
   %--------------------------------------------------------------------------
   if STAT ~= 'P'
-
-      if ~isfield(SwE, 'WB')
+      
+      % If we are doing voxelwise parametric.
+      if ~isfield(SwE, 'WB') && infType == 0
           
           %-Get height threshold
-          %----------------------------------------------------------------------
+          %----------------------------------------------------------------
           fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...height threshold')  %-#
           try
               thresDesc = xSwE.thresDesc;
           catch
               % For non WB we only have FDR.
-              if ~isfield(SwE, 'WB')
-                  str = 'FDR|none';
-              else
-                  str = 'FWE|FDR|none';
-              end
+              str = 'FDR|none';
+
               thresDesc = spm_input('p value adjustment to control','+1','b',str,[],1);
           end
           
           switch thresDesc
 
-      %         case 'FWE' % Family-wise false positive rate
-      %             %--------------------------------------------------------------
-      %             try
-      %                 u = xSwE.u;
-      %             catch
-      %                 u = spm_input('p value (FWE)','+0','r',0.05,1,[0,1]);
-      %             end
-      %             thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
-      %             switch STAT
-      %                 case 'T'
-      %                     u   = spm_uc(u,[0,0],'Z',R,n,S);
-      %                 case 'F'
-      %                     u   = spm_uc(u,[0,1],'X',R,n,S);
-      %             end
-
-
               case 'FDR' % False discovery rate
-                  %--------------------------------------------------------------
-      %             if topoFDR,
-      %                 fprintf('\n');                                          %-#
-      %                 error('Change defaults.stats.topoFDR to use voxel FDR');
-      %             end
+                  %--------------------------------------------------------
                   try
                       u = xSwE.u;
                   catch
@@ -734,7 +721,7 @@ if ~isMat
                   end
 
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
-                  %--------------------------------------------------------------
+                  %--------------------------------------------------------
                   try
                       u = xSwE.u;
                   catch
@@ -752,8 +739,6 @@ if ~isMat
                       thresDesc = [STAT '=' num2str(u) ];
                   end
 
-
-
               otherwise
                   %--------------------------------------------------------------
                   fprintf('\n');                                              %-#
@@ -763,7 +748,7 @@ if ~isMat
           end % switch thresDesc
           
           %-Compute p-values for topological and voxel-wise FDR (all search voxels)
-          %----------------------------------------------------------------------
+          %----------------------------------------------------------------
           fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...for voxelFDR')  %-#
           switch STAT
               case 'T'
@@ -771,59 +756,209 @@ if ~isMat
               case 'F'
                   Ps = (1-spm_Xcdf(Zum,df(2))).^n;
           end
-          %-Peak FDR
-          %----------------------------------------------------------------------
-      %     switch STAT
-      %         case 'T'
-      %             [up,Pp] = spm_uc_peakFDR(0.05,df,'Z',R,n,Zum,XYZum,u);
-      %         case 'F'
-      %             [up,Pp] = spm_uc_peakFDR(0.05,df,'X',R,n,Zum,XYZum,u);
-      %     end
-              up  = NaN;
-              Pp  = NaN;
-          %-Cluster FDR
-          %----------------------------------------------------------------------
-      %     if STAT == 'T' && n == 1
-      %         V2R        = 1/prod(SwE.xVol.FWHM(SwE.xVol.DIM > 1));
-      %         [uc,Pc,ue] = spm_uc_clusterFDR(0.05,df,STAT,R,n,Zum,XYZum,V2R,u);
-      %     else
-              uc  = NaN;
-              ue  = NaN;
-              Pc  = [];
-      %     end
-
-          %-Peak FWE
-          %----------------------------------------------------------------
-      %     switch STAT
-      %         case 'T'
-      %             uu      = spm_uc(0.05,[0 0],'Z',R,n,S);
-      %         case 'F'
-      %             uu      = spm_uc(0.05,[0 1],'X',R,n,S);
-      %     end
+          
+          up  = NaN;
+          Pp  = NaN;
+          uc  = NaN;
+          ue  = NaN;
+          Pc  = [];
           uu = [];
           
-          %-Calculate height threshold filtering
-          %----------------------------------------------------------------
           Q      = find(Z > u);
       
-      % Here we are looking at Wild Bootstrap clusterwise results.
+      % If we are doing clusterwise parametric.
+      elseif ~isfield(SwE, 'WB') && infType == 1
+          
+          % Record what type of clusterwise inference we are doing.
+          clustWise = 'Uncorr';
+          
+          % No adjustment: p for conjunctions is p of the conjunction SwE
+          %--------------------------------------------------------------
+          try
+              u = xSwE.u;
+          catch
+              u = spm_input(['threshold {',STAT,' or p value}'],'+1','r',0.001,1);
+          end
+          if u <= 1
+              thresDesc = ['p<' num2str(u) ' (unc.)'];
+              switch STAT
+                  case 'T'
+                      u  = swe_invNcdf(1-u^(1/n));
+                  case 'F'
+                      u  = spm_invXcdf(1-u^(1/n),1);
+              end
+          else
+              thresDesc = [STAT '=' num2str(u) ];
+          end
+          
+          %-Compute p-values for topological and voxel-wise FDR (all search voxels)
+          %----------------------------------------------------------------
+          fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...for voxelFDR')  %-#
+          switch STAT
+              case 'T'
+                  Ps = (1-spm_Ncdf(Zum)).^n; 
+              case 'F'
+                  Ps = (1-spm_Xcdf(Zum,df(2))).^n;
+          end
+          
+          up  = NaN;
+          Pp  = NaN;
+          uc  = NaN;
+          ue  = NaN;
+          Pc  = [];
+          uu = [];
+          
+          Q      = find(Z > u);
+
+      % If we are doing voxelwise WB.
+      elseif isfield(SwE, 'WB') && infType == 0
+          
+          %-Get height threshold
+          %----------------------------------------------------------------------
+          fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...height threshold')  %-#
+          try
+              thresDesc = xSwE.thresDesc;
+          catch
+              % For WB we have FWE or FDR.
+              str = 'FWE|FDR|none';
+              thresDesc = spm_input('p value adjustment to control','+1','b',str,[],1);
+          end
+          
+          switch thresDesc
+
+              case 'FWE' % Family-wise false positive rate
+                  % This is performed on the voxelwise FWE P value map
+                  %--------------------------------------------------------
+                  try
+                      u = xSwE.u;
+                  catch
+                      u = spm_input('p value (FWE)','+0','r',0.05,1,[0,1]);
+                  end
+                  thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
+                  
+                  FWE_ps = 10.^-spm_get_data(xCon(1).VspmFWEP,XYZum);
+                  
+                  Q      = find(FWE_ps  < u);
+
+              case 'FDR' % False discovery rate
+                  % This is performed on the FDR P value map
+                  %--------------------------------------------------------
+                  try
+                      u = xSwE.u;
+                  catch
+                      u = spm_input('p value (FDR)','+0','r',0.05,1,[0,1]);
+                  end
+                  thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
+
+                  FDR_ps = 10.^-spm_get_data(xCon(1).VspmFDRP,XYZum);
+                  
+                  Q      = find(FDR_ps  < u);
+                  
+              case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
+                  % This is performed in the normal manor on the Z map.
+                  %--------------------------------------------------------
+                  try
+                      u = xSwE.u;
+                  catch
+                      u = spm_input(['threshold {',STAT,' or p value}'],'+0','r',0.001,1);
+                  end
+                  if u <= 1
+                      thresDesc = ['p<' num2str(u) ' (unc.)'];
+                      switch STAT
+                          case 'T'
+                              u  = swe_invNcdf(1-u^(1/n));
+                          case 'F'
+                              u  = spm_invXcdf(1-u^(1/n),1);
+                      end
+                  else
+                      thresDesc = [STAT '=' num2str(u) ];
+                  end
+
+                  Q      = find(Z > u);
+
+              otherwise
+                  %--------------------------------------------------------------
+                  fprintf('\n');                                              %-#
+                  error('Unknown control method "%s".',thresDesc);
+          end
+          
+          up  = NaN;
+          Pp  = NaN;
+          uc  = NaN;
+          ue  = NaN;
+          Pc  = [];
+          uu = [];
+
+      % Else we are doing clusterwise WB.
       else
           
-          % For WB we have performed our thresholding and worked out of 
-          % regions of activation. 
-          %(Note: Q Currently only set for activation).
-          locActVox = SwE.WB.clusterInfo.LocActivatedVoxels;
-          [~, index]=ismember(XYZ',locActVox','rows');
-          Q=find(index~=0);
+          fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...height threshold')  %-#
+          try
+              thresDesc = xSwE.thresDesc;
+          catch
+              % For WB we have FWE or FDR.
+              str = 'FWE|none';
+              thresDesc = spm_input('extent p value adjustment to control','+1','b',str,[],1);
+          end
           
-          % We also should record the cluster forming threshold that was
-          % used.
-          pu = SwE.WB.clusterInfo.primaryThreshold;
-          thresDesc = ['p<' num2str(pu) ' (unc.)'];
-          if strcmp(STAT, 'T')
-              u = norminv(1-pu);
-          else
-              u = chi2inv(1-pu, 1);
+          switch thresDesc
+              
+              case 'FWE' % Family-wise false positive rate
+                  % This is performed on the FWE P value map
+                  %--------------------------------------------------------
+                  
+                  % Record what type of clusterwise inference we are doing.
+                  clustWise = 'FWE';
+                  
+                  % For WB we have performed our thresholding and worked out of 
+                  % regions of activation. 
+                  %(Note: Q Currently only set for activation).
+                  locActVox = SwE.WB.clusterInfo.LocActivatedVoxels;
+                  [~, index]=ismember(XYZ',locActVox','rows');
+                  Q=find(index~=0);
+
+                  % We also should record the cluster forming threshold that was
+                  % used.
+                  pu = SwE.WB.clusterInfo.primaryThreshold;
+                  thresDesc = ['p<' num2str(pu) ' (unc.)'];
+                  if strcmp(STAT, 'T')
+                      u = norminv(1-pu);
+                  else
+                      u = chi2inv(1-pu, 1);
+                  end
+                  
+              case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
+                  % This is performed in the normal manor on the Z map.
+                  %--------------------------------------------------------
+                  % Record what type of clusterwise inference we are doing.
+                  clustWise = 'Uncorr';
+                  
+                  try
+                      u = xSwE.u;
+                  catch
+                      u = spm_input(['threshold {',STAT,' or p value}'],'+1','r',0.001,1);
+                  end
+                  if u <= 1
+                      thresDesc = ['p<' num2str(u) ' (unc.)'];
+                      switch STAT
+                          case 'T'
+                              u  = swe_invNcdf(1-u^(1/n));
+                          case 'F'
+                              u  = spm_invXcdf(1-u^(1/n),1);
+                      end
+                  else
+                      thresDesc = [STAT '=' num2str(u) ];
+                  end
+                  
+                  up  = NaN;
+                  Pp  = NaN;
+                  uc  = NaN;
+                  ue  = NaN;
+                  Pc  = [];
+                  uu = [];
+                  
+                  Q      = find(Z > u);
+          
           end
               
       end
@@ -840,45 +975,51 @@ if ~isMat
       fprintf('\n');                                                      %-#
       warning('SwE:NoVoxels','No voxels survive masking at p=%4.2f',pm);
   end
+  
+  % If we are doing uncorrected clusterwise ask for k.
+  if strcmp(clustWise, 'Uncorr')
+      %-Extent threshold (disallowed for conjunctions)
+      %--------------------------------------------------------------------------
+      if ~isempty(XYZ) && nc == 1 
 
+          fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...extent threshold')  %-#
 
-  %-Extent threshold (disallowed for conjunctions)
-  %--------------------------------------------------------------------------
-  if ~isempty(XYZ) && nc == 1 && ~isfield(SwE, 'WB')
+          %-Get extent threshold [default = 0]
+          %----------------------------------------------------------------------
+          try
+              k = xSwE.k;
+          catch
+              k = spm_input('& extent threshold {voxels}','+1','r',0,1,[0,Inf]);
+          end
 
-      fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...extent threshold')  %-#
+          %-Calculate extent threshold filtering
+          %----------------------------------------------------------------------
+          A     = spm_clusters(XYZ);
+          Q     = [];
+          for i = 1:max(A)
+              j = find(A == i);
+              if length(j) >= k; Q = [Q j]; end
+          end
 
-      %-Get extent threshold [default = 0]
-      %----------------------------------------------------------------------
-      try
-          k = xSwE.k;
-      catch
-          k = spm_input('& extent threshold {voxels}','+1','r',0,1,[0,Inf]);
-      end
+          % ...eliminate voxels
+          %----------------------------------------------------------------------
+          Z     = Z(:,Q);
+          XYZ   = XYZ(:,Q);
+          if isempty(Q)
+              fprintf('\n');                                                  %-#
+              warning('SwE:NoVoxels','No voxels survive masking at p=%4.2f',pm);
+          end
 
-      %-Calculate extent threshold filtering
-      %----------------------------------------------------------------------
-      A     = spm_clusters(XYZ);
-      Q     = [];
-      for i = 1:max(A)
-          j = find(A == i);
-          if length(j) >= k; Q = [Q j]; end
-      end
+      else
 
-      % ...eliminate voxels
-      %----------------------------------------------------------------------
-      Z     = Z(:,Q);
-      XYZ   = XYZ(:,Q);
-      if isempty(Q)
-          fprintf('\n');                                                  %-#
-          warning('SwE:NoVoxels','No voxels survive masking at p=%4.2f',pm);
-      end
+          k = 0;
 
+      end % (if ~isempty(XYZ))
+  
+  % If we are doing corrected clusterwise ask for p.
   else
-
-      k = 0;
-
-  end % (if ~isempty(XYZ))
+      % TO DO
+  end
 end 
 
 %==========================================================================
