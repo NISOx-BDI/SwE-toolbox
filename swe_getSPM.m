@@ -736,7 +736,7 @@ if ~isMat
                               u  = spm_invXcdf(1-u^(1/n),1);
                       end
                   else
-                      thresDesc = [STAT '=' num2str(u) ];
+                      '';
                   end
 
               otherwise
@@ -788,7 +788,7 @@ if ~isMat
                       u  = spm_invXcdf(1-u^(1/n),1);
               end
           else
-              thresDesc = [STAT '=' num2str(u) ];
+              thresDesc = '';
           end
           
           %-Compute p-values for topological and voxel-wise FDR (all search voxels)
@@ -885,7 +885,7 @@ if ~isMat
                               u  = spm_invXcdf(1-u^(1/n),1);
                       end
                   else
-                      thresDesc = [STAT '=' num2str(u) ];
+                      thresDesc = '';
                   end
 
                   Q      = find(Z > u);
@@ -961,7 +961,7 @@ if ~isMat
                               u  = spm_invXcdf(1-u^(1/n),1);
                       end
                   else
-                      thresDesc = [STAT '=' num2str(u) ];
+                      thresDesc = '';
                   end
                   
                   up  = NaN;
