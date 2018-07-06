@@ -1132,8 +1132,10 @@ if isfield(SwE, 'WB')
 end
 
 % Record clusterwise FWE P value if there is one.
-if strcmp(clustWise, 'FWE')
-    xSwE.fwep_c = fwep_c;
+if ~isMat
+    if strcmp(clustWise, 'FWE')
+        xSwE.fwep_c = fwep_c;
+    end
 end
  %             'R',        SwE.xVol.R,...
 %             'FWHM',     SwE.xVol.FWHM,...
