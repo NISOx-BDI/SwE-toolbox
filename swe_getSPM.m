@@ -351,7 +351,7 @@ if nc > 1
         end
     end
 else
-    n = 1;
+    n = 1; 
 end
 
 % not sure we want to do that with the SwE (commented for now)
