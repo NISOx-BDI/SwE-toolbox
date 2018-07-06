@@ -553,10 +553,14 @@ end
 
 % Ask whether to do voxelwise or clusterwise inference.
 if ~isMat
-    if isfield(SwE, 'WB')
-        infType = spm_input('inference type','+1','b','voxelwise|clusterwise',[0,1],2);
-    else
-        infType = spm_input('inference type','+1','b','voxelwise|clusterwise',[0,1],1);
+    try
+        infType = xSwE.infType;
+    catch 
+        if isfield(SwE, 'WB')
+            infType = spm_input('inference type','+1','b','voxelwise|clusterwise',[0,1],2);
+        else
+            infType = spm_input('inference type','+1','b','voxelwise|clusterwise',[0,1],1);
+        end
     end
 end
 
@@ -1132,6 +1136,7 @@ end
 
 % Record clusterwise FWE P value if there is one.
 if ~isMat
+    xSwE.infType = infType;
     xSwE.clustWise = clustWise;
     if strcmp(clustWise, 'FWE')
         xSwE.fwep_c = fwep_c;
