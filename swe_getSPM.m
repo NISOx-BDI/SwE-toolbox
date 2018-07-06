@@ -1116,8 +1116,7 @@ xSwE   = struct( ...
             'VOX',      VOX,...
             'Vspm',     VspmSv,...
             'thresDesc',thresDesc,...
-            'WB',       0,...
-            'clustWise',clustWise);
+            'WB',       0);
 
 % For WB analyses we have already computed uncorrected, FDR, FWE and
 % cluster-FWE P values at this point.
@@ -1133,6 +1132,7 @@ end
 
 % Record clusterwise FWE P value if there is one.
 if ~isMat
+    xSwE.clustWise = clustWise;
     if strcmp(clustWise, 'FWE')
         xSwE.fwep_c = fwep_c;
     end
