@@ -990,29 +990,65 @@ if ~isMat
       warning('SwE:NoVoxels','No voxels survive masking at p=%4.2f',pm);
   end
   
-  % If we are doing uncorrected clusterwise ask for k.
-  if strcmp(clustWise, 'Uncorr')
+  % If we are doing clusterwise ask for threshold.
+  if ~strcmp(clustWise, 'None')
       %-Extent threshold (disallowed for conjunctions)
       %--------------------------------------------------------------------------
       if ~isempty(XYZ) && nc == 1 
 
           fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...extent threshold')  %-#
+          
+          % Uncorrected threshold.
+          if strcmp(clustWise, 'Uncorr')
+              %-Get extent threshold [default = 0]
+              %----------------------------------------------------------------------
+              try
+                  k = xSwE.k;
+              catch
+                  k = spm_input('& extent threshold {voxels}','+1','r',0,1,[0,Inf]);
+              end
 
-          %-Get extent threshold [default = 0]
-          %----------------------------------------------------------------------
-          try
-              k = xSwE.k;
-          catch
-              k = spm_input('& extent threshold {voxels}','+1','r',0,1,[0,Inf]);
+              %-Calculate extent threshold filtering
+              %----------------------------------------------------------------------
+              A     = spm_clusters(XYZ);
+              Q     = [];
+              for i = 1:max(A)
+                  j = find(A == i);
+                  if length(j) >= k; Q = [Q j]; end
+              end
           end
+          
+          % FWE WB threshold.
+          if strcmp(clustWise, 'FWE')
+              %-Get extent threshold [default = 0]
+              %----------------------------------------------------------------------
+              try
+                  fwep_c = xSwE.fwep_c;
+              catch
+                  fwep_c = spm_input('& extent threshold {FWE P}','+1','r',0.05,1,[0,1]);
+              end
 
-          %-Calculate extent threshold filtering
-          %----------------------------------------------------------------------
-          A     = spm_clusters(XYZ);
-          Q     = [];
-          for i = 1:max(A)
-              j = find(A == i);
-              if length(j) >= k; Q = [Q j]; end
+              %-Calculate extent threshold filtering
+              %----------------------------------------------------------------------
+              ps_fwe     = 10.^-spm_get_data(xCon(1).VspmFWEP_clus,XYZ);
+              Q     = find(ps_fwe<fwep_c);
+              
+              % To obtain k we find the largest p value below the p value
+              % threshold.
+              pofclus = max(ps_fwe(ps_fwe<fwep_c));
+              
+              % We then look for the size of the clusters with this p value
+              % We do this by first getting this index of clusters with
+              % this p value.
+              A = spm_clusters(XYZ);
+              clusIndices = unique(A(ps_fwe==pofclus));
+              
+              % And then looping through this indices looking for the
+              % smallest cluster.
+              k = Inf;
+              for i = 1:length(clusIndices)
+                 k = min(k, sum(A==clusIndices(i)));
+              end
           end
 
           % ...eliminate voxels
@@ -1023,7 +1059,7 @@ if ~isMat
               fprintf('\n');                                                  %-#
               warning('SwE:NoVoxels','No voxels survive masking at p=%4.2f',pm);
           end
-
+          
       else
 
           k = 0;
@@ -1080,7 +1116,8 @@ xSwE   = struct( ...
             'VOX',      VOX,...
             'Vspm',     VspmSv,...
             'thresDesc',thresDesc,...
-            'WB',       0);
+            'WB',       0,...
+            'clustWise',clustWise);
 
 % For WB analyses we have already computed uncorrected, FDR, FWE and
 % cluster-FWE P values at this point.
@@ -1093,8 +1130,11 @@ if isfield(SwE, 'WB')
     xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
 
 end
- 
 
+% Record clusterwise FWE P value if there is one.
+if strcmp(clustWise, 'FWE')
+    xSwE.fwep_c = fwep_c;
+end
  %             'R',        SwE.xVol.R,...
 %             'FWHM',     SwE.xVol.FWHM,...
           

@@ -384,6 +384,7 @@ switch lower(Action), case 'setup'                         %-Set up results
     xSwEtmp = xSwE; xSwEtmp.thresDesc = 'p<0.001 (unc.)';
     uimenu(hC1,'Label','Set to 0.001 (unc.)','UserData',struct('Ic',xSwE.Ic),...
         'Callback',{@mychgcon,xSwEtmp});
+    
     uimenu(hC1,'Label',[xSwE.thresDesc ', k=' num2str(xSwE.k)],...
         'Enable','off','Separator','on');
     
@@ -435,8 +436,11 @@ switch lower(Action), case 'setup'                         %-Set up results
     catch
         text(0,12,sprintf('Height threshold %c = %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
     end
-    text(0,00,sprintf('Extent threshold k = %0.0f voxels',xSwE.k), 'Parent',hResAx)
- 
+    if strcmp(xSwE.clustWise, 'FWE') 
+        text(0,00,sprintf('Extent threshold k = %0.0f voxels {p<%0.3f (FWE)}',xSwE.k, xSwE.fwep_c), 'Parent',hResAx)
+    else
+        text(0,00,sprintf('Extent threshold k = %0.0f voxels',xSwE.k), 'Parent',hResAx)
+    end
  
     %-Plot design matrix
     %----------------------------------------------------------------------

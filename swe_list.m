@@ -436,19 +436,23 @@ case 'table'                                                        %-Table
             else
                 Pu      = 10.^-VspmFWEP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
                 Qu      = 10.^-VspmFDRP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                Pk      = 10.^-VspmFWEP_clus(XYZ(1,i),XYZ(2,i),XYZ(3,i));
                 Pn      = [];
                 Qc      = [];
                 Qp      = [];
                 ws      = warning('off','SPM:outOfRangeNormal');
                 warning(ws);
                 
-                % It is possible to get the results window to display
-                % details about voxels that were thresholded out by the
-                % cluster-forming threshold used for the wild bootstrap.
-                % These regions will have NaN for the cluster FWE P-value
-                % when they should have one. So the below is necessary:
-                Pk(isnan(Pk)) = 1;
+                if strcmp(xSwE.clustWise, 'FWE')
+                    Pk      = 10.^-VspmFWEP_clus(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                    % It is possible to get the results window to display
+                    % details about voxels that were thresholded out by the
+                    % cluster-forming threshold used for the wild bootstrap.
+                    % These regions will have NaN for the cluster FWE P-value
+                    % when they should have one. So the below is necessary:
+                    Pk(isnan(Pk)) = 1;
+                else
+                    Pk = [];
+                end
                 
             end
 %         end
