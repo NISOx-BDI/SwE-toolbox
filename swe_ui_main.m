@@ -151,7 +151,7 @@ function results_Callback(hObject, eventdata, handles)
 % hObject    handle to results (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-swe_results_ui
+swe_results_ui;
 
 
 % --- Executes on button press in batch.

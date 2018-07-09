@@ -19,11 +19,12 @@ job   = varargin{1};
 %-Change directory
 %--------------------------------------------------------------------------
 original_dir = pwd;
-cd(job.dir{1});
+swd = job.dir{1};
+cd(swd);
 
 %-Ask about overwriting files from previous analyses...
 %--------------------------------------------------------------------------
-if exist(fullfile(job.dir{1},'SwE.mat'),'file')
+if exist(fullfile(swd,'SwE.mat'),'file')
     str = { 'Current directory contains existing SwE file:',...
         'Continuing will overwrite existing file!'};
     if spm_input(str,1,'bd','stop|continue',[1,0],1,mfilename);
@@ -712,6 +713,7 @@ end
 
 %-Assemble SwE structure like it is done in SPM structure
 %==========================================================================
+SwE.swd = swd;
 SwE.xY.P      = P;            % filenames
 SwE.xY.VY     = VY;           % mapped data
 SwE.xY.isMat  = isMat;

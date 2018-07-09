@@ -454,7 +454,11 @@ if (nargin==0) || ~ischar(varargin{1})
     if nargin<3, n=1; else n=varargin{3}; end
     if nargin<2, STATmode='T|F'; else STATmode=varargin{2}; end
     if nargin<1, error('no SwE struct specified'); else SwE = varargin{1};end
-
+    
+    %-Change to results directory
+    %----------------------------------------------------------------------
+    try, cd(SwE.swd); end
+    
     %----------------------------------------------------------------------
     try
         SwE.xCon;

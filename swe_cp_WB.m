@@ -1591,6 +1591,8 @@ for b = 1:WB.nB
   swe_progress_bar('Set',100 * b / WB.nB);
 end
 
+swe_progress_bar('Clear');
+
 %-Save analysis original max min in SwE structure
 %--------------------------------------------------------------------------
 SwE.WB.maxScore = maxScore;
