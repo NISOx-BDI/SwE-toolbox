@@ -384,6 +384,7 @@ switch lower(Action), case 'setup'                         %-Set up results
     xSwEtmp = xSwE; xSwEtmp.thresDesc = 'p<0.001 (unc.)';
     uimenu(hC1,'Label','Set to 0.001 (unc.)','UserData',struct('Ic',xSwE.Ic),...
         'Callback',{@mychgcon,xSwEtmp});
+    
     uimenu(hC1,'Label',[xSwE.thresDesc ', k=' num2str(xSwE.k)],...
         'Enable','off','Separator','on');
     
@@ -431,12 +432,27 @@ switch lower(Action), case 'setup'                         %-Set up results
     text(get(h,'Extent')*[0;0;1;0],24,spm_str_manip(SwE.swd,'a30'),'Parent',hResAx)
     try
         thresDesc = xSwE.thresDesc;
-        text(0,12,sprintf('Height threshold %c = %0.6f  {%s}',eSTAT,xSwE.u,thresDesc),'Parent',hResAx)
+        if ~strcmp(xSwE.thresDesc, 'none') && ~isempty(xSwE.thresDesc)
+            text(0,12,sprintf('Height threshold %c = %0.6f  {%s}',eSTAT,xSwE.u,thresDesc),'Parent',hResAx)
+        else
+            text(0,12,sprintf('Height threshold %c = %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
+        end
     catch
         text(0,12,sprintf('Height threshold %c = %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
     end
-    text(0,00,sprintf('Extent threshold k = %0.0f voxels',xSwE.k), 'Parent',hResAx)
- 
+    if strcmp(xSwE.clustWise, 'FWE') 
+        text(0,00,sprintf('Extent threshold k = %0.0f voxels {p<%0.3f (FWE)}',xSwE.k, xSwE.fwep_c), 'Parent',hResAx)
+    else
+        text(0,00,sprintf('Extent threshold k = %0.0f voxels',xSwE.k), 'Parent',hResAx)
+    end
+    try
+        WB = xSwE.WB;
+        if WB
+            text(0,-12,sprintf('Wild Bootstrap'), 'Parent',hResAx)
+        end
+    catch
+        error('Missing details about whether this is a wild boostrap or not.')
+    end
  
     %-Plot design matrix
     %----------------------------------------------------------------------
@@ -527,6 +543,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         if nargin < 4, error('Insufficient arguments'), end
         M      = varargin{2};
         DIM    = varargin{3};
+        xSwE   = varargin{4};
         Finter = spm_figure('GetWin',Finter);
         WS     = spm('WinScale');
         FS     = spm('FontSizes');
@@ -552,6 +569,10 @@ switch lower(Action), case 'setup'                         %-Set up results
         %-Set up buttons for results functions
         %------------------------------------------------------------------
         swe_results_ui('DrawButts',hReg,DIM,Finter,WS,FS);
+        
+        %-Load whole brain table.
+        %------------------------------------------------------------------
+        swe_list('List',xSwE,hReg);
  
         varargout  = {hReg};
  
