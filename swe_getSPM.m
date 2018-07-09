@@ -934,7 +934,7 @@ if ~isMat
                   locActVox = SwE.WB.clusterInfo.LocActivatedVoxels;
                   [~, index]=ismember(XYZ',locActVox','rows');
                   Q=find(index~=0);
-
+                  
                   % We also should record the cluster forming threshold that was
                   % used.
                   pu = SwE.WB.clusterInfo.primaryThreshold;
@@ -944,6 +944,11 @@ if ~isMat
                   else
                       u = chi2inv(1-pu, 1);
                   end
+                  
+                  % We should display the cluster forming threshold that
+                  % was used.
+                  spm_input(['threshold {',STAT,' or p value}'],...
+                      '+1','b',['(pre-set: ' STAT '=' num2str(u) ' P=' num2str(pu) ')'],[0],0)
                   
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
                   % This is performed in the normal manor on the Z map.

@@ -543,6 +543,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         if nargin < 4, error('Insufficient arguments'), end
         M      = varargin{2};
         DIM    = varargin{3};
+        xSwE   = varargin{4};
         Finter = spm_figure('GetWin',Finter);
         WS     = spm('WinScale');
         FS     = spm('FontSizes');
@@ -568,6 +569,10 @@ switch lower(Action), case 'setup'                         %-Set up results
         %-Set up buttons for results functions
         %------------------------------------------------------------------
         swe_results_ui('DrawButts',hReg,DIM,Finter,WS,FS);
+        
+        %-Load whole brain table.
+        %------------------------------------------------------------------
+        swe_list('List',xSwE,hReg);
  
         varargout  = {hReg};
  
