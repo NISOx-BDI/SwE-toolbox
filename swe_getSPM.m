@@ -947,8 +947,8 @@ if ~isMat
                   
                   % We should display the cluster forming threshold that
                   % was used.
-                  spm_input(['threshold {',STAT,' or p value}'],...
-                      '+1','b',['(pre-set: ' STAT '=' num2str(u) ' P=' num2str(pu) ')'],[0],0)
+                  spm_input(['threshold {p value}'],...
+                      '+1','b',['(pre-set: P=' num2str(pu) ')'],[0],0)
                   
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
                   % This is performed in the normal manor on the Z map.
