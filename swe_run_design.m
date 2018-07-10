@@ -631,15 +631,19 @@ xX     = struct(    'X',        X,...
 
 %-Give a warning if the design matrix does not include an intercept.
 %==========================================================================
-P=X*pinv(X);
-%N = size(X, 1);
+if ~exist('OCTAVE_VERSION','builtin')
+    P=X*pinv(X);
+else
+    P=X*inv(X'*X)*X';
+end
+N = size(X, 1);
 
-%if any(abs(ones(N,1)-P*ones(N,1))>sqrt(eps))
-%    warning(['Input model does not include an intercept. It is strongly',... 
-%             ' recommended that you should include an intercept in this',...
-%             ' model.']);
-%    
-%end
+if any(abs(ones(N,1)-P*ones(N,1))>sqrt(eps))
+    warning(['Input model does not include an intercept. It is strongly',... 
+             ' recommended that you should include an intercept in this',...
+             ' model.']);
+    
+end
 
 %-Design description (an nx2 cellstr) - for saving and display
 %==========================================================================
