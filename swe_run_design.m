@@ -631,12 +631,18 @@ xX     = struct(    'X',        X,...
 
 %-Give a warning if the design matrix does not include an intercept.
 %==========================================================================
+disp('1')
 if ~exist('OCTAVE_VERSION','builtin')
+    disp('2')
     P=X*pinv(X);
 else
+    disp('3')
     XT = X';
+    disp('4')
     P=X*inv(XT*X)*XT;
+    disp('5')
 end
+disp('6')
 N = size(X, 1);
 
 %if any(abs(ones(N,1)-P*ones(N,1))>sqrt(eps))
