@@ -634,7 +634,8 @@ xX     = struct(    'X',        X,...
 if ~exist('OCTAVE_VERSION','builtin')
     P=X*pinv(X);
 else
-    P=X*inv([X']*X)*[X'];
+    XT = X';
+    P=X*inv(XT*X)*XT;
 end
 N = size(X, 1);
 
