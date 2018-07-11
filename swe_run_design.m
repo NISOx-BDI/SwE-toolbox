@@ -629,15 +629,14 @@ xX     = struct(    'X',        X,...
     'I',        I,...
     'sF',       {sF});
 
-%-Give a warning if the design matrix does not include an intercept.
+%-Error if the design matrix does not include an intercept.
 %==========================================================================
 P_x=X*pinv(X);
 N = size(X, 1);
 
 if any(abs(ones(N,1)-P_x*ones(N,1))>sqrt(eps))
-    warning(['Input model does not include an intercept. It is strongly',... 
-             ' recommended that you should include an intercept in this',...
-             ' model.']);
+    error(['Input model does not include an intercept. You must '...
+           'include an intercept in this model.']);
     
 end
 
