@@ -135,7 +135,7 @@ if isMat && WB.clusterWise == 1
 end
 
 % small sample correction (for WB)
-[corrWB, tmpR2] = swe_resid_corr(SwE, WB.RWB, WB.SS, pX);
+[corrWB, tmpR2] = swe_resid_corr(SwE, 1, WB.SS, pX);
 
 % small sample correction (for parametric)
 [corr, tmpR2] = swe_resid_corr(SwE, WB.RSwE, SwE.SS, pX, tmpR2);
@@ -500,11 +500,7 @@ if ~isMat
   %----------------------------------------------------------------------
   
   for i = 1:nScan
-      if WB.RWB == 1
-        descrip = sprintf('adjusted restricted residuals (%04d)', i);
-      else
-        descrip = sprintf('adjusted unrestricted residuals (%04d)', i);
-      end
+      descrip = sprintf('adjusted restricted residuals (%04d)', i);
       VResWB(i) = swe_create_vol(sprintf('swe_vox_resid_y%04d%s', i, file_ext), DIM, M, descrip);
   end
   
@@ -514,11 +510,7 @@ if ~isMat
   %----------------------------------------------------------------------
   
   for i = 1:nScan
-      if WB.RWB == 1
-         descrip = sprintf('restricted fitted data  (%04d)', i);
-      else
-         descrip = sprintf('unrestricted fitted data (%04d)', i);
-      end
+      descrip = sprintf('restricted fitted data  (%04d)', i);
       VYWB(i) = swe_create_vol(sprintf('swe_vox_fit_y%04d%s',i,file_ext), DIM, M, descrip);
   end
   
@@ -703,11 +695,7 @@ if ~isMat
         beta  = pX*Y;                     %-Parameter estimates
         
         % restricted fitted data
-        if WB.RWB == 1
-            [resWB, YWB]=swe_fit(SwE, Y, tmpR2, corrWB, beta, SwE.WB.SS);
-        else 
-            [resWB, YWB]=swe_fit(SwE, Y, xX.X, corrWB, beta, SwE.WB.SS);
-        end
+        [resWB, YWB]=swe_fit(SwE, Y, tmpR2, corrWB, beta, SwE.WB.SS);
 
         if WB.RSwE == 1
             res=swe_fit(SwE, Y, tmpR2, corr, beta, SwE.SS);
@@ -1005,11 +993,7 @@ else % ".mat" format
     
     beta  = pX*Y;                     %-Parameter estimates
     
-    if WB.RWB == 1
-        [resWB, YWB]=swe_fit(SwE, Y, tmpR2, corrWB, beta, SwE.WB.SS);
-    else 
-        [resWB, YWB]=swe_fit(SwE, Y, xX.X, corrWB, beta, SwE.WB.SS);
-    end
+    [resWB, YWB]=swe_fit(SwE, Y, tmpR2, corrWB, beta, SwE.WB.SS);
     
     if WB.RSwE == 1
         res=swe_fit(SwE, Y, tmpR2, corr, beta, SwE.SS);
@@ -1240,9 +1224,8 @@ SwE.WB.weightR    = weightR;
 SwE.WB.corrWB     = corrWB;
 SwE.WB.corr       = corr;
 
-if SwE.WB.RWB == 1 || SwE.WB.RSwE == 1
-  SwE.WB.tmpR2      = tmpR2;
-end
+SwE.WB.tmpR2      = tmpR2;
+
 
 % cluster-wise specific fields if needed
 if (SwE.WB.clusterWise == 1)
