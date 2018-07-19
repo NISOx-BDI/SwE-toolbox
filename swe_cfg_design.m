@@ -545,23 +545,6 @@ WB_no.help    = {''
   'Only a "standard" parametric SwE analysis is considered'};
 
 % ---------------------------------------------------------------------
-% WB_type WB_type
-% ---------------------------------------------------------------------
-WB_type         = cfg_menu;
-WB_type.tag     = 'WB_type';
-WB_type.name    = 'Type of resampling';
-WB_type.labels     = {'U-WB' 'R-WB'};
-WB_type.values     = {0 1};
-WB_type.val     = {1};
-WB_type.help    = {''
-  'U-WB: unrestricted WB which based the resampling on the unrestricted model (not imposing the null hypothesis)'
-  ''
-  'R-WB: restricted WB which based the resampling on the restricted model (imposing the null hypothesis)'
-  ''
-  'Monte Carlo simulations (see Guillaume, 2015) indicates that the R-WB generally outperforms the U-WB and, therefore, it seems preferable to always use this WB version. The U-WB option is currently available, but nothing indicates that it should be used and thus might be removed later.'
-  ''
-  };
-% ---------------------------------------------------------------------
 % WB_SwE type of SwE
 % ---------------------------------------------------------------------
 WB_SwE         = cfg_menu;
@@ -786,7 +769,7 @@ WB_cluster.help    = {''
 WB_yes         = cfg_branch;
 WB_yes.tag     = 'WB_yes';
 WB_yes.name    = 'Yes';
-WB_yes.val     = {WB_type WB_ss WB_nB WB_SwE WB_stat WB_cluster};
+WB_yes.val     = {WB_ss WB_nB WB_SwE WB_stat WB_cluster};
 WB_yes.help    = {''
                      'A non-parametric Wild Bootstrap procedure is considered to analyse the data (see Guillaume, 2015)'
 }';
