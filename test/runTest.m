@@ -66,6 +66,7 @@ function testSetup(porwb, torf, matorimg)
 
 	% Move into the test folder and add the path to tests.
 	cd(['/swe/test/data/test_' porwb '_' torf '_' matorimg]);
+	ls;
 	addpath('/swe');
 	addpath('/swe/test');
 
