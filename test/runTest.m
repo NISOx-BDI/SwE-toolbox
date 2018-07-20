@@ -30,6 +30,9 @@ function result=runTest(porwb, torf, matorimg)
 	disp(['Test case running: ' testname])
 	disp(sprintf('==============================================================\n'))
 
+	% Test setup
+	testSetup(porwb, torf, matorimg)
+
 	% Generate the results for the test.
 	generateData(porwb, torf, matorimg);
 
@@ -44,7 +47,7 @@ function result=runTest(porwb, torf, matorimg)
 	% Compare test results to ground truth.
 	result = verifyMapsUnchanged(porwb, torf, matorimg);
 
-	%Tell the user whether the tests passed.
+	% Tell the user whether the tests passed.
 	disp(sprintf('\n=============================================================='))
 	if ~result
 		disp('A test has failed!')
@@ -54,10 +57,12 @@ function result=runTest(porwb, torf, matorimg)
 	end
 	disp(sprintf('==============================================================\n'))
 
+	% Teardown method
+	testTearDown(porwb, torf, matorimg)
+
 end
 
-
-function generateData(porwb, torf, matorimg)
+function testSetup(porwb, torf, matorimg)
 
 	% Move into the test folder and add the path to tests.
 	cd(['/swe/test/data/test_' porwb '_' torf '_' matorimg]);
@@ -72,6 +77,16 @@ function generateData(porwb, torf, matorimg)
 	randp('state', seed);
 	randg('state',seed);
 	rande('state',seed);
+
+	% Make a copy of the original xSwE object for future runs.
+	if exist('xSwE.mat')~=0
+		copyfile('xSwE.mat', 'xSwE_orig.mat')
+	end
+
+end
+
+function generateData(porwb, torf, matorimg)
+
 
 	% Load the test design and run it.
 	load('design.mat');
@@ -223,5 +238,18 @@ function mapsEqual = verifyMapsUnchanged(porwb, torf, matorimg)
     % return true if all maps were equal false otherwise.
 
     mapsEqual = ~any(~equalMaps);
+
+end
+
+function testTearDown(porwb, torf, matorimg)
+	
+	% Delete all files from this run.
+	delete('swe_*')
+	delete('SwE*')
+
+	if exist('xSwE.mat')~=0
+		delete('xSwE.mat')
+		rename('xSwE_orig.mat', 'xSwE.mat')
+	end
 
 end
