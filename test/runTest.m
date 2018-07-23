@@ -54,7 +54,7 @@ function result=runTest(porwb, torf, matorimg)
 % 		error(['Test ' testname ' has failed.'])
 % 	else
 % 		disp('All tests pass!!')
-% 	end
+% 	end 
 % 	disp(sprintf('==============================================================\n'))
 
 	% Teardown method
