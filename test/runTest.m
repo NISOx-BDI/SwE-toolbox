@@ -69,6 +69,10 @@ function testSetup(porwb, torf, matorimg)
 	ls;
 	addpath('/swe');
 	addpath('/swe/test');
+    
+    % Run teardown method just in case some of the files managed to get
+    % cached.
+    testTearDown(porwb, torf, matorimg);
 
 	% Reset all seeds 
 	% (Footnote: In octave these are all different!!).
