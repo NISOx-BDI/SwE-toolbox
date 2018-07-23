@@ -70,8 +70,8 @@ function testSetup(porwb, torf, matorimg)
 	addpath('/swe');
 	addpath('/swe/test');
     
-    % Run teardown method just in case some of the files managed to get
-    % cached.
+    % Run teardown method just in case some of the files from the previous 
+    % run managed to get cached.
     testTearDown(porwb, torf, matorimg);
 
 	% Reset all seeds 
@@ -252,7 +252,7 @@ function testTearDown(porwb, torf, matorimg)
 	delete('swe_*')
 	delete('SwE*')
 
-	if exist('xSwE.mat')~=0
+	if exist('xSwE_orig.mat')~=0
 		delete('xSwE.mat')
 		rename('xSwE_orig.mat', 'xSwE.mat')
 	end
