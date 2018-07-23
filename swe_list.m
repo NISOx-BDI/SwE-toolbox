@@ -297,46 +297,46 @@ case 'table'                                                        %-Table
     
     %-Footnote with SPM parameters
     %----------------------------------------------------------------------
-%     if STAT ~= 'P'
-%         Pz              = spm_P(1,0,u,df,STAT,1,n,S);
-%         Pu              = spm_P(1,0,u,df,STAT,R,n,S);
-%         [P Pn Ec Ek]    = spm_P(1,k,u,df,STAT,R,n,S);
-%         
-%         TabDat.ftr      = cell(9,2);
-%         TabDat.ftr{1,1} = ...
-%             ['Height threshold: ' STAT ' = %0.2f, p = %0.3f (%0.3f)'];
-%         TabDat.ftr{1,2} = [u,Pz,Pu];
-%         TabDat.ftr{2,1} = ...
-%             'Extent threshold: k = %0.0f voxels, p = %0.3f (%0.3f)';
-%         TabDat.ftr{2,2} = [k/V2R,Pn,P];
-%         TabDat.ftr{3,1} = ...
-%             'Expected voxels per cluster, <k> = %0.3f';
-%         TabDat.ftr{3,2} = Ek/V2R;
-%         TabDat.ftr{4,1} = ...
-%             'Expected number of clusters, <c> = %0.2f';
-%         TabDat.ftr{4,2} = Ec*Pn;
-%         if any(isnan(uc))
-%             TabDat.ftr{5,1} = 'FWEp: %0.3f, FDRp: %0.3f';
-%             TabDat.ftr{5,2} = uc(1:2);
-%         else
-%             TabDat.ftr{5,1} = ...
-%                 'FWEp: %0.3f, FDRp: %0.3f, FWEc: %0.0f, FDRc: %0.0f';
-%             TabDat.ftr{5,2} = uc;
-%         end
-%         TabDat.ftr{6,1} = 'Degrees of freedom = [%0.1f, %0.1f]';
-%         TabDat.ftr{6,2} = df;
-%         TabDat.ftr{7,1} = ...
-%             ['FWHM = ' voxfmt units{:} '; ' voxfmt '{voxels}'];
-%         TabDat.ftr{7,2} = [FWmm FWHM];
-%         TabDat.ftr{8,1} = ...
-%             'Volume: %0.0f = %0.0f voxels = %0.1f resels';
-%         TabDat.ftr{8,2} = [S*prod(VOX),S,R(end)];
-%         TabDat.ftr{9,1} = ...
-%             ['Voxel size: ' voxfmt units{:} '; (resel = %0.2f voxels)'];
-%         TabDat.ftr{9,2} = [VOX,prod(FWHM)];
-%      else
+     if STAT ~= 'P' && ~xSwE.WB
+         Pz              = spm_P(1,0,u,df,STAT,1,n,S);
+         Pu              = spm_P(1,0,u,df,STAT,R,n,S);
+         [P Pn Ec Ek]    = spm_P(1,k,u,df,STAT,R,n,S);
+         
+         TabDat.ftr      = cell(9,2);
+         TabDat.ftr{1,1} = ...
+             ['Height threshold: ' STAT ' = %0.2f, p = %0.3f (%0.3f)'];
+         TabDat.ftr{1,2} = [u,Pz,Pu];
+        TabDat.ftr{2,1} = ...
+            'Extent threshold: k = %0.0f voxels, p = %0.3f (%0.3f)';
+        TabDat.ftr{2,2} = [k/V2R,Pn,P];
+        TabDat.ftr{3,1} = ...
+            'Expected voxels per cluster, <k> = %0.3f';
+        TabDat.ftr{3,2} = Ek/V2R;
+        TabDat.ftr{4,1} = ...
+            'Expected number of clusters, <c> = %0.2f';
+        TabDat.ftr{4,2} = Ec*Pn;
+        if any(isnan(uc))
+            TabDat.ftr{5,1} = 'FWEp: %0.3f, FDRp: %0.3f';
+            TabDat.ftr{5,2} = uc(1:2);
+        else
+            TabDat.ftr{5,1} = ...
+                'FWEp: %0.3f, FDRp: %0.3f, FWEc: %0.0f, FDRc: %0.0f';
+            TabDat.ftr{5,2} = uc;
+        end
+        TabDat.ftr{6,1} = 'Degrees of freedom = [%0.1f, %0.1f]';
+        TabDat.ftr{6,2} = df;
+        TabDat.ftr{7,1} = ...
+            ['FWHM = ' voxfmt units{:} '; ' voxfmt '{voxels}'];
+        TabDat.ftr{7,2} = [FWmm FWHM];
+        TabDat.ftr{8,1} = ...
+            'Volume: %0.0f = %0.0f voxels = %0.1f resels';
+        TabDat.ftr{8,2} = [S*prod(VOX),S,R(end)];
+        TabDat.ftr{9,1} = ...
+            ['Voxel size: ' voxfmt units{:} '; (resel = %0.2f voxels)'];
+        TabDat.ftr{9,2} = [VOX,prod(FWHM)];
+     else
         TabDat.ftr = {};
-%     end 
+     end 
 
     %-Characterize excursion set in terms of maxima
     % (sorted on Z values and grouped by regions)
