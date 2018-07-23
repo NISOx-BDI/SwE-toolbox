@@ -25,37 +25,37 @@ function result=runTest(porwb, torf, matorimg)
 	% Work out which test we are running.
 	testname = [porwb '_' torf '_' matorimg];
 
-	% Tell the user which test case we are running.
-	disp(sprintf('\n=============================================================='))
-	disp(['Test case running: ' testname])
-	disp(sprintf('==============================================================\n'))
-
-	% Test setup
-	testSetup(porwb, torf, matorimg)
-
-	% Generate the results for the test.
-	generateData(porwb, torf, matorimg);
-
-
-	% Tell the user we have run the test.
-	disp(sprintf('\n=============================================================='))
-	disp(['Test case ' testname ' has been run.'])
-	disp('--------------------------------------------------------------')
-	disp('Verifying test results')
-	disp(sprintf('==============================================================\n'))
-
-	% Compare test results to ground truth.
-	result = verifyMapsUnchanged(porwb, torf, matorimg);
-
-	% Tell the user whether the tests passed.
-	disp(sprintf('\n=============================================================='))
-	if ~result
-		disp('A test has failed!')
-		error(['Test ' testname ' has failed.'])
-	else
-		disp('All tests pass!!')
-	end
-	disp(sprintf('==============================================================\n'))
+% 	% Tell the user which test case we are running.
+% 	disp(sprintf('\n=============================================================='))
+% 	disp(['Test case running: ' testname])
+% 	disp(sprintf('==============================================================\n'))
+% 
+% 	% Test setup
+% 	testSetup(porwb, torf, matorimg)
+% 
+% 	% Generate the results for the test.
+% 	generateData(porwb, torf, matorimg);
+% 
+% 
+% 	% Tell the user we have run the test.
+% 	disp(sprintf('\n=============================================================='))
+% 	disp(['Test case ' testname ' has been run.'])
+% 	disp('--------------------------------------------------------------')
+% 	disp('Verifying test results')
+% 	disp(sprintf('==============================================================\n'))
+% 
+% 	% Compare test results to ground truth.
+% 	result = verifyMapsUnchanged(porwb, torf, matorimg);
+% 
+% 	% Tell the user whether the tests passed.
+% 	disp(sprintf('\n=============================================================='))
+% 	if ~result
+% 		disp('A test has failed!')
+% 		error(['Test ' testname ' has failed.'])
+% 	else
+% 		disp('All tests pass!!')
+% 	end
+% 	disp(sprintf('==============================================================\n'))
 
 	% Teardown method
 	testTearDown(porwb, torf, matorimg)
