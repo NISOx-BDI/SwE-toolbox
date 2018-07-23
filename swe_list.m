@@ -298,14 +298,14 @@ case 'table'                                                        %-Table
     %-Footnote with SPM parameters
     %----------------------------------------------------------------------
      if STAT ~= 'P' && ~xSwE.WB
-         Pz              = spm_P(1,0,u,df,STAT,1,n,S);
-         Pu              = spm_P(1,0,u,df,STAT,R,n,S);
-         [P Pn Ec Ek]    = spm_P(1,k,u,df,STAT,R,n,S);
+        Pz              = spm_P(1,0,u,df,STAT,1,n,S);
+        Pu              = spm_P(1,0,u,df,STAT,R,n,S);%Needs R
+        [P, Pn, Ec, Ek]    = spm_P(1,k,u,df,STAT,R,n,S);
          
-         TabDat.ftr      = cell(9,2);
-         TabDat.ftr{1,1} = ...
+        TabDat.ftr      = cell(9,2);
+        TabDat.ftr{1,1} = ...
              ['Height threshold: ' STAT ' = %0.2f, p = %0.3f (%0.3f)'];
-         TabDat.ftr{1,2} = [u,Pz,Pu];
+        TabDat.ftr{1,2} = [u,Pz,Pu];
         TabDat.ftr{2,1} = ...
             'Extent threshold: k = %0.0f voxels, p = %0.3f (%0.3f)';
         TabDat.ftr{2,2} = [k/V2R,Pn,P];
