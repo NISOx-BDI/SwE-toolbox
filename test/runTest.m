@@ -8,7 +8,7 @@
 % matorimg - 'mat' for '.mat' file surface input pr 'img' for '.img' and '.hdr' 
 %			 volumetric input.
 %
-% Author: Tom Maullin (08/06/20178)
+% Author: Tom Maullin (08/06/20178) 
 %
 %=======================================================================================
 
