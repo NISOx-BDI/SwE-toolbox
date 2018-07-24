@@ -314,14 +314,9 @@ case 'table'                                                        %-Table
         TabDat.ftr{2,1} = ...
             'Extent threshold: k = %0.0f voxels';
         TabDat.ftr{2,2} = k;
-        if any(isnan(uc))%wtf
-            TabDat.ftr{3,1} = 'FWEp: %0.3f, FDRp: %0.3f';
-            TabDat.ftr{3,2} = uc(1:2);
-        else
-            TabDat.ftr{3,1} = ...
-                'FWEp: %0.3f, FDRp: %0.3f, FWEc: %0.0f, FDRc: %0.0f';
-            TabDat.ftr{3,2} = uc;
-        end
+        TabDat.ftr{3,1} = ...
+            'vox %s FDRp: %0.3f';
+        %TabDat.ftr{3,2} = [STAT spm_P_FDR(U,[1 1],STATe,n,QPs)];
         TabDat.ftr{4,1} = 'Degrees of freedom = [%0.1f, %0.1f]';
         TabDat.ftr{4,2} = df;
         TabDat.ftr{5,1} = ...
