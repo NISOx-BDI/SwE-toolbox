@@ -1132,6 +1132,7 @@ xSwE   = struct( ...
 if isfield(SwE, 'WB')
     
     xSwE.WB = 1;
+    xSwE.nB = SwE.WB.nB;
     xSwE.VspmUncP = cat(1,xCon(Ic).VspmUncP);
     xSwE.VspmFDRP = cat(1,xCon(Ic).VspmFDRP);
     xSwE.VspmFWEP = cat(1,xCon(Ic).VspmFWEP);

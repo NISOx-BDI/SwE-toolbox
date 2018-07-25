@@ -297,37 +297,80 @@ case 'table'                                                        %-Table
     
     %-Footnote with SPM parameters
     %----------------------------------------------------------------------
-     if STAT ~= 'P' && ~xSwE.WB
-         
-        if strcmp(STAT, 'T')
-            Pz              = 1-spm_Ncdf(u);
-            eSTAT = 'Z';
-        else
-            Pz              = 1-spm_Xcdf(u, 1);
-            eSTAT = 'X';
-        end
-         
-        TabDat.ftr      = cell(6,2);
-        TabDat.ftr{1,1} = ...
-             ['Height threshold: ' eSTAT ' = %0.2f, p = %0.3f'];
-        TabDat.ftr{1,2} = [u,Pz];
-        TabDat.ftr{2,1} = ...
-            'Extent threshold: k = %0.0f voxels';
-        TabDat.ftr{2,2} = k;
-        TabDat.ftr{3,1} = ...
-            'vox %s FDRp: ';
-        TabDat.ftr{3,2} = [STAT]% spm_P_FDR(U,[1 1],STATe,n,QPs)];
-        TabDat.ftr{4,1} = 'Degrees of freedom = [%0.1f, %0.1f]';
-        TabDat.ftr{4,2} = df;
-        TabDat.ftr{5,1} = ...
-            ['Volume: %0.0f ' units{:} ' = %0.0f voxels'];
-        TabDat.ftr{5,2} = [S*prod(VOX),S];
-        TabDat.ftr{6,1} = ...
-            ['Voxel size: ' voxfmt units{:}];
-        TabDat.ftr{6,2} = VOX;
+     if strcmp(STAT, 'T')
+         Pz              = 1-spm_Ncdf(u);
+         eSTAT = 'Z';
      else
-        TabDat.ftr = {};
+         Pz              = 1-spm_Xcdf(u, 1);
+         eSTAT = 'X';
+     end
+    
+     % Create footer for display.
+     TabDat.ftr      = cell(6,2);
+     
+     % Record height thresholds.
+     TabDat.ftr{1,1} = ...
+          ['Height threshold: ' eSTAT ' = %0.2f, p = %0.3f'];
+     TabDat.ftr{1,2} = [u,Pz];
+     
+     % Record extent threshold.
+     TabDat.ftr{2,1} = ...
+         'Extent threshold: k = %0.0f voxels';
+     TabDat.ftr{2,2} = k;
+     
+     % Record Degrees of freedom. TODO: Check recorded properly.
+     TabDat.ftr{4,1} = 'Degrees of freedom = [%0.1f, %0.1f]';
+     TabDat.ftr{4,2} = df;
+     
+     if xSwE.WB
+        
+        % We need the P uncorrected P values to be in the correct form to
+        % use spm_uc_FDR.
+        Ts = spm_data_read(xSwE.VspmUncP);
+        if ~isempty(XYZ)
+            if isstruct(XYZ)
+                Ts = Ts(XYZ);
+            end
+        end
+        Ts(isnan(Ts)) = [];
+        Ts = 10.^-Ts;
+        Ts = sort(Ts(:));
+        
+        % Obtain the FDR p 0.05 value.
+        FDRp_05 = spm_uc_FDR(0.05,df,'P',n,Ts);
+        
+        % Record FWE/FDR/clus FWE p values. TODO
+        TabDat.ftr{3,1} = ...
+             'vox P_FDRp: %0.3f';
+        TabDat.ftr{3,2} = FDRp_05;
+        
+        % Recording effective Degrees of freedom - TODO
+        TabDat.ftr{5,1}='Effective DF: (Type X): (min) [X.X X.X], (median) [X.X X.X], (max) [X.X X.X]';
+        TabDat.ftr{5,2}='';
+        
+        % Recording number of bootstraps.
+        TabDat.ftr{6,1}='Bootstrap samples = %0.0f';
+        TabDat.ftr{6,2}= xSwE.nB;
+        
+        % Record number of rows so far.
+        idx = 6;
+     
+     else
+         
+        % Record number of rows so far.
+        idx = 4;
+        
      end 
+     
+     % Record volume.
+     TabDat.ftr{idx+1,1} = ...
+         ['Volume: %0.0f ' units{:} ' = %0.0f voxels'];
+     TabDat.ftr{idx+1,2} = [S*prod(VOX),S];
+     
+     % Record voxel sizes.
+     TabDat.ftr{idx+2,1} = ...
+         ['Voxel size: ' voxfmt units{:}];
+     TabDat.ftr{idx+2,2} = VOX;
 
     %-Characterize excursion set in terms of maxima
     % (sorted on Z values and grouped by regions)
