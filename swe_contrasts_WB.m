@@ -64,6 +64,7 @@ function [SwE] = swe_contrasts_WB(SwE)
     DxCon.VspmFDRP = spm_vol(sprintf('swe_vox_%cstat_lpFDR%s_c%.2d%s', STAT, wbstring, 1, file_ext));
     DxCon.VspmFWEP = spm_vol(sprintf('swe_vox_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 1, file_ext));
     DxCon.VspmFWEP_clus = spm_vol(sprintf('swe_clustere_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 1, file_ext));
+    DxCon.Vedf = spm_vol(sprintf('swe_vox_edf_c%.2d%s', 1, file_ext));
     
     % Return SwE.
     %----------------------------------------------------------------------

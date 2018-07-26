@@ -195,12 +195,13 @@ case 'table'                                                        %-Table
     try, QPc  = xSwE.Pc; end
     
     % For WB analyses we have already calculated the information for the
-    % table. We just need to read it in and put it in the table.
+    % table and footer. We just need to read it in.
     if xSwE.WB
         VspmUncP = spm_read_vols(xSwE.VspmUncP);
         VspmFDRP = spm_read_vols(xSwE.VspmFDRP);
         VspmFWEP = spm_read_vols(xSwE.VspmFWEP);
         VspmFWEP_clus = spm_read_vols(xSwE.VspmFWEP_clus);
+        Vedf = spm_read_vols(xSwE.VspmFWEP_clus);
     end
     
 %     if STAT~='P'
@@ -327,26 +328,30 @@ case 'table'                                                        %-Table
         % We need the P uncorrected P values to be in the correct form to
         % use spm_uc_FDR.
         Ts = spm_data_read(xSwE.VspmUncP);
-        if ~isempty(XYZ)
-            if isstruct(XYZ)
-                Ts = Ts(XYZ);
-            end
-        end
         Ts(isnan(Ts)) = [];
         Ts = 10.^-Ts;
         Ts = sort(Ts(:));
         
         % Obtain the FDR p 0.05 value.
         FDRp_05 = spm_uc_FDR(0.05,df,'P',n,Ts);
+        clear Ts
         
         % Record FWE/FDR/clus FWE p values.
         TabDat.ftr{3,1} = ...
              ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f, clus k(5%% FWE): %0.1f '];
         TabDat.ftr{3,2} = [xSwE.Pfv, FDRp_05, xSwE.Pfc];
         
+        % Retrieve edf data
+        edf = spm_data_read(xSwE.Vedf);
+        edf(isnan(edf)) = [];
+        
+        edf_max = max(edf);
+        edf_min = min(edf);
+        edf_med = median(edf);
+        
         % Recording effective Degrees of freedom - TODO
-        TabDat.ftr{5,1}='Effective DF: (Type X): (min) [X.X X.X], (median) [X.X X.X], (max) [X.X X.X]';
-        TabDat.ftr{5,2}='';
+        TabDat.ftr{5,1}='Effective DF: (Type X): (min) [X.X %0.1f], (median) [X.X %0.1f], (max) [X.X %0.1f]';
+        TabDat.ftr{5,2}=[edf_min, edf_med, edf_max];
         
         % Recording number of bootstraps.
         TabDat.ftr{6,1}='Bootstrap samples = %0.0f';
