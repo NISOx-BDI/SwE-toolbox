@@ -2050,7 +2050,7 @@ function [corr, tmpR2] = swe_resid_corr(SwE, restric, ss, pX, varargin)
     conWB = SwE.WB.con;
     iSubj = SwE.Subj.iSubj;
     nSubj = SwE.Subj.nSubj;
-    uSubj = SwE.Subj.uSubj;
+    uSubj = SwE.Subj.uSubj; 
     rankCon = rank(SwE.WB.con);
 
     % This is to prevent tmpR2 being overwritten.

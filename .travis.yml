@@ -5,6 +5,8 @@ services:
   - docker
 cache: 
   timeout: 1000
+  directories:
+  - test/data
 python:
   - "3.5"
 bundler_args: --retry 9
@@ -16,9 +18,14 @@ install:
  - export PATH=$PATH:`pwd`/git-lfs-1.4.1
  - git lfs install  
  # Download data.
- - cd SwE-toolbox/test
- - git clone https://github.com/TomMaullin/SwE-toolbox-testdata.git data
- - cd ..
+ - cd SwE-toolbox/test/data
+ - if ! [ -d .git ]; then git clone https://github.com/TomMaullin/SwE-toolbox-testdata.git .; fi
+ # Delete any previous changes (retry because lfs might download files)
+ - travis_retry git reset --hard origin/master
+ # A second time to allow for 3 more retries as "--retry 9" does not seem to be
+ # taken into account by Travis CI
+ - travis_retry git reset --hard origin/master
+ - cd ../..
 jobs:
   include:
     - stage: Results generation 
