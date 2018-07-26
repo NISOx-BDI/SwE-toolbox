@@ -180,6 +180,7 @@ case 'table'                                                        %-Table
 %     VRpv      = xSwE.VRpv;
     n         = xSwE.n;
     STAT      = xSwE.STAT;
+    Vedf = spm_read_vols(xSwE.Vedf);
     switch STAT
         case 'T'
             STATe = 'Z';
@@ -201,7 +202,6 @@ case 'table'                                                        %-Table
         VspmFDRP = spm_read_vols(xSwE.VspmFDRP);
         VspmFWEP = spm_read_vols(xSwE.VspmFWEP);
         VspmFWEP_clus = spm_read_vols(xSwE.VspmFWEP_clus);
-        Vedf = spm_read_vols(xSwE.VspmFWEP_clus);
     end
     
 %     if STAT~='P'
@@ -323,6 +323,18 @@ case 'table'                                                        %-Table
      TabDat.ftr{4,1} = 'Degrees of freedom = [%0.1f, %0.1f]';
      TabDat.ftr{4,2} = df;
      
+     % Retrieve edf data
+     edf = spm_data_read(xSwE.Vedf);
+     edf(isnan(edf)) = [];
+        
+     edf_max = max(edf);
+     edf_min = min(edf);
+     edf_med = median(edf);
+
+     % Recording effective Degrees of freedom
+     TabDat.ftr{5,1}='Effective DF: (Type %0.0f): (min) %0.1f, (median) %0.1f, (max) %0.1f';
+     TabDat.ftr{5,2}=[xSwE.dofType, edf_min, edf_med, edf_max];
+     
      if xSwE.WB
         
         % We need the P uncorrected P values to be in the correct form to
@@ -338,20 +350,8 @@ case 'table'                                                        %-Table
         
         % Record FWE/FDR/clus FWE p values.
         TabDat.ftr{3,1} = ...
-             ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f, clus k(5%% FWE): %0.1f '];
+             ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f, clus k(5%% FWE): %0.0f '];
         TabDat.ftr{3,2} = [xSwE.Pfv, FDRp_05, xSwE.Pfc];
-        
-        % Retrieve edf data
-        edf = spm_data_read(xSwE.Vedf);
-        edf(isnan(edf)) = [];
-        
-        edf_max = max(edf);
-        edf_min = min(edf);
-        edf_med = median(edf);
-        
-        % Recording effective Degrees of freedom - TODO
-        TabDat.ftr{5,1}='Effective DF: (Type X): (min) %0.1f, (median) %0.1f, (max) %0.1f';
-        TabDat.ftr{5,2}=[edf_min, edf_med, edf_max];
         
         % Recording number of bootstraps.
         TabDat.ftr{6,1}='Bootstrap samples = %0.0f';
@@ -368,7 +368,7 @@ case 'table'                                                        %-Table
         TabDat.ftr{3,2} = spm_uc_FDR(0.05,df,'P',n,sort(xSwE.Ps)');
         
         % Record number of rows so far.
-        idx = 4;
+        idx = 5;
         
      end 
      

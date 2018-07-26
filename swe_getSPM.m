@@ -1081,6 +1081,13 @@ if ~isMat
   end
 end 
 
+% Doftype
+if isfield(SwE.type,'modified')
+    dof_type = SwE.type.modified.dof_mo;
+else
+    dof_type = SwE.type.classic.dof_cl;        
+end
+
 %==========================================================================
 % - E N D
 %==========================================================================
@@ -1125,7 +1132,9 @@ xSwE   = struct( ...
             'VOX',      VOX,...
             'Vspm',     VspmSv,...
             'thresDesc',thresDesc,...
-            'WB',       0);
+            'WB',       0,...
+            'dofType',  dof_type,...
+            'Vedf',     cat(1,xCon(Ic).Vedf));
 
 % For WB analyses we have already computed uncorrected, FDR, FWE and
 % cluster-FWE P values at this point.
@@ -1137,7 +1146,6 @@ if isfield(SwE, 'WB')
     xSwE.VspmFDRP = cat(1,xCon(Ic).VspmFDRP);
     xSwE.VspmFWEP = cat(1,xCon(Ic).VspmFWEP);
     xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
-    xSwE.Vedf = cat(1,xCon(Ic).Vedf);
     
     % 95% percentiles
     maxScore = sort(SwE.WB.maxScore);

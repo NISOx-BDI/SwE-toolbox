@@ -105,7 +105,9 @@ rankCon = rank(conWB);
 if WB.clusterWise == 1 && WB.RSwE ==1
   WB.RSwE = 0;
   SwE.WB.RSwE = 0;
-  if spm_matlab_version_chk('7') >=0
+  if isOctave
+    save('SwE','SwE');
+  elseif spm_matlab_version_chk('7') >=0
     save('SwE','SwE','-V6');
   else
     save('SwE','SwE');
@@ -1909,7 +1911,9 @@ if ~isMat
 end
 
 %Save SwE.
-if spm_matlab_version_chk('7') >=0
+if isOctave
+    save('SwE','SwE');
+elseif spm_matlab_version_chk('7') >=0
     save('SwE','SwE','-V6');
 else
     save('SwE','SwE');
