@@ -339,10 +339,10 @@ case 'table'                                                        %-Table
         % Obtain the FDR p 0.05 value.
         FDRp_05 = spm_uc_FDR(0.05,df,'P',n,Ts);
         
-        % Record FWE/FDR/clus FWE p values. TODO
+        % Record FWE/FDR/clus FWE p values.
         TabDat.ftr{3,1} = ...
-             'vox P_FDRp: %0.3f';
-        TabDat.ftr{3,2} = FDRp_05;
+             ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f, clus k(5%% FWE): %0.1f '];
+        TabDat.ftr{3,2} = [xSwE.Pfv, FDRp_05, xSwE.Pfc];
         
         % Recording effective Degrees of freedom - TODO
         TabDat.ftr{5,1}='Effective DF: (Type X): (min) [X.X X.X], (median) [X.X X.X], (max) [X.X X.X]';
@@ -357,6 +357,11 @@ case 'table'                                                        %-Table
      
      else
          
+        % Record FDR p value.
+        TabDat.ftr{3,1} = ...
+             'vox P(5%% FDR): %0.3f';
+        TabDat.ftr{3,2} = spm_uc_FDR(0.05,df,'P',n,sort(xSwE.Ps)');
+        
         % Record number of rows so far.
         idx = 4;
         

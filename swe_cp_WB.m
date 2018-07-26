@@ -480,6 +480,12 @@ if ~isMat
   Vscore = swe_create_vol(sprintf('swe_vox_%cstat_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
 			  sprintf('Original parametric %c statistic data.', WB.stat));
   
+  %-Initialise original parametric edf image
+  %----------------------------------------------------------------------
+  
+  Vedf = swe_create_vol(sprintf('swe_vox_edf_c%02d%s', 1, file_ext), DIM, M,...
+			  sprintf('Original parametric %c edf data.', WB.stat));
+          
   %-Initialise parametric P-Value image
   %----------------------------------------------------------------------
   
@@ -611,8 +617,8 @@ if ~isMat
     CrPl         = z:min(z+nbz-1,zdim);       %-plane list
     zords        = CrPl(:)*ones(1,xdim*ydim); %-plane Z coordinates
     CrScore      = [];                        %-scores
-    CrYWB         = [];                       %-fitted data under H0
-    CrResWB       = [];                       %-residuals
+    CrYWB        = [];                       %-fitted data under H0
+    CrResWB      = [];                       %-residuals
     CrP          = [];                        %-parametric p-values
     if (WB.stat == 'T')
      CrPNeg       = [];                       %-negative parametric p-values
@@ -620,6 +626,7 @@ if ~isMat
     CrConScore   = [];                        %-converted score values. 
                                               % i.e. Z/X from T/F
     Q            = [];                        %-in mask indices for this plane
+    Credf        = [];                        %-edf
     
     for bch = 1:nbch                     %-loop over blocks
       
@@ -781,10 +788,10 @@ if ~isMat
           
           % hypothesis test, using clusterwise threshold if available.
           if (SwE.WB.clusterWise == 1)
-            [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+            [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
             clear CovcCovBc cCovBc
           else
-            p=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
+            [p, edf]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
           end
           
           minScore(1) = min(minScore(1), min(score));
@@ -802,9 +809,9 @@ if ~isMat
           
           % hypothesis test, using clusterwise threshold if available.
           if (SwE.WB.clusterWise == 1)
-            [p, activatedVoxels]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
+            [p, edf, activatedVoxels]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
           else
-            p=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
+            [p, edf]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
           end
         end
         
@@ -816,6 +823,7 @@ if ~isMat
         CrResWB           = [CrResWB,  resWB]; %#ok<AGROW>
         CrScore           = [CrScore,  score]; %#ok<AGROW>
         CrP               = [CrP,      -log10(1-p)]; %#ok<AGROW>
+        Credf             = [Credf,    edf]; %#ok<AGROW> 
         if (SwE.WB.stat == 'T')
             CrConScore    = [CrConScore, swe_invNcdf(p)]; %#ok<AGROW>
             CrPNeg        = [CrPNeg,   -log10(p)]; %#ok<AGROW>
@@ -866,6 +874,11 @@ if ~isMat
     %------------------------------------------------------------------
     if ~isempty(Q), jj(Q) = CrScore; end
     Vscore = spm_write_plane(Vscore, jj, CrPl);
+    
+    %-Write parametric edf image of the original data
+    %------------------------------------------------------------------
+    if ~isempty(Q), jj(Q) = Credf; end
+    Vedf = spm_write_plane(Vedf, jj, CrPl);
     
     %-Write parametric p-value image
     %------------------------------------------------------------------
@@ -1082,7 +1095,7 @@ else % ".mat" format
       score = (conWB * beta) ./ sqrt(cCovBc);
       
       if (SwE.WB.clusterWise == 1)
-        [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+        [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
         clear CovcCovBc cCovBc
       end
       
@@ -1100,7 +1113,7 @@ else % ".mat" format
       score = score / rankCon;
       % Perform hypothesis test for activated regions.
       if (SwE.WB.clusterWise == 1)
-        [p, activatedVoxels] = swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
+        [p, edf, activatedVoxels] = swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
       end
     end
     maxScore(1) = max(score);
@@ -1111,10 +1124,15 @@ else % ".mat" format
   S           = CrS;  
   VM          = sprintf('swe_vox_mask%s', file_ext);
   Vscore      = sprintf('swe_vox_%cstat_c%02d%s', WB.stat, 1, file_ext);
+  Vedf        = sprintf('swe_vox_edf_c%02d%s', 1, file_ext);
 
   mask = Cm;       
   save(sprintf('swe_vox_mask%s',  file_ext), 'mask');
   clear mask
+  
+  edf(:,Cm) = edf;
+  save(Vedf, 'edf');
+  clear Vedf
   
   tmp = score;
   score = nan(1, nVox);
@@ -1134,7 +1152,7 @@ else % ".mat" format
   VlP(:,Cm) = -log10(1-p);
   save(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 1, file_ext), 'VlP');
   clear VlP
-
+  
   if (SwE.WB.stat == 'T')
       
        VlP_neg = nan(1, nVox);
@@ -1437,7 +1455,7 @@ for b = 1:WB.nB
       
       % hypothesis test
       if (WB.clusterWise == 1)
-        [~, activatedVoxels(index)]=swe_hyptest(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
+        [~, ~, activatedVoxels(index)]=swe_hyptest(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
         clear cCovBc
       end
       uncP(index) = uncP(index) + (score >= originalScore(index));
@@ -1533,7 +1551,7 @@ for b = 1:WB.nB
     
     % hypothesis test
     if (WB.clusterWise == 1)
-        [~, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, S, edf, cCovBc, Cov_vis, dofMat);
+        [~, ~, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, S, edf, cCovBc, Cov_vis, dofMat);
         clear cCovBc
     end
     uncP = uncP + (score >= originalScore); 
@@ -1973,7 +1991,7 @@ end
 % This function performs a hypothesis test using the threshold given as the
 % primary threshold in the SwE cluster info. If this is not available it
 % returns unthresholded p values only.
-function [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
+function [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
 
       % setup
       p = zeros(1, matSize);
@@ -2022,9 +2040,9 @@ function [p, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSiz
 			   tmp = eye(nSizeCon);
                edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
                      (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
-    	    end
-	   end
-
+            end
+      end
+       
 	   % P values and activated voxels (if clusterwise).
 	   if (SwE.WB.stat == 'T')
     	  p  = spm_Tcdf(score, edf);

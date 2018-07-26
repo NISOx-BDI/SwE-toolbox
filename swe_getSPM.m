@@ -1137,7 +1137,9 @@ if isfield(SwE, 'WB')
     xSwE.VspmFDRP = cat(1,xCon(Ic).VspmFDRP);
     xSwE.VspmFWEP = cat(1,xCon(Ic).VspmFWEP);
     xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
-
+    xSwE.Pfv = prctile(SwE.WB.maxScore, 95); % Voxelwise FWE P
+    xSwE.Pfc = prctile(SwE.WB.clusterInfo.maxClusterSize, 95); % Clusterwise FWE P
+    
 end
 
 % Record clusterwise FWE P value if there is one.
