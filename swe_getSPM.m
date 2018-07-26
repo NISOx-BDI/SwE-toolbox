@@ -1138,8 +1138,12 @@ if isfield(SwE, 'WB')
     xSwE.VspmFWEP = cat(1,xCon(Ic).VspmFWEP);
     xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
     xSwE.Vedf = cat(1,xCon(Ic).Vedf);
-    xSwE.Pfv = prctile(SwE.WB.maxScore, 95); % Voxelwise FWE P
-    xSwE.Pfc = prctile(SwE.WB.clusterInfo.maxClusterSize, 95); % Clusterwise FWE P
+    
+    % 95% percentiles
+    maxScore = sort(SwE.WB.maxScore);
+    maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSize);
+    xSwE.Pfv = maxScore(ceil(0.95*(xSwE.nB+1))); % Voxelwise FWE P 
+    xSwE.Pfc = maxClusterSize(ceil(0.95*(xSwE.nB+1))); % Clusterwise FWE P 
     
 end
 

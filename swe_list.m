@@ -350,7 +350,7 @@ case 'table'                                                        %-Table
         edf_med = median(edf);
         
         % Recording effective Degrees of freedom - TODO
-        TabDat.ftr{5,1}='Effective DF: (Type X): (min) [X.X %0.1f], (median) [X.X %0.1f], (max) [X.X %0.1f]';
+        TabDat.ftr{5,1}='Effective DF: (Type X): (min) %0.1f, (median) %0.1f, (max) %0.1f';
         TabDat.ftr{5,2}=[edf_min, edf_med, edf_max];
         
         % Recording number of bootstraps.
