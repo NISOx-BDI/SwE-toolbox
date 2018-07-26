@@ -8,7 +8,7 @@
 % matorimg - 'mat' for '.mat' file surface input pr 'img' for '.img' and '.hdr' 
 %			 volumetric input.
 %
-% Author: Tom Maullin (08/06/20178)
+% Author: Tom Maullin (08/06/20178) 
 %
 %=======================================================================================
 
@@ -30,6 +30,9 @@ function result=runTest(porwb, torf, matorimg)
 	disp(['Test case running: ' testname])
 	disp(sprintf('==============================================================\n'))
 
+	% Test setup
+	testSetup(porwb, torf, matorimg)
+
 	% Generate the results for the test.
 	generateData(porwb, torf, matorimg);
 
@@ -44,25 +47,32 @@ function result=runTest(porwb, torf, matorimg)
 	% Compare test results to ground truth.
 	result = verifyMapsUnchanged(porwb, torf, matorimg);
 
-	%Tell the user whether the tests passed.
+	% Tell the user whether the tests passed.
 	disp(sprintf('\n=============================================================='))
 	if ~result
 		disp('A test has failed!')
 		error(['Test ' testname ' has failed.'])
 	else
 		disp('All tests pass!!')
-	end
+	end 
 	disp(sprintf('==============================================================\n'))
+
+	% Teardown method
+	testTearDown(porwb, torf, matorimg)
 
 end
 
-
-function generateData(porwb, torf, matorimg)
+function testSetup(porwb, torf, matorimg)
 
 	% Move into the test folder and add the path to tests.
 	cd(['/swe/test/data/test_' porwb '_' torf '_' matorimg]);
+	ls;
 	addpath('/swe');
 	addpath('/swe/test');
+    
+    % Run teardown method just in case some of the files from the previous 
+    % run managed to get cached.
+    testTearDown(porwb, torf, matorimg);
 
 	% Reset all seeds 
 	% (Footnote: In octave these are all different!!).
@@ -72,6 +82,16 @@ function generateData(porwb, torf, matorimg)
 	randp('state', seed);
 	randg('state',seed);
 	rande('state',seed);
+
+	% Make a copy of the original xSwE object for future runs.
+	if exist('xSwE.mat')~=0
+		copyfile('xSwE.mat', 'xSwE_orig.mat')
+	end
+
+end
+
+function generateData(porwb, torf, matorimg)
+
 
 	% Load the test design and run it.
 	load('design.mat');
@@ -223,5 +243,18 @@ function mapsEqual = verifyMapsUnchanged(porwb, torf, matorimg)
     % return true if all maps were equal false otherwise.
 
     mapsEqual = ~any(~equalMaps);
+
+end
+
+function testTearDown(porwb, torf, matorimg)
+	
+	% Delete all files from this run.
+	delete('swe_*')
+	delete('SwE*')
+
+	if exist('xSwE_orig.mat')~=0
+		delete('xSwE.mat')
+		rename('xSwE_orig.mat', 'xSwE.mat')
+	end
 
 end

@@ -663,7 +663,6 @@ fprintf('%30s\n','...done')                                             %-#
 %==========================================================================
 if isfield(job.WB, 'WB_yes')
   
-  WB.RWB            = job.WB.WB_yes.WB_type;
   WB.SS             = job.WB.WB_yes.WB_ss;
   WB.nB             = job.WB.WB_yes.WB_nB;
   WB.RSwE           = job.WB.WB_yes.WB_SwE;
