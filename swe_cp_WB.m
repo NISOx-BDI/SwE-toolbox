@@ -234,28 +234,43 @@ end
 if isfield(SwE.type,'modified')
   iVis      = SwE.Vis.iVis;
   iGr       = SwE.Gr.iGr;
-  uGr       = unique(iGr);
+  uGr       = unique(iGr); 
   nGr       = length(uGr);
-  SwE.Gr.uGr       = uGr;
-  SwE.Gr.nGr       = nGr;
-  
+    
   % info specific for each group
   uVis_g = cell(1,nGr); % unique visits for each group
   nVis_g = zeros(1,nGr); % number of visits for each group
-  uSubj_g = cell(1,nGr); % unique subjects for each group
-  nSubj_g = zeros(1,nGr); % number of subjects for each group
+  uSubj_g = cell(1,nGr); % unique visits for each group
+  nSubj_g = zeros(1,nGr); % number of visits for each group
   for g = 1:nGr
-    uVis_g{g}  = unique(iVis(iGr==uGr(g)));
-    nVis_g(g)  = length(uVis_g{g});
-    uSubj_g{g} = unique(iSubj(iGr==uGr(g)));
-    nSubj_g(g) = length(uSubj_g{g});
+      uVis_g{g}  = unique(iVis(iGr==uGr(g))); 
+      nVis_g(g)  = length(uVis_g{g});
+      iSubj_g = iSubj(iGr==uGr(g)) % Subject number for each subject in group for each visit
+      uSubj_g{g} = unique(iSubj_g); % Unique subject numbers of subjects in group
+      nSubj_g(g) = length(uSubj_g{g});
+      uSubj_g_tmp = uSubj_g{g};
+        
+      for k = 1:nSubj_g 
+
+          % The number of visits for subject uSubj_g(k)
+          vis_g_subj(k) = sum(iSubj_g==uSubj_g_tmp(k));
+
+      end
+
+      max_nVis_g(g) = max(vis_g_subj);
+      min_nVis_g(g) = min(vis_g_subj);
+        
+      clear vis_g_subj
+        
   end
   nCov_vis_g  = nVis_g.*(nVis_g+1)/2; % number of covariance elements to be estimated for each group
   nCov_vis    = sum(nCov_vis_g); % total number of covariance elements to be estimated
   
-  % Save nVis_g and uVis_g.
+  % Save Vis variables.
   SwE.Vis.uVis_g = uVis_g;
   SwE.Vis.nVis_g = nVis_g;
+  SwE.Vis.max_nVis_g = max_nVis_g;
+  SwE.Vis.min_nVis_g = min_nVis_g;
   
   % Flags matrices indicating which residuals have to be used for each covariance element
   Flagk  = false(nCov_vis,nScan); % Flag indicating scans corresponding to visit k for each covariance element
