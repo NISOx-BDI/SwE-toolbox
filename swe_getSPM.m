@@ -720,7 +720,7 @@ if ~isMat
                       case 'T'
                          u = spm_uc_FDR(u,Inf,'Z',n,VspmSv,0); 
                       case 'F'
-                         u = spm_uc_FDR(u,1,'X',n,VspmSv,0); 
+                         u = spm_uc_FDR(u,[1 1],'X',n,VspmSv,0); 
                   end
 
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
