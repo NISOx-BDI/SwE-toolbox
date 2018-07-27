@@ -592,7 +592,6 @@ end
 %--------------------------------------------------------------------------
 %dFWHM=SwE.xVol.FWHM * SwE.xVol.M(1:3,1:3);
 %df=[xCon(Ic(1)).eidf, (SwE.Subj.nSubj-SwE.xX.pB)*((1+2*(SwE.vFWHM(1)/dFWHM(1))^2)*(1+2*(SwE.vFWHM(2)/dFWHM(2))^2)*(1+2*(SwE.vFWHM(3)/dFWHM(3))^2))^0.5-xCon(Ic(1)).eidf+1]; %df=[xCon(Ic(1)).eidf nSubj-pB-xCon(Ic(1)).eidf-1]; %df     = [xCon(Ic(1)).eidf xX.erdf];
-df     = [1 1];
 if nc > 1
     if n > 1
         str = sprintf('^{%d \\{Ha:k\\geq%d\\}}',nc,(nc-n)+1);
@@ -719,9 +718,9 @@ if ~isMat
                   thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
                   switch STAT
                       case 'T'
-                         u = spm_uc_FDR(u,df,'Z',n,VspmSv,0); 
+                         u = spm_uc_FDR(u,Inf,'Z',n,VspmSv,0); 
                       case 'F'
-                         u = spm_uc_FDR(u,df,'X',n,VspmSv,0); 
+                         u = spm_uc_FDR(u,1,'X',n,VspmSv,0); 
                   end
 
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
@@ -758,7 +757,7 @@ if ~isMat
               case 'T'
                   Ps = (1-spm_Ncdf(Zum)).^n; 
               case 'F'
-                  Ps = (1-spm_Xcdf(Zum,df(2))).^n;
+                  Ps = (1-spm_Xcdf(Zum,1)).^n;
           end
           
           up  = NaN;
@@ -802,7 +801,7 @@ if ~isMat
               case 'T'
                   Ps = (1-spm_Ncdf(Zum)).^n; 
               case 'F'
-                  Ps = (1-spm_Xcdf(Zum,df(2))).^n;
+                  Ps = (1-spm_Xcdf(Zum,1)).^n;
           end
           
           up  = NaN;
@@ -1115,7 +1114,6 @@ xSwE   = struct( ...
             'Z',        Z,...
             'n',        n,...
             'STAT',     STAT,...
-            'df',       df,...
             'STATstr',  STATstr,...
             'Ic',       Ic,...
             'Im',       {Im},...
@@ -1134,7 +1132,10 @@ xSwE   = struct( ...
             'thresDesc',thresDesc,...
             'WB',       0,...
             'dofType',  dof_type,...
-            'Vedf',     cat(1,xCon(Ic).Vedf));
+            'Vedf',     cat(1,xCon(Ic).Vedf),...
+            'nSubj_g',  SwE.Gr.nSubj_g,...
+            'nPredict', size(SwE.xX.X, 2),...
+            'df_Con',   rank(xCon(Ic).c));
 
 % For WB analyses we have already computed uncorrected, FDR, FWE and
 % cluster-FWE P values at this point.
