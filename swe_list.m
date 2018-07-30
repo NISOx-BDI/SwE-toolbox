@@ -338,10 +338,9 @@ case 'table'                                                        %-Table
      
      if xSwE.WB
          
-         % Adding in a blank column so that for WB all df information
-         % appears on same side.
-         TabDat.ftr{6,1}='';
-         TabDat.ftr{6,2}='';
+         % Recording number of bootstraps.
+         TabDat.ftr{6,1}='Bootstrap samples = %0.0f';
+         TabDat.ftr{6,2}= xSwE.nB;
          
          % Recording effective Degrees of freedom
          if xSwE.dofType~=1
@@ -368,12 +367,8 @@ case 'table'                                                        %-Table
              ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f, clus k(5%% FWE): %0.0f '];
         TabDat.ftr{3,2} = [xSwE.Pfv, FDRp_05, xSwE.Pfc];
         
-        % Recording number of bootstraps.
-        TabDat.ftr{8,1}='Bootstrap samples = %0.0f';
-        TabDat.ftr{8,2}= xSwE.nB;
-        
         % Record number of rows so far.
-        idx = 8;
+        idx = 7;
      
      else
          
