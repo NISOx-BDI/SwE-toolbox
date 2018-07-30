@@ -236,6 +236,8 @@ if isfield(SwE.type,'modified')
   iGr       = SwE.Gr.iGr;
   uGr       = unique(iGr); 
   nGr       = length(uGr);
+  SwE.Gr.uGr       = uGr;
+  SwE.Gr.nGr       = nGr;
     
   % info specific for each group
   uVis_g = cell(1,nGr); % unique visits for each group
