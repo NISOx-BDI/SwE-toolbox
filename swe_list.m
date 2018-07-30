@@ -335,18 +335,23 @@ case 'table'                                                        %-Table
      edf_max = max(edf);
      edf_min = min(edf);
      edf_med = median(edf);
-
-     % Recording effective Degrees of freedom
-     if xSwE.dofType~=1
-        TabDat.ftr{6,1}='Error DF: (Type %0.0f): (min) %0.1f, (median) %0.1f, (max) %0.1f';
-        TabDat.ftr{6,2}=[xSwE.dofType, edf_min, edf_med, edf_max];
-     else
-        TabDat.ftr{6,1}='DF: (Type 1): %0.1f';
-        TabDat.ftr{6,2}=11;
-     end
      
      if xSwE.WB
-        
+         
+         % Adding in a blank column so that for WB all df information
+         % appears on same side.
+         TabDat.ftr{6,1}='';
+         TabDat.ftr{6,2}='';
+         
+         % Recording effective Degrees of freedom
+         if xSwE.dofType~=1
+            TabDat.ftr{7,1}='Error DF: (Type %0.0f): (min) %0.1f, (median) %0.1f, (max) %0.1f';
+            TabDat.ftr{7,2}=[xSwE.dofType, edf_min, edf_med, edf_max];
+         else
+            TabDat.ftr{7,1}='DF: (Type 1): %0.1f';
+            TabDat.ftr{7,2}=11;
+         end
+     
         % We need the P uncorrected P values to be in the correct form to
         % use spm_uc_FDR.
         Ts = spm_data_read(xSwE.VspmUncP);
@@ -364,13 +369,22 @@ case 'table'                                                        %-Table
         TabDat.ftr{3,2} = [xSwE.Pfv, FDRp_05, xSwE.Pfc];
         
         % Recording number of bootstraps.
-        TabDat.ftr{7,1}='Bootstrap samples = %0.0f';
-        TabDat.ftr{7,2}= xSwE.nB;
+        TabDat.ftr{8,1}='Bootstrap samples = %0.0f';
+        TabDat.ftr{8,2}= xSwE.nB;
         
         % Record number of rows so far.
-        idx = 7;
+        idx = 8;
      
      else
+         
+        % Recording effective Degrees of freedom
+        if xSwE.dofType~=1
+           TabDat.ftr{6,1}='Error DF: (Type %0.0f): (min) %0.1f, (median) %0.1f, (max) %0.1f';
+           TabDat.ftr{6,2}=[xSwE.dofType, edf_min, edf_med, edf_max];
+        else
+           TabDat.ftr{6,1}='DF: (Type 1): %0.1f';
+           TabDat.ftr{6,2}=11;
+        end
          
         % Record FDR p value.
         TabDat.ftr{3,1} = ...
