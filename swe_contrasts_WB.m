@@ -71,7 +71,7 @@ function [SwE] = swe_contrasts_WB(SwE)
     if ~isfield(SwE, 'xCon')
         SwE.xCon = DxCon;
     else
-        SwE.xCon = [SwE.xCon DxCon];
+        SwE.xCon = [SwE.xCon DxCon]; 
     end
 
 end
