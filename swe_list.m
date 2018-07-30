@@ -395,12 +395,14 @@ case 'table'                                                        %-Table
      TabDat.ftr{idx+2,2} = xSwE.nSubj_g;
      
      % Record visits per group. TODO
-     nVisitsString = 'Number of visits: ';
-     for i = 1:length([1])
-         nVisitsString = [nVisitsString '%0.0f '];
+     nVisitsString = 'Number of visits ([Mn Max]): ';
+     nVisitsNumbers = [];
+     for i = 1:length(xSwE.max_nVis_g)
+         nVisitsString = [nVisitsString '[%0.0f %0.0f]'];
+         nVisitsNumbers = [nVisitsNumbers xSwE.min_nVis_g(i) xSwE.max_nVis_g(i)];
      end
      TabDat.ftr{idx+3,1} = nVisitsString;
-     TabDat.ftr{idx+3,2} = [1];
+     TabDat.ftr{idx+3,2} = nVisitsNumbers;
      
      % Record number of predictors.
      TabDat.ftr{idx+4,1} = 'Number of predictors: %0.0f';
@@ -756,11 +758,11 @@ case 'table'                                                        %-Table
         %-Paginate if necessary
         %------------------------------------------------------------------
         if y < dy
-            h = text(0.5,-5*dy,...
-                sprintf('Page %d',spm_figure('#page',Fgraph)),...
-                        'FontName',PF.helvetica,'FontAngle','Italic',...
-                        'FontSize',FS(8));
-            spm_figure('NewPage',[hPage,h])
+%             h = text(0.5,-5*dy,...
+%                 sprintf('Page %d',spm_figure('#page',Fgraph)),...
+%                         'FontName',PF.helvetica,'FontAngle','Italic',...
+%                         'FontSize',FS(8));
+            spm_figure('NewPage',hPage)
             hPage = [];
             y     = y0;
         end
@@ -801,9 +803,9 @@ case 'table'                                                        %-Table
     %-Number and register last page (if paginated)
     %----------------------------------------------------------------------
     if spm_figure('#page',Fgraph)>1
-        h = text(0.5,-5*dy,sprintf('Page %d/%d',spm_figure('#page',Fgraph)*[1,1]),...
-            'FontName',PF.helvetica,'FontSize',FS(8),'FontAngle','Italic');
-        spm_figure('NewPage',[hPage,h])
+%         h = text(0.5,-5*dy,sprintf('Page %d/%d',spm_figure('#page',Fgraph)*[1,1]),...
+%             'FontName',PF.helvetica,'FontSize',FS(8),'FontAngle','Italic');
+        spm_figure('NewPage',hPage)
     end
     
     %-End: Store TabDat in UserData of context menu
