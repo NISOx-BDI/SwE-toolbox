@@ -20,7 +20,7 @@ function varargout = swe_list(varargin)
 % .M     - voxels - > mm matrix
 % .VOX   - voxel dimensions {mm}
 % .DIM   - image dimensions {voxels}
-% .units - space units
+% .units - space units 
 % .VRpv  - filehandle - Resels per voxel
 % .Ps    - uncorrected P values in searched volume (for voxel FDR)
 % .Pp    - uncorrected P values of peaks (for peak FDR)
