@@ -318,38 +318,7 @@ case 'table'                                                        %-Table
          'Extent threshold: k = %0.0f voxels';
      TabDat.ftr{2,2} = k;
      
-     % Record volume.
-     TabDat.ftr{4,1} = ...
-         ['Volume: %0.0f ' units{:} ' = %0.0f voxels'];
-     TabDat.ftr{4,2} = [S*prod(VOX),S];
-     
-     % Record voxel sizes.
-     TabDat.ftr{5,1} = ...
-         ['Voxel size: ' voxfmt units{:}];
-     TabDat.ftr{5,2} = VOX;
-     
-     % Retrieve edf data
-     edf = spm_data_read(xSwE.Vedf);
-     edf(isnan(edf)) = [];
-        
-     edf_max = max(edf);
-     edf_min = min(edf);
-     edf_med = median(edf);
-     
      if xSwE.WB
-         
-         % Recording number of bootstraps.
-         TabDat.ftr{6,1}='Bootstrap samples = %0.0f';
-         TabDat.ftr{6,2}= xSwE.nB;
-         
-         % Recording effective Degrees of freedom
-         if xSwE.dofType~=1
-            TabDat.ftr{7,1}='Error DF: (Type %0.0f): (min) %0.1f, (median) %0.1f, (max) %0.1f';
-            TabDat.ftr{7,2}=[xSwE.dofType, edf_min, edf_med, edf_max];
-         else
-            TabDat.ftr{7,1}='DF: (Type 1): %0.1f';
-            TabDat.ftr{7,2}=11;
-         end
      
         % We need the P uncorrected P values to be in the correct form to
         % use spm_uc_FDR.
@@ -366,56 +335,84 @@ case 'table'                                                        %-Table
         TabDat.ftr{3,1} = ...
              ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f, clus k(5%% FWE): %0.0f '];
         TabDat.ftr{3,2} = [xSwE.Pfv, FDRp_05, xSwE.Pfc];
-        
-        % Record number of rows so far.
-        idx = 7;
      
      else
-         
-        % Recording effective Degrees of freedom
-        if xSwE.dofType~=1
-           TabDat.ftr{6,1}='Error DF: (Type %0.0f): (min) %0.1f, (median) %0.1f, (max) %0.1f';
-           TabDat.ftr{6,2}=[xSwE.dofType, edf_min, edf_med, edf_max];
-        else
-           TabDat.ftr{6,1}='DF: (Type 1): %0.1f';
-           TabDat.ftr{6,2}=11;
-        end
          
         % Record FDR p value.
         TabDat.ftr{3,1} = ...
              'vox P(5%% FDR): %0.3f';
         TabDat.ftr{3,2} = spm_uc_FDR(0.05,Inf,'P',n,sort(xSwE.Ps)');
         
-        % Record number of rows so far.
-        idx = 6;
-        
      end
-     
-     % Record contrast degrees of freedom.
-     TabDat.ftr{idx+1,1} = 'Contrast DF: %0.0f';
-     TabDat.ftr{idx+1,2} = [xSwE.df_Con];
      
      % Record number of subjects per group.
      nSubjString = 'Number of subjects: ';
      for i = 1:length(xSwE.nSubj_g)
-         nSubjString = [nSubjString '%0.0f '];
+         nSubjString = [nSubjString '%0.0f'];
+         if i ~= length(xSwE.nSubj_g)
+             nSubjString = [nSubjString ', '];
+         else
+             nSubjString = [nSubjString '; '];
+         end
      end
-     TabDat.ftr{idx+2,1} = nSubjString;
-     TabDat.ftr{idx+2,2} = xSwE.nSubj_g;
      
-     % Record visits per group. TODO
+     % Record visits per group.
      nVisitsString = 'Number of visits ([Mn Max]): ';
      nVisitsNumbers = [];
      for i = 1:length(xSwE.max_nVis_g)
          nVisitsString = [nVisitsString '[%0.0f %0.0f]'];
+         if i ~= length(xSwE.max_nVis_g)
+             nSubjString = [nSubjString ', '];
+         end
          nVisitsNumbers = [nVisitsNumbers xSwE.min_nVis_g(i) xSwE.max_nVis_g(i)];
      end
-     TabDat.ftr{idx+3,1} = nVisitsString;
-     TabDat.ftr{idx+3,2} = nVisitsNumbers;
+     TabDat.ftr{4,1} = [nSubjString nVisitsString];
+     TabDat.ftr{4,2} = [xSwE.nSubj_g nVisitsNumbers];
      
-     % Record number of predictors.
-     TabDat.ftr{idx+4,1} = 'Number of predictors: %0.0f';
-     TabDat.ftr{idx+4,2} = [xSwE.nPredict];
+     if xSwE.WB
+         
+         % Recording number of bootstraps.
+         TabDat.ftr{5,1}='Bootstrap samples = %0.0f';
+         TabDat.ftr{5,2}= xSwE.nB;
+         
+     else
+         
+         % We don't record anything here for parametric.
+         TabDat.ftr{5,1}='';
+         TabDat.ftr{5,2}= '';
+         
+     end
+     
+     % Retrieve edf data
+     edf = spm_data_read(xSwE.Vedf);
+     edf(isnan(edf)) = [];
+        
+     edf_max = max(edf);
+     edf_min = min(edf);
+     edf_med = median(edf);
+     
+     % Recording effective Degrees of freedom
+     if xSwE.dofType~=1
+        TabDat.ftr{6,1}='Error DF: (Type %0.0f): (min) %0.1f, (median) %0.1f, (max) %0.1f';
+        TabDat.ftr{6,2}=[xSwE.dofType, edf_min, edf_med, edf_max];
+     else
+        TabDat.ftr{6,1}='DF: (Type 1): %0.1f';
+        TabDat.ftr{6,2}=11;
+     end
+     
+     % Record contrast degrees of freedom.
+     TabDat.ftr{7,1} = 'Contrast DF: %0.0f; Number of predictors: %0.0f';
+     TabDat.ftr{7,2} = [xSwE.df_Con xSwE.nPredict];
+     
+     % Record volume.
+     TabDat.ftr{8,1} = ...
+         ['Volume: %0.0f ' units{:} ' = %0.0f voxels'];
+     TabDat.ftr{8,2} = [S*prod(VOX),S];
+     
+     % Record voxel sizes.
+     TabDat.ftr{9,1} = ...
+         ['Voxel size: ' voxfmt units{:}];
+     TabDat.ftr{9,2} = VOX;
 
     %-Characterize excursion set in terms of maxima
     % (sorted on Z values and grouped by regions)
