@@ -80,9 +80,7 @@ if exist(fullfile(SwE.swd,'swe_vox_mask.nii'),'file') == 2
     end
 end
  
-files = {'^swe_vox_mask\..{3}$','^swe_vox_beta_bb\..{3}$','^swe_vox_cov\..{3}$',...
-    '^swe_vox_cov_vv.{2}\..{3}$','^swe_vox_edf_c.{2}\..{3}$','^swe_vox_\w{1}stat_c.{2}\..{3}$',...
-    '^swe_vox_\w{2}stat_c.{2}\..{3}$'};
+files = {'^swe_*'};
  
 for i = 1:length(files)
     j = spm_select('List',SwE.swd,files{i});
