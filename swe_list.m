@@ -310,13 +310,8 @@ case 'table'                                                        %-Table
      
      % Record height thresholds.
      TabDat.ftr{1,1} = ...
-          ['Height threshold: ' eSTAT ' = %0.2f, p = %0.3f'];
-     TabDat.ftr{1,2} = [u,Pz];
-     
-     % Record extent threshold.
-     TabDat.ftr{2,1} = ...
-         'Extent threshold: k = %0.0f voxels';
-     TabDat.ftr{2,2} = k;
+          ['Threshold: Height ' eSTAT ' = %0.2f, p = %0.3f; Extent k = %0.0f voxels.'];
+     TabDat.ftr{1,2} = [u,Pz,k];
      
      if xSwE.WB
      
@@ -332,16 +327,16 @@ case 'table'                                                        %-Table
         clear Ts
         
         % Record FWE/FDR/clus FWE p values.
-        TabDat.ftr{3,1} = ...
+        TabDat.ftr{2,1} = ...
              ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f, clus k(5%% FWE): %0.0f '];
-        TabDat.ftr{3,2} = [xSwE.Pfv, FDRp_05, xSwE.Pfc];
+        TabDat.ftr{2,2} = [xSwE.Pfv, FDRp_05, xSwE.Pfc];
      
      else
          
         % Record FDR p value.
-        TabDat.ftr{3,1} = ...
+        TabDat.ftr{2,1} = ...
              'vox P(5%% FDR): %0.3f';
-        TabDat.ftr{3,2} = spm_uc_FDR(0.05,Inf,'P',n,sort(xSwE.Ps)');
+        TabDat.ftr{2,2} = spm_uc_FDR(0.05,Inf,'P',n,sort(xSwE.Ps)');
         
      end
      
@@ -366,8 +361,20 @@ case 'table'                                                        %-Table
          end
          nVisitsNumbers = [nVisitsNumbers xSwE.min_nVis_g(i) xSwE.max_nVis_g(i)];
      end
-     TabDat.ftr{4,1} = [nSubjString nVisitsString];
-     TabDat.ftr{4,2} = [xSwE.nSubj_g nVisitsNumbers];
+     TabDat.ftr{3,1} = [nSubjString nVisitsString];
+     TabDat.ftr{3,2} = [xSwE.nSubj_g nVisitsNumbers];
+     
+     % Record small sample adjustments.
+     TabDat.ftr{4,1}='Resid. Adj.: %s';
+     switch xSwE.SS
+         case {0, 1, 2, 3}
+             TabDat.ftr{4,2} = ['Type ' num2str(xSwE.SS)];
+         case {4, 5}
+             TabDat.ftr{4,2} = ['Type C' num2str(xSwE.SS - 2)];
+         otherwise
+             error('Unknown SS type')
+     end
+     
      
      if xSwE.WB
          
@@ -392,11 +399,32 @@ case 'table'                                                        %-Table
      edf_med = median(edf);
      
      % Recording effective Degrees of freedom
-     if xSwE.dofType~=1
-        TabDat.ftr{6,1}='Error DF: (Type %0.0f): (min) %0.1f, (median) %0.1f, (max) %0.1f';
-        TabDat.ftr{6,2}=[xSwE.dofType, edf_min, edf_med, edf_max];
+     if xSwE.dofType~=0
+        
+        % Work out dofType
+        switch xSwE.dofType
+            
+            case 1
+                
+                dofTypeStr = 'Approx I';
+                
+            case 2
+                
+                dofTypeStr = 'Approx II';
+                
+            case 3
+                
+                dofTypeStr = 'Approx III';
+            
+            otherwise
+                
+                dofTypeStr = '';
+                
+        end
+        TabDat.ftr{6,1}=['Error DF: (' dofTypeStr '): (min) %0.1f, (median) %0.1f, (max) %0.1f'];
+        TabDat.ftr{6,2}=[edf_min, edf_med, edf_max];
      else
-        TabDat.ftr{6,1}='DF: (Type 1): %0.1f';
+        TabDat.ftr{6,1}='DF: (Naive): %0.1f';
         TabDat.ftr{6,2}=11;
      end
      

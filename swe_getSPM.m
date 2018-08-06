@@ -1045,6 +1045,11 @@ if ~isMat
               % threshold.
               pofclus = max(ps_fwe(ps_fwe<fwep_c));
               
+              % Prevent error if nothing survived threshold.
+              if isempty(pofclus)
+                  pofclus = -1;
+              end
+              
               % We then look for the size of the clusters with this p value
               % We do this by first getting this index of clusters with
               % this p value.
@@ -1137,7 +1142,8 @@ xSwE   = struct( ...
             'nPredict',   size(SwE.xX.X, 2),...
             'df_Con',     rank(xCon(Ic).c),...
             'max_nVis_g', SwE.Vis.max_nVis_g,...
-            'min_nVis_g', SwE.Vis.min_nVis_g);
+            'min_nVis_g', SwE.Vis.min_nVis_g,...
+            'SS',         SwE.SS);
 
 % For WB analyses we have already computed uncorrected, FDR, FWE and
 % cluster-FWE P values at this point.
