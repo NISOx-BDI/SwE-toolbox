@@ -232,7 +232,7 @@ if isfield(SwE.type,'modified')
     for g = 1:nGr
         uVis_g{g}  = unique(iVis(iGr==uGr(g))); 
         nVis_g(g)  = length(uVis_g{g});
-        iSubj_g = iSubj(iGr==uGr(g)) % Subject number for each subject in group for each visit
+        iSubj_g = iSubj(iGr==uGr(g)); % Subject number for each subject in group for each visit
         uSubj_g{g} = unique(iSubj_g); % Unique subject numbers of subjects in group
         nSubj_g(g) = length(uSubj_g{g});
         uSubj_g_tmp = uSubj_g{g};
