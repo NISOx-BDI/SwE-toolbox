@@ -763,7 +763,7 @@ if ~spm('CmdLine')
     else
     	fname = cat(1,{SwE.xY.VY.fname}');
     end
-    spm_DesRep('DesMtx',SwE.xX,fname,SwE.xsDes)
+    swe_DesRep('DesMtx',SwE.xX,fname,SwE.xsDes)
     fprintf('%30s\n','...done')                                         %-#
 end
 
