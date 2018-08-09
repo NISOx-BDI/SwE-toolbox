@@ -398,34 +398,41 @@ case 'table'                                                        %-Table
      edf_min = min(edf);
      edf_med = median(edf);
      
-     % Recording effective Degrees of freedom
-     if xSwE.dofType~=0
+     % Work out range of dof values
+     diff = abs(edf_max - edf_min);
+     
+     % Work out dofType
+     switch xSwE.dofType
         
-        % Work out dofType
-        switch xSwE.dofType
-            
-            case 1
-                
-                dofTypeStr = 'Approx I';
-                
-            case 2
-                
-                dofTypeStr = 'Approx II';
-                
-            case 3
-                
-                dofTypeStr = 'Approx III';
-            
-            otherwise
-                
-                dofTypeStr = '';
-                
-        end
+         case 0 
+             
+             dofTypeStr = 'Naive';
+             
+         case 1
+
+             dofTypeStr = 'Approx I';
+
+         case 2
+
+             dofTypeStr = 'Approx II';
+
+         case 3
+
+             dofTypeStr = 'Approx III';
+
+         otherwise
+
+             error('Unknown degrees of freedom.')
+
+     end
+     
+     % Recording effective Degrees of freedom
+     if xSwE.dofType~=0 && diff > 10^-10
         TabDat.ftr{6,1}=['Error DF: (' dofTypeStr '): (min) %0.1f, (median) %0.1f, (max) %0.1f'];
         TabDat.ftr{6,2}=[edf_min, edf_med, edf_max];
      else
-        TabDat.ftr{6,1}='DF: (Naive): %0.1f';
-        TabDat.ftr{6,2}=11;
+        TabDat.ftr{6,1}=['Error DF: (' dofTypeStr '): %0.1f'];
+        TabDat.ftr{6,2}=edf_med;
      end
      
      % Record contrast degrees of freedom.
