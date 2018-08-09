@@ -243,9 +243,25 @@ if isfield(SwE.type,'modified')
     for g = 1:nGr
         uVis_g{g}  = unique(iVis(iGr==uGr(g))); 
         nVis_g(g)  = length(uVis_g{g});
-        uSubj_g{g} = unique(iSubj(iGr==uGr(g)));
+        iSubj_g = iSubj(iGr==uGr(g)); % Subject number for each subject in group for each visit
+        uSubj_g{g} = unique(iSubj_g); % Unique subject numbers of subjects in group
         nSubj_g(g) = length(uSubj_g{g});
+        uSubj_g_tmp = uSubj_g{g};
+        
+        for k = 1:nSubj_g 
+
+             % The number of visits for subject uSubj_g(k)
+             vis_g_subj(k) = sum(iSubj_g==uSubj_g_tmp(k));
+
+        end
+
+        max_nVis_g(g) = max(vis_g_subj);
+        min_nVis_g(g) = min(vis_g_subj);
+        
+        clear vis_g_subj
+        
     end
+    
     nCov_vis_g  = nVis_g.*(nVis_g+1)/2; % number of covariance elements to be estimated for each group
     nCov_vis    = sum(nCov_vis_g); % total number of covariance elements to be estimated   
     
@@ -1193,6 +1209,8 @@ if isfield(SwE.type,'modified')
     SwE.Vis.nVis_g = nVis_g;
     SwE.Vis.nCov_vis_g = nCov_vis_g;
     SwE.Vis.nCov_vis = nCov_vis;
+    SwE.Vis.max_nVis_g = max_nVis_g;
+    SwE.Vis.min_nVis_g = min_nVis_g;
     
     SwE.Gr.uGr       = uGr;
     SwE.Gr.nGr       = nGr;

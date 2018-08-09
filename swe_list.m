@@ -20,7 +20,7 @@ function varargout = swe_list(varargin)
 % .M     - voxels - > mm matrix
 % .VOX   - voxel dimensions {mm}
 % .DIM   - image dimensions {voxels}
-% .units - space units
+% .units - space units 
 % .VRpv  - filehandle - Resels per voxel
 % .Ps    - uncorrected P values in searched volume (for voxel FDR)
 % .Pp    - uncorrected P values of peaks (for peak FDR)
@@ -180,13 +180,13 @@ case 'table'                                                        %-Table
 %     VRpv      = xSwE.VRpv;
     n         = xSwE.n;
     STAT      = xSwE.STAT;
+    Vedf = spm_read_vols(xSwE.Vedf);
     switch STAT
         case 'T'
             STATe = 'Z';
         case 'F'
             STATe = 'X';
     end
-    df        = xSwE.df;
     u         = xSwE.u;
     k         = xSwE.k;
     try, uc   = xSwE.uc; end
@@ -195,7 +195,7 @@ case 'table'                                                        %-Table
     try, QPc  = xSwE.Pc; end
     
     % For WB analyses we have already calculated the information for the
-    % table. We just need to read it in and put it in the table.
+    % table and footer. We just need to read it in.
     if xSwE.WB
         VspmUncP = spm_read_vols(xSwE.VspmUncP);
         VspmFDRP = spm_read_vols(xSwE.VspmFDRP);
@@ -297,46 +297,157 @@ case 'table'                                                        %-Table
     
     %-Footnote with SPM parameters
     %----------------------------------------------------------------------
-%     if STAT ~= 'P'
-%         Pz              = spm_P(1,0,u,df,STAT,1,n,S);
-%         Pu              = spm_P(1,0,u,df,STAT,R,n,S);
-%         [P Pn Ec Ek]    = spm_P(1,k,u,df,STAT,R,n,S);
-%         
-%         TabDat.ftr      = cell(9,2);
-%         TabDat.ftr{1,1} = ...
-%             ['Height threshold: ' STAT ' = %0.2f, p = %0.3f (%0.3f)'];
-%         TabDat.ftr{1,2} = [u,Pz,Pu];
-%         TabDat.ftr{2,1} = ...
-%             'Extent threshold: k = %0.0f voxels, p = %0.3f (%0.3f)';
-%         TabDat.ftr{2,2} = [k/V2R,Pn,P];
-%         TabDat.ftr{3,1} = ...
-%             'Expected voxels per cluster, <k> = %0.3f';
-%         TabDat.ftr{3,2} = Ek/V2R;
-%         TabDat.ftr{4,1} = ...
-%             'Expected number of clusters, <c> = %0.2f';
-%         TabDat.ftr{4,2} = Ec*Pn;
-%         if any(isnan(uc))
-%             TabDat.ftr{5,1} = 'FWEp: %0.3f, FDRp: %0.3f';
-%             TabDat.ftr{5,2} = uc(1:2);
-%         else
-%             TabDat.ftr{5,1} = ...
-%                 'FWEp: %0.3f, FDRp: %0.3f, FWEc: %0.0f, FDRc: %0.0f';
-%             TabDat.ftr{5,2} = uc;
-%         end
-%         TabDat.ftr{6,1} = 'Degrees of freedom = [%0.1f, %0.1f]';
-%         TabDat.ftr{6,2} = df;
-%         TabDat.ftr{7,1} = ...
-%             ['FWHM = ' voxfmt units{:} '; ' voxfmt '{voxels}'];
-%         TabDat.ftr{7,2} = [FWmm FWHM];
-%         TabDat.ftr{8,1} = ...
-%             'Volume: %0.0f = %0.0f voxels = %0.1f resels';
-%         TabDat.ftr{8,2} = [S*prod(VOX),S,R(end)];
-%         TabDat.ftr{9,1} = ...
-%             ['Voxel size: ' voxfmt units{:} '; (resel = %0.2f voxels)'];
-%         TabDat.ftr{9,2} = [VOX,prod(FWHM)];
-%      else
-        TabDat.ftr = {};
-%     end 
+     if strcmp(STAT, 'T')
+         Pz              = 1-spm_Ncdf(u);
+         eSTAT = 'Z';
+     else
+         Pz              = 1-spm_Xcdf(u, 1);
+         eSTAT = 'X';
+     end
+    
+     % Create footer for display.
+     TabDat.ftr      = cell(6,2);
+     
+     % Record height thresholds.
+     TabDat.ftr{1,1} = ...
+          ['Threshold: Height ' eSTAT ' = %0.2f, p = %0.3f; Extent k = %0.0f voxels.'];
+     TabDat.ftr{1,2} = [u,Pz,k];
+     
+     if xSwE.WB
+     
+        % We need the P uncorrected P values to be in the correct form to
+        % use spm_uc_FDR.
+        Ts = spm_data_read(xSwE.VspmUncP);
+        Ts(isnan(Ts)) = [];
+        Ts = 10.^-Ts;
+        Ts = sort(Ts(:));
+        
+        % Obtain the FDR p 0.05 value.
+        FDRp_05 = spm_uc_FDR(0.05,Inf,'P',n,Ts);
+        clear Ts
+        
+        % Record FWE/FDR/clus FWE p values.
+        TabDat.ftr{2,1} = ...
+             ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f, clus k(5%% FWE): %0.0f '];
+        TabDat.ftr{2,2} = [xSwE.Pfv, FDRp_05, xSwE.Pfc];
+     
+     else
+         
+        % Record FDR p value.
+        TabDat.ftr{2,1} = ...
+             'vox P(5%% FDR): %0.3f';
+        TabDat.ftr{2,2} = spm_uc_FDR(0.05,Inf,'P',n,sort(xSwE.Ps)');
+        
+     end
+     
+     % Record number of subjects per group.
+     nSubjString = 'Number of subjects: ';
+     for i = 1:length(xSwE.nSubj_g)
+         nSubjString = [nSubjString '%0.0f'];
+         if i ~= length(xSwE.nSubj_g)
+             nSubjString = [nSubjString ', '];
+         else
+             nSubjString = [nSubjString '; '];
+         end
+     end
+     
+     % Record visits per group.
+     nVisitsString = 'Number of visits ([Mn Max]): ';
+     nVisitsNumbers = [];
+     for i = 1:length(xSwE.max_nVis_g)
+         nVisitsString = [nVisitsString '[%0.0f %0.0f]'];
+         if i ~= length(xSwE.max_nVis_g)
+             nSubjString = [nSubjString ', '];
+         end
+         nVisitsNumbers = [nVisitsNumbers xSwE.min_nVis_g(i) xSwE.max_nVis_g(i)];
+     end
+     TabDat.ftr{3,1} = [nSubjString nVisitsString];
+     TabDat.ftr{3,2} = [xSwE.nSubj_g nVisitsNumbers];
+     
+     % Record small sample adjustments.
+     TabDat.ftr{4,1}='Resid. Adj.: %s';
+     switch xSwE.SS
+         case {0, 1, 2, 3}
+             TabDat.ftr{4,2} = ['Type ' num2str(xSwE.SS)];
+         case {4, 5}
+             TabDat.ftr{4,2} = ['Type C' num2str(xSwE.SS - 2)];
+         otherwise
+             error('Unknown SS type')
+     end
+     
+     
+     if xSwE.WB
+         
+         % Recording number of bootstraps.
+         TabDat.ftr{5,1}='Bootstrap samples = %0.0f';
+         TabDat.ftr{5,2}= xSwE.nB;
+         
+     else
+         
+         % We don't record anything here for parametric.
+         TabDat.ftr{5,1}='';
+         TabDat.ftr{5,2}= '';
+         
+     end
+     
+     % Retrieve edf data
+     edf = spm_data_read(xSwE.Vedf);
+     edf(isnan(edf)) = [];
+        
+     edf_max = max(edf);
+     edf_min = min(edf);
+     edf_med = median(edf);
+     
+     % Work out range of dof values
+     diff = abs(edf_max - edf_min);
+     
+     % Work out dofType
+     switch xSwE.dofType
+        
+         case 0 
+             
+             dofTypeStr = 'Naive';
+             
+         case 1
+
+             dofTypeStr = 'Approx I';
+
+         case 2
+
+             dofTypeStr = 'Approx II';
+
+         case 3
+
+             dofTypeStr = 'Approx III';
+
+         otherwise
+
+             error('Unknown degrees of freedom.')
+
+     end
+     
+     % Recording effective Degrees of freedom
+     if xSwE.dofType~=0 && diff > 10^-10
+        TabDat.ftr{6,1}=['Error DF: (' dofTypeStr '): (min) %0.1f, (median) %0.1f, (max) %0.1f'];
+        TabDat.ftr{6,2}=[edf_min, edf_med, edf_max];
+     else
+        TabDat.ftr{6,1}=['Error DF: (' dofTypeStr '): %0.1f'];
+        TabDat.ftr{6,2}=edf_med;
+     end
+     
+     % Record contrast degrees of freedom.
+     TabDat.ftr{7,1} = 'Contrast DF: %0.0f; Number of predictors: %0.0f';
+     TabDat.ftr{7,2} = [xSwE.df_Con xSwE.nPredict];
+     
+     % Record volume.
+     TabDat.ftr{8,1} = ...
+         ['Volume: %0.0f ' units{:} ' = %0.0f voxels'];
+     TabDat.ftr{8,2} = [S*prod(VOX),S];
+     
+     % Record voxel sizes.
+     TabDat.ftr{9,1} = ...
+         ['Voxel size: ' voxfmt units{:}];
+     TabDat.ftr{9,2} = VOX;
 
     %-Characterize excursion set in terms of maxima
     % (sorted on Z values and grouped by regions)
@@ -667,7 +778,7 @@ case 'table'                                                        %-Table
         set(Hs,'Visible','off');
      end
     
-    if TabDat.dat{1,2} > 1 % c
+    if TabDat.dat{1,2} >= 1 % c
         h     = text(tCol(1),y,sprintf(TabDat.fmt{1},TabDat.dat{1,1}),...
                     'FontWeight','Bold', 'UserData',TabDat.dat{1,1},...
                     'ButtonDownFcn','get(gcbo,''UserData'')');
@@ -688,11 +799,11 @@ case 'table'                                                        %-Table
         %-Paginate if necessary
         %------------------------------------------------------------------
         if y < dy
-            h = text(0.5,-5*dy,...
-                sprintf('Page %d',spm_figure('#page',Fgraph)),...
-                        'FontName',PF.helvetica,'FontAngle','Italic',...
-                        'FontSize',FS(8));
-            spm_figure('NewPage',[hPage,h])
+%             h = text(0.5,-5*dy,...
+%                 sprintf('Page %d',spm_figure('#page',Fgraph)),...
+%                         'FontName',PF.helvetica,'FontAngle','Italic',...
+%                         'FontSize',FS(8));
+            spm_figure('NewPage',hPage)
             hPage = [];
             y     = y0;
         end
@@ -733,9 +844,9 @@ case 'table'                                                        %-Table
     %-Number and register last page (if paginated)
     %----------------------------------------------------------------------
     if spm_figure('#page',Fgraph)>1
-        h = text(0.5,-5*dy,sprintf('Page %d/%d',spm_figure('#page',Fgraph)*[1,1]),...
-            'FontName',PF.helvetica,'FontSize',FS(8),'FontAngle','Italic');
-        spm_figure('NewPage',[hPage,h])
+%         h = text(0.5,-5*dy,sprintf('Page %d/%d',spm_figure('#page',Fgraph)*[1,1]),...
+%             'FontName',PF.helvetica,'FontSize',FS(8),'FontAngle','Italic');
+        spm_figure('NewPage',hPage)
     end
     
     %-End: Store TabDat in UserData of context menu
