@@ -1,4 +1,3 @@
-function vechCovVechV = swe_vechCovVechV(covVis,dofMat,type)
 % =========================================================================
 % Compute vech(Cov(vech(\hat V))) following one of the 3 following
 % methodologies:
@@ -32,6 +31,9 @@ function vechCovVechV = swe_vechCovVechV(covVis,dofMat,type)
 % Note: there are probably ways to compute this quicker, but this will do 
 % for now.
 % By Bryan Guillaume
+
+function vechCovVechV = swe_vechCovVechV(covVis,dofMat,type)
+
 [nCovVis, nVox] = size(covVis);
 nVis = -0.5 + sqrt(0.25 + 2 * nCovVis);
 nVechCovVechV      = nCovVis * (nCovVis + 1) / 2;

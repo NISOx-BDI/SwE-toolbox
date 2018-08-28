@@ -1,4 +1,3 @@
-function varargout = swe_ui_main(varargin)
 % =========================================================================
 % SWE_UI_MAIN MATLAB code for SWE_UI_MAIN.fig
 %      SWE_UI_MAIN, by itself, creates a new SWE_UI_MAIN or raises the 
@@ -32,6 +31,9 @@ function varargout = swe_ui_main(varargin)
 % Last Modified by GUIDE v2.5 24-Apr-2013 18:41:03
 
 % Begin initialization code - DO NOT EDIT
+
+function varargout = swe_ui_main(varargin)
+
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
