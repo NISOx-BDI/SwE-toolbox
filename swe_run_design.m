@@ -1,16 +1,18 @@
-function out = swe_run_design(varargin)
-%
-% Sandwich Estimator Method for Neuroimaging Longitudinal Data Analysis, SwE.
-% takes a harvested job data structure and rearranges data into SwE
-% data structure, then saves SwE.mat file.
-%
-% INPUT
-%   job    - harvested job data structure (see matlabbatch help)
-%
-% OUTPUT
-%   out    - filename of saved data structure.
-
+% =========================================================================
+% Sandwich Estimator Method for Neuroimaging Longitudinal Data Analysis, 
+% SwE. This function takes a harvested job data structure and rearranges 
+% data into SwE data structure, then saves it as a SwE.mat file.
+% =========================================================================
+% FORMAT: swe_run_design(job)
+% -------------------------------------------------------------------------
+% Inputs:
+%  - job: harvested job data structure (see matlabbatch help)
+% -------------------------------------------------------------------------
+% Outputs:
+%  - out: filename of saved data structure.
+% =========================================================================
 % Written by Bryan Guillaume
+function out = swe_run_design(varargin)
 
 % Job variable
 % -------------------------------------------------------------------------
@@ -54,7 +56,7 @@ end
 %==========================================================================
 
 % %-Generic factor names
-% %--------------------------------------------------------------------------
+% %------------------------------------------------------------------------
 sF = {'sF1','sF2','sF3','sF4'};
 
 %-Covariate by factor interaction options
@@ -90,7 +92,7 @@ sCC = {'around overall mean';...                            %-1
     '(redundant: not doing AnCova)'}';                      %-12
 
 % %-DesMtx I forms for covariate centering options
-% %--------------------------------------------------------------------------
+% %------------------------------------------------------------------------
 % CCforms = {'ones(nScan,1)',CFIforms{2:end,1},''}';
 
 %-Global calculation options                                       (GXcalc)
