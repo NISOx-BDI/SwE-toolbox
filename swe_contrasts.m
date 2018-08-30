@@ -1,11 +1,21 @@
-function [SwE] = swe_contrasts(SwE,Ic)
-% Fills in SwE.xCon and writes con_????.img, ess_????.img and SwE?_????.img
+% =========================================================================
+% Fills in SwE.xCon and writes the following images for a parametric 
+% analysis:
+%   - swe_vox_{T|F}stat_c{c#}.{nii|mat}: T/F tatistic image
+%   - swe_vox_{zT|xF}stat_c{c#}.{nii|mat}: Z/Chi square equivalent 
+%                                          statistic image
+%   - swe_vox_{T|F}stat_lp_c{c#}.{nii|mat}: -log10 P image.
+%   - swe_vox_edf_c{c#}.{nii|mat}: error degrees of freedom image.
+% =========================================================================
 % FORMAT [SwE] = SwE_contrasts(SwE,Ic)
-%
-% SwE - SwE data structure
-% Ic  - indices of xCon to compute
+% -------------------------------------------------------------------------
+% Inputs/Outputs:
+%   - SwE: SwE data structure
+%   - Ic:  Indices of xCon to compute
+% =========================================================================
 % Modified version of spm_contrasts adapted for the SwE toolbox
 % By Bryan Guillaume
+function [SwE] = swe_contrasts(SwE,Ic)
 
 % Temporary SwE variable to check for any changes to SwE. We want to avoid
 % always having to save SwE.mat unless it has changed, because this is

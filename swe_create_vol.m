@@ -14,28 +14,30 @@
 
 function vol=swe_create_vol(fname, DIM, M, varargin)
     
-if nargin > 3
-    descrip = varargin{1};
-else
-    descrip = '';
-end
+    if nargin > 3
+        descrip = varargin{1};
+    else
+        descrip = '';
+    end
 
-if nargin > 4
-    meshData = varargin{2};
-else
-    meshData = false;
-end
+    if nargin > 4
+        meshData = varargin{2};
+    else
+        meshData = false;
+    end
 
-vol = struct(...
-  'fname',    fname,...
-  'dim',      DIM',...
-  'dt',       [spm_type('float32') spm_platform('bigend')],...
-  'mat',      M,...
-  'pinfo',    [1 0 0]',...
-  'descrip',  descrip);
+    vol = struct(...
+      'fname',    fname,...
+      'dim',      DIM',...
+      'dt',       [spm_type('float32') spm_platform('bigend')],...
+      'mat',      M,...
+      'pinfo',    [1 0 0]',...
+      'descrip',  descrip);
 
-if meshData
-    vol = spm_data_hdr_write(vol);
-else
-    vol = spm_create_vol(vol);
+    if meshData
+        vol = spm_data_hdr_write(vol);
+    else
+        vol = spm_create_vol(vol);
+    end
+    
 end
