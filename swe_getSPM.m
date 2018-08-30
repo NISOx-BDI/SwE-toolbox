@@ -88,23 +88,23 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % .thresDesc - description of height threshold (string)
 %
 % In addition, the xCon structure is updated. For newly evaluated
-% contrasts, SwE images (spmT_????) are written, along with
-% contrast (con_????) images for SwE{T}'s, or Extra
-% Sum-of-Squares images (ess_????}) for SwE{F}'s.
+% contrasts, SwE images (swe_vox_{T|F}stat_c{c#}) are written, along 
+% with contrast (swe_vox_beta_c{c#}) images.
 %
 % For a parametric analysis the following is added to the xCon
 % structure:
 %
-% .Vspm  - Name of SwE image
+% .Vspm          - Name of SwE image
 %
 % For a non-parametric analysis the following are added to the xCon
 % structure:
 %
-% .Vspm     - Name of SwE image
-% .VspmFWEP - Name of FWE P SwE image
-% .VspmFDRP - Name of FDR P SwE image
-% .VspmUncP - Name of Uncorrected P SwE image
-% .Vedf     - Name of error degrees of freedom image
+% .Vspm          - Name of SwE image
+% .VspmFWEP      - Name of FWE P SwE image
+% .VspmFDRP      - Name of FDR P SwE image
+% .VspmUncP      - Name of Uncorrected P SwE image
+% .VspmFWEP_clus - Name of FWE cluster P SwE image
+% .Vedf          - Name of error degrees of freedom image
 %
 % The contrast images are the weighted sum of the parameter images,
 % where the weights are the contrast weights, and are uniquely
@@ -112,8 +112,8 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % contrast manager. These contrast images (for appropriate contrasts)
 % are suitable summary images of an effect at this level, and can be
 % used as input at a higher level when effecting a random effects
-% analysis. (Note that the ess_????.{img,hdr} and
-% SwE{T,F}_????.{img,hdr} images are not suitable input for a higher
+% analysis. (Note that the swe_vox_beta_c{c#} and
+% swe_vox_{T|F}stat_c{c#} images are not suitable input for a higher
 % level analysis.) See spm_RandFX.man for further details.
 %
 %__________________________________________________________________________
