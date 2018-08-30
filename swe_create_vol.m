@@ -1,14 +1,18 @@
-function vol=swe_create_vol(fname, DIM, M, varargin)
-% FORMAT vol = swe_create_vol(fname, DIM, M [, descrip])
+% =========================================================================
 % Initialise a new volume for writing
-% 
-% fname   - Filename of new image
-% DIM     - Row vector giving image dimensions
-% M       - 4x4 homogeneous transformation, from V.mat
-% descrip - Description to enter into image header
-% meshData - Boolean stating whether we output gifti or not.
-%_______________________________________________________________________
+% =========================================================================
+% FORMAT vol = swe_create_vol(fname, DIM, M [, descrip])
+% -------------------------------------------------------------------------
+% Inputs: 
+%   - fname:    Filename of new image
+%   - DIM:      Row vector giving image dimensions
+%   - M:        4x4 homogeneous transformation, from V.mat
+%   - descrip:  Description to enter into image header
+%   - meshData: Boolean stating whether we output gifti or not.
+% =========================================================================
 % SwE-toolbox
+
+function vol=swe_create_vol(fname, DIM, M, varargin)
     
 if nargin > 3
     descrip = varargin{1};
