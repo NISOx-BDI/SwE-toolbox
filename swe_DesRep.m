@@ -1,8 +1,12 @@
+% This files is a clone of spm_DesRep.m, temporarily added to SWE until
+% changes are made to the original SPM version. The only change in place is
+% on line 751 where the 'DefaultTextInterpreter' parameter has been changed
+% from 'TeX' to 'None'.
 function varargout = swe_DesRep(varargin)
 % Design reporting utilities
-% FORMAT varargout = swe_DesRep(action,varargin)
+% FORMAT varargout = spm_DesRep(action,varargin)
 %
-% swe_DesRep (design reporting) is a suite of utility functions for various
+% spm_DesRep (design reporting) is a suite of utility functions for various
 % graphical reports on a given experimental design, embodied in the design
 % matrix structure and other associated data structures.
 % For detailed programmers comments, see format specifications in main body
@@ -10,18 +14,17 @@ function varargout = swe_DesRep(varargin)
 %
 %                           ----------------
 %
-% By default, swe_DesRep prompts for selection of a parametric SwE.mat
-% file.
+% By default, spm_DesRep prompts for selection of a SPM.mat file.
 %
-% Given details of a design swe_DesRep sets up a "Design" menu in the
-% SwE 'Interactive' window.  The menu options launch various graphical
-% summaries of the current SwE design in the SPM 'Graphics' window.
+% Given details of a design spm_DesRep sets up a "Design" menu in the
+% SPM 'Interactive' window.  The menu options launch various graphical
+% summaries of the current SPM design in the SPM 'Graphics' window.
 %
 % * Design Matrix  - Displays graphical summary of the design matrix
 %
 %     The design is labelled with the corresponding parameter and
 %     file names, and is displayed as an image scaled (using
-%     swe_DesMtx('sca',...) such that zero is mid-grey, -1 is black, and +1
+%     spm_DesMtx('sca',...) such that zero is mid-grey, -1 is black, and +1
 %     is white. Covariates exceeding this randge are scaled to fit.
 %
 %     The design matrix is "surfable": Clicking (and holding or dragging)
@@ -84,7 +87,7 @@ function varargout = swe_DesRep(varargin)
 %                                factor indicies and covariates.
 %
 %     The covariates printed are the raw covariates as entered into
-%     SWE, with the exception of the global value, which is printed
+%     SPM, with the exception of the global value, which is printed
 %     after any grand mean scaling.
 %
 % * Explore: Covariates - Plots of the covariates, showing how they are
@@ -101,7 +104,7 @@ function varargout = swe_DesRep(varargin)
 %
 %                           ----------------
 %
-% swe_DesRep also handles "surfing" of contrast depictions, which are
+% spm_DesRep also handles "surfing" of contrast depictions, which are
 % bar-graphs for T-contrasts and images for F-contrasts. Clicking
 % ('normal' click - "left" mouse button usually) with the on the bars
 % of the bar-graphs, or anywhere in an image, and dragging, dynamically
@@ -115,11 +118,9 @@ function varargout = swe_DesRep(varargin)
 %
 % Double clicking on a contrast depiction extracts the contrast weights
 % into the base workspace.
-
-% Function adapted from 'spm_DesRep.m'
 %__________________________________________________________________________
 % Copyright (C) 1999-2015 Wellcome Trust Centre for Neuroimaging
-% 
+
 % Andrew Holmes
 % $Id: spm_DesRep.m 6351 2015-02-26 16:37:18Z guillaume $
 
@@ -130,9 +131,9 @@ function varargout = swe_DesRep(varargin)
 %( This is a multi function function, the first argument is an action  )
 %( string, specifying the particular action function to take.          )
 %
-% FORMAT h = swe_DesRep('DesRepUI',SWE)
+% FORMAT h = spm_DesRep('DesRepUI',SPM)
 % Setup "design" menu for design reporting.
-% SWE    - structure containing design details. Required fields are:
+% SPM    - structure containing design details. Required fields are:
 %
 % .xX    - design matrix structure
 %          (See spm_fmri_spm_ui.m & spm_spm.m for formats)
@@ -145,15 +146,15 @@ function varargout = swe_DesRep(varargin)
 %          (see spm_fmri_spm_ui.m for format)
 % .xsDes - Design description structure
 %          (see spm_fmri_spm_ui.m for details)
-% .swd   - SwE working directory - directory where configuration file resides
+% .swd   - SPM working directory - directory where configuration file resides
 %          [defaults to empty]
-% .SWEid - (recommended) ID string of creator program.
+% .SPMid - (recommended) ID string of creator program.
 % h      - handle of menu created ('Tag'ged as 'DesRepUI') 
 %
 %
-% FORMAT swe_DesRep('Files&Factors',P,I,xC,sF,xs)
+% FORMAT spm_DesRep('Files&Factors',P,I,xC,sF,xs)
 % Produces multi-page listing of files, factor indices, and covariates.
-% P   - nxv CellStr of filenames (i.e. reshape(cellstr(SWE.xY.P),size(V)))
+% P   - nxv CellStr of filenames (i.e. reshape(cellstr(SPM.xY.P),size(V)))
 % I   - nx4 matrix of factor indices
 % xC  - Covariate structure array (see spm_spm_ui.m for definitions)
 %       ('rc' & 'cname' fields used)
@@ -163,9 +164,9 @@ function varargout = swe_DesRep(varargin)
 %       The field names are used as sub-headings, the field values (which
 %       must be strings or CellStr) printed alongside.
 %
-% FORMAT swe_DesRep('DesMtx',xX,fnames,xs)
+% FORMAT spm_DesRep('DesMtx',xX,fnames,xs)
 % Produces a one-page graphical summary of the design matrix
-% FORMAT swe_DesRep('DesOrth',xX)
+% FORMAT spm_DesRep('DesOrth',xX)
 % Produces a one-page graphical summary of the design orthogonality
 % xX      - Structure containing design matrix information
 %         - the first of {xX.nX, xX.xKXs.X, xX.X} is used for display
@@ -173,17 +174,17 @@ function varargout = swe_DesRep(varargin)
 % .xKXs.X - temporally filtered design matrix (within space structure)
 % .X      - "raw" design matrix (as setup by spm_fmri_spm_ui)
 % .name   - [optional] px1 CellStr of parameter names
-% fnames  - [optional] nxv CellStr of filenames (i.e. reshape(cellstr(SWE.xY.P),size(V)))
+% fnames  - [optional] nxv CellStr of filenames (i.e. reshape(cellstr(SPM.xY.P),size(V)))
 % xs      - [optional] structure of extra strings containing descriptive
 %           information which is printed at the foot of the page ('DesMtx' usage)
 %           The field names are used as sub-headings, the field values
 %           (which must be strings or CellStr) printed alongside.
 %
-% FORMAT swe_DesRep('fMRIDesMtx',SWE,s,i)
+% FORMAT spm_DesRep('fMRIDesMtx',SPM,s,i)
 % Interactive review of fMRI design matrix.
 % Sess(s).U(i)  -  see spm_fMRI_design for session s, trial i
 %
-% FORMAT swe_DesRep('Covs',xC,X,Xnames)
+% FORMAT spm_DesRep('Covs',xC,X,Xnames)
 % Plots the covariates and describes how they are included into the model.
 % xC     - Covariate structure array (see spm_spm_ui.m for details)
 %          ('rcname','rc','descrip','cname' & 'cols' fields used)
@@ -193,7 +194,7 @@ function varargout = swe_DesRep(varargin)
 % =========================================================================
 % Utility functions and CallBack handlers:
 %
-% FORMAT s = swe_DesRep('ScanTick',nScan,lim)
+% FORMAT s = spm_DesRep('ScanTick',nScan,lim)
 % Pares down 1:nScan to at most lim items, showing every 2nd/3rd/... as
 % necessary to pair  down to <lim items. Always ends with nScan so
 % #images is indicated.
@@ -201,11 +202,11 @@ function varargout = swe_DesRep(varargin)
 % lim    - limit to number of elements of s
 % s      - 1:nScan pared down accordingly
 %
-% FORMAT swe_DesRep('SurfDesMtx_CB')
+% FORMAT spm_DesRep('SurfDesMtx_CB')
 % 'ButtonDownFcn' CallBack for surfing clickable design matrix images
-% FORMAT swe_DesRep('SurfDesMtxMo_CB')
+% FORMAT spm_DesRep('SurfDesMtxMo_CB')
 % 'WindowButtonMotionFcn' CallBack for surfing clickable design matrix images
-% FORMAT swe_DesRep('SurfDesMtxUp_CB')
+% FORMAT spm_DesRep('SurfDesMtxUp_CB')
 % 'ButtonUpFcn' CallBack for ending surfing of design matrix images
 %
 % The design matrix, parameter names and image file names should be
@@ -214,11 +215,11 @@ function varargout = swe_DesRep(varargin)
 % these being empty or mis-specified - surfing simply reports "no
 % cached data".
 %
-% FORMAT swe_DesRep('SurfEstIm_CB')
+% FORMAT spm_DesRep('SurfEstIm_CB')
 % 'ButtonDownFcn' CallBack for surfing clickable parameter estimability images
-% FORMAT swe_DesRep('SurfEstImMo_CB')
+% FORMAT spm_DesRep('SurfEstImMo_CB')
 % 'WindowButtonMotionFcn' CallBack for surfing parameter estimability images
-% FORMAT swe_DesRep('SurfEstImUp_CB')
+% FORMAT spm_DesRep('SurfEstImUp_CB')
 % 'ButtonUpFcn' CallBack for ending surfing of parameter estimability images
 %
 % The binary parameter estimability matrix and parameter names should
@@ -227,11 +228,11 @@ function varargout = swe_DesRep(varargin)
 % these being empty or mis-specified - surfing simply reports "no
 % cached data".
 %
-% FORMAT swe_DesRep('SurfDesO_CB')
+% FORMAT spm_DesRep('SurfDesO_CB')
 % 'ButtonDownFcn' CallBack for surfing clickable design orthogonality images
-% FORMAT swe_DesRep('SurfDesOMo_CB')
+% FORMAT spm_DesRep('SurfDesOMo_CB')
 % 'WindowButtonMotionFcn' CallBack for surfing design orthogonality images
-% FORMAT swe_DesRep('SurfDesOUp_CB')
+% FORMAT spm_DesRep('SurfDesOUp_CB')
 % 'ButtonUpFcn' CallBack for ending surfing of design orthogonality images
 %
 % The design orthogonality matrix (cosine of angle between vectors),
@@ -240,11 +241,11 @@ function varargout = swe_DesRep(varargin)
 % saved in the UserData of the image object as a structure with fields
 % 'O', 'bC' & 'Xnames' respectively.
 %
-% FORMAT swe_DesRep('SurfCon_CB')
+% FORMAT spm_DesRep('SurfCon_CB')
 % 'ButtonDownFcn' CallBack for surfing clickable contrast depictions
-% FORMAT swe_DesRep('SurfConOMo_CB')
+% FORMAT spm_DesRep('SurfConOMo_CB')
 % 'WindowButtonMotionFcn' CallBack for surfing contrast depictions
-% FORMAT swe_DesRep('SurfConOUp_CB')
+% FORMAT spm_DesRep('SurfConOUp_CB')
 % 'ButtonUpFcn' CallBack for ending surfing of contrast depictions
 %
 % The contrast number, handle of text object to use for reporting and
