@@ -1,3 +1,47 @@
+% =========================================================================
+% For a non-parametric SwE analysis with either nifti or '.mat' input, this
+% function computes the following maps:
+%
+%   - swe_vox_mask: 
+%        The mask image for the analysis.
+%
+%   - swe_vox_{T|F}stat_c{c#}: 
+%        Voxelwise parametric statistic map (T or F) for contrast {c#}.
+%
+%   - swe_vox_{zT|xF}stat_c{c#}: 
+%        Voxelwise parametric equivalent statistic map (Z or Chi Squared) 
+%        for contrast {c#}.
+%
+%   - swe_vox_{zT|xF}stat-WB_c{c#}: 
+%        Voxelwise non-parametric equivalent statistic map (Z or Chi 
+%        Squared) for contrast {c#}.
+%
+%   - swe_vox_{T|F}stat_lp-WB_c{c#}:
+%         Log10 map of the voxelwise uncorrected P values for contrast 
+%         {c#}.
+%
+%   - swe_vox_{T|F}stat_lpFWE-WB_c{c#}:
+%         Log10 map of the voxelwise bootstrap-calculated FWE P values for 
+%         contrast {c#}.
+%
+%   - swe_vox_{T|F}stat_lpFDR-WB_c{c#}:
+%         Log10 map of the voxelwise bootstrap-calculated FDR P values for
+%         contrast {c#}.
+%
+%   - swe_clustere_{T|F}stat_lpFWE-WB_c{c#}:
+%         Log10 map of the clusterwise bootstrap-calculated FWE P values 
+%         for contrast {c#}.
+%
+% Currently (30/08/2018), the only contrasts computed are activation 
+% (contrast #1) and deactivation (contrast #2) for the contrast vector the 
+% user input during the batch entry.
+% =========================================================================
+% FORMAT swe_cp_WB(SwE)
+% -------------------------------------------------------------------------
+% Inputs:
+%   - SwE: SwE data structure
+% =========================================================================
+
 function swe_cp_WB(SwE)
 
 %-Say hello
