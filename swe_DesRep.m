@@ -260,11 +260,11 @@ SVNid = '$Rev: 6351 $';
 %-Format arguments
 %--------------------------------------------------------------------------
 if ~nargin
-    SWEid = spm('FnBanner',mfilename,SVNid);
+    SPMid = spm('FnBanner',mfilename,SVNid);
     hC    = spm_DesRep('DesRepUI'); 
-    SWE   = get(hC,'UserData');
-    if ~isempty(SWE)
-        cb_menu([],[],'DesMtx',SWE);
+    SPM   = get(hC,'UserData');
+    if ~isempty(SPM)
+        cb_menu([],[],'DesMtx',SPM);
         drawnow;
     end
     return;
@@ -276,54 +276,54 @@ switch lower(varargin{1})
 case 'desrepui'                                       %-Design reporting UI
 %==========================================================================
 % h = spm_DesRep('DesRepUI')
-% h = spm_DesRep('DesRepUI',SWE)
+% h = spm_DesRep('DesRepUI',SPM)
 
 %-Load design data from file if not passed as argument
 %--------------------------------------------------------------------------
 if nargin < 2
-    [spmmatfile, sts] = spm_select(1,'^SWE\.mat$','Select SWE.mat');
+    [spmmatfile, sts] = spm_select(1,'^SPM\.mat$','Select SPM.mat');
     if ~sts, varargout = {[]}; return; end
     swd = spm_file(spmmatfile,'fpath');
     try
-        load(fullfile(swd,'SWE.mat'));
+        load(fullfile(swd,'SPM.mat'));
     catch
-        error(['Cannot read ' fullfile(swd,'SWE.mat')]);
+        error(['Cannot read ' fullfile(swd,'SPM.mat')]);
     end
-    SWE.swd = swd;
+    SPM.swd = swd;
 else
-    SWE     = varargin{2};
+    SPM     = varargin{2};
 end
 
 %-Canonicalise data
 %--------------------------------------------------------------------------
 %-Work out where design configuration has come from
-if ~isfield(SWE,'cfg')
-    if     isfield(SWE.xX,'V'),  cfg = 'SWEest';
-    elseif isfield(SWE.xY,'VY'), cfg = 'SWEdata';
-    elseif isfield(SWE,'Sess'),  cfg = 'SWEcfg';
+if ~isfield(SPM,'cfg')
+    if     isfield(SPM.xX,'V'),  cfg = 'SPMest';
+    elseif isfield(SPM.xY,'VY'), cfg = 'SPMdata';
+    elseif isfield(SPM,'Sess'),  cfg = 'SPMcfg';
     else   error('Can''t fathom origin!')
     end
-    SWE.cfg = cfg;
+    SPM.cfg = cfg;
 end
 
 %-Work out what modality this is
 %--------------------------------------------------------------------------
 try
-    SWE.Sess(1);
-    SWE.modality = 'fMRI';
+    SPM.Sess(1);
+    SPM.modality = 'fMRI';
 catch
     try
-        SWE.xC;
+        SPM.xC;
     catch
-        SWE.xC = {};
+        SPM.xC = {};
     end
-    SWE.modality = 'PET';
+    SPM.modality = 'PET';
 end
 
 %-Add a scaled design matrix to the design data structure
 %--------------------------------------------------------------------------
-if ~isfield(SWE.xX,'nKX')
-    SWE.xX.nKX = spm_DesMtx('Sca',SWE.xX.X,SWE.xX.name);
+if ~isfield(SPM.xX,'nKX')
+    SPM.xX.nKX = spm_DesMtx('Sca',SPM.xX.X,SPM.xX.name);
 end
 
 
@@ -340,20 +340,20 @@ delete(findobj(get(Finter,'Children'),'flat','Tag','DesRepUI'))
 hC      = uimenu(Finter,'Label','Design',...
         'Separator','on',...
         'Tag','DesRepUI',...
-        'UserData',SWE,...
+        'UserData',SPM,...
         'HandleVisibility','on');
 
 %-DesMtx
 %--------------------------------------------------------------------------
 hDesMtx = uimenu(hC,'Label','Design Matrix','Accelerator','D',...
-        'CallBack',{@cb_menu,'DesMtx',SWE},...
+        'CallBack',{@cb_menu,'DesMtx',SPM},...
         'UserData',hC,...
         'HandleVisibility','off');
 
 %-Design matrix orthogonality
 %--------------------------------------------------------------------------
 h = uimenu(hC,'Label','Design orthogonality','Accelerator','O',...
-        'CallBack',{@cb_menu,'DesOrth',SWE},...
+        'CallBack',{@cb_menu,'DesOrth',SPM},...
         'UserData',hC,...
         'HandleVisibility','off');
 
@@ -361,24 +361,24 @@ h = uimenu(hC,'Label','Design orthogonality','Accelerator','O',...
 %--------------------------------------------------------------------------
 hExplore = uimenu(hC,'Label','Explore','HandleVisibility','off');
 
-switch SWE.modality
+switch SPM.modality
 case 'PET'
     hFnF = uimenu(hExplore,'Label','Files and factors','Accelerator','F',...
-        'CallBack',{@cb_menu,'Files&Factors',SWE},...
+        'CallBack',{@cb_menu,'Files&Factors',SPM},...
         'UserData',hC,...
         'HandleVisibility','off');
     hCovs = uimenu(hExplore,'Label','Covariates','Accelerator','C',...
-        'CallBack',{@cb_menu,'Covs',SWE},...
+        'CallBack',{@cb_menu,'Covs',SPM},...
         'UserData',hC,...
         'HandleVisibility','off');
-    if isempty(SWE.xC), set(hCovs,'Enable','off'), end
+    if isempty(SPM.xC), set(hCovs,'Enable','off'), end
 case 'fMRI'
-    for j = 1:length(SWE.Sess)
+    for j = 1:length(SPM.Sess)
         h = uimenu(hExplore,'Label',sprintf('Session %.0f ',j),...
             'HandleVisibility','off');
-        for k = 1:length(SWE.Sess(j).Fc)
-            uimenu(h,'Label',SWE.Sess(j).Fc(k).name,...
-                 'CallBack',{@cb_menu,'fMRIDesMtx',SWE,j,k},...
+        for k = 1:length(SPM.Sess(j).Fc)
+            uimenu(h,'Label',SPM.Sess(j).Fc(k).name,...
+                 'CallBack',{@cb_menu,'fMRIDesMtx',SPM,j,k},...
                  'UserData',hC,...
                  'HandleVisibility','off')
         end
@@ -386,10 +386,10 @@ case 'fMRI'
 end
 
 hxvi = uimenu(hExplore, 'Label','Covariance structure', ...
-        'Callback',{@cb_menu,'xVi',SWE},...
+        'Callback',{@cb_menu,'xVi',SPM},...
         'UserData',hC, 'HandleVisibility','off');
-if ~isfield(SWE,'xVi') || (isfield(SWE.xVi,'iid') && SWE.xVi.iid) || ...
-    ~(isfield(SWE.xVi,'V') || isfield(SWE.xVi,'Vi'))
+if ~isfield(SPM,'xVi') || (isfield(SPM.xVi,'iid') && SPM.xVi.iid) || ...
+    ~(isfield(SPM.xVi,'V') || isfield(SPM.xVi,'Vi'))
     set(hxvi,'Enable','off');
 end
 
@@ -883,9 +883,9 @@ figure(Fgraph)
 %==========================================================================
 case 'fmridesmtx'                %-Interactive review of fMRI design matrix
 %==========================================================================
-%spm_DesRep('fMRIDesMtx',SWE,s,i)
-SWE  = varargin{2};
-Sess = SWE.Sess;
+%spm_DesRep('fMRIDesMtx',SPM,s,i)
+SPM  = varargin{2};
+Sess = SPM.Sess;
 if nargin < 4, i = 1; else i = varargin{4}; end
 if nargin < 3, s = 1; else s = varargin{3}; end
 
@@ -897,7 +897,7 @@ spm_results_ui('Clear',Fgraph,0)
 
 %-Trial-specific regressors - time domain
 %--------------------------------------------------------------------------
-sX    = SWE.xX.X(Sess(s).row,Sess(s).col);
+sX    = SPM.xX.X(Sess(s).row,Sess(s).col);
 rX    = sX(:,Sess(s).Fc(i).i);
 subplot(2,2,1)
 plot(Sess(s).row,rX)
@@ -913,10 +913,10 @@ subplot(2,2,2)
 gX    = abs(fft(rX)).^2;
 gX    = gX*diag(1./sum(gX));
 q     = size(gX,1);
-Hz    = [0:(q - 1)]/(q*SWE.xY.RT);
+Hz    = [0:(q - 1)]/(q*SPM.xY.RT);
 q     = 2:fix(q/2);
 plot(Hz(q),gX(q,:))
-HPF   = SWE.xX.K(s).HParam;
+HPF   = SPM.xX.K(s).HParam;
 patch([0 1 1 0]/HPF,[0 0 1 1]*max(max(gX)),[1 1 1]*.9,'facealpha',.5);
 xlabel('Frequency (Hz)')
 ylabel('relative spectral density')
@@ -933,13 +933,13 @@ if length(Sess(s).U) >= i
     %----------------------------------------------------------------------
     subplot(2,2,3)
     dt   = Sess(s).U(i).dt;
-    RT   = SWE.xY.RT;
-    t    = [1:size(SWE.xBF.bf,1)]*dt;
+    RT   = SPM.xY.RT;
+    t    = [1:size(SPM.xBF.bf,1)]*dt;
     pst  = Sess(s).U(i).pst;
-    plot(t,SWE.xBF.bf,pst,0*pst,'.','MarkerSize',16)
+    plot(t,SPM.xBF.bf,pst,0*pst,'.','MarkerSize',16)
     str  = sprintf('TR = %0.2fs',RT);
     xlabel({'time {secs}' str sprintf('%0.0fms time bins',1000*dt)})
-    title({'Basis set and peristimulus sampling' SWE.xBF.name})
+    title({'Basis set and peristimulus sampling' SPM.xBF.name})
     axis tight
     grid on
 
@@ -1544,14 +1544,14 @@ end
 
 
 %==========================================================================
-% function cb_menu(obj,evt,action,SWE,varargin)
+% function cb_menu(obj,evt,action,SPM,varargin)
 %==========================================================================
-function cb_menu(obj,evt,action,SWE,varargin)
+function cb_menu(obj,evt,action,SPM,varargin)
 
 switch action
     case {'DesMtx','Files&Factors'}
         try
-            filenames = reshape(cellstr(SWE.xY.P),size(SWE.xY.VY));
+            filenames = reshape(cellstr(SPM.xY.P),size(SPM.xY.VY));
         catch
             filenames = {};
         end
@@ -1559,24 +1559,24 @@ end
 
 switch action
     case 'DesMtx'
-        spm_DesRep('DesMtx',SWE.xX,...
+        spm_DesRep('DesMtx',SPM.xX,...
             filenames,...
-            SWE.xsDes);
+            SPM.xsDes);
             
     case 'DesOrth'
-        spm_DesRep('DesOrth',SWE.xX);
+        spm_DesRep('DesOrth',SPM.xX);
 
     case 'Files&Factors'
         spm_DesRep('Files&Factors',...
             filenames,...
-            SWE.xX.I,SWE.xC,SWE.xX.sF,SWE.xsDes);
+            SPM.xX.I,SPM.xC,SPM.xX.sF,SPM.xsDes);
 
     case 'Covs'
-        spm_DesRep('Covs',SWE.xX,SWE.xC);
+        spm_DesRep('Covs',SPM.xX,SPM.xC);
 
     case 'fMRIDesMtx'
-        spm_DesRep('fMRIDesMtx',SWE,varargin{1},varargin{2});
+        spm_DesRep('fMRIDesMtx',SPM,varargin{1},varargin{2});
 
     case 'xVi'
-        spm_DesRep('xVi', SWE.xVi);
+        spm_DesRep('xVi', SPM.xVi);
 end
