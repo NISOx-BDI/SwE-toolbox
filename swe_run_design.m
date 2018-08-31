@@ -193,10 +193,11 @@ if isfield(job.cov, 'icov')
     
     % If entered manually we already have a struct of covariates.
     cov = job.cov.icov;
-    
+
+% If they were entered as a matrix file and name file.
 elseif isfield(job.cov, 'fmcov')
     
-    % Read in covariatematrix.
+    % Read in covariate matrix.
     valFile = job.cov.fmcov.fval{1};
     try
         covMat = load(valFile, '-MAT');
@@ -208,7 +209,7 @@ elseif isfield(job.cov, 'fmcov')
     % inside a structure. 
     if isstruct(covMat)
         
-        if numel(covMat)==1
+        if numel(fieldnames(covMat))==1
             
             % Retrieve the name of the matrix
             f = fieldnames(covMat);
@@ -252,9 +253,40 @@ elseif isfield(job.cov, 'fmcov')
     if numName ~= numCov
        error('Number of covariates entered does not match number of covariate names entered.') 
     end
-    
+
+% If they were entered as a '.mat' file containing a struct.
 else 
     
+    % Read in covariate structure.
+    valFile = job.cov.fscov.fval{1};
+    covStruct = load(valFile, '-MAT');
+    
+    % The structure might have been saved inside itself.
+    if numel(fieldnames(covStruct))==1
+            
+        % Retrieve the name of the matrix
+        f = fieldnames(covStruct);
+        covStruct = covStruct.(f{1});
+        
+    end
+    
+    cov = struct();
+    
+    % Retrieve all covariate names and vectors and check all covariates are
+    % the same length.
+    f = fieldnames(covStruct);
+    covLength = length(covStruct.(f{1}));
+    for i=1:numel(f)
+        
+        % Record covariates.
+        cov(i).c = covStruct.(f{i})';
+        cov(i).cname = f{i};
+        
+        % Error if covariates are of inconsistent length.
+        if length(covStruct.(f{i})) ~= covLength
+            error('Covariates are of differing length.')
+        end
+    end
 end
 % Covariate options:
 nc=length(cov); % number of covariates
