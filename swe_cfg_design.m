@@ -155,8 +155,8 @@ fmval.tag     = 'fval';
 fmval.name    = 'Covariate values';
 fmval.help    = {'Enter a file containing a matrix of regressors. The matrix dimensions should be the number of scans by the number of regressors.'
     ''
-    'Supported formats are ''.mat'', ''.dat'' and ''.txt'' files.'};
-fmval.filter  = {'mat', 'dat', 'txt'};
+    'Supported formats are ''.mat'', ''.dat'' and ''.csv'' files.'};
+fmval.filter  = {'mat', 'dat', 'csv'};
 fmval.ufilter = '.*';
 fmval.num     = [1 1];
 
@@ -177,7 +177,7 @@ fsval.num     = [1 1];
 % Covariate Names File 
 % ---------------------------------------------------------------------
 fmname         = cfg_files;
-fmname.tag     = 'fval';
+fmname.tag     = 'fname';
 fmname.name    = 'Covariate names';
 fmname.help    = {'Enter a text file containing a list of covariate names. Each name should be on a new line and the order of names should match that of the order of the columns in the covariate matrix.'
     ''};
