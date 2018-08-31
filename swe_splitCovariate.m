@@ -1,6 +1,5 @@
 function [crossCov, longCov, avgCov] = swe_splitCovariate(cov, subject)
-% This function splits a time-varying covariate into a cross-sectional
-% covariate and a longitudinal covariate. 
+% Splits a covariate into pure cross-sectional and longitudinal components.
 %
 % The split is done first by  extracting the within-subect average to build 
 % the cross-sectional covariate, which is also centered. Second, the 

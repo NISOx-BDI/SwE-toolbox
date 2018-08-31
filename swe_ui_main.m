@@ -1,7 +1,6 @@
 function varargout = swe_ui_main(varargin)
-% SWE_UI_MAIN MATLAB code for SWE_UI_MAIN.fig
-%      SWE_UI_MAIN, by itself, creates a new SWE_UI_MAIN or raises the 
-%      existing singleton*.
+% Creates a new SWE_UI_MAIN menu or raises the existing singleton*.
+%
 % =========================================================================
 % FORMAT:
 %

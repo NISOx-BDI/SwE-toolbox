@@ -1,6 +1,5 @@
 function [SwE,xSwE] = swe_getSPM(varargin)
-% Compute a specified and thresholded SwE parametric map for 
-% the SwE method.
+% Compute specified and thresholded SwE parametric map for the SwE method.
 %
 % =========================================================================
 % FORMAT [SwE,xSwE] = swe_getSPM;
