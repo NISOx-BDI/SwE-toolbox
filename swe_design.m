@@ -1,4 +1,6 @@
 function swe_design
+% Launches batch window containing SwE batch module.
+% =========================================================================
 % This function prepares (if needed) and launches the batch system with a 
 % job containing the batch module for the specification of
 % data and design.

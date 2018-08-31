@@ -1,5 +1,6 @@
 function varargout=swe_conman(varargin)
 % Contrast manager: GUI for defining valid contrasts
+%==========================================================================
 % FORMAT varargout=swe_conman(varargin)
 %       - An embedded callback, multi-function function
 %       - For detailed programmers comments,

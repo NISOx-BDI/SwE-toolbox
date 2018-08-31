@@ -1,6 +1,6 @@
 function [SwE] = swe_contrasts(SwE,Ic)
 % This function writes statistic & p value images for parametric analyses.
-%
+% =========================================================================
 % Fills in SwE.xCon and writes the following images for a parametric 
 % analysis:
 %   - swe_vox_{T|F}stat_c{c#}.{nii|mat}: T/F tatistic image

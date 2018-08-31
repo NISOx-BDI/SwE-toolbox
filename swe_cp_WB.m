@@ -1,7 +1,6 @@
 function swe_cp_WB(SwE)
-% This function computes statistic and p-value maps for non-parametric
-% analyses.
-%
+% Computes statistic and p-value maps for non-parametric analyses.
+% =========================================================================
 % For a non-parametric SwE analysis with either nifti or '.mat' input, the
 % following maps are computed:
 %

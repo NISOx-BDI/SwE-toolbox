@@ -1,6 +1,5 @@
 function varargout = swe_ui_main(varargin)
 % Creates a new SWE_UI_MAIN menu or raises the existing singleton*.
-%
 % =========================================================================
 % FORMAT:
 %

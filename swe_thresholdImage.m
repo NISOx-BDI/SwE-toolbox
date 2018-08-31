@@ -1,6 +1,5 @@
 function swe_thresholdImage(threshold, minimumClusterSize)
 % Threshold an image, specified by selection window.
-%
 % =========================================================================
 % FORMAT: spm_read_vols(threshold, minimumClusterSize)
 % -------------------------------------------------------------------------

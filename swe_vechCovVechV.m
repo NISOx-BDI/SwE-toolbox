@@ -1,6 +1,5 @@
 function vechCovVechV = swe_vechCovVechV(covVis,dofMat,type)
 % Compute vech(Cov(vech(\hat V))) following one of 3 input types.
-%
 % =========================================================================
 % FORMAT: swe_vechCovVechV(covVis,dofMat,type)
 % -------------------------------------------------------------------------

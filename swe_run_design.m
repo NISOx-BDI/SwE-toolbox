@@ -1,6 +1,5 @@
 function out = swe_run_design(varargin)
 % Harvests job structure to create SwE structure, saved as SwE.mat.
-%
 % =========================================================================
 % FORMAT: swe_run_design(job)
 % -------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 function [crossCov, longCov, avgCov] = swe_splitCovariate(cov, subject)
 % Splits a covariate into pure cross-sectional and longitudinal components.
-%
+% =========================================================================
 % The split is done first by  extracting the within-subect average to build 
 % the cross-sectional covariate, which is also centered. Second, the 
 % longitudinal covariate is simply the difference between the original 

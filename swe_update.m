@@ -1,13 +1,15 @@
+function swe_update()
+% Checks for SwE updates.
 % =========================================================================
 % This function can be called with no input arguments to check whether or
 % not the installed version of swe is up to date. It does this by looking
 % on GitHub to find the latest version release number and comparing it to
 % the version number stored in the local version of swe.
-%
+% =========================================================================
+% FORMAT swe_update()
+% =========================================================================
 % Authors: Thomas Nichols, Tom Maullin (23/07/2018).
 % =========================================================================
-
-function swe_update()
 
     % Obtain swe version number.
     vswe=swe('ver');
