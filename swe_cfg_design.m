@@ -144,32 +144,46 @@ icov.tag     = 'icov';
 icov.name    = 'Covariate';
 icov.val     = {c cname };
 icov.help    = {'Add a new covariate to your design.'
-               'Please note that no covariates is added per default. Thus, all the model covariates must be added by the user.'
+               'Please note that no covariate is added by default. Thus, all the model covariates must be added by the user.'
                'Note also that a function called swe_splitCovariate can be used to split time-varying covariates into a cross-sectional component and a longitudinal component. This may be useful to take apart these two different mode of variation'};
 
 % ---------------------------------------------------------------------
-% Covariate Values Text File 
+% Covariate Values File (matrix)
 % ---------------------------------------------------------------------
-tfval         = cfg_files;
-tfval.tag     = 'tfval';
-tfval.name    = 'Covariate values';
-tfval.help    = {' '
-    ''};
-tfval.filter = {};
-tfval.ufilter = '.*';
-tfval.num     = [1 1];
+fmval         = cfg_files;
+fmval.tag     = 'fval';
+fmval.name    = 'Covariate values';
+fmval.help    = {'Enter a file containing a matrix of regressors. The matrix dimensions should be the number of scans by the number of regressors.'
+    ''
+    'Supported formats are ''.mat'', ''.dat'' and ''.txt'' files.'};
+fmval.filter  = {'mat', 'dat', 'txt'};
+fmval.ufilter = '.*';
+fmval.num     = [1 1];
 
 % ---------------------------------------------------------------------
-% Covariate Names Text File 
+% Covariate Values File (structure)
 % ---------------------------------------------------------------------
-tfname         = cfg_files;
-tfname.tag     = 'tfval';
-tfname.name    = 'Covariate names';
-tfname.help    = {' '
+fsval         = cfg_files;
+fsval.tag     = 'fval';
+fsval.name    = 'Covariate values';
+fsval.help    = {'Enter a ''.mat'' file containing a structure of regressors. The structure should be laid out in the following way:'
+         ''
+         'struct(''Covariate Name #1'', Covariate vector #1, ''Covariate Name #2'', Covariate vector #2,...)'};
+fsval.filter  = {'mat'};
+fsval.ufilter = '.*';
+fsval.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% Covariate Names File 
+% ---------------------------------------------------------------------
+fmname         = cfg_files;
+fmname.tag     = 'fval';
+fmname.name    = 'Covariate names';
+fmname.help    = {'Enter a text file containing a list of covariate names. Each name should be on a new line and the order of names should match that of the order of the columns in the covariate matrix.'
     ''};
-tfname.filter = {};
-tfname.ufilter = '.*';
-tfname.num     = [1 1];
+fmname.filter  = {'txt'};
+fmname.ufilter = '.*';
+fmname.num     = [1 1];
 
 % ---------------------------------------------------------------------
 % Manual Covariate entry
@@ -178,35 +192,35 @@ manucov         = cfg_repeat;
 manucov.tag     = 'manucov';
 manucov.name    = 'Manual Entry';
 manucov.help    = {
-                   'This option allows for the specification of covariates variables.'
+                   'This option allows for the manual specifcation of covariates.'
                    ''
 }';
 manucov.values  = {icov };
 manucov.num     = [1 Inf];
 
 % ---------------------------------------------------------------------
-% Text File Covariate entry (containing matrix)
+% File Covariate entry (containing matrix)
 % ---------------------------------------------------------------------
-tfmcov         = cfg_branch;
-tfmcov.tag     = 'tfmcov';
-tfmcov.name    = 'Text file (matrix)';
-tfmcov.help    = {
-                   'This option allows for the specification of covariates variables.'
+fmcov         = cfg_branch;
+fmcov.tag     = 'fmcov';
+fmcov.name    = 'File (matrix)';
+fmcov.help    = {
+                   'This option allows for the specification of covariates as two files, one containing a matrix of covariates and the other a list of covariate names.'
                    ''
 }';
-tfmcov.val  = {tfval tfname };
+fmcov.val  = {fmval fmname };
 
 % ---------------------------------------------------------------------
-% Text File Covariate entry (containing structure)
+% File Covariate entry (containing structure)
 % ---------------------------------------------------------------------
-tfscov         = cfg_branch;
-tfscov.tag     = 'tfscov';
-tfscov.name    = 'Text file (structure)';
-tfscov.help    = {
-                   'This option allows for the specification of covariates variables.'
+fscov         = cfg_branch;
+fscov.tag     = 'fscov';
+fscov.name    = 'File (structure)';
+fscov.help    = {
+                   'This option allows for the specification of covariates as a single ''.mat'' file containing a matlab structure.'
                    ''
 }';
-tfscov.val  = {tfval };
+fscov.val  = {fsval };
 
 % ---------------------------------------------------------------------
 % Covariates
@@ -219,7 +233,7 @@ cov.val     = {manucov};
 cov.help    = {
               'Choose input type for covariates.'
 }';
-cov.values  = {manucov tfmcov tfscov};
+cov.values  = {manucov fmcov fscov};
 
 % ---------------------------------------------------------------------
 % tm_none None
