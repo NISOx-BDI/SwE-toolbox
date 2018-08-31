@@ -1,14 +1,13 @@
 function [SwE,xSwE] = swe_getSPM(varargin)
-% ====================================================================
 % Compute a specified and thresholded SwE parametric map for 
 % the SwE method.
 %
-% ====================================================================
+% =========================================================================
 % FORMAT [SwE,xSwE] = swe_getSPM;
 % Query SwE in interactive mode.
 %
 % FORMAT [SwE,xSwE] = swe_getSPM(xSwE);
-% --------------------------------------------------------------------
+% -------------------------------------------------------------------------
 %
 % Query SwE in batch mode. See below for a description of fields that 
 % may be present in xSwE input. Values for missing fields will be 

@@ -1,4 +1,4 @@
-% =========================================================================
+function d = swe_duplication_matrix(n)
 % Compute the duplication matrix of size n^2 X n(n+1)/2
 % =========================================================================
 % FORMAT: d = swe_duplication_matrix(n)
@@ -11,7 +11,6 @@
 % =========================================================================
 % By Bryan Guillaume
 
-function d = swe_duplication_matrix(n)
     d = zeros(n^2, n * (n + 1) / 2);
     it = 0;
     for j = 1 : n

@@ -1,10 +1,10 @@
-% ====================================================================
-% Data & design configuration file
-% This builds the SwE.mat data and design structure.
-% ====================================================================
-% Written by Bryan Guillaume
-
 function design = swe_cfg_design
+% Data & design configuration file.
+% This builds the SwE.mat data and design structure.
+% =========================================================================
+% FORMAT design = swe_cfg_design
+% =========================================================================
+% Written by Bryan Guillaume
 
 % ---------------------------------------------------------------------
 % dir Directory

@@ -1,6 +1,5 @@
-% ====================================================================
-% This function runs a test case for the SwE toolbox and is designed 
-% for octave. 
+function result=runTest(porwb, torf, matorimg)
+% This function runs an octave test case for the SwE toolbox.
 % ====================================================================
 % FORMAT result=runTest(porwb, torf, matorimg)
 % --------------------------------------------------------------------
@@ -13,8 +12,6 @@
 % ====================================================================
 % Author: Tom Maullin (08/06/20178) 
 
-function result=runTest(porwb, torf, matorimg)
-	
 	% Turn off warnings.
 	%
 	% (Footnote: These warnings occur as we cannot open the displays and octave reads

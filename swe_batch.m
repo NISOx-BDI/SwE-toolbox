@@ -1,15 +1,12 @@
-% ====================================================================
-% Sandwich Estimator for Neuroimaging Longitudinal Data Analysis, SwE.
-%
+function swe_batch
 % This function prepares and launches the batch system.
+%
 % This builds the whole tree for the various tools and their GUI at 
 % the first call to this script.
-% ====================================================================
-% FUNCTION bch = swe_batch
-% ====================================================================
+% =========================================================================
+% FORMAT bch = swe_batch
+% =========================================================================
 % Written by Bryan Guillaume
-
-function swe_batch
 
 	% Check if SwE config tree is there
 	if ~isstruct(cfg_util('tag2mod_cfg_id','swe.design'))

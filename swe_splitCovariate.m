@@ -1,10 +1,11 @@
-% =========================================================================
+function [crossCov, longCov, avgCov] = swe_splitCovariate(cov, subject)
 % This function splits a time-varying covariate into a cross-sectional
-% covariate and a longitudinal covariate. The split is done first by 
-% extracting the within-subect average to build the cross-sectional 
-% covariate, which is also centered. Second, the longitudinal covariate is 
-% simply the difference between the original covariate and the non-centered
-% cross-sectional covariate.
+% covariate and a longitudinal covariate. 
+%
+% The split is done first by  extracting the within-subect average to build 
+% the cross-sectional covariate, which is also centered. Second, the 
+% longitudinal covariate is simply the difference between the original 
+% covariate and the non-centered cross-sectional covariate.
 % =========================================================================
 % FORMAT: swe_splitCovariate(cov, subject)
 % -------------------------------------------------------------------------
@@ -18,7 +19,6 @@
 %  - avgCrossCov: the average of the time-varying covariate
 % =========================================================================
 % written by Bryan Guillaume
-function [crossCov, longCov, avgCov] = swe_splitCovariate(cov, subject)
 
     uSubject = unique(subject);
     nSubj = length(uSubject);

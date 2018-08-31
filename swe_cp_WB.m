@@ -1,6 +1,9 @@
-% =========================================================================
-% For a non-parametric SwE analysis with either nifti or '.mat' input, this
-% function computes the following maps:
+function swe_cp_WB(SwE)
+% This function computes statistic and p-value maps for non-parametric
+% analyses.
+%
+% For a non-parametric SwE analysis with either nifti or '.mat' input, the
+% following maps are computed:
 %
 %   - swe_vox_mask: 
 %        The mask image for the analysis.
@@ -41,8 +44,6 @@
 % Inputs:
 %   - SwE: SwE data structure
 % =========================================================================
-
-function swe_cp_WB(SwE)
 
 %-Say hello
 %--------------------------------------------------------------------------

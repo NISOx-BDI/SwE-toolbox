@@ -1,12 +1,11 @@
-% =========================================================================
-% Sandwich Estimator for Neuroimaging Longitudinal Data Analysis, SwE.
-%
+function swe_design
 % This function prepares (if needed) and launches the batch system with a 
 % job containing the batch module for the specification of
 % data and design.
 % =========================================================================
+% FORMAT swe_design
+% =========================================================================
 % Written by Bryan Guillaume
-function swe_design
 
     % Initiate a job 
     spm_jobman('initcfg')

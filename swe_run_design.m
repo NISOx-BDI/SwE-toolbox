@@ -1,6 +1,5 @@
-% =========================================================================
-% Sandwich Estimator Method for Neuroimaging Longitudinal Data Analysis, 
-% SwE. This function takes a harvested job data structure and rearranges 
+function out = swe_run_design(varargin)
+% This function takes a harvested job data structure and rearranges 
 % data into SwE data structure, then saves it as a SwE.mat file.
 % =========================================================================
 % FORMAT: swe_run_design(job)
@@ -12,7 +11,6 @@
 %  - out: filename of saved data structure.
 % =========================================================================
 % Written by Bryan Guillaume
-function out = swe_run_design(varargin)
 
 % Job variable
 % -------------------------------------------------------------------------

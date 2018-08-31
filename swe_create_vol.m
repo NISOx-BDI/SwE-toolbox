@@ -1,4 +1,4 @@
-% =========================================================================
+function vol=swe_create_vol(fname, DIM, M, varargin)
 % Initialise a new volume for writing
 % =========================================================================
 % FORMAT vol = swe_create_vol(fname, DIM, M [, descrip])
@@ -11,8 +11,6 @@
 %   - meshData: Boolean stating whether we output gifti or not.
 % =========================================================================
 % SwE-toolbox
-
-function vol=swe_create_vol(fname, DIM, M, varargin)
     
     if nargin > 3
         descrip = varargin{1};

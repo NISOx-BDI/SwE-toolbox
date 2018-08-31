@@ -1,19 +1,18 @@
+function [p,F,f1,f2] = swe_Box_test()
 % Box's test of Compound Symmetry for the SwE toolbox
-% ====================================================================
+% =========================================================================
 % FORMAT [p,F,f1,f2] = swe_Box_test()
-% --------------------------------------------------------------------
+% -------------------------------------------------------------------------
 % Outputs:
 %   - p: vector of p-values
 %   - F: vector of F-scores
 %   - f1: numerator degrees of freedom
 %   - f2: denominator degrees of freedom
-% ====================================================================
+% =========================================================================
 % Note that the Box's test of Compound Symmetry assumes that there is 
 % no missingness in the data. See Box (1950) for more information.
 % Written by Bryan Guillaume
 % $Id$
-
-function [p,F,f1,f2] = swe_Box_test()
 
     %select a SwE.
     P     = cellstr(spm_select(1,'^SwE\.mat$','Select SwE.mat[s]'));

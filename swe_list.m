@@ -1,6 +1,5 @@
 function varargout = swe_list(varargin)
-% =========================================================================
-% Display an analysis of SPM{.}
+% Display an analysis of an SwE parametric map
 % =========================================================================
 % FORMAT TabDat = swe_list('List',xSwE,hReg,[Num,Dis,Str])
 %    Summary list of local maxima for entire volume of interest

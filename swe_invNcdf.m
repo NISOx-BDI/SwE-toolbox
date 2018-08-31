@@ -1,4 +1,4 @@
-% =========================================================================
+function z = swe_invNcdf(p, mu, var)
 % Inverse Cumulative Distribution Function (CDF) for univariate Normal
 % =========================================================================
 % FORMAT: z=swe_invNcdf(p, mu, var)
@@ -11,7 +11,6 @@
 % Outputs:
 %   - z: equivalent z-score
 % =========================================================================
-function z = swe_invNcdf(p, mu, var)
 
     if nargin < 3
       var = 1;

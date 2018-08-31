@@ -1,4 +1,6 @@
-% =========================================================================
+function swe_cp(SwE)
+% This function computes covariance and beta maps for parametric analyses.
+%
 % For a parametric SwE analysis with nifti input, this function computes 
 % the following maps:
 %
@@ -30,8 +32,6 @@
 %   - SwE: SwE data structure
 % =========================================================================
 
-function swe_cp(SwE)
- 
 %-Say hello
 %--------------------------------------------------------------------------
 Finter = spm('CreateIntWin','off');
