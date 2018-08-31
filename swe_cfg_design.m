@@ -137,29 +137,89 @@ iCC.labels = {
 iCC.values = {1 2 3 4 5 6 7 8};
 iCC.val    = {5};
 % ---------------------------------------------------------------------
-% cov Covariate
+% Individual Covariate
 % ---------------------------------------------------------------------
-cov         = cfg_branch;
-cov.tag     = 'cov';
-cov.name    = 'Covariate';
-cov.val     = {c cname };
-%cov.val     = {c cname iCFI iCC };
-cov.help    = {'Add a new covariate to your design.'
+icov         = cfg_branch;
+icov.tag     = 'icov';
+icov.name    = 'Covariate';
+icov.val     = {c cname };
+icov.help    = {'Add a new covariate to your design.'
                'Please note that no covariates is added per default. Thus, all the model covariates must be added by the user.'
                'Note also that a function called swe_splitCovariate can be used to split time-varying covariates into a cross-sectional component and a longitudinal component. This may be useful to take apart these two different mode of variation'};
 
 % ---------------------------------------------------------------------
-% generic Covariates
+% Covariate Values Text File 
 % ---------------------------------------------------------------------
-generic         = cfg_repeat;
-generic.tag     = 'generic';
-generic.name    = 'Covariates';
-generic.help    = {
+tfval         = cfg_files;
+tfval.tag     = 'tfval';
+tfval.name    = 'Covariate values';
+tfval.help    = {' '
+    ''};
+tfval.filter = {};
+tfval.ufilter = '.*';
+tfval.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% Covariate Names Text File 
+% ---------------------------------------------------------------------
+tfname         = cfg_files;
+tfname.tag     = 'tfval';
+tfname.name    = 'Covariate names';
+tfname.help    = {' '
+    ''};
+tfname.filter = {};
+tfname.ufilter = '.*';
+tfname.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% Manual Covariate entry
+% ---------------------------------------------------------------------
+manucov         = cfg_repeat;
+manucov.tag     = 'manucov';
+manucov.name    = 'Manual Entry';
+manucov.help    = {
                    'This option allows for the specification of covariates variables.'
                    ''
 }';
-generic.values  = {cov };
-generic.num     = [1 Inf];
+manucov.values  = {icov };
+manucov.num     = [1 Inf];
+
+% ---------------------------------------------------------------------
+% Text File Covariate entry (containing matrix)
+% ---------------------------------------------------------------------
+tfmcov         = cfg_branch;
+tfmcov.tag     = 'tfmcov';
+tfmcov.name    = 'Text file (matrix)';
+tfmcov.help    = {
+                   'This option allows for the specification of covariates variables.'
+                   ''
+}';
+tfmcov.val  = {tfval tfname };
+
+% ---------------------------------------------------------------------
+% Text File Covariate entry (containing structure)
+% ---------------------------------------------------------------------
+tfscov         = cfg_branch;
+tfscov.tag     = 'tfscov';
+tfscov.name    = 'Text file (structure)';
+tfscov.help    = {
+                   'This option allows for the specification of covariates variables.'
+                   ''
+}';
+tfscov.val  = {tfval };
+
+% ---------------------------------------------------------------------
+% Covariates
+% ---------------------------------------------------------------------
+
+cov         = cfg_choice;
+cov.tag     = 'cov';
+cov.name    = 'Covariates';
+cov.val     = {manucov};
+cov.help    = {
+              'Choose input type for covariates.'
+}';
+cov.values  = {manucov tfmcov tfscov};
 
 % ---------------------------------------------------------------------
 % tm_none None
@@ -795,7 +855,7 @@ WB.val    = {WB_no};
 design        = cfg_exbranch;
 design.tag    = 'design';
 design.name   = 'Data & Design';
-design.val    = {dir scans type subjects generic masking WB globalc globalm};
+design.val    = {dir scans type subjects cov masking WB globalc globalm};
 design.help   = {' '
                  'Module of the SwE toolbox allowing the specification of the data and design.'};
 design.prog   = @swe_run_design;
