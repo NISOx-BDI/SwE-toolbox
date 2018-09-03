@@ -104,6 +104,7 @@ function generateData(porwb, torf, matorimg)
 	else
 
 		% Load the generated SwE file and run it.
+        ls();
 		load('SwE.mat');
 		swe_cp(SwE);
 

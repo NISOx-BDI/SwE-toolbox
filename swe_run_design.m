@@ -187,12 +187,112 @@ H  = []; Hnames = [];
 B  = []; Bnames = [];
 xC = [];                         %-Struct array to hold raw covariates
 
+% Retrieve covariates
+if isfield(job.cov, 'icov')
+    
+    % If entered manually we already have a struct of covariates.
+    cov = job.cov.icov;
+
+% If they were entered as a matrix file and name file.
+elseif isfield(job.cov, 'fmcov')
+    
+    % Read in covariate matrix.
+    valFile = job.cov.fmcov.fval{1};
+    try
+        covMat = load(valFile, '-MAT');
+    catch
+        covMat = load(valFile, '-ASCII');
+    end
+
+    % It may be the case that the data is a matrix but the '.mat' has saved it 
+    % inside a structure. 
+    if isstruct(covMat)
+        
+        if numel(fieldnames(covMat))==1
+            
+            % Retrieve the name of the matrix
+            f = fieldnames(covMat);
+
+            % If there is only one field and that field is a matrix we use it.
+            if ismatrix(covMat.(f{1}))
+                covMat = covMat.(f{1});
+            else
+                error('Invalid input. Input must be covariate matrix.')
+            end
+        else
+            error('Invalid input. Input must be covariate matrix.')
+        end
+    end
+    
+    % Record number of covariates.
+    numCov = size(covMat, 2);
+    
+    % Record covariates.
+    cov = struct();
+    for i=1:size(covMat, 2)
+        cov(i).c = covMat(:,i);
+    end
+    
+    % Open the text file with filenames.
+    nameFile = job.cov.fmcov.fname{1};
+    fid = fopen(nameFile,'r');
+    
+    % Count and record all filenames.
+    numName = 0;
+    cname = fgetl(fid);
+    while ischar(cname)
+        disp(cname)
+        if ~isempty(cname)
+            numName = numName + 1;
+            cov(numName).cname = cname;
+        end
+        cname = fgetl(fid);
+    end
+    
+    if numName ~= numCov
+       error('Number of covariates entered does not match number of covariate names entered.') 
+    end
+
+% If they were entered as a '.mat' file containing a struct.
+else 
+    
+    % Read in covariate structure.
+    valFile = job.cov.fscov.fval{1};
+    covStruct = load(valFile, '-MAT');
+    
+    % The structure might have been saved inside itself.
+    if numel(fieldnames(covStruct))==1
+            
+        % Retrieve the name of the matrix
+        f = fieldnames(covStruct);
+        covStruct = covStruct.(f{1});
+        
+    end
+    
+    cov = struct();
+    
+    % Retrieve all covariate names and vectors and check all covariates are
+    % the same length.
+    f = fieldnames(covStruct);
+    covLength = length(covStruct.(f{1}));
+    for i=1:numel(f)
+        
+        % Record covariates.
+        cov(i).c = covStruct.(f{i})';
+        cov(i).cname = f{i};
+        
+        % Error if covariates are of inconsistent length.
+        if length(covStruct.(f{i})) ~= covLength
+            error('Covariates are of differing length.')
+        end
+    end
+end
 % Covariate options:
-nc=length(job.cov); % number of covariates
+nc=length(cov); % number of covariates
 for i=1:nc
 
-    c      = job.cov(i).c;
-    cname  = job.cov(i).cname;
+    c      = cov(i).c;
+    cname  = cov(i).cname;
     rc     = c;                         %-Save covariate value
     rcname = cname;                     %-Save covariate name
 %     if job.cov(i).iCFI==1, % no interaction
