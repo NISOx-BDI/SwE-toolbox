@@ -188,6 +188,38 @@ H  = []; Hnames = [];
 B  = []; Bnames = [];
 xC = [];                         %-Struct array to hold raw covariates
 
+%-Multiple covariates
+%--------------------------------------------------------------------------
+for m=1:numel(job.multi_cov)
+    for n=1:numel(job.multi_cov(m).files)
+        tmp   = load(job.multi_cov(m).files{n});
+        names = {};
+        if isstruct(tmp) % .mat
+            if isfield(tmp,'R')
+                R = tmp.R;
+                if isfield(tmp,'names')
+                    names = tmp.names;
+                end
+            else
+                error(['Variable ''R'' not found in multiple ' ...
+                    'covariates file ''%s''.'], job.multi_cov(m).files{n});
+            end
+        elseif isnumeric(tmp) % .txt
+            R     = tmp;
+            % read names from first line if commented?
+        end
+        for j=1:size(R,2)
+            job.cov(end+1).c   = R(:,j);
+            if isempty(names)
+                job.cov(end).cname = sprintf('R%d%s',j);
+            else
+                job.cov(end).cname = names{j};
+            end
+        end
+    end
+end
+
+%-Single covariates
 % Covariate options:
 nc=length(job.cov); % number of covariates
 for i=1:nc
