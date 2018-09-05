@@ -131,7 +131,7 @@ cov.val     = {{''}};
 cov.help    = {
                'Select the *.mat/*.txt file(s) containing details of your multiple covariates. '
                ''
-               'A *.mat file must contain a matrix R, and may optionally contain a cell array called ''names'' with covariate names. A *.txt file can be any file that can be read by Matlab''s IMPORTDATA function, which includes a data-only text file, with spaces, tabs or comma separators. A header row is allowed, and if present will be used to obtain the covariate names. If names for the covariates are not give they will be named R1, R2, R3, ..etc.'
+               'A *.mat file must contain a matrix R, and may optionally contain a cell array called ''names'' with covariate names. A *.txt file can be any file that can be read by Matlab''s IMPORTDATA function, which includes a data-only text file, with spaces, tabs or comma separators. A header row is allowed, and if present will be used to obtain the covariate names. If names for the covariates are not given they will be named R1, R2, R3, ..etc.'
               }';
 cov.filter  = 'mat';
 cov.ufilter = '.*';
