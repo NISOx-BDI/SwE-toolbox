@@ -1,4 +1,4 @@
-function swe_smodel
+function swe_results
 % Launches batch window containing SwE batch module.
 % =========================================================================
 % This function prepares (if needed) and launches the batch system with a 
@@ -18,7 +18,7 @@ function swe_smodel
     % Launch the batch system with the SwE tab
     swe_batch
     % Add the specification module to it
-    spm_jobman('interactive','','swe.smodel');
+    spm_jobman('interactive','','swe.results');
 
     return
     

@@ -22,7 +22,7 @@ dir.num     = [1 1];
 % -------------------------------------------------------------------------
 des         = cfg_files;
 des.tag     = 'des';
-des.name    = 'Design File';
+des.name    = 'SwE File';
 des.help    = {' '
     'Select an ''SwE.mat'' file containing the model to be run.'};
 des.filter = 'mat';

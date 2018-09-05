@@ -221,17 +221,9 @@ if nargin
 end
 try
     swd = xSwE.swd;
-    sts = 1;
 catch
-    if ~exist('OCTAVE_VERSION','builtin')
-        [spmmatfile, sts] = spm_select(1,'^SwE\.mat$','Select SwE.mat');
-        swd = spm_str_manip(spmmatfile,'H');
-    else
-        sts = 1;
-        swd = '.';
-    end
+    swd = '.';
 end
-if ~sts, SwE = []; xSwE = []; return; end
 
 %-Preliminaries...
 %==========================================================================

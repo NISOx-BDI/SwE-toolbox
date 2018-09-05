@@ -15,12 +15,12 @@ function swe_run_results(varargin)
 % -------------------------------------------------------------------------
 job   = varargin{1};
 
-% Obtain SwE structure
+% Change directory to directory containing SwE structure
 % -------------------------------------------------------------------------
-load(job.res{1});
+cd(fileparts(job.dis{1}));
 
 % Display results.
 % -------------------------------------------------------------------------
-swe_cp(SwE);
+swe_results_ui; %%ISSUE: DISPLAY OUTPUT NOT IN USER PREFERENCE FOLDER
 
 end

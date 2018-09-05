@@ -12,7 +12,7 @@ function swe = swe_cfg_batch
 	    'This is the batch interface for SwE, i.e. Sandwich Estimator '...
 	    'Method for Neuroimaging Longitudinal Data Analysis.']
 	                  }';
-	swe.values  = {swe_cfg_smodel swe_cfg_rmodel};
+	swe.values  = {swe_cfg_smodel swe_cfg_rmodel swe_cfg_results};
 	              
 	%----------------------------------------------------------------------
 

@@ -5,7 +5,7 @@ function swe_rmodel
 % job containing the batch module for the computation of a prespecified
 % design.
 % =========================================================================
-% FORMAT swe_runmodel
+% FORMAT swe_rmodel
 % =========================================================================
 % Written by Tom Maullin (05/09/2018)
 
