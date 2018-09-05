@@ -1,12 +1,12 @@
-function results = swe_cfg_results
-% This displays the results from an SwE disel.
+function results = swe_leaf_results
+% This displays the results from an SwE model.
 % =========================================================================
 % FORMAT disign = swe_cfg_results
 % =========================================================================
 % Written by Tom Maullin (05/09/2018)
 
 % -------------------------------------------------------------------------
-% dir Directory
+% display Directory
 % -------------------------------------------------------------------------
 dis         = cfg_files;
 dis.tag     = 'dis';
@@ -18,7 +18,7 @@ dis.ufilter = '.*';
 dis.num     = [1 1];
 
 % -------------------------------------------------------------------------
-% compute disign
+% compute design
 % -------------------------------------------------------------------------
 results        = cfg_exbranch;
 results.tag    = 'results';

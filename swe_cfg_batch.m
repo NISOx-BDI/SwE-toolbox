@@ -5,6 +5,8 @@ function swe = swe_cfg_batch
 % =========================================================================
 % Written by Bryan Guillaume
 
+    addpath
+
 	swe         = cfg_choice;
 	swe.tag     = 'swe';
 	swe.name    = 'SwE';
@@ -12,7 +14,7 @@ function swe = swe_cfg_batch
 	    'This is the batch interface for SwE, i.e. Sandwich Estimator '...
 	    'Method for Neuroimaging Longitudinal Data Analysis.']
 	                  }';
-	swe.values  = {swe_cfg_smodel swe_cfg_rmodel swe_cfg_results};
+	swe.values  = {swe_leaf_smodel swe_leaf_rmodel swe_leaf_results};
 	              
 	%----------------------------------------------------------------------
 

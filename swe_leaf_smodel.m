@@ -1,4 +1,4 @@
-function design = swe_cfg_smodel
+function design = swe_leaf_smodel
 % This builds the SwE.mat data and design structure specifying the model.
 % =========================================================================
 % FORMAT design = swe_cfg_smodel

@@ -5,9 +5,9 @@ function swe_results
 % job containing the batch module for the specification of
 % data and design.
 % =========================================================================
-% FORMAT swe_smodel
+% FORMAT swe_results
 % =========================================================================
-% Written by Bryan Guillaume
+% Written by Tom Maullin (05/09/2018)
 
     % Initiate a job 
     if isempty(spm_figure('FindWin','Graphics'))

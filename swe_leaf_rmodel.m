@@ -1,4 +1,4 @@
-function design = swe_cfg_rmodel
+function design = swe_leaf_rmodel
 % This takes in a SwE.mat file containing a design and runs the model.
 % =========================================================================
 % FORMAT design = swe_cfg_rmodel
