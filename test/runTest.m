@@ -1,19 +1,17 @@
-%=======================================================================================
-%
-% This function runs a test case for the SwE toolbox and is designed for octave. It 
-% takes the following inputs:
-%
-% porwb    - 'p' for parametric or 'wb' for wild bootstrap.
-% torf     - 't' for a t test or 'f' for an f test.
-% matorimg - 'mat' for '.mat' file surface input pr 'img' for '.img' and '.hdr' 
-%			 volumetric input.
-%
-% Author: Tom Maullin (08/06/20178) 
-%
-%=======================================================================================
-
 function result=runTest(porwb, torf, matorimg)
-	
+% This function runs an octave test case for the SwE toolbox.
+% ====================================================================
+% FORMAT result=runTest(porwb, torf, matorimg)
+% --------------------------------------------------------------------
+% Inputs:
+%
+%   - porwb:    'p' for parametric or 'wb' for wild bootstrap.
+%   - torf:     't' for a t test or 'f' for an f test.
+%   - matorimg: 'mat' for '.mat' file surface input pr 'img' for 
+%                '.img' and '.hdr' volumetric input.
+% ====================================================================
+% Author: Tom Maullin (08/06/20178) 
+
 	% Turn off warnings.
 	%
 	% (Footnote: These warnings occur as we cannot open the displays and octave reads

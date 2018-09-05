@@ -1,3 +1,7 @@
+% This files is a clone of spm_DesRep.m, temporarily added to SWE until
+% changes are made to the original SPM version. The only change in place is
+% on line 751 where the 'DefaultTextInterpreter' parameter has been changed
+% from 'TeX' to 'None'.
 function varargout = swe_DesRep(varargin)
 % Design reporting utilities
 % FORMAT varargout = spm_DesRep(action,varargin)

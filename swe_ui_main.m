@@ -1,30 +1,35 @@
 function varargout = swe_ui_main(varargin)
-% SWE_UI_MAIN MATLAB code for SWE_UI_MAIN.fig
-%      SWE_UI_MAIN, by itself, creates a new SWE_UI_MAIN or raises the existing
-%      singleton*.
+% Creates a new SWE_UI_MAIN menu or raises the existing singleton*.
+% =========================================================================
+% FORMAT:
 %
-%      H = SWE_UI_MAIN returns the handle to a new SWE_UI_MAIN or the handle to
-%      the existing singleton*.
+%      SWE_UI_MAIN('CALLBACK',hObject,eventData,handles,...) calls the 
+%      local function named CALLBACK in SWE_UI_MAIN.M with the given input
+%      arguments.
 %
-%      SWE_UI_MAIN('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in SWE_UI_MAIN.M with the given input arguments.
-%
-%      SWE_UI_MAIN('Property','Value',...) creates a new SWE_UI_MAIN or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before SWE_UI_MAIN_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to SWE_UI_MAIN_OpeningFcn via varargin.
+%      SWE_UI_MAIN('Property','Value',...) creates a new SWE_UI_MAIN or 
+%      raises the existing singleton*.  Starting from the left, property 
+%      value pairs are applied to the GUI before SWE_UI_MAIN_OpeningFcn 
+%      gets called.  An unrecognized property name or invalid value makes 
+%      property application stop.  All inputs are passed to 
+%      SWE_UI_MAIN_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
+%--------------------------------------------------------------------------
+% Outputs:
+%
+% - H: SWE_UI_MAIN returns the handle to a new SWE_UI_MAIN or the handle to
+%      the existing singleton*.
+% =========================================================================
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
-
 % Written by Bryan Guillaume
 
 % Last Modified by GUIDE v2.5 24-Apr-2013 18:41:03
 
 % Begin initialization code - DO NOT EDIT
+
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...

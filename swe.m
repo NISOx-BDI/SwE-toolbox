@@ -1,12 +1,18 @@
 function varargout = swe(varargin)
-% Sandwich Estimator for Neuroimaging Longitudinal Data Analysis, SwE.
-%
-% This function initializes things for the SwE toolbox and provides 
-% some low level functionalities
-
+% This function initializes the SwE toolbox and checks the installation.
+% =========================================================================
+% FUNCTION swe, swe(), swe('startup') - starts the SwE toolbox.
+% FUNCTION swe('ASCIIwelcome') - display the startup message.
+% -------------------------------------------------------------------------
+% Inputs:
+%  - str - 'ASCIIwelcome' for startup message or 'startup' for toolbox
+% =========================================================================
 % Written by Bryan Guillaume
 % $Id$
-if nargin == 0,
+
+versionNo = '1.2.9';
+
+if nargin == 0
     Action = 'StartUp';
 else
     Action = varargin{1};
@@ -47,8 +53,11 @@ switch lower(Action)
         disp( '  / __) _    _ | __)   _  _  /_|    (__ \    | _ |       ');
         disp( '  \__ \ \\/\// | __)   \\//   || _  / __/ _  | _ |       ');
         disp( '  (___/  \/\/  |___)    \/    |||_| \___)|_| |___|       ');
-        fprintf('\n  swe v1.2.9\n');
+        fprintf('\n  swe v%s \n', versionNo);
   
+    case 'ver'
+        
+        varargout{1}=versionNo;
         
         %==================================================================
     otherwise                                       %-Unknown action string

@@ -1,21 +1,24 @@
 function [Y,y,beta,Bcov] = swe_graph(xSwE,SwE,hReg)
 % Graphical display of adjusted data
-% FORMAT [Y y beta Bcov] = spm_graph(xSPM,SPM,hReg)
+% =========================================================================
+% FORMAT [Y y beta Bcov] = swe_graph(xSPM,SPM,hReg)
+% -------------------------------------------------------------------------
+% Inputs: 
+%  - xSwE   - structure containing SPM, distributional & filtering details
+%             about the excursion set
+%  - SwE    - structure containing generic details about the analysis
+%  - hReg   - handle of MIP register or [x y z] coordinates
+% -------------------------------------------------------------------------
+% Outputs:
+%  - Y      - fitted   data for the selected voxel
+%  - y      - adjusted data for the selected voxel
+%  - beta   - parameter estimates (ML or MAP)
+%  - Bcov   - Covariance of parameter estimates (ML or conditional)
 %
-% xSwE   - structure containing SPM, distributional & filtering details
-%          about the excursion set
-% SwE    - structure containing generic details about the analysis
-% hReg   - handle of MIP register or [x y z] coordinates
-%
-% Y      - fitted   data for the selected voxel
-% y      - adjusted data for the selected voxel
-% beta   - parameter estimates (ML or MAP)
-% Bcov   - Covariance of parameter estimates (ML or conditional)
-%
-% See spm_getSPM for details.
+% See swe_getSPM for details.
 %__________________________________________________________________________
 %
-% spm_graph is a Callback script that uses the structures above to:  (i)
+% swe_graph is a Callback script that uses the structures above to:  (i)
 % send adjusted (y) and fitted data (Y), for the selected voxel, to the
 % workspace and (ii) provide graphics for:
 %
@@ -67,7 +70,7 @@ function [Y,y,beta,Bcov] = swe_graph(xSwE,SwE,hReg)
 %__________________________________________________________________________
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
-% Modified version of spm_graph
+% Modified version of swe_graph
 % Modified by Bryan Guillaume
 
 

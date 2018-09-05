@@ -1,41 +1,46 @@
 function [SwE,xSwE] = swe_getSPM(varargin)
-% Compute a specified and thresholded SwE for the SwE method
+% Compute specified and thresholded SwE parametric map for the SwE method.
+% =========================================================================
 % FORMAT [SwE,xSwE] = swe_getSPM;
 % Query SwE in interactive mode.
 %
 % FORMAT [SwE,xSwE] = swe_getSPM(xSwE);
-% Query SwE in batch mode. See below for a description of fields that may
-% be present in xSwE input. Values for missing fields will be queried
-% interactively.
+% -------------------------------------------------------------------------
 %
-% xSwE      - structure containing spm, distribution & filtering details
-% .swd      - SwE working directory - directory containing current SwE.mat
-% .title    - title for comparison (string)
-% .Z        - minimum of Statistics {filtered on u and k}
-% .n        - conjunction number <= number of contrasts
-% .STAT     - distribution {Z, T, X, F or P}
-% .df       - degrees of freedom [df{interest}, df{residual}]
-% .STATstr  - description string
-% .Ic       - indices of contrasts (in SwE.xCon)
-% .Im       - indices of masking contrasts (in xCon)
-% .pm       - p-value for masking (uncorrected)
-% .Ex       - flag for exclusive or inclusive masking
-% .u        - height threshold
-% .k        - extent threshold {voxels}
-% .XYZ      - location of voxels {voxel coords}
-% .XYZmm    - location of voxels {mm}
-% .S        - search Volume {voxels}
-% .R        - search Volume {resels}
-% .FWHM     - smoothness {voxels}
-% .M        - voxels -> mm matrix
-% .iM       - mm -> voxels matrix
-% .VOX      - voxel dimensions {mm} - column vector
-% .DIM      - image dimensions {voxels} - column vector
-% .Vspm     - Mapped statistic image(s)
-% .Ps       - uncorrected P values in searched volume (for voxel FDR)
-% .Pp       - uncorrected P values of peaks (for peak FDR)
-% .Pc       - uncorrected P values of cluster extents (for cluster FDR)
-% .uc       - 0.05 critical thresholds for FWEp, FDRp, FWEc, FDRc
+% Query SwE in batch mode. See below for a description of fields that 
+% may be present in xSwE input. Values for missing fields will be 
+% queried interactively.
+%
+% xSwE       - structure containing spm, distribution & filtering 
+%              details
+% .swd       - SwE working directory - directory containing current 
+%              SwE.mat
+% .title     - title for comparison (string)
+% .Z         - minimum of Statistics {filtered on u and k}
+% .n         - conjunction number <= number of contrasts
+% .STAT      - distribution {Z, T, X, F or P}
+% .df        - degrees of freedom [df{interest}, df{residual}]
+% .STATstr   - description string
+% .Ic        - indices of contrasts (in SwE.xCon)
+% .Im        - indices of masking contrasts (in xCon)
+% .pm        - p-value for masking (uncorrected)
+% .Ex        - flag for exclusive or inclusive masking
+% .u         - height threshold
+% .k         - extent threshold {voxels}
+% .XYZ       - location of voxels {voxel coords}
+% .XYZmm     - location of voxels {mm}
+% .S         - search Volume {voxels}
+% .R         - search Volume {resels}
+% .FWHM      - smoothness {voxels}
+% .M         - voxels -> mm matrix
+% .iM        - mm -> voxels matrix
+% .VOX       - voxel dimensions {mm} - column vector
+% .DIM       - image dimensions {voxels} - column vector
+% .Vspm      - Mapped statistic image(s)
+% .Ps        - uncorrected P values in searched volume (for voxel FDR)
+% .Pp        - uncorrected P values of peaks (for peak FDR)
+% .Pc        - uncorrected P values of cluster extents (for cluster FDR)
+% .uc        - 0.05 critical thresholds for FWEp, FDRp, FWEc, FDRc
 % .thresDesc - description of height threshold (string)
 %
 % Required fields of SwE
@@ -80,9 +85,23 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % .thresDesc - description of height threshold (string)
 %
 % In addition, the xCon structure is updated. For newly evaluated
-% contrasts, SwE images (spmT_????) are written, along with
-% contrast (con_????) images for SwE{T}'s, or Extra
-% Sum-of-Squares images (ess_????}) for SwE{F}'s.
+% contrasts, SwE images (swe_vox_{T|F}stat_c{c#}) are written, along 
+% with contrast (swe_vox_beta_c{c#}) images.
+%
+% For a parametric analysis the following is added to the xCon
+% structure:
+%
+% .Vspm          - Name of SwE image
+%
+% For a non-parametric analysis the following are added to the xCon
+% structure:
+%
+% .Vspm          - Name of SwE image
+% .VspmFWEP      - Name of FWE P SwE image
+% .VspmFDRP      - Name of FDR P SwE image
+% .VspmUncP      - Name of Uncorrected P SwE image
+% .VspmFWEP_clus - Name of FWE cluster P SwE image
+% .Vedf          - Name of error degrees of freedom image
 %
 % The contrast images are the weighted sum of the parameter images,
 % where the weights are the contrast weights, and are uniquely
@@ -90,15 +109,15 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % contrast manager. These contrast images (for appropriate contrasts)
 % are suitable summary images of an effect at this level, and can be
 % used as input at a higher level when effecting a random effects
-% analysis. (Note that the ess_????.{img,hdr} and
-% SwE{T,F}_????.{img,hdr} images are not suitable input for a higher
+% analysis. (Note that the swe_vox_beta_c{c#} and
+% swe_vox_{T|F}stat_c{c#} images are not suitable input for a higher
 % level analysis.) See spm_RandFX.man for further details.
 %
 %__________________________________________________________________________
 %
-% swe_getSPM prompts for an SwE and applies thresholds {u & k}
+% swe_getSPM prompts for an SwE parametric map and applies thresholds {u & k}
 % to a point list of voxel values (specified with their locations {XYZ})
-% This allows the SwE be displayed and characterized in terms of regionally
+% This allows the SwE map be displayed and characterized in terms of regionally
 % significant effects by subsequent routines.
 %
 % For general linear model Y = XB + E with data Y, design matrix X,
@@ -106,13 +125,19 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % parameters (with contrast weights c) is estimated by c'b, where b are
 % the parameter estimates given by b=pinv(X)*Y.
 %
-% Either single contrasts can be examined or conjunctions of different
-% contrasts. Contrasts are estimable linear combinations of the
-% parameters, and are specified using the SwE contrast manager
-% interface [swe_conman.m]. SPMs are generated for the null hypotheses
-% that the contrast is zero (or zero vector in the case of
-% F-contrasts). See the help for the contrast manager [swe_conman.m]
-% for a further details on contrasts and contrast specification.
+% For a paramertic analysis, either single contrasts can be examined 
+% or conjunctions of different contrasts. Contrasts are estimable 
+% linear combinations of the parameters, and are specified using 
+% the SwE contrast manager interface [swe_conman.m]. For a 
+% non-parametric analysis, two contrasts are recorded; activation
+% and deactivation for the contrast vector specified in the batch
+% window. These are recorded a priori in a seperate function 
+% with certain thresholds applied here [swe_contrasts_WB].
+%
+% SwE parametric maps are generated for the null hypotheses that 
+% the contrast is zero (or zero vector in the case of F-contrasts). 
+% See the help for the contrast manager [swe_conman.m] for a further 
+% details on contrasts and contrast specification.
 %
 % A conjunction assesses the conjoint expression of multiple effects. The
 % conjunction SwE is the minimum of the component SPMs defined by the
@@ -133,7 +158,7 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 %
 % The Global and Intermediate nulls use results for minimum fields which
 % require the SPMs to be identically distributed and independent. Thus,
-% all component SPMs must be either SwE{t}'s, or SwE{F}'s with the same
+% all component SwE maps must be either SwE{t}'s, or SwE{F}'s with the same
 % degrees of freedom. Independence is roughly guaranteed for large
 % degrees of freedom (and independent data) by ensuring that the
 % contrasts are "orthogonal". Note that it is *not* the contrast weight
@@ -143,7 +168,7 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % i.i.d. (i.e. the estimates are maximum likelihood or Gauss-Markov. This
 % is the default in spm_spm).
 %
-% To ensure approximate independence of the component SPMs in the case of
+% To ensure approximate independence of the component SwE maps in the case of
 % the global or intermediate null, non-orthogonal contrasts are serially
 % orthogonalised in the order specified, possibly generating new
 % contrasts, such that the second is orthogonal to the first, the third
@@ -157,7 +182,7 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % more further contrasts.  No account is taken of this masking in the
 % statistical inference pertaining to the masked contrast.
 %
-% The SwE is subject to thresholding on the basis of height (u) and the
+% The SwE map is subject to thresholding on the basis of height (u) and the
 % number of voxels comprising its clusters {k}. The height threshold is
 % specified as above in terms of an [un]corrected p value or
 % statistic.  Clusters can also be thresholded on the basis of their
@@ -176,8 +201,8 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % the xCon.eidf.  Subsequent plotting and tables will use the conditional
 % estimates and associated posterior or conditional probabilities.
 %
-% see spm_results_ui.m for further details of the SwE results section.
-% see also spm_contrasts.m
+% see swe_results_ui.m for further details of the SwE results section.
+% see also swe_contrasts.m
 %__________________________________________________________________________
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
