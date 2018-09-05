@@ -10,7 +10,11 @@ function swe_design
 % Written by Bryan Guillaume
 
     % Initiate a job 
-    % spm_jobman('initcfg')
+    if isempty(spm_figure('FindWin','Graphics'))
+        % SPM not running
+        spm_jobman('initcfg')
+    end
+    
     % Launch the batch system with the SwE tab
     swe_batch
     % Add the specification module to it

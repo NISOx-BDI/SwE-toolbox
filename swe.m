@@ -39,6 +39,9 @@ switch lower(Action)
             addpath(fullfile(spm('Dir'),'compat'))
         end
         
+        % Add path to SwE toolbox.
+        addpath(fileparts(mfilename('fullpath')));
+        
         % launch the main GUI
         swe_ui_main;
         
