@@ -10,7 +10,7 @@ function swe_design
 % Written by Bryan Guillaume
 
     % Initiate a job 
-    spm_jobman('initcfg')
+    % spm_jobman('initcfg')
     % Launch the batch system with the SwE tab
     swe_batch
     % Add the specification module to it
