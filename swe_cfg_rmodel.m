@@ -1,7 +1,7 @@
-function design = swe_cfg_compute
-% This takes in the SwE.mat data and computes the design.
+function design = swe_cfg_rmodel
+% This takes in a SwE.mat file containing a design and runs the model.
 % =========================================================================
-% FORMAT design = swe_cfg_compute
+% FORMAT design = swe_cfg_rmodel
 % =========================================================================
 % Written by Tom Maullin (05/09/2018)
 
@@ -24,7 +24,7 @@ des         = cfg_files;
 des.tag     = 'des';
 des.name    = 'Design File';
 des.help    = {' '
-    'Select an ''SwE.mat'' file containing the design to be compute.'};
+    'Select an ''SwE.mat'' file containing the model to be run.'};
 des.filter = 'mat';
 des.ufilter = '.*';
 des.num     = [1 1];
@@ -33,10 +33,9 @@ des.num     = [1 1];
 % compute Design
 % ---------------------------------------------------------------------
 design        = cfg_exbranch;
-design.tag    = 'compute';
-design.name   = 'Compute Design';
+design.tag    = 'rmodel';
+design.name   = 'Run Model';
 design.val    = {dir des};
 design.help   = {' '
-                 'Module of the SwE toolbox allowing the computing of a specified design.'};
-design.prog   = @swe_cp;
-design.vout   = @vout_data;
+                 'Module of the SwE toolbox allowing the computing of a previously specified model.'};
+design.prog   = @swe_run_rmodel;

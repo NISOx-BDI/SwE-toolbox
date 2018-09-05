@@ -1,4 +1,4 @@
-function swe_cp(varargin)
+function swe_cp(SwE)
 % This function computes covariance and beta maps for parametric analyses.
 % =========================================================================
 % For a parametric SwE analysis with nifti input, this function computes 
@@ -26,11 +26,10 @@ function swe_cp(varargin)
 % instead as these maps must be computed differently. See the header of
 % `swe_cp_WB` for more information.
 % =========================================================================
-% FORMAT swe_cp(SwE) swe_cp(job)
+% FORMAT swe_cp(SwE)
 % -------------------------------------------------------------------------
 % Inputs:
 %   - SwE: SwE data structure
-%   - job: Matlab job structure created by `swe_cfg_compute`
 % =========================================================================
 
 %-Say hello
@@ -56,13 +55,6 @@ if nargin == 0
         end
     end
     return
-else
-    % If the input is a matlabbatch job.
-    if isstruct(varargin{1})
-        job = varargin{1};
-        cd(job.dir);
-        load(job.des);
-    end
 end
 % If this is a WB analysis we need to use swe_cp_WB.
 if isfield(SwE, 'WB')
