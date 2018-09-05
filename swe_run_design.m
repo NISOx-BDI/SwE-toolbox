@@ -192,21 +192,30 @@ xC = [];                         %-Struct array to hold raw covariates
 %--------------------------------------------------------------------------
 for m=1:numel(job.multi_cov)
     for n=1:numel(job.multi_cov(m).files)
-        tmp   = load(job.multi_cov(m).files{n});
+        tmp   = importdata(job.multi_cov(m).files{n});
         names = {};
         if isstruct(tmp) % .mat
-            if isfield(tmp,'R')
+            % If it's a manually created structure with field 'R' mandatory
+            % containing matrix and field 'names' optionally containing a
+            % cell array of names.
+            if isfield(tmp,'R') 
                 R = tmp.R;
                 if isfield(tmp,'names')
                     names = tmp.names;
+                end
+            % If it's a structure created by importdata from reading a
+            % table with column headers.
+            elseif isfield(tmp,'data')
+                R = tmp.data;
+                if isfield(tmp,'colheaders')
+                    names = tmp.colheaders;
                 end
             else
                 error(['Variable ''R'' not found in multiple ' ...
                     'covariates file ''%s''.'], job.multi_cov(m).files{n});
             end
-        elseif isnumeric(tmp) % .txt
+        elseif isnumeric(tmp) % .txt file with no column headers.
             R     = tmp;
-            % read names from first line if commented?
         end
         for j=1:size(R,2)
             job.cov(end+1).c   = R(:,j);
