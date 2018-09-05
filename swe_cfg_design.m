@@ -97,46 +97,7 @@ cname.name    = 'Name';
 cname.help    = {'Name of the covariate'};
 cname.strtype = 's';
 cname.num     = [1 Inf];
-% ---------------------------------------------------------------------
-% iCFI Interactions
-% ---------------------------------------------------------------------
-iCFI         = cfg_menu;
-iCFI.tag     = 'iCFI';
-iCFI.name    = 'Interactions';
-iCFI.help    = {
-                'For each covariate you have defined, there is an opportunity to create an additional regressor that is the interaction between the covariate and a chosen experimental factor. '
-                ''
-}';
-iCFI.labels = {
-               'None'
-               'With Factor 1'
-               'With Factor 2'
-               'With Factor 3'
-}';
-iCFI.values = {1 2 3 4};
-iCFI.val    = {1};
-% ---------------------------------------------------------------------
-% iCC Centering
-% ---------------------------------------------------------------------
-iCC         = cfg_menu;
-iCC.tag     = 'iCC';
-iCC.name    = 'Centering';
-iCC.help    = {
-               'The appropriate centering option is usually the one that corresponds to the interaction chosen, and ensures that main effects of the interacting factor aren''t affected by the covariate. You are advised to choose this option, unless you have other modelling considerations. '
-               ''
-}';
-iCC.labels = {
-              'Overall mean'
-              'Factor 1 mean'
-              'Factor 2 mean'
-              'Factor 3 mean'
-              'No centering'
-              'User specified value'
-              'As implied by ANCOVA'
-              'GM'
-}';
-iCC.values = {1 2 3 4 5 6 7 8};
-iCC.val    = {5};
+
 % ---------------------------------------------------------------------
 % cov Covariate
 % ---------------------------------------------------------------------
@@ -144,7 +105,6 @@ cov         = cfg_branch;
 cov.tag     = 'cov';
 cov.name    = 'Covariate';
 cov.val     = {c cname };
-%cov.val     = {c cname iCFI iCC };
 cov.help    = {'Add a new covariate to your design.'
                'Please note that no covariates is added per default. Thus, all the model covariates must be added by the user.'
                'Note also that a function called swe_splitCovariate can be used to split time-varying covariates into a cross-sectional component and a longitudinal component. This may be useful to take apart these two different mode of variation'};
@@ -160,7 +120,42 @@ generic.help    = {
                    ''
 }';
 generic.values  = {cov };
-generic.num     = [1 Inf];
+generic.num     = [0 Inf];
+
+%--------------------------------------------------------------------------
+% multi_reg Multiple covariates
+%--------------------------------------------------------------------------
+cov         = cfg_files;
+cov.tag     = 'files';
+cov.name    = 'File(s)';
+cov.val     = {{''}};
+cov.help    = {
+               'Select the *.mat/*.txt file(s) containing details of your multiple covariates. '
+               ''
+               'A *.mat file must contain a matrix R, and may optionally contain a cell array called ''names'' with covariate names. A *.txt file can be any file that can be read by Matlab''s IMPORTDATA function, which includes a data-only text file, with spaces, tabs or comma separators. A header row is allowed, and if present will be used to obtain the covariate names. If names for the covariates are not given they will be named R1, R2, R3, ..etc.'
+              }';
+cov.filter  = 'mat';
+cov.ufilter = '.*';
+cov.num     = [0 Inf];
+
+%--------------------------------------------------------------------------
+% multi_cov Covariate
+%--------------------------------------------------------------------------
+multi_cov         = cfg_branch;
+multi_cov.tag     = 'multi_cov';
+multi_cov.name    = 'Covariates';
+multi_cov.val     = {cov};
+multi_cov.help    = {'Add a new set of covariates to your experimental design.'};
+
+%--------------------------------------------------------------------------
+% generic2 Multiple covariates
+%--------------------------------------------------------------------------
+generic2        = cfg_repeat;
+generic2.tag    = 'generic';
+generic2.name   = 'Multiple covariates';
+generic2.help   = {'This option allows for the specification of multiple covariates from TXT/MAT files.'};
+generic2.values = {multi_cov};
+generic2.num    = [0 Inf];
 
 % ---------------------------------------------------------------------
 % tm_none None
@@ -796,7 +791,7 @@ WB.val    = {WB_no};
 design        = cfg_exbranch;
 design.tag    = 'design';
 design.name   = 'Data & Design';
-design.val    = {dir scans type subjects generic masking WB globalc globalm};
+design.val    = {dir scans type subjects generic generic2 masking WB globalc globalm};
 design.help   = {' '
                  'Module of the SwE toolbox allowing the specification of the data and design.'};
 design.prog   = @swe_run_design;
