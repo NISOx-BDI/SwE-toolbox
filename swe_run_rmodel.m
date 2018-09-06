@@ -5,9 +5,6 @@ function swe_run_rmodel(varargin)
 % -------------------------------------------------------------------------
 % Inputs:
 %  - job: harvested job data structure (see matlabbatch help)
-% -------------------------------------------------------------------------
-% Outputs:
-%  - out: filename of saved data structure.
 % =========================================================================
 % Written by Tom Maullin (05/09/2018)
 

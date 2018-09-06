@@ -1,4 +1,4 @@
-function design = swe_config_smodel
+function smodel = swe_config_smodel
 % This builds the SwE.mat data and design structure specifying the model.
 % =========================================================================
 % FORMAT design = swe_config_smodel
@@ -793,14 +793,14 @@ WB.val    = {WB_no};
 % ---------------------------------------------------------------------
 % data Data & Design
 % ---------------------------------------------------------------------
-design        = cfg_exbranch;
-design.tag    = 'smodel';
-design.name   = 'Specify Model';
-design.val    = {dir scans type subjects generic masking WB globalc globalm};
-design.help   = {' '
+smodel        = cfg_exbranch;
+smodel.tag    = 'smodel';
+smodel.name   = 'Specify Model';
+smodel.val    = {dir scans type subjects generic masking WB globalc globalm};
+smodel.help   = {' '
                  'Module of the SwE toolbox allowing the specification of the data and design.'};
-design.prog   = @swe_run_smodel;
-design.vout   = @vout_data;
+smodel.prog   = @swe_run_smodel;
+smodel.vout   = @vout_data;
 
 %------------------------------------------------------------------------
 % Output function

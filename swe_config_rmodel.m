@@ -1,4 +1,4 @@
-function design = swe_config_rmodel
+function rmodel = swe_config_rmodel
 % This takes in a SwE.mat file containing a design and runs the model.
 % =========================================================================
 % FORMAT design = swe_config_rmodel
@@ -32,10 +32,10 @@ des.num     = [1 1];
 % ---------------------------------------------------------------------
 % compute Design
 % ---------------------------------------------------------------------
-design        = cfg_exbranch;
-design.tag    = 'rmodel';
-design.name   = 'Run Model';
-design.val    = {dir des};
-design.help   = {' '
+rmodel        = cfg_exbranch;
+rmodel.tag    = 'rmodel';
+rmodel.name   = 'Run Model';
+rmodel.val    = {dir des};
+rmodel.help   = {' '
                  'Module of the SwE toolbox allowing the computing of a previously specified model.'};
-design.prog   = @swe_run_rmodel;
+rmodel.prog   = @swe_run_rmodel;
