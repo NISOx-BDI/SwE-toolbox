@@ -93,7 +93,7 @@ function generateData(porwb, torf, matorimg)
 
 	% Load the test design and run it.
 	load('design.mat');
-	swe_run_design(design);
+	swe_run_smodel(design);
 
 	if strcmp(porwb, 'wb')
 
