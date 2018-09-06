@@ -1,12 +1,12 @@
-function results = swe_leaf_results
+function results = swe_config_results
 % This displays the results from an SwE model.
 % =========================================================================
-% FORMAT disign = swe_cfg_results
+% FORMAT results = swe_config_results
 % =========================================================================
 % Written by Tom Maullin (05/09/2018)
 
 % -------------------------------------------------------------------------
-% display Directory
+% Results Directory
 % -------------------------------------------------------------------------
 dis         = cfg_files;
 dis.tag     = 'dis';
@@ -26,4 +26,4 @@ results.name   = 'Results Display';
 results.val    = {dis};
 results.help   = {' '
                  'Module of the SwE toolbox allowing the display of a previously computed model.'};
-results.prog   = @swe_run_results;%%%%%should be run results
+results.prog   = @swe_run_results;
