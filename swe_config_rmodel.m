@@ -8,18 +8,6 @@ function rmodel = swe_config_rmodel
 % -------------------------------------------------------------------------
 % dir Directory
 % -------------------------------------------------------------------------
-dir         = cfg_files;
-dir.tag     = 'dir';
-dir.name    = 'Directory';
-dir.help    = {' '
-    'Select a directory where the output images will be written.'};
-dir.filter = 'dir';
-dir.ufilter = '.*';
-dir.num     = [1 1];
-
-% -------------------------------------------------------------------------
-% dir Directory
-% -------------------------------------------------------------------------
 des         = cfg_files;
 des.tag     = 'des';
 des.name    = 'SwE File';
@@ -35,7 +23,7 @@ des.num     = [1 1];
 rmodel        = cfg_exbranch;
 rmodel.tag    = 'rmodel';
 rmodel.name   = 'Run Model';
-rmodel.val    = {dir des};
+rmodel.val    = {des};
 rmodel.help   = {' '
                  'Module of the SwE toolbox allowing the computing of a previously specified model.'};
 rmodel.prog   = @swe_run_rmodel;
