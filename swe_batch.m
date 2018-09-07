@@ -9,7 +9,7 @@ function swe_batch
 % Written by Bryan Guillaume
 
 	% Check if SwE config tree is there
-	if ~isstruct(cfg_util('tag2mod_cfg_id','swe.design'))
+	if isempty(cfg_util('tag2cfg_id', 'swe'))
 	    % SwE config tree
 	    swe_gui = swe_cfg_batch;
 	    % Adding SwE config tree to the SPM tools
