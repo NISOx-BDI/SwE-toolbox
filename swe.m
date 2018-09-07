@@ -1,8 +1,9 @@
 function varargout = swe(varargin)
 % This function initializes the SwE toolbox and checks the installation.
 % =========================================================================
-% FUNCTION swe, swe(), swe('startup') - starts the SwE toolbox.
-% FUNCTION swe('ASCIIwelcome') - display the startup message.
+% FORMAT swe, swe(), swe('startup') - starts the SwE toolbox.
+% FORMAT swe('ASCIIwelcome') - display the startup message.
+% FORMAT swe('Colour') - returns the interface colour.
 % -------------------------------------------------------------------------
 % Inputs:
 %  - str - 'ASCIIwelcome' for startup message or 'startup' for toolbox
@@ -39,6 +40,9 @@ switch lower(Action)
             addpath(fullfile(spm('Dir'),'compat'))
         end
         
+        % Add path to SwE toolbox.
+        addpath(fileparts(mfilename('fullpath')));
+        
         % launch the main GUI
         swe_ui_main;
         
@@ -52,9 +56,13 @@ switch lower(Action)
         disp( '   ___          ___           _      ___      ___        ');
         disp( '  / __) _    _ | __)   _  _  /_|    (__ \    | _ |       ');
         disp( '  \__ \ \\/\// | __)   \\//   || _  / __/ _  | _ |       ');
-        disp( '  (___/  \/\/  |___)    \/    |||_| \___)|_| |___|       ');
+        disp( '  (___/  \/\/  |___)    \/    |||_| \___)|_|   |_|       ');
         fprintf('\n  swe v%s \n', versionNo);
   
+    case 'colour'
+        
+        varargout = {[0.8 0.8 1.0], 'Diluted Blackcurrent Purple'};
+        
     case 'ver'
         
         varargout{1}=versionNo;

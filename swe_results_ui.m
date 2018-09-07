@@ -1,7 +1,7 @@
 function varargout = swe_results_ui(varargin)
 % User interface for SwE results: Display and analysis of regional effects
 % =========================================================================
-% FORMAT: [hReg,xSwE,SwE] = spm_SwE_results_uicB('Setup',[xSwE])
+% FORMAT: [hReg,xSwE,SwE] = spm_spm_results_uicB('Setup',[xSwE])
 % -------------------------------------------------------------------------
 % Inputs/Outputs:
 %  - hReg: handle of MIP XYZ registry object
