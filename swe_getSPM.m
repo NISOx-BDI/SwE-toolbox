@@ -1164,7 +1164,7 @@ if isfield(SwE, 'WB')
     % Uncorrected P values.
     Ps_vol = spm_vol(xSwE.VspmUncP);
     Ps = spm_read_vols(Ps_vol);
-    Ps = Ps(~isnan(Ps));
+    Ps = 10.^(-Ps(~isnan(Ps)));
     xSwE.Ps = Ps;
     
     % 95% percentiles

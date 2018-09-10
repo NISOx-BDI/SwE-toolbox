@@ -523,7 +523,7 @@ case 'table'                                                        %-Table
         %-Find largest remaining local maximum
         %------------------------------------------------------------------
         [U,i]  = max(Z);            %-largest maxima
-        j      = find(A == A(i));   %-maxima in cluster
+        mj     = find(A == A(i));   %-maxima in cluster
 
 
         %-Compute cluster {k} and peak-level {u} p values for this cluster
@@ -609,10 +609,10 @@ case 'table'                                                        %-Table
         
         %-Print Num secondary maxima (> Dis mm apart)
         %------------------------------------------------------------------
-        [l,q] = sort(-Z(j));                              % sort on Z value
+        [l,q] = sort(-Z(mj));                              % sort on Z value
         D     = i;
         for i = 1:length(q)
-            d = j(q(i));
+            d = mj(q(i));
             if min(sqrt(sum((XYZmm(:,D)-repmat(XYZmm(:,d),1,size(D,2))).^2)))>Dis
                 if length(D) < Num
                     % voxel-level p values {Z}
@@ -634,9 +634,10 @@ case 'table'                                                        %-Table
 %                         end
 %                     else
 
-                    % If we are not running a wild bootstrap we need to calculate
+                    % If we are not running a wild bootstrap or if we are  
+                    % doing a small volume correction we need to calculate
                     % the FDR P value and leave the other values blank.
-                    if ~xSwE.WB 
+                    if ~xSwE.WB || isfield(xSwE,'svc')
                         Pz     = spm_Ncdf(-Z(d));
                         Pu     = [];
                         Qu     = [];
@@ -652,8 +653,8 @@ case 'table'                                                        %-Table
                     else
                         
                         Pz      = spm_Ncdf(-Z(d));
-                        Pu      = 10.^-VspmFWEP(XYZ(1,q(i)),XYZ(2,q(i)),XYZ(3,q(i)));
-                        Qu      = 10.^-VspmFDRP(XYZ(1,q(i)),XYZ(2,q(i)),XYZ(3,q(i)));
+                        Pu      = 10.^-VspmFWEP(XYZ(1,d),XYZ(2,d),XYZ(3,d));
+                        Qu      = 10.^-VspmFDRP(XYZ(1,d),XYZ(2,d),XYZ(3,d));
                         ws     = warning('off','SPM:outOfRangeNormal');
                         Ze     = swe_invNcdf(Z(d));
                         warning(ws);
@@ -672,7 +673,7 @@ case 'table'                                                        %-Table
                 end
             end
         end
-        Z(j) = NaN;     % Set local maxima to NaN
+        Z(mj) = NaN;     % Set local maxima to NaN
     end
     
     varargout = {TabDat};
@@ -948,10 +949,10 @@ case 'table'                                                        %-Table
             %-Find selected cluster
             %--------------------------------------------------------------
             A          = spm_clusters(xSwE.XYZ);
-            j          = find(A == A(i));
-            xSwE.Z     = xSwE.Z(j);
-            xSwE.XYZ   = xSwE.XYZ(:,j);
-            xSwE.XYZmm = xSwE.XYZmm(:,j);
+            mj          = find(A == A(i));
+            xSwE.Z     = xSwE.Z(mj);
+            xSwE.XYZ   = xSwE.XYZ(:,mj);
+            xSwE.XYZmm = xSwE.XYZmm(:,mj);
         end
 
         %-Call 'list' functionality to produce table
@@ -982,8 +983,8 @@ case 'table'                                                        %-Table
         %-Table data
         %------------------------------------------------------------------
         for i = 1:size(TabDat.dat,1)
-            for j=c:size(TabDat.dat,2)
-                fprintf(TabDat.fmt{j},TabDat.dat{i,j});
+            for mj=c:size(TabDat.dat,2)
+                fprintf(TabDat.fmt{mj},TabDat.dat{i,mj});
                 fprintf('\t')
             end
             fprintf('\n')
