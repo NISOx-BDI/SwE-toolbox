@@ -289,10 +289,10 @@ case 'table'                                                        %-Table
     %----------------------------------------------------------------------
     if isempty(xSwE.XYZmm) % empty results
         xyzfmt = '%3.0f %3.0f %3.0f';
-        %voxfmt = repmat('%0.1f ',1,numel(FWmm));
+        voxfmt = '%1.1f %1.1f %1.1f';
     elseif ~any(strcmp(units{3},{'mm',''})) % 2D data
         xyzfmt = '%3.0f %3.0f %3.0f';
-        %voxfmt = repmat('%0.1f ',1,numel(FWmm));
+        voxfmt = '%1.1f %1.1f %1.1f';
     else % 3D data, work out best precision based on voxel sizes and FOV
         xyzsgn = min(xSwE.XYZmm(DIM,:),[],2) < 0;
         xyzexp = max(floor(log10(max(abs(xSwE.XYZmm(DIM,:)),[],2)))+(max(abs(xSwE.XYZmm(DIM,:)),[],2) >= 1),0);
