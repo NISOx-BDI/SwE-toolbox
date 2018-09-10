@@ -636,7 +636,7 @@ case 'table'                                                        %-Table
 
                     % If we are not running a wild bootstrap we need to calculate
                     % the FDR P value and leave the other values blank.
-                    if ~xSwE.WB
+                    if ~xSwE.WB 
                         Pz     = spm_Ncdf(-Z(d));
                         Pu     = [];
                         Qu     = [];
@@ -652,8 +652,8 @@ case 'table'                                                        %-Table
                     else
                         
                         Pz      = spm_Ncdf(-Z(d));
-                        Pu      = 10.^-VspmFWEP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                        Qu      = 10.^-VspmFDRP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                        Pu      = 10.^-VspmFWEP(XYZ(1,q(i)),XYZ(2,q(i)),XYZ(3,q(i)));
+                        Qu      = 10.^-VspmFDRP(XYZ(1,q(i)),XYZ(2,q(i)),XYZ(3,q(i)));
                         ws     = warning('off','SPM:outOfRangeNormal');
                         Ze     = swe_invNcdf(Z(d));
                         warning(ws);
