@@ -562,9 +562,10 @@ case 'table'                                                        %-Table
                   end
             end
             
-            % If we are not running a wild bootstrap we need to calculate
-            % the FDR P value and leave the other values blank.
-            if ~xSwE.WB
+            % If we are not running a wild bootstrap or we are doing a 
+            % small volume correction we need to calculate the FDR P value
+            % and leave the other values blank.
+            if ~xSwE.WB || isfield(xSwE,'svc')
                 Pu      = [];
                 Pk      = [];
                 Pn      = [];

@@ -1,15 +1,15 @@
-function [TabDat,xSVC] = swe_VOI(SPM,xSPM,hReg,xY)
+function [TabDat,xSVC] = swe_VOI(SwE,xSwE,hReg,xY)
 % List of local maxima and adjusted p-values for a small Volume of Interest
 % =========================================================================
-% FORMAT [TabDat,xSVC] = swe_VOI(SPM,xSPM,hReg,[xY])
+% FORMAT [TabDat,xSVC] = swe_VOI(SwE,xSwE,hReg,[xY])
 % -------------------------------------------------------------------------
 % Inputs:
 % 
-% SPM    - Structure containing analysis details (see spm_spm)
+% SwE    - Structure containing analysis details (see spm_spm)
 %
-% xSPM   - Structure containing SPM, distribution & filtering details
+% xSwE   - Structure containing SwE, distribution & filtering details
 %          Required fields are:
-% .swd     - SPM working directory - directory containing current SPM.mat
+% .swd     - SwE working directory - directory containing current SwE.mat
 % .Z       - minimum of n Statistics {filtered on u and k}
 % .n       - number of conjoint tests
 % .STAT    - distribution {Z, T, X or F}
@@ -34,20 +34,20 @@ function [TabDat,xSVC] = swe_VOI(SPM,xSPM,hReg,xY)
 % xY     - VOI structure
 %
 % TabDat - Structure containing table data (see spm_list.m)
-% xSVC   - Thresholded xSPM data (see spm_getSPM.m)
+% xSVC   - Thresholded xSwE data (see spm_getSwE.m)
 %__________________________________________________________________________
 %
-% spm_VOI is  called by the SPM results section and takes variables in
-% SPM to compute p-values corrected for a specified volume of interest.
+% spm_VOI is  called by the SwE results section and takes variables in
+% SwE to compute p-values corrected for a specified volume of interest.
 %
 % The volume of interest may be defined as a box or sphere centred on
 % the current voxel or by a mask image.
 %
 % If the VOI is defined by a mask this mask must have been defined
-% independently of the SPM (e.g. using a mask based on an orthogonal
+% independently of the SwE (e.g. using a mask based on an orthogonal
 % contrast).
 %
-% External mask images should be in the same orientation as the SPM
+% External mask images should be in the same orientation as the SwE
 % (i.e. as the input used in stats estimation). The VOI is defined by
 % voxels with values greater than 0.
 %
@@ -72,7 +72,7 @@ Dis = spm_get_defaults('stats.results.svc.distmin'); % distance among maxima {mm
 
 %-Title
 %--------------------------------------------------------------------------
-spm('FigName',['SPM{',xSPM.STAT,'}: Small Volume Correction']);
+spm('FigName',['SwE{',xSwE.STAT,'}: Small Volume Correction']);
 
 %-Get current location {mm}
 %--------------------------------------------------------------------------
@@ -103,8 +103,8 @@ end
 
 %-Voxels in entire search volume {mm}
 %--------------------------------------------------------------------------
-XYZmm      = SPM.xVol.M(1:3,:)*[SPM.xVol.XYZ; ones(1, SPM.xVol.S)];
-Q          = ones(1,size(xSPM.XYZmm,2));
+XYZmm      = SwE.xVol.M(1:3,:)*[SwE.xVol.XYZ; ones(1, SwE.xVol.S)];
+Q          = ones(1,size(xSwE.XYZmm,2));
 O          = ones(1,size(     XYZmm,2));
 
 
@@ -118,9 +118,9 @@ switch SPACE
         D  = xY.spec;
     end
     str    = sprintf('%0.1fmm sphere',D);
-    j      = find(sum((xSPM.XYZmm - xyzmm*Q).^2) <= D^2);
+    j      = find(sum((xSwE.XYZmm - xyzmm*Q).^2) <= D^2);
     k      = find(sum((     XYZmm - xyzmm*O).^2) <= D^2);
-    D      = D./xSPM.VOX;
+    D      = D./xSwE.VOX;
 
 
     case 'B' %-Box
@@ -132,9 +132,9 @@ switch SPACE
     end
     if length(D)~=3, D = ones(1,3)*D(1); end
     str    = sprintf('%0.1f x %0.1f x %0.1f mm box',D(1),D(2),D(3));
-    j      = find(all(abs(xSPM.XYZmm - xyzmm*Q) <= D(:)*Q/2));
+    j      = find(all(abs(xSwE.XYZmm - xyzmm*Q) <= D(:)*Q/2));
     k      = find(all(abs(     XYZmm - xyzmm*O) <= D(:)*O/2));
-    D      = D./xSPM.VOX;
+    D      = D./xSwE.VOX;
 
 
     case 'I' %-Mask Image
@@ -169,29 +169,30 @@ switch SPACE
         {'\\\\' '\\^' '\\_' '\\{' '\\}'}); % Escape TeX special characters
     str    = sprintf('image mask: %s',str); 
     VOX    = sqrt(sum(D.mat(1:3,1:3).^2));
-    XYZ    = D.mat \ [xSPM.XYZmm; ones(1, size(xSPM.XYZmm, 2))];
+    XYZ    = D.mat \ [xSwE.XYZmm; ones(1, size(xSwE.XYZmm, 2))];
     j      = find(spm_sample_vol(D, XYZ(1,:), XYZ(2,:), XYZ(3,:),0) > 0);
     XYZ    = D.mat \ [     XYZmm; ones(1, size(     XYZmm, 2))];
     k      = find(spm_sample_vol(D, XYZ(1,:), XYZ(2,:), XYZ(3,:),0) > 0);
 
 end
 
-xSPM.S     = length(k);
-xSPM.Z     = xSPM.Z(j);
-xSPM.XYZ   = xSPM.XYZ(:,j);
-xSPM.XYZmm = xSPM.XYZmm(:,j);
+xSwE.S     = length(k);
+xSwE.Z     = xSwE.Z(j);
+xSwE.XYZ   = xSwE.XYZ(:,j);
+xSwE.XYZmm = xSwE.XYZmm(:,j);
 
 %-Restrict FDR to the search volume
 %--------------------------------------------------------------------------
-STAT       = xSPM.STAT;
-DIM        = xSPM.DIM;
-n          = xSPM.n;
-Vspm       = xSPM.Vspm;
-u          = xSPM.u;
-S          = xSPM.S;
+STAT       = xSwE.STAT;
+DIM        = xSwE.DIM;
+n          = xSwE.n;
+Vspm       = xSwE.Vspm;
+u          = xSwE.u;
+S          = xSwE.S;
+xSwE.svc   = true;
 
-try, xSPM.Ps = xSPM.Ps(k); end
-try, xSPM.uc          = [uu up ue uc]; end
+try, xSwE.Ps = xSwE.Ps(k); end
+try, xSwE.uc          = [uu up ue uc]; end
 
 %-Tabulate p values
 %--------------------------------------------------------------------------
@@ -200,10 +201,10 @@ if any(strcmp(SPACE,{'S','B'}))
     str = sprintf('%s at [%.0f,%.0f,%.0f]',str,xyzmm(1),xyzmm(2),xyzmm(3));
 end
 
-TabDat     = swe_list('List',xSPM,hReg,Num,Dis,str);
+TabDat     = swe_list('List',xSwE,hReg,Num,Dis,str);
 
-if nargout > 1, xSVC = xSPM; end
+if nargout > 1, xSVC = xSwE; end
 
 %-Reset title
 %--------------------------------------------------------------------------
-spm('FigName',['SPM{',xSPM.STAT,'}: Results']);
+spm('FigName',['SwE{',xSwE.STAT,'}: Results']);
