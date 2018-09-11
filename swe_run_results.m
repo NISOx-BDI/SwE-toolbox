@@ -18,6 +18,6 @@ cd(fileparts(job.dis{1}));
 
 % Display results.
 % -------------------------------------------------------------------------
-swe_results_ui; %%ISSUE: DISPLAY OUTPUT NOT IN USER PREFERENCE FOLDER
+swe_results_ui; 
 
 end
