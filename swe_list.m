@@ -822,7 +822,7 @@ case 'table'                                                        %-Table
                     'ButtonDownFcn','get(gcbo,''UserData'')');
         hPage = [hPage, h];
     else
-        set(Hc,'Visible','off');
+        set(Hs,'Visible','off');
     end
     
     %-Cluster and local maxima p-values & statistics
