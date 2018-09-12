@@ -704,6 +704,7 @@ case 'table'                                                        %-Table
         ht = 0.4; bot = 0.1;
     end
     swe_results_ui('Clear',Fgraph)
+    
     FS     = spm('FontSizes');           %-Scaled font sizes
     PF     = spm_platform('fonts');      %-Font names (for this platform)
     

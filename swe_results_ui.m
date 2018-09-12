@@ -511,7 +511,11 @@ switch lower(Action), case 'setup'                         %-Set up results
     H  = findobj(H);
     Hv = get(H,'Visible');
     set(hResAx,'Tag','PermRes','UserData',struct('H',H,'Hv',{Hv}))
- 
+    
+    %-Load whole brain table.
+    %------------------------------------------------------------------
+    swe_list('List',xSwE,hReg);
+    
     %-Finished results setup
     %----------------------------------------------------------------------
     varargout = {hReg,xSwE,SwE};
@@ -555,10 +559,6 @@ switch lower(Action), case 'setup'                         %-Set up results
         %-Set up buttons for results functions
         %------------------------------------------------------------------
         swe_results_ui('DrawButts',hReg,DIM,Finter,WS,FS);
-        
-        %-Load whole brain table.
-        %------------------------------------------------------------------
-        swe_list('List',xSwE,hReg);
  
         varargout  = {hReg};
  
