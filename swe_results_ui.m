@@ -511,7 +511,11 @@ switch lower(Action), case 'setup'                         %-Set up results
     H  = findobj(H);
     Hv = get(H,'Visible');
     set(hResAx,'Tag','PermRes','UserData',struct('H',H,'Hv',{Hv}))
- 
+    
+    %-Load whole brain table.
+    %------------------------------------------------------------------
+    swe_list('List',xSwE,hReg);
+    
     %-Finished results setup
     %----------------------------------------------------------------------
     varargout = {hReg,xSwE,SwE};
@@ -555,10 +559,6 @@ switch lower(Action), case 'setup'                         %-Set up results
         %-Set up buttons for results functions
         %------------------------------------------------------------------
         swe_results_ui('DrawButts',hReg,DIM,Finter,WS,FS);
-        
-        %-Load whole brain table.
-        %------------------------------------------------------------------
-        swe_list('List',xSwE,hReg);
  
         varargout  = {hReg};
  
@@ -600,10 +600,9 @@ switch lower(Action), case 'setup'                         %-Set up results
         uicontrol(Finter,'Style','PushButton','String','small volume','FontSize',FS(10),...
             'ToolTipString',['Small Volume Correction - corrected p-values ',...
             'for a small search region'],...
-            'Callback','spm_VOI(SwE,xSwE,hReg);',...
+            'Callback','swe_VOI(SwE,xSwE,hReg);',...
             'Interruptible','on','Enable','on',...
-            'Position',[015 095 100 020].*WS,...
-            'Enable','off')
+            'Position',[015 095 100 020].*WS)
  
  
         %-SwE area - used for Volume of Interest analyses
