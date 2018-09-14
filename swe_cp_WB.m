@@ -46,6 +46,11 @@ function swe_cp_WB(SwE)
 
 %%%%%%%%%%%%%TEMPTEMPTEMP%%%%%%%%%%%%%%%
 TFCE = true;
+H = 2;
+E = 0.5;
+dh = 0.1;
+C = 18;
+
 
 %-Say hello
 %--------------------------------------------------------------------------
@@ -558,10 +563,10 @@ if ~isMat
   %-Initialise parametric TFCE score image, if TFCE has been selected.
   %---------------------------------------------------------------------- 
   if TFCE
-      Vtfcescore = swe_create_vol(sprintf('swe_tfce_%02d%s', 1, file_ext), DIM, M,...
+      Vscore_tfce = swe_create_vol(sprintf('swe_tfce_c%02d%s', 1, file_ext), DIM, M,...
                   'Original parametric TFCE statistic data.'); 
       if WB.stat=='T'
-          Vtfcescore_neg = swe_create_vol(sprintf('swe_tfce_c%02d%s', 2, file_ext), DIM, M,...
+          Vscore_tfce_neg = swe_create_vol(sprintf('swe_tfce_c%02d%s', 2, file_ext), DIM, M,...
                   'Original parametric TFCE statistic data for a negative contrast.'); 
       end
   end
@@ -632,11 +637,15 @@ if ~isMat
   %-Initialise parametric TFCE results images, if TFCE has been selected.
   %---------------------------------------------------------------------- 
   if TFCE
-      Vlp_tfce_pos = swe_create_vol(sprintf('swe_tfce_lp-WB_%02d%s', 1, file_ext), DIM, M,...
+      VlP_tfce_pos = swe_create_vol(sprintf('swe_tfce_lp-WB_c%02d%s', 1, file_ext), DIM, M,...
+                  'Original parametric TFCE statistic data.'); 
+      VlP_tfce_FWE_pos = swe_create_vol(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 1, file_ext), DIM, M,...
                   'Original parametric TFCE statistic data.'); 
       if WB.stat=='T'
-          Vlp_tfce_neg = swe_create_vol(sprintf('swe_tfce_lp-WB_%02d%s', 2, file_ext), DIM, M,...
+          VlP_tfce_neg = swe_create_vol(sprintf('swe_tfce_lp-WB_c%02d%s', 2, file_ext), DIM, M,...
                   'Original parametric TFCE statistic data for a negative contrast.'); 
+          VlP_tfce_FWE_neg = swe_create_vol(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 2, file_ext), DIM, M,...
+                  'Original parametric TFCE statistic data for a negative contrast.')
       end
   end
   
@@ -880,6 +889,7 @@ if ~isMat
           end
           
           minScore(1) = min(minScore(1), min(score));
+          
         else
           % need to loop at every voxel
           cBeta = conWB * beta;
@@ -987,6 +997,22 @@ if ~isMat
     
   end % (for z = 1:zdim)
   
+  if TFCE
+      % Create parametric TFCE statistic images.
+      if strcmp(WB.stat, 'T')
+        ptfce = swe_tfce_transform(spm_read_vols(Vscore), H, E, C, dh);
+        ptfce_neg = swe_tfce_transform(-spm_read_vols(Vscore), H, E, C, dh);
+      else
+          %%%%% TODO: F 
+      end
+      
+      % Save TFCE statistic images.
+      spm_write_vol(Vscore_tfce, ptfce);
+      if strcmp(WB.stat, 'T')
+          spm_write_vol(Vscore_tfce_neg, ptfce_neg);
+      end
+  end
+  
   
   fprintf('\n');                                                          %-#
   swe_progress_bar('Clear')
@@ -1052,6 +1078,14 @@ else % ".mat" format
   maxScore = nan(1, WB.nB + 1);
   if (WB.stat == 'T')
     minScore = nan(1, WB.nB + 1);
+  end
+  
+  % Record the TFCE maximas for TFCE FWE
+  if TFCE
+    maxTFCEScore = nan(1, WB.nB + 1);
+    if (WB.stat == 'T')
+        maxTFCEScore_neg = nan(1, WB.nB + 1);
+    end
   end
   
   %-Get data & construct analysis mask
@@ -1181,6 +1215,11 @@ else % ".mat" format
       end
       
       minScore(1) = min(score);
+      
+      if TFCE
+              %%%% TODO: T (MAKE SCORE)
+      end
+      
     else
       % need to loop at every voxel
       cBeta = conWB * beta;
@@ -1196,6 +1235,11 @@ else % ".mat" format
       if (SwE.WB.clusterWise == 1)
         [p, edf, activatedVoxels] = swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
       end
+      
+      if TFCE
+              %%%% TODO: F (MAKE SCORE)
+      end
+      
     end
     maxScore(1) = max(score);
     
