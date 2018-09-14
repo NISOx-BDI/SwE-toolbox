@@ -645,7 +645,7 @@ if ~isMat
           VlP_tfce_neg = swe_create_vol(sprintf('swe_tfce_lp-WB_c%02d%s', 2, file_ext), DIM, M,...
                   'Original parametric TFCE statistic data for a negative contrast.'); 
           VlP_tfce_FWE_neg = swe_create_vol(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 2, file_ext), DIM, M,...
-                  'Original parametric TFCE statistic data for a negative contrast.')
+                  'Original parametric TFCE statistic data for a negative contrast.');
       end
   end
   
@@ -1000,16 +1000,16 @@ if ~isMat
   if TFCE
       % Create parametric TFCE statistic images.
       if strcmp(WB.stat, 'T')
-        ptfce = swe_tfce_transform(spm_read_vols(Vscore), H, E, C, dh);
-        ptfce_neg = swe_tfce_transform(-spm_read_vols(Vscore), H, E, C, dh);
+        par_tfce = swe_tfce_transform(spm_read_vols(Vscore), H, E, C, dh);
+        par_tfce_neg = swe_tfce_transform(-spm_read_vols(Vscore), H, E, C, dh);
       else
           %%%%% TODO: F 
       end
       
       % Save TFCE statistic images.
-      spm_write_vol(Vscore_tfce, ptfce);
+      spm_write_vol(Vscore_tfce, par_tfce);
       if strcmp(WB.stat, 'T')
-          spm_write_vol(Vscore_tfce_neg, ptfce_neg);
+          spm_write_vol(Vscore_tfce_neg, par_tfce_neg);
       end
   end
   
@@ -1467,6 +1467,16 @@ str   = sprintf('Parameter estimation\nBootstraping');
 swe_progress_bar('Init',100,str,'');
 
 fprintf('\n')
+
+% If we are doing a TFCE analysis we need to record uncorrected P-values
+% for TFCE.
+if TFCE
+    tfce_uncP = zeros(DIM(1), DIM(2), DIM(3));
+    if SwE.WB.stat == 'T'
+        tfce_uncP_neg = zeros(DIM(1), DIM(2), DIM(3));
+    end
+end
+
 for b = 1:WB.nB
   tic
   str   = sprintf('Parameter estimation\nBootstrap # %i', b);
@@ -1590,6 +1600,26 @@ for b = 1:WB.nB
       end
       
     end % (bch)
+    
+    % Calculate TFCE uncorrected p image.
+    if TFCE
+        scorevol = zeros(DIM(1), DIM(2), DIM(3));
+        scorevol(sub2ind(DIM,XYZ(1,:),XYZ(2,:),XYZ(3,:))) = score;
+        
+        % Bootstrapped tmp vol.
+        tfce = swe_tfce_transform(scorevol,H,E,C,dh);
+        if SwE.WB.stat == 'T'
+            tfce_neg = swe_tfce_transform(-scorevol,H,E,C,dh);
+        end
+        
+        % Sum how many voxels are lower than the original parametric tmp.
+        tfce_uncP = tfce_uncP + (par_tfce<=tfce);
+        if SwE.WB.stat == 'T'
+            tfce_uncP_neg = tfce_uncP_neg + (par_tfce_neg<=tfce_neg);
+        end
+        
+        clear tfce tfce_neg
+    end
   else
     
     %-Print progress information in command window
@@ -2032,6 +2062,16 @@ else
       spm_write_vol(VlP_wb_clusterFWE_neg, tmp);
     end
   end
+  
+  if TFCE
+      tfce_luncP = -log10((tfce_uncP+1)./(WB.nB+1));
+      spm_write_vol(VlP_tfce_pos, tfce_luncP);
+      if WB.stat == 'T'
+          tfce_luncP_neg = -log10((tfce_uncP_neg+1)./(WB.nB+1));
+          spm_write_vol(VlP_tfce_neg, tfce_luncP_neg);
+      end
+  end
+  
 end
       
 %==========================================================================
