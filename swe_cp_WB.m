@@ -44,6 +44,9 @@ function swe_cp_WB(SwE)
 %   - SwE: SwE data structure
 % =========================================================================
 
+%%%%%%%%%%%%%TEMPTEMPTEMP%%%%%%%%%%%%%%%
+TFCE = true;
+
 %-Say hello
 %--------------------------------------------------------------------------
 Finter = spm('CreateIntWin','off');
@@ -552,6 +555,17 @@ if ~isMat
   Vscore = swe_create_vol(sprintf('swe_vox_%cstat_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
 			  sprintf('Original parametric %c statistic data.', WB.stat));
   
+  %-Initialise parametric TFCE score image, if TFCE has been selected.
+  %---------------------------------------------------------------------- 
+  if TFCE
+      Vtfcescore = swe_create_vol(sprintf('swe_tfce_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+                  'Original parametric TFCE statistic data.'); 
+      if WB.stat=='T'
+          Vtfcescore_neg = swe_create_vol(sprintf('swe_tfce_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+                  'Original parametric TFCE statistic data for a negative contrast.'); 
+      end
+  end
+  
   %-Initialise original parametric edf image
   %----------------------------------------------------------------------
   
@@ -613,6 +627,17 @@ if ~isMat
     VlP_wb_FDR_neg = swe_create_vol(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
                                      '-log10(FDR-corr. P, -ve)');
 
+  end
+  
+  %-Initialise parametric TFCE results images, if TFCE has been selected.
+  %---------------------------------------------------------------------- 
+  if TFCE
+      Vlp_tfce_pos = swe_create_vol(sprintf('swe_tfce_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+                  'Original parametric TFCE statistic data.'); 
+      if WB.stat=='T'
+          Vlp_tfce__neg = swe_create_vol(sprintf('swe_tfce_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+                  'Original parametric TFCE statistic data for a negative contrast.'); 
+      end
   end
   
   % Converted score for WB.
