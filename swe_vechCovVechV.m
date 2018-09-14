@@ -1,22 +1,36 @@
 function vechCovVechV = swe_vechCovVechV(covVis,dofMat,type)
-% Compute vech(Cov(vech(\hat V))) following one of the 3 following
-% methodologies:
-% type = 1: based on the estimate "II" proposed in Guillaume (2015).
+% Compute vech(Cov(vech(\hat V))) following one of 3 input types.
+% =========================================================================
+% FORMAT: swe_vechCovVechV(covVis,dofMat,type)
+% -------------------------------------------------------------------------
+% Inputs:
+%
+%  - type:
+%        1: based on the estimate "II" proposed in Guillaume (2015).
 %           It accounts partially for missing data (not for a missing data 
 %           bias) and for a small sample bias
-% type = 2: based on the estimate "III" proposed in Guillaume (2015).
+%        2: based on the estimate "III" proposed in Guillaume (2015).
 %           It accounts for missing data (included the missing data bias), 
 %           but not for the small sample bias.
-% type = 3: based on the estimate "II" proposed in Guillaume (2015), but
-%           requires no missing data (so accounts for the small sample bias).
-% covVis: matrix (nCovVis X nVox)  containing vech(\hat V) for several voxels 
-% dofMat: for type 1 and 2, matrix (nCovVis X nCovVis) containing degrees of freedom 
-%         information (precalculated in swe_cp.m). 
-%         for type 3, scalar.
-%         See Guillaume (2015)for more information.
-% Note: there are probably ways to compute this quicker, but this will do for
-% now.
+%        3: based on the estimate "II" proposed in Guillaume (2015), but
+%           requires no missing data (so accounts for the small sample 
+%           bias).
+%  - covVis: matrix (nCovVis X nVox)  containing vech(\hat V) for several 
+%            voxels 
+%  - dofMat: for type 1 and 2, matrix (nCovVis X nCovVis) containing 
+%            degrees of freedom information (precalculated in swe_cp.m). 
+%            for type 3, scalar.
+%            See Guillaume (2015)for more information.
+% -------------------------------------------------------------------------
+% Outputs:
+%
+%  - vechCovVechV: vech(Cov(vech(\hat V))) as given in Guillaume (2015).
+% =========================================================================
+%
+% Note: there are probably ways to compute this quicker, but this will do 
+% for now.
 % By Bryan Guillaume
+
 [nCovVis, nVox] = size(covVis);
 nVis = -0.5 + sqrt(0.25 + 2 * nCovVis);
 nVechCovVechV      = nCovVis * (nCovVis + 1) / 2;

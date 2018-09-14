@@ -1,162 +1,104 @@
-function varargout = swe_ui_main(varargin)
-% SWE_UI_MAIN MATLAB code for SWE_UI_MAIN.fig
-%      SWE_UI_MAIN, by itself, creates a new SWE_UI_MAIN or raises the existing
-%      singleton*.
-%
-%      H = SWE_UI_MAIN returns the handle to a new SWE_UI_MAIN or the handle to
-%      the existing singleton*.
-%
-%      SWE_UI_MAIN('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in SWE_UI_MAIN.M with the given input arguments.
-%
-%      SWE_UI_MAIN('Property','Value',...) creates a new SWE_UI_MAIN or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before SWE_UI_MAIN_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to SWE_UI_MAIN_OpeningFcn via varargin.
-%
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-%      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
-
-% Written by Bryan Guillaume
-
-% Last Modified by GUIDE v2.5 24-Apr-2013 18:41:03
-
-% Begin initialization code - DO NOT EDIT
-gui_Singleton = 1;
-gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @swe_ui_main_OpeningFcn, ...
-                   'gui_OutputFcn',  @swe_ui_main_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
-if nargin && ischar(varargin{1})
-    gui_State.gui_Callback = str2func(varargin{1});
-end
-
-if nargout
-    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
-else
-    gui_mainfcn(gui_State, varargin{:});
-end
-% End initialization code - DO NOT EDIT
-
-
-% --- Executes just before swe_ui_main is made visible.
-function swe_ui_main_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to swe_ui_main (see VARARGIN)
-
-Tag='swemain';
-F = findall(allchild(0),'Flat','Tag',Tag);
-if length(F) > 1
-    % Multiple Graphics windows - close all but most recent
-    close(F(2:end))
-    F = F(1);
-    uistack(F,'top')
-elseif length(F)==1
-    uistack(F,'top')
-else
+function swe_ui_main
+% Creates a new SWE_UI_MAIN menu.
+% =========================================================================
+% FORMAT: swe_ui_main
+% =========================================================================
+% The SwE GUI displays 4 buttons:
+%   - Specify model:
+%       This option opens the batch window and allows the user to specify a
+%       new 'SwE' matlabbatch.
+%   - Run model:
+%       This option allows the user to run a design specified during the
+%       specify model stage.
+%   - Results:
+%       This option allows the user to view and query thresholded results.
+%   - Documentation:
+%       This option opens the documentation available on the NISOx website
+%       via the Matlab internet browser.
+% =========================================================================
+% Author: Tom Maullin (05/09/2018)
     
-    %set size of the window, taking screen resolution and platform into account
-    S0= spm('WinSize','0',1);   %-Screen size (of the current monitor)
-    if ispc
-        PF='MS Sans Serif';
-    else
-        PF= spm_platform('fonts');     %-Font names (for this platform)
-        PF=PF.helvetica;
-    end
-    tmp  = [S0(3)/1280 (S0(4))/800];
-    ratio=min(tmp)*[1 1 1 1];
-    FS = 1 + 0.85*(min(ratio)-1);  %factor to scale the fonts
-    x=get(handles.swemain,'Position');
-    set(handles.swemain,'DefaultTextFontSize',FS*8,...
-        'DefaultUicontrolFontSize',FS*8,...
-        'DefaultTextFontName',PF,...
-        'DefaultAxesFontName',PF,...
-        'DefaultUicontrolFontName',PF)
-    set(handles.swemain,'Position',ratio.*x)
+    %=======================================================================
+    close(findobj(get(0,'Children'),'Tag','SwE Menu'))
+
+    %-Open SwE menu window
+    %----------------------------------------------------------------------
+    S = get(0,'ScreenSize');
+    F = figure('Color',[1 1 1]*.8,...
+        'Name','SwE Toolbox',...
+        'NumberTitle','off',...
+        'Position',[S(3)/2-200,S(4)/2-140,300,290],...
+        'Resize','off',...
+        'Tag','SwE Menu',...
+        'Pointer','Watch',...
+        'MenuBar','none',...
+        'Visible','off');
+
+    %-Outer Frames and text
+    %----------------------------------------------------------------------
+    axes('Position',[0 0 80/300 300/300],'Visible','Off')
+    text(0.5,0.455,'SwE',...
+        'FontName','Times','FontSize',72,...
+        'Rotation',90,...
+        'VerticalAlignment','middle','HorizontalAlignment','center',...
+        'Color',[1 1 1]*.6);
     
-    % Choose some figure parameters
-    aa=get(handles.swemain,'children');
-    for i=1:length(aa)
-        if strcmpi(get(aa(i),'type'),'uipanel')
-            bb=get(aa(i),'children');
-            if ~isempty(bb)
-                for j=1:length(bb)
-                    set(bb(j),'FontUnits','pixel')
-                    xf=get(bb(j),'FontSize');
-                    set(bb(j),'FontSize',ceil(FS*xf),'FontName',PF,...
-                        'FontUnits','normalized','Units','normalized')
-                end
-            end
-        end
-        xf=get(aa(i),'FontSize');
-        if ispc
-            set(aa(i),'FontSize',FS*xf,'FontName',PF,...
-                'FontUnits','normalized','Units','normalized')
-        else
-            set(aa(i),'FontSize',FS*xf,'FontName',PF,...
-                'Units','normalized')
-        end
-    end    
+    text(0.4,0.96,'Sandwich Estimator Toolbox',...
+        'FontName','Times','FontSize',16,'FontAngle','Italic',...
+        'FontWeight','Bold',...
+        'Color',[1 1 1]*.6);
+    
+    text(2.5,0.9,['Version ' swe('ver')],...
+        'FontName','Times','FontSize',12,'FontAngle','Italic',...
+        'FontWeight','Bold',...
+        'Color',[1 1 1]*.6);
+    
+    %-Inner Frames
+    %----------------------------------------------------------------------
+    uicontrol(F,'Style','Frame','Position',[095 005 200 240],...
+              'BackgroundColor',swe('Colour'));
+    uicontrol(F,'Style','Frame','Position',[105 015 180 220]);
+    
+    %-Buttons to launch SwE functions
+    %----------------------------------------------------------------------
+    uicontrol(F,'String','Specify Model',...
+        'Position',[115 190-(1-1)*55 130 035],...
+        'CallBack','swe_smodel',...
+        'Interruptible','on',...
+        'ForegroundColor','k');
+    
+    uicontrol(F,'String','Run Model',...
+        'Position',[115 190-(2-1)*55 130 035],...
+        'CallBack','swe_rmodel',...
+        'Interruptible','on',...
+        'ForegroundColor','k');
+    uicontrol(F,'String','?',...
+        'Position',[250 190-(2-1)*55 025 035],...
+        'CallBack','spm_help(''swe_cp.m'')',...
+        'Interruptible','on',...
+        'ForegroundColor','b');
+    
+    uicontrol(F,'String','Results',...
+        'Position',[115 190-(3-1)*55 130 035],...
+        'CallBack','swe_results',...
+        'Interruptible','on',...
+        'ForegroundColor','k');
+    uicontrol(F,'String','?',...
+        'Position',[250 190-(3-1)*55 025 035],...
+        'CallBack','spm_help(''swe_results_ui.m'')',...
+        'Interruptible','on',...
+        'ForegroundColor','b');
+    
+    uicontrol(F,'String','<html>Documentation<br>&emsp;&ensp;(Online)',...
+        'Position',[115 190-(4-1)*55 130 035],...
+        'CallBack','web(''http://www.nisox.org/Software/SwE'')',...
+        'Interruptible','on',...
+        'ForegroundColor','k');
+    
+    %-Make visible
+    %----------------------------------------------------------------------
+    set(F,'Pointer','Arrow','Visible','on');
+
+    
+    
 end
-
-
-% Choose default command line output for swe_ui_main
-handles.output = hObject;
-
-% Update handles structure
-guidata(hObject, handles);
-
-% UIWAIT makes swe_ui_main wait for user response (see UIRESUME)
-% uiwait(handles.swemain);
-
-
-% --- Outputs from this function are returned to the command line.
-function varargout = swe_ui_main_OutputFcn(hObject, eventdata, handles) 
-% varargout  cell array for returning output args (see VARARGOUT);
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Get default command line output from handles structure
-varargout{1} = handles.output;
-
-
-% --- Executes on button press in specify.
-function specify_Callback(hObject, eventdata, handles)
-% hObject    handle to specify (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-swe_design
-
-
-
-% --- Executes on button press in run.
-function run_Callback(hObject, eventdata, handles)
-% hObject    handle to run (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-swe_cp
-
-
-% --- Executes on button press in results.
-function results_Callback(hObject, eventdata, handles)
-% hObject    handle to results (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-swe_results_ui;
-
-
-% --- Executes on button press in batch.
-function batch_Callback(hObject, eventdata, handles)
-% hObject    handle to batch (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-swe_batch

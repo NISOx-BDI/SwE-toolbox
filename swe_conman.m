@@ -1,19 +1,21 @@
 function varargout=swe_conman(varargin)
 % Contrast manager: GUI for defining valid contrasts
+%==========================================================================
 % FORMAT varargout=swe_conman(varargin)
 %       - An embedded callback, multi-function function
 %       - For detailed programmers comments,
-%         see format specifications in main body of program (below user help)
+%         see format specifications in main body of program (below user
+%		  help)
 %__________________________________________________________________________
 %
 % The contrast manager is a user interface for the selection and definition
 % of contrasts for a given SwE design. At present, the contrast manager
 % provides only interactive GUI facilities.
 %
-% See also: spm_getSPM.m, spm_contrasts.m
+% See also: swe_getSPM.m, swe_contrasts.m, swe_contrasts_WB.m
 %
 %==========================================================================
-% U s i n g   t h e   S P M   C o n t r a s t   M a n a g e r   G U I
+% U s i n g   t h e   S W E   C o n t r a s t   M a n a g e r   G U I
 %==========================================================================
 %
 % The contrast manager graphicsl user interface (GUI) is a dialog box for
@@ -26,7 +28,8 @@ function varargout=swe_conman(varargin)
 %
 % The contrast selection interface consists of:
 %
-% * "Show" statistic type radio-buttons: "t-contrasts", "F-contrasts", "All":
+% * "Show" statistic type radio-buttons: "t-contrasts", "F-contrasts", 
+%   "All":
 %   Selects the types of contrast that are presented for selection in the
 %   contrast selection list box. Depending on the use of the contrast
 %   manager, some options may be unavailable.
@@ -43,8 +46,8 @@ function varargout=swe_conman(varargin)
 %   Selected contrasts are highlit in black.
 %
 % * Image of the design matrix:
-%   A grey-scale representation of the design matrix, to aid interpretation
-%   of the contrasts.
+%   A grey-scale representation of the design matrix, to aid 
+%   interpretation of the contrasts.
 %
 %   The design matrix is "surfable": Clicking (and holding or dragging)
 %   around the design matrix image reports the corresponding value of the
@@ -52,7 +55,7 @@ function varargout=swe_conman(varargin)
 %   image filename ('extend' mouse click - "middle" mouse), or parameter
 %   name ('alt' click - "right" mouse). Double clicking the design matrix
 %   image extracts the design matrix into the base MATLAB workspace.
-%   (Surfing is handled by spm_DesRep.m)
+%   (Surfing is handled by swe_DesRep.m)
 %
 % * Parameter estimability bar
 %   Under the design matrix the parameter estimability is displayed as
@@ -91,8 +94,8 @@ function varargout=swe_conman(varargin)
 %   "Done" yet!
 %
 % * A "?" help button (at the right hand end of the status line):
-%   This brings up this help text (the help text for swe_conman.m) in the
-%   spm help viewer.
+%   This brings up this help text (the help text for swe_conman.m) in
+%   the spm help viewer.
 %
 % In addition, the dialog has a figure ContextMenu, accessed by
 % right-clicking in the figure background: In addition to providing
@@ -132,7 +135,7 @@ function varargout=swe_conman(varargin)
 %     (design matrix with 4 columns), you need only enter "+1 -1". The
 %     contrast manager will parse this to [+1 -1 0 0].
 %   - For t-contrasts, this will only accept a single line of input,
-%     since contrast weights c' for an SwE{T} must be a row-vector.
+%     since contrast weights c' for an SwE{T} map must be a row-vector.
 %     Pressing <return> or moving the focus (by clicking on another GUI
 %     element, such as the "Submit" button) will enter the contrast
 %     weights for parsing.
@@ -146,8 +149,8 @@ function varargout=swe_conman(varargin)
 %     spm_input.m for more tips on using evaluated input widgets.)
 %
 % * For F-contrasts, a "columns for reduced design" edit widget appears:
-%   - Here you can specify SwE{F}s by specifying the reduced design as
-%     a sub-partition of the current design matrix.
+%   - Here you can specify SwE{F} maps by specifying the reduced design 
+%     as a sub-partition of the current design matrix.
 %   - Enter the indicies of the design matrix columns you wish to retain
 %     in the reduced design.
 %   - Pressing <return> or moving the focus (by clicking on another GUI
@@ -221,7 +224,7 @@ function varargout=swe_conman(varargin)
 %
 %
 %==========================================================================
-% S P M   C o n t r a s t   m a n a g e m e n t
+% S W E   C o n t r a s t   m a n a g e m e n t
 %==========================================================================
 %
 % Contrasts are stored by SwE in a single structure (See spm_FcUtil.m
@@ -234,7 +237,7 @@ function varargout=swe_conman(varargin)
 %
 % Although the contrasts are named by the user, they are referred to
 % internally and on the corresponding contrast, ESS and SwE images (see
-% spm_getSPM.m) by their contrast number, which indexes them in the
+% swe_getSPM.m) by their contrast number, which indexes them in the
 % order in which they were created. Because of this, it can be rather
 % involved to delete any but the most recently defined contrast: All
 % file references and indices would have to be canonicalised! Thus, no
