@@ -74,6 +74,14 @@ Dis = spm_get_defaults('stats.results.svc.distmin'); % distance among maxima {mm
 %--------------------------------------------------------------------------
 spm('FigName',['SwE{',xSwE.STAT,'}: Small Volume Correction']);
 
+%-Warning, if this is a WB analysis.
+%--------------------------------------------------------------------------
+if xSwE.WB
+    warning(['No FWE (voxel or cluster) results available for small',...
+             'volumes. Create a new WB analysis with a restricted',...
+             'analysis mask to obtain FWE results on a small volume.'])
+end
+
 %-Get current location {mm}
 %--------------------------------------------------------------------------
 try
