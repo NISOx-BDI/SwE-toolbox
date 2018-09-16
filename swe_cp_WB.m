@@ -1000,10 +1000,16 @@ if ~isMat
   if TFCE
       % Create parametric TFCE statistic images.
       if strcmp(WB.stat, 'T')
-        par_tfce = swe_tfce_transform(spm_read_vols(Vscore), H, E, C, dh);
-        par_tfce_neg = swe_tfce_transform(-spm_read_vols(Vscore), H, E, C, dh);
+          
+          % Read in T statistics to get negative and positive TFCE scores.
+          par_tfce = swe_tfce_transform(spm_read_vols(Vscore), H, E, C, dh);% Or is it VcScore
+          par_tfce_neg = swe_tfce_transform(-spm_read_vols(Vscore), H, E, C, dh);
       else
-          %%%%% TODO: F 
+          % Read in F statistics.
+          fvol=spm_read_vols(Vscore);
+          
+          % Convert F statistics to Z scores.
+          par_tfce=-norminv(fcdf(fvol,1,1,'upper'));
       end
       
       % Save TFCE statistic images.
@@ -1078,14 +1084,6 @@ else % ".mat" format
   maxScore = nan(1, WB.nB + 1);
   if (WB.stat == 'T')
     minScore = nan(1, WB.nB + 1);
-  end
-  
-  % Record the TFCE maximas for TFCE FWE
-  if TFCE
-    maxTFCEScore = nan(1, WB.nB + 1);
-    if (WB.stat == 'T')
-        maxTFCEScore_neg = nan(1, WB.nB + 1);
-    end
   end
   
   %-Get data & construct analysis mask
@@ -1469,12 +1467,24 @@ swe_progress_bar('Init',100,str,'');
 fprintf('\n')
 
 % If we are doing a TFCE analysis we need to record uncorrected P-values
-% for TFCE.
+% for TFCE and maxima for FWE.
 if TFCE
     tfce_uncP = zeros(DIM(1), DIM(2), DIM(3));
     if SwE.WB.stat == 'T'
         tfce_uncP_neg = zeros(DIM(1), DIM(2), DIM(3));
     end
+    
+    % We also need to record the TFCE maximas for TFCE FWE (including the
+    % original parametric max).
+    if TFCE
+       maxTFCEScore = nan(1, WB.nB + 1);
+       maxTFCEScore(1) = max(par_tfce(:));
+       if (WB.stat == 'T')
+          maxTFCEScore_neg = nan(1, WB.nB + 1);
+          maxTFCEScore_neg(1) = max(par_tfce_neg(:));
+       end
+    end
+    
 end
 
 for b = 1:WB.nB
@@ -1602,23 +1612,43 @@ for b = 1:WB.nB
     end % (bch)
     
     % Calculate TFCE uncorrected p image.
-    if TFCE
-        scorevol = zeros(DIM(1), DIM(2), DIM(3));
-        scorevol(sub2ind(DIM,XYZ(1,:),XYZ(2,:),XYZ(3,:))) = score;
+    if TFCE    
         
-        % Bootstrapped tmp vol.
-        tfce = swe_tfce_transform(scorevol,H,E,C,dh);
+        % Instantiate volume for TFCE conversion.
+        scorevol = zeros(DIM(1), DIM(2), DIM(3));
+        
         if SwE.WB.stat == 'T'
+            
+            % T stat from this boostrap
+            scorevol(sub2ind(DIM,XYZ(1,:),XYZ(2,:),XYZ(3,:))) = score;
+            
+            % Bootstrapped tfce vol.
+            tfce = swe_tfce_transform(scorevol,H,E,C,dh);
             tfce_neg = swe_tfce_transform(-scorevol,H,E,C,dh);
+            
+        else
+            
+            % F stat from this boostrap (converted to Z).
+            scorevol(sub2ind(DIM,XYZ(1,:),XYZ(2,:),XYZ(3,:))) = -norminv(fcdf(score,1,1,'upper'));
+            
+            % Bootstrapped tfce vol.
+            tfce = swe_tfce_transform(scorevol,H,E,C,dh);
         end
         
-        % Sum how many voxels are lower than the original parametric tmp.
+        % Sum how many voxels are lower than the original parametric tfce.
         tfce_uncP = tfce_uncP + (par_tfce<=tfce);
         if SwE.WB.stat == 'T'
             tfce_uncP_neg = tfce_uncP_neg + (par_tfce_neg<=tfce_neg);
         end
         
+        % Record maxima for TFCE FWE p values.
+        maxTFCEScore(b+1) = max(tfce(:));
+        if SwE.WB.stat == 'T'
+            maxTFCEScore_neg(b+1) = max(tfce_neg(:));
+        end
+        
         clear tfce tfce_neg
+        
     end
   else
     
@@ -1982,6 +2012,40 @@ else
   FWERP = FWERP / (WB.nB + 1);
   tmp(Q) = -log10(FWERP);
   spm_write_vol(VlP_wb_FWE_pos, tmp);
+  
+  % FWE correction for TFCE images.
+  if TFCE
+      
+      % Make new tfce fwe p volume. (Initiate to one to account for
+      % original analysis).
+      tfcefwevol = ones(DIM(1), DIM(2), DIM(3));
+      
+      % Calculate FWE p values.
+      for b = 1:WB.nB
+          tfcefwevol = tfcefwevol + (maxTFCEScore(b+1) > par_tfce - tol);
+      end
+      tfcefwevol = tfcefwevol / (WB.nB + 1);
+      
+      % Write out volume.
+      spm_write_vol(VlP_tfce_FWE_pos, -log10(tfcefwevol));
+      
+      % Same again for negative contrast, if we are using a T statistic.
+      if WB.stat == 'T'
+          
+          % Make new negative tfce fwe p volume. (Initiate to one to 
+          % account for original analysis).
+          tfcefwevol_neg = ones(DIM(1), DIM(2), DIM(3));
+
+          % Calculate FWE negative p values.
+          for b = 1:WB.nB
+              tfcefwevol_neg = tfcefwevol_neg + (maxTFCEScore_neg(b+1) > par_tfce_neg - tol);
+          end
+          tfcefwevol_neg = tfcefwevol_neg / (WB.nB + 1);
+
+          % Write out volume.
+          spm_write_vol(VlP_tfce_FWE_neg, -log10(tfcefwevol_neg));
+      end
+  end
   
   if WB.stat == 'T'
     FWERPNeg = ones(1, S); % 1 because the original maxScore is always > original Score
