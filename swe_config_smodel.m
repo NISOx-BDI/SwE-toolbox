@@ -770,16 +770,77 @@ WB_voxelwise.help    = {''
   'Mass univariate inference will be performed with the option of bootstrapped FWE.'
   ''};
 
-% % --------------------------------------------------------------------- 
-% % WB_voxelwise WB voxelwise inference
-% % ---------------------------------------------------------------------
-% WB_mat         = cfg_const;
-% WB_mat.tag     = 'WB_voxelwise'; %%%%%%%%%%%% WAS UP TO HERE
-% WB_voxelwise.name    = 'Voxelwise';
-% WB_voxelwise.val     = {0};
-% WB_voxelwise.help    = {''
-%   'Mass univariate inference will be performed with the option of bootstrapped FWE.'
-%   ''};
+% ---------------------------------------------------------------------
+% WB_clusterwise WB surface clusterwise inference mask
+% ---------------------------------------------------------------------
+WB_surfacemask         = cfg_files;
+WB_surfacemask.tag     = 'WB_surfacemask';
+WB_surfacemask.name    = 'Surface mask';
+WB_surfacemask.help    = {' '
+    'Select a mask/''.mat'' file containing mesh data.'};
+WB_surfacemask.filter = 'mat';
+WB_surfacemask.ufilter = '.*';
+WB_surfacemask.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_clusThresh
+% ---------------------------------------------------------------------
+WB_clusThresh         = cfg_entry;
+WB_clusThresh.tag     = 'WB_clusThresh';
+WB_clusThresh.name    = 'Set the cluster-forming threshold';
+WB_clusThresh.val     = {0.001};
+WB_clusThresh.help    = {''
+                     'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default)'
+''}';
+WB_clusThresh.strtype = 'e';
+WB_clusThresh.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_clusterwise WB surface clusterwise inference
+% ---------------------------------------------------------------------
+WB_surface         = cfg_branch;
+WB_surface.tag     = 'WB_surface';
+WB_surface.name    = 'Surface input';
+WB_surface.val     = {WB_surfacemask};
+WB_surface.help    = {''
+  'Clusterwise inference will be performed on surface input given as a ''.mat'' file.'
+  ''
+  'Please enter a mask/''.mat'' file containing mesh data.'};
+
+% --------------------------------------------------------------------- 
+% WB_voxelwise WB clusterwise volumetric .img input
+% ---------------------------------------------------------------------
+WB_volumetric         = cfg_const;
+WB_volumetric.tag     = 'WB_volumetric'; 
+WB_volumetric.name    = 'Volumetric input';
+WB_volumetric.val     = {0};
+WB_volumetric.help    = {''
+  'Clusterwise inference will be performed on volumetric input given as a ''.mat'' file.'
+  ''};
+
+% ---------------------------------------------------------------------
+% WB_infType WB inference type
+% ---------------------------------------------------------------------
+WB_mat         = cfg_choice;
+WB_mat.tag     = 'WB_mat';
+WB_mat.name    = 'mat input';
+WB_mat.values  = {WB_surface WB_volumetric};
+WB_mat.val     = {WB_surface};
+WB_mat.help    = {''
+  'Clusterwise inference will be performed on input given as a ``.mat`` file.'
+  ''
+  'Please select whether the ''.mat'' file contains volumetric or surface data.'};
+
+% --------------------------------------------------------------------- 
+% WB_voxelwise WB clusterwise .img input
+% ---------------------------------------------------------------------
+WB_img         = cfg_const;
+WB_img.tag     = 'WB_img';
+WB_img.name    = 'img/nii input';
+WB_img.val     = {0};
+WB_img.help    = {''
+  'Clusterwise inference will be performed on volumetric input given as nifti/image files.'
+  ''};
 
 % ---------------------------------------------------------------------
 % WB_infType WB inference type
@@ -801,6 +862,58 @@ WB_clusterwise.name    = 'Clusterwise';
 WB_clusterwise.val     = {WB_inputType WB_clusThresh};
 WB_clusterwise.help    = {''
                      'Bootstrapped clusterwise inference will be performed with clusterwise FWE p values available at the results stage.'
+}';
+
+% ---------------------------------------------------------------------
+% WB_TFCE_E E parameter for TFCE
+% ---------------------------------------------------------------------
+WB_TFCE_E         = cfg_entry;
+WB_TFCE_E.tag     = 'WB_TFCE_E';
+WB_TFCE_E.name    = 'E';
+WB_TFCE_E.val     = {0.5};
+WB_TFCE_E.help    = {''
+                     'Select the E parameter as defined by Smith & Nichols (2009). The default value of 0.5 is strongly recommended.'
+''}';
+WB_TFCE_E.strtype = 'e';
+WB_TFCE_E.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_TFCE_H H parameter for TFCE
+% ---------------------------------------------------------------------
+WB_TFCE_H         = cfg_entry;
+WB_TFCE_H.tag     = 'WB_TFCE_H';
+WB_TFCE_H.name    = 'H';
+WB_TFCE_H.val     = {2};
+WB_TFCE_H.help    = {''
+                     'Select the H parameter as defined by Smith & Nichols (2009). The default value of 2 is strongly recommended.'
+''}';
+WB_TFCE_H.strtype = 'e';
+WB_TFCE_H.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_TFCE_dh dh parameter for TFCE
+% ---------------------------------------------------------------------
+WB_TFCE_dh         = cfg_entry;
+WB_TFCE_dh.tag     = 'WB_TFCE_dh';
+WB_TFCE_dh.name    = 'dh';
+WB_TFCE_dh.val     = {0.1};
+WB_TFCE_dh.help    = {''
+                     'Select the dh parameter as defined by Smith & Nichols (2009).' 
+                     ''
+                     'The smaller this value the more accurate and computationally expensive the analaysis will be. The suggested default is 0.1.'
+''}';
+WB_TFCE_dh.strtype = 'e';
+WB_TFCE_dh.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_clusterwise WB clusterwise inference
+% ---------------------------------------------------------------------
+WB_TFCE         = cfg_branch;
+WB_TFCE.tag     = 'WB_TFCE';
+WB_TFCE.name    = 'TFCE';
+WB_TFCE.val     = {WB_TFCE_E WB_TFCE_H WB_TFCE_dh};
+WB_TFCE.help    = {''
+                     'Threshold Free Cluster Enhancement performed will be performed using the wild boostrap.'
 }';
 
 % ---------------------------------------------------------------------
