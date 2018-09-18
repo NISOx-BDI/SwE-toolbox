@@ -1127,8 +1127,10 @@ else % ".mat" format
   %------------------------------------------------------------------
   [Cm,Y,CrS] = swe_mask_seperable(SwE, Cm, Y, iGr_dof);
   
-  if isfield(SwE.WB.clusterInfo, 'Vxyz')
-    XYZ   = XYZ(:,Cm);
+  if WB.clusterWise == 1
+    if isfield(SwE.WB.clusterInfo, 'Vxyz')
+      XYZ   = XYZ(:,Cm);
+    end
   end
   %==================================================================
   %-Proceed with General Linear Model (if there are voxels)
@@ -1367,8 +1369,10 @@ fprintf('%-40s: %30s','Saving results','...writing');
 
 %-place fields in SwE
 %--------------------------------------------------------------------------
-if isfield(SwE.WB, 'clusterInfo') && isfield(SwE.WB.clusterInfo, 'Vfaces')
-  XYZ = [];
+if WB.clusterWise == 1
+  if isfield(SwE.WB, 'clusterInfo') && isfield(SwE.WB.clusterInfo, 'Vfaces')
+    XYZ = [];
+  end
 end
 
 SwE.xVol.XYZ   = XYZ;               %-InMask XYZ coords (voxels)
