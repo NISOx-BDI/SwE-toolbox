@@ -44,14 +44,6 @@ function swe_cp_WB(SwE)
 %   - SwE: SwE data structure
 % =========================================================================
 
-%%%%%%%%%%%%%TEMPTEMPTEMP%%%%%%%%%%%%%%%
-TFCE = true;
-H = 2;
-E = 0.5;
-dh = 0.1;
-C = 18;
-
-
 %-Say hello
 %--------------------------------------------------------------------------
 Finter = spm('CreateIntWin','off');
@@ -91,6 +83,16 @@ if ~isMat
     end
 else
     isMeshData = false;
+end
+
+%-Check whether we are doing a TFCE analysis
+%--------------------------------------------------------------------------
+TFCE = isfield(SwE.WB, 'TFCE');
+if TFCE
+    H = SwE.WB.TFCE.H;
+    E = SwE.WB.TFCE.E;
+    dh = SwE.WB.TFCE.dh;
+    C = 18;
 end
 
 %-Prevent unnecessary octave warning
@@ -1499,7 +1501,6 @@ for b = 1:WB.nB
   % activated voxels for cluster-wise inference
   if (SwE.WB.clusterWise == 1)
     activatedVoxels = false(1,S);
-    pvol = [];
     if (SwE.WB.stat == 'T')
       activatedVoxelsNeg = false(1,S);
     end
@@ -1604,8 +1605,7 @@ for b = 1:WB.nB
       
       % hypothesis test
       if (WB.clusterWise == 1)
-        [p, ~, activatedVoxels(index)]=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
-        pvol = [pvol p];
+        [~, ~, activatedVoxels(index)]=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
         clear cCovBc
       end
       uncP(index) = uncP(index) + (score >= originalScore(index));
@@ -1622,6 +1622,9 @@ for b = 1:WB.nB
         
         % Instantiate volume for TFCE conversion.
         scorevol = zeros(DIM(1), DIM(2), DIM(3));
+        
+        % Obtain P values.
+        pvol=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
         
         if SwE.WB.stat == 'T'
             

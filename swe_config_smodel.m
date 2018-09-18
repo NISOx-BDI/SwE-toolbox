@@ -767,11 +767,36 @@ WB_voxelwise.tag     = 'WB_voxelwise';
 WB_voxelwise.name    = 'Voxelwise';
 WB_voxelwise.val     = {0};
 WB_voxelwise.help    = {''
-  'Mass univariate inference will be performed with the option of bootstrapped FWE.'
+  'Mass univariate inference will be performed with the option of bootstrapped FWE and FDR.'
   ''};
 
 % ---------------------------------------------------------------------
-% WB_clusterwise WB surface clusterwise inference mask
+% WB_volumetric WB volumetric clusterwise inference mask
+% ---------------------------------------------------------------------
+WB_volumetricmask         = cfg_files;
+WB_volumetricmask.tag     = 'WB_volumetricmask';
+WB_volumetricmask.name    = 'Volumetric mask';
+WB_volumetricmask.help    = {' '
+    'Select a mask/''.mat'' file containing mesh data.'};
+WB_volumetricmask.filter = 'mat';
+WB_volumetricmask.ufilter = '.*';
+WB_volumetricmask.num     = [1 1];
+
+
+% ---------------------------------------------------------------------
+% WB_volumetric WB volumetric clusterwise inference
+% ---------------------------------------------------------------------
+WB_volumetric         = cfg_branch;
+WB_volumetric.tag     = 'WB_volumetric';
+WB_volumetric.name    = 'Volumetric input';
+WB_volumetric.val     = {WB_volumetricmask};
+WB_volumetric.help    = {''
+  'Clusterwise inference will be performed on volumetric input given as a ''.mat'' file.'
+  ''
+  'Please enter a mask/''.mat'' file containing mesh data.'};
+
+% ---------------------------------------------------------------------
+% WB_surfacemask WB surface clusterwise inference mask
 % ---------------------------------------------------------------------
 WB_surfacemask         = cfg_files;
 WB_surfacemask.tag     = 'WB_surfacemask';
@@ -900,7 +925,7 @@ WB_TFCE_dh.val     = {0.1};
 WB_TFCE_dh.help    = {''
                      'Select the dh parameter as defined by Smith & Nichols (2009).' 
                      ''
-                     'The smaller this value the more accurate and computationally expensive the analaysis will be. The suggested default is 0.1.'
+                     'The smaller this value is, the more accurate and computationally expensive the analaysis will be. The suggested default is 0.1.'
 ''}';
 WB_TFCE_dh.strtype = 'e';
 WB_TFCE_dh.num     = [1 1];
@@ -913,7 +938,7 @@ WB_TFCE.tag     = 'WB_TFCE';
 WB_TFCE.name    = 'TFCE';
 WB_TFCE.val     = {WB_TFCE_E WB_TFCE_H WB_TFCE_dh};
 WB_TFCE.help    = {''
-                     'Threshold Free Cluster Enhancement performed will be performed using the wild boostrap.'
+                     'Threshold Free Cluster Enhancement performed will be performed using the wild boostrap. For more information, see Smith & Nichols (2009).'
 }';
 
 % ---------------------------------------------------------------------
