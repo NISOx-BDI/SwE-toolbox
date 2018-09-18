@@ -1,4 +1,4 @@
-function result=runTest(porwb, torf, matorimg)
+function result=runTest(porwb, inftype, torf, matorimg)
 % This function runs an octave test case for the SwE toolbox.
 % ====================================================================
 % FORMAT result=runTest(porwb, inftype, torf, matorimg)
