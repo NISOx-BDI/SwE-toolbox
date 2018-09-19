@@ -1218,6 +1218,9 @@ else % ".mat" format
       if (SwE.WB.clusterWise == 1)
         [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
         clear CovcCovBc cCovBc
+      else
+        [p, edf]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+        clear CovcCovBc cCovBc
       end
       
       minScore(1) = min(score);
@@ -1240,6 +1243,8 @@ else % ".mat" format
       % Perform hypothesis test for activated regions.
       if (SwE.WB.clusterWise == 1)
         [p, edf, activatedVoxels] = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels);
+      else
+        [p, edf]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
       end
       
       if TFCE
@@ -1372,10 +1377,10 @@ fprintf('%-40s: %30s','Saving results','...writing');
 if WB.clusterWise == 1
   if isfield(SwE.WB, 'clusterInfo') && isfield(SwE.WB.clusterInfo, 'Vfaces')
     XYZ = [];
+    SwE.xVol.XYZ   = XYZ;               %-InMask XYZ coords (voxels)
   end
 end
 
-SwE.xVol.XYZ   = XYZ;               %-InMask XYZ coords (voxels)
 SwE.xVol.M     = M;                 %-voxels -> mm
 SwE.xVol.iM    = inv(M);            %-mm -> voxels
 SwE.xVol.DIM   = DIM;               %-image dimensions
