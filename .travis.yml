@@ -63,6 +63,16 @@ jobs:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
       - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'vox', 't', 'img')"
     - env:
+      - testname='wb_vox_f_mat'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'vox', 'f', 'mat')"
+    - env:
+      - testname='wb_vox_t_mat'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'vox', 't', 'mat')"
+    - env:
       - testname='p_vox_f_mat'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
