@@ -1009,7 +1009,7 @@ if ~isMat
       else
           
           % Convert F statistics to Z scores.
-          scorevol=-norminv(10.^(-spm_read_vols(VlP)));
+          scorevol=-swe_invNcdf(10.^(-spm_read_vols(VlP)));
           scorevol(isnan(scorevol))=0;
           
           % Convert to TFCE.
