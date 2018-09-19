@@ -14,7 +14,7 @@ end
 
 switch lower(Action)
     %==================================================================
-    case 'startup'                                % Startup the toolbox
+    case 'startup'                                % Startup the toolbox 
     %==================================================================     
         % check installation of toolbox and of SPM8/SPM12
         ok = check_installation;
