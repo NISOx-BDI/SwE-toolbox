@@ -305,7 +305,7 @@ if isfield(SwE.type,'modified')
       nSubj_g(g) = length(uSubj_g{g});
       uSubj_g_tmp = uSubj_g{g};
         
-      for k = 1:nSubj_g 
+      for k = 1:nSubj_g (g)
 
           % The number of visits for subject uSubj_g(k)
           vis_g_subj(k) = sum(iSubj_g==uSubj_g_tmp(k));
