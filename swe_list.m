@@ -231,7 +231,13 @@ case 'table'                                                        %-Table
         VspmUncP = spm_read_vols(xSwE.VspmUncP);
         VspmFDRP = spm_read_vols(xSwE.VspmFDRP);
         VspmFWEP = spm_read_vols(xSwE.VspmFWEP);
-        VspmFWEP_clus = spm_read_vols(xSwE.VspmFWEP_clus);
+        % If the user didn't originally select clusterwise inference,
+        % clusterwise FWEP values will not have been calculated.
+        if isfield(xSwE, 'VspmFWEP_clus')
+            VspmFWEP_clus = spm_read_vols(xSwE.VspmFWEP_clus);
+        else
+            VspmFWEP_clus = [];
+        end
     end
     
 %     if STAT~='P'
@@ -357,11 +363,17 @@ case 'table'                                                        %-Table
         FDRp_05 = spm_uc_FDR(0.05,Inf,'P',n,Ts);
         clear Ts
         
-        % Record FWE/FDR/clus FWE p values.
-        TabDat.ftr{2,1} = ...
-             ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f, clus k(5%% FWE): %0.0f '];
-        TabDat.ftr{2,2} = [xSwE.Pfv, FDRp_05, xSwE.Pfc];
-     
+        % Record FWE/FDR/clus FWE p values. (No clus FWE for voxelwise and
+        % TFCE analyses)
+        if isfield(xSwE, 'Pfc')
+            TabDat.ftr{2,1} = ...
+                 ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f, clus k(5%% FWE): %0.0f '];
+            TabDat.ftr{2,2} = [xSwE.Pfv, FDRp_05, xSwE.Pfc];
+        else
+            TabDat.ftr{2,1} = ...
+                 ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f'];
+            TabDat.ftr{2,2} = [xSwE.Pfv, FDRp_05];
+        end
      else
          
         % Record FDR p value.

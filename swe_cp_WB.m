@@ -1377,10 +1377,12 @@ fprintf('%-40s: %30s','Saving results','...writing');
 if WB.clusterWise == 1
   if isfield(SwE.WB, 'clusterInfo') && isfield(SwE.WB.clusterInfo, 'Vfaces')
     XYZ = [];
-    SwE.xVol.XYZ   = XYZ;               %-InMask XYZ coords (voxels)
   end
 end
 
+if ~isMat
+    SwE.xVol.XYZ   = XYZ;               %-InMask XYZ coords (voxels)
+end
 SwE.xVol.M     = M;                 %-voxels -> mm
 SwE.xVol.iM    = inv(M);            %-mm -> voxels
 SwE.xVol.DIM   = DIM;               %-image dimensions
@@ -2296,7 +2298,7 @@ function [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, m
     	  p  = spm_Tcdf(score, edf);
           
           if SwE.WB.clusterWise~=0
-              if nargin <=7
+              if nargin <=6
                 % We may wish to just record the activated voxels. 
                 activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold);
                 activatedVoxelsNeg = p < (SwE.WB.clusterInfo.primaryThreshold);
@@ -2318,7 +2320,7 @@ function [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, m
           end
 
           if SwE.WB.clusterWise~=0
-              if nargin<=7
+              if nargin<=6
                   activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold);
               else
                   activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold)];

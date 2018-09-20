@@ -706,16 +706,17 @@ if isfield(job.WB, 'WB_yes')
   WB.SS             = job.WB.WB_yes.WB_ss;
   WB.nB             = job.WB.WB_yes.WB_nB;
   WB.RSwE           = job.WB.WB_yes.WB_SwE;
-  WB.voxelWise      = 1;
   WB.voxelWiseInfo = [];
   switch char(fieldnames(job.WB.WB_yes.WB_infType))
       
       case 'WB_voxelwise'
           WB.clusterWise  = 0;
+          WB.voxelWise    = 1;
                     
       case 'WB_clusterwise'
       
           WB.clusterWise = 1;
+          WB.voxelWise   = 0;
           
           % Cluster forming threshold.
           WB.clusterInfo.primaryThreshold = job.WB.WB_yes.WB_infType.WB_clusterwise.WB_clusThresh;
@@ -742,6 +743,7 @@ if isfield(job.WB, 'WB_yes')
           
           % We have no clusterwise results for TFCE
           WB.clusterWise  = 0; %%% Q: Tom wanted cluster as well but no primThresh set? This gon disagree with code later as well.
+          WB.voxelWise    = 0;
           
           % Create TFCE structure for TFCE analysis.
           WB.TFCE.H = job.WB.WB_yes.WB_infType.WB_TFCE.WB_TFCE_H;
