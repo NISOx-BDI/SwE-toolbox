@@ -289,10 +289,10 @@ case 'table'                                                        %-Table
     %----------------------------------------------------------------------
     if isempty(xSwE.XYZmm) % empty results
         xyzfmt = '%3.0f %3.0f %3.0f';
-        %voxfmt = repmat('%0.1f ',1,numel(FWmm));
+        voxfmt = '%1.1f %1.1f %1.1f';
     elseif ~any(strcmp(units{3},{'mm',''})) % 2D data
         xyzfmt = '%3.0f %3.0f %3.0f';
-        %voxfmt = repmat('%0.1f ',1,numel(FWmm));
+        voxfmt = '%1.1f %1.1f %1.1f';
     else % 3D data, work out best precision based on voxel sizes and FOV
         xyzsgn = min(xSwE.XYZmm(DIM,:),[],2) < 0;
         xyzexp = max(floor(log10(max(abs(xSwE.XYZmm(DIM,:)),[],2)))+(max(abs(xSwE.XYZmm(DIM,:)),[],2) >= 1),0);
@@ -523,7 +523,7 @@ case 'table'                                                        %-Table
         %-Find largest remaining local maximum
         %------------------------------------------------------------------
         [U,i]  = max(Z);            %-largest maxima
-        j      = find(A == A(i));   %-maxima in cluster
+        mj     = find(A == A(i));   %-maxima in cluster
 
 
         %-Compute cluster {k} and peak-level {u} p values for this cluster
@@ -562,9 +562,10 @@ case 'table'                                                        %-Table
                   end
             end
             
-            % If we are not running a wild bootstrap we need to calculate
-            % the FDR P value and leave the other values blank.
-            if ~xSwE.WB
+            % If we are not running a wild bootstrap or we are doing a 
+            % small volume correction we need to calculate the FDR P value
+            % and leave the other values blank.
+            if ~xSwE.WB || isfield(xSwE,'svc')
                 Pu      = [];
                 Pk      = [];
                 Pn      = [];
@@ -608,10 +609,10 @@ case 'table'                                                        %-Table
         
         %-Print Num secondary maxima (> Dis mm apart)
         %------------------------------------------------------------------
-        [l,q] = sort(-Z(j));                              % sort on Z value
+        [l,q] = sort(-Z(mj));                              % sort on Z value
         D     = i;
         for i = 1:length(q)
-            d = j(q(i));
+            d = mj(q(i));
             if min(sqrt(sum((XYZmm(:,D)-repmat(XYZmm(:,d),1,size(D,2))).^2)))>Dis
                 if length(D) < Num
                     % voxel-level p values {Z}
@@ -633,9 +634,10 @@ case 'table'                                                        %-Table
 %                         end
 %                     else
 
-                    % If we are not running a wild bootstrap we need to calculate
+                    % If we are not running a wild bootstrap or if we are  
+                    % doing a small volume correction we need to calculate
                     % the FDR P value and leave the other values blank.
-                    if ~xSwE.WB
+                    if ~xSwE.WB || isfield(xSwE,'svc')
                         Pz     = spm_Ncdf(-Z(d));
                         Pu     = [];
                         Qu     = [];
@@ -651,8 +653,8 @@ case 'table'                                                        %-Table
                     else
                         
                         Pz      = spm_Ncdf(-Z(d));
-                        Pu      = 10.^-VspmFWEP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                        Qu      = 10.^-VspmFDRP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                        Pu      = 10.^-VspmFWEP(XYZ(1,d),XYZ(2,d),XYZ(3,d));
+                        Qu      = 10.^-VspmFDRP(XYZ(1,d),XYZ(2,d),XYZ(3,d));
                         ws     = warning('off','SPM:outOfRangeNormal');
                         Ze     = swe_invNcdf(Z(d));
                         warning(ws);
@@ -671,7 +673,7 @@ case 'table'                                                        %-Table
                 end
             end
         end
-        Z(j) = NaN;     % Set local maxima to NaN
+        Z(mj) = NaN;     % Set local maxima to NaN
     end
     
     varargout = {TabDat};
@@ -702,12 +704,14 @@ case 'table'                                                        %-Table
         ht = 0.4; bot = 0.1;
     end
     swe_results_ui('Clear',Fgraph)
+    
     FS     = spm('FontSizes');           %-Scaled font sizes
     PF     = spm_platform('fonts');      %-Font names (for this platform)
     
     %-Table axes & Title
     %----------------------------------------------------------------------
-    hAx   = axes('Position',[0.025 bot 0.9 ht],...
+    hAx   = axes('Parent',Fgraph,...
+                 'Position',[0.025 bot 0.9 ht],...
                  'DefaultTextFontSize',FS(8),...
                  'DefaultTextInterpreter','Tex',...
                  'DefaultTextVerticalAlignment','Baseline',...
@@ -819,7 +823,7 @@ case 'table'                                                        %-Table
                     'ButtonDownFcn','get(gcbo,''UserData'')');
         hPage = [hPage, h];
     else
-        set(Hc,'Visible','off');
+        set(Hs,'Visible','off');
     end
     
     %-Cluster and local maxima p-values & statistics
@@ -947,10 +951,10 @@ case 'table'                                                        %-Table
             %-Find selected cluster
             %--------------------------------------------------------------
             A          = spm_clusters(xSwE.XYZ);
-            j          = find(A == A(i));
-            xSwE.Z     = xSwE.Z(j);
-            xSwE.XYZ   = xSwE.XYZ(:,j);
-            xSwE.XYZmm = xSwE.XYZmm(:,j);
+            mj          = find(A == A(i));
+            xSwE.Z     = xSwE.Z(mj);
+            xSwE.XYZ   = xSwE.XYZ(:,mj);
+            xSwE.XYZmm = xSwE.XYZmm(:,mj);
         end
 
         %-Call 'list' functionality to produce table
@@ -981,8 +985,8 @@ case 'table'                                                        %-Table
         %-Table data
         %------------------------------------------------------------------
         for i = 1:size(TabDat.dat,1)
-            for j=c:size(TabDat.dat,2)
-                fprintf(TabDat.fmt{j},TabDat.dat{i,j});
+            for mj=c:size(TabDat.dat,2)
+                fprintf(TabDat.fmt{mj},TabDat.dat{i,mj});
                 fprintf('\t')
             end
             fprintf('\n')

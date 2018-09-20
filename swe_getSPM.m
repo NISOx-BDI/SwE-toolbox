@@ -1151,12 +1151,21 @@ xSwE   = struct( ...
 % cluster-FWE P values at this point.
 if isfield(SwE, 'WB')
     
+    % Bootstrap variables.
     xSwE.WB = 1;
     xSwE.nB = SwE.WB.nB;
+    
+    % Volumes
     xSwE.VspmUncP = cat(1,xCon(Ic).VspmUncP);
     xSwE.VspmFDRP = cat(1,xCon(Ic).VspmFDRP);
     xSwE.VspmFWEP = cat(1,xCon(Ic).VspmFWEP);
     xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
+    
+    % Uncorrected P values.
+    Ps_vol = spm_vol(xSwE.VspmUncP);
+    Ps = spm_read_vols(Ps_vol);
+    Ps = 10.^(-Ps(~isnan(Ps)));
+    xSwE.Ps = Ps;
     
     % 95% percentiles
     maxScore = sort(SwE.WB.maxScore);
