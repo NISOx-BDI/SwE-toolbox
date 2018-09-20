@@ -33,6 +33,16 @@ jobs:
     # results generation stage.
     - stage: Results generation 
       env:
+      - testname='wb_tfce_f_img'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'tfce', 'f', 'img')"
+    - env:
+      - testname='wb_tfce_t_img'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'tfce', 't', 'img')"
+    - env:
       - testname='wb_clus_f_mat'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
