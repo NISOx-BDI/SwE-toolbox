@@ -742,13 +742,22 @@ if isfield(job.WB, 'WB_yes')
       case 'WB_TFCE'
           
           % We have no clusterwise results for TFCE
-          WB.clusterWise  = 0; %%% Q: Tom wanted cluster as well but no primThresh set? This gon disagree with code later as well.
+          WB.clusterWise  = 0; 
           WB.voxelWise    = 0;
           
           % Create TFCE structure for TFCE analysis.
           WB.TFCE.H = job.WB.WB_yes.WB_infType.WB_TFCE.WB_TFCE_H;
           WB.TFCE.E = job.WB.WB_yes.WB_infType.WB_TFCE.WB_TFCE_E;
-          WB.TFCE.dh = job.WB.WB_yes.WB_infType.WB_TFCE.WB_TFCE_dh;
+          
+          % This is by default set to 0.1 as recommended per Smith &
+          % Nichols (2007). If a user wishes to change this value, change
+          % it on the below line:
+          WB.TFCE.dh = 0.1;
+          
+          % Error if '.mat' input.
+          if isMat
+              error('TFCE is not currently available for ''.mat'' input.')
+          end
           
   end
   

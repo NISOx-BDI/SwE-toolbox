@@ -916,27 +916,12 @@ WB_TFCE_H.strtype = 'e';
 WB_TFCE_H.num     = [1 1];
 
 % ---------------------------------------------------------------------
-% WB_TFCE_dh dh parameter for TFCE
-% ---------------------------------------------------------------------
-WB_TFCE_dh         = cfg_entry;
-WB_TFCE_dh.tag     = 'WB_TFCE_dh';
-WB_TFCE_dh.name    = 'dh';
-WB_TFCE_dh.val     = {0.1};
-WB_TFCE_dh.help    = {''
-                     'Select the dh parameter as defined by Smith & Nichols (2009).' 
-                     ''
-                     'The smaller this value is, the more accurate and computationally expensive the analaysis will be. The suggested default is 0.1.'
-''}';
-WB_TFCE_dh.strtype = 'e';
-WB_TFCE_dh.num     = [1 1];
-
-% ---------------------------------------------------------------------
 % WB_clusterwise WB clusterwise inference
 % ---------------------------------------------------------------------
 WB_TFCE         = cfg_branch;
 WB_TFCE.tag     = 'WB_TFCE';
 WB_TFCE.name    = 'TFCE';
-WB_TFCE.val     = {WB_TFCE_E WB_TFCE_H WB_TFCE_dh};
+WB_TFCE.val     = {WB_TFCE_E WB_TFCE_H};
 WB_TFCE.help    = {''
                      'Threshold Free Cluster Enhancement performed will be performed using the wild boostrap. For more information, see Smith & Nichols (2009).'
 }';
@@ -956,7 +941,7 @@ WB_infType.help    = {''
   ''
   'Clusterwise: Bootstrapped clusterwise inference with clusterwise FWE p values available.'
   ''
-  'TFCE: Threshold Free Cluster Enhancement performed using the wild boostrap.'};
+  'TFCE: Threshold Free Cluster Enhancement performed using the wild boostrap. (Note: this feature is not available for ''.mat'' input.'};
 
 % ---------------------------------------------------------------------
 % WB_yes Yes

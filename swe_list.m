@@ -280,7 +280,7 @@ case 'table'                                                        %-Table
     
     % If we are doing a clusterwise/voxelwise analysis the header is the
     % normal SPM header.
-    if ~xSwE.TFCEanaly
+    if ~isfield(xSwE, 'TFCEanaly') || ~xSwE.TFCEanaly
         TabDat.hdr = {...
             'set',      'p',            '\itp';...
             'set',      'c',            '\itc';...
@@ -365,7 +365,7 @@ case 'table'                                                        %-Table
      TabDat.ftr      = cell(6,2);
      
      % Record height thresholds.
-     if ~xSwE.TFCEthresh
+     if ~isfield(xSwE, 'TFCEthresh') || ~xSwE.TFCEthresh
          TabDat.ftr{1,1} = ...
               ['Threshold: Height ' eSTAT ' = %0.2f, p = %0.3f; Extent k = %0.0f voxels.'];
          TabDat.ftr{1,2} = [u,Pz,k];
@@ -516,9 +516,9 @@ case 'table'                                                        %-Table
          ['Voxel size: ' voxfmt units{:}];
      TabDat.ftr{9,2} = VOX;
      
-     if xSwE.TFCEanaly
-         TabDat.ftr{10,1} = 'TFCE: E=%0.1f, H=%0.1f, dH=%0.2f';
-         TabDat.ftr{10,2} = [xSwE.TFCE.E, xSwE.TFCE.H, xSwE.TFCE.dh];
+     if isfield(xSwE, 'TFCEanaly') && xSwE.TFCEanaly
+         TabDat.ftr{10,1} = 'TFCE: E=%0.1f, H=%0.1f';
+         TabDat.ftr{10,2} = [xSwE.TFCE.E, xSwE.TFCE.H];
      end
 
     %-Characterize excursion set in terms of maxima
@@ -634,11 +634,8 @@ case 'table'                                                        %-Table
                     % These regions will have NaN for the cluster FWE P-value
                     % when they should have one. So the below is necessary:
                     Pk(isnan(Pk)) = 1;
-                else
-                    Pk = [];
-                end
-                
-                if xSwE.TFCEanaly
+                    
+                elseif xSwE.TFCEanaly
                     
                     % Get coordinates of all voxels in the current cluster.
                     currentClus = find(A == A(i));
@@ -649,9 +646,8 @@ case 'table'                                                        %-Table
                     
                     % Record the minimum TFCE FWE P value in said cluster.
                     Pk  = min(tfp);
-                    
                 else
-                    Pk = [];
+                    Pk  = [];
                 end
                 
             end

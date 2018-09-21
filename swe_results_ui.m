@@ -416,7 +416,7 @@ switch lower(Action), case 'setup'                         %-Set up results
     h     = text(0,24,'SPMresults:','Parent',hResAx,...
         'FontWeight','Bold','FontSize',FS(14));
     text(get(h,'Extent')*[0;0;1;0],24,spm_str_manip(SwE.swd,'a30'),'Parent',hResAx)
-    if ~xSwE.TFCEthresh
+    if ~isfield(xSwE, 'TFCEthresh') || ~xSwE.TFCEthresh
         try
             thresDesc = xSwE.thresDesc;
             if ~strcmp(xSwE.thresDesc, 'none') && ~isempty(xSwE.thresDesc)
