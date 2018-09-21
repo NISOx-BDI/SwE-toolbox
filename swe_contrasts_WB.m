@@ -67,8 +67,15 @@ function [SwE] = swe_contrasts_WB(SwE)
     DxCon.VspmUncP = spm_vol(sprintf('swe_vox_%cstat_lp_c%.2d%s', STAT, 1, file_ext));
     DxCon.VspmFDRP = spm_vol(sprintf('swe_vox_%cstat_lpFDR%s_c%.2d%s', STAT, wbstring, 1, file_ext));
     DxCon.VspmFWEP = spm_vol(sprintf('swe_vox_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 1, file_ext));
-    if SwE.WB.clusterWise
-        DxCon.VspmFWEP_clus = spm_vol(sprintf('swe_clustere_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 1, file_ext));
+    if isfield(SwE,'WB')
+        if SwE.WB.clusterWise
+            DxCon.VspmFWEP_clus = spm_vol(sprintf('swe_clustere_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 1, file_ext));
+        end
+        if isfield(SwE.WB, 'TFCE')
+            DxCon.VspmTFCE = spm_vol(sprintf('swe_tfce_c%.2d%s', 1, file_ext));
+            DxCon.VspmTFCEP = spm_vol(sprintf('swe_tfce_lp-WB_c%.2d%s', 1, file_ext));
+            DxCon.VspmTFCEFWEP = spm_vol(sprintf('swe_tfce_lpFWE-WB_c%.2d%s', 1, file_ext));
+        end
     end
     DxCon.Vedf = spm_vol(sprintf('swe_vox_edf_c%.2d%s', 1, file_ext));
     

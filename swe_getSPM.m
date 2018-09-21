@@ -559,7 +559,11 @@ if ~isMat
         infType = xSwE.infType;
     catch 
         if isfield(SwE, 'WB')
-            infType = spm_input('inference type','+1','b','voxelwise|clusterwise',[0,1],2);
+            if isfield(SwE.WB, 'TFCE')
+                infType = spm_input('inference type','+1','b','voxelwise|clusterwise|TFCE',[0,1,2],3);
+            else
+                infType = spm_input('inference type','+1','b','voxelwise|clusterwise',[0,1],2);
+            end
         else
             infType = spm_input('inference type','+1','b','voxelwise|clusterwise',[0,1],1);
         end
@@ -922,8 +926,8 @@ if ~isMat
           Pc  = [];
           uu = [];
 
-      % Else we are doing clusterwise WB.
-      else
+      % If we are doing clusterwise WB.
+      elseif isfield(SwE, 'WB') && infType == 1
           
           fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...height threshold')  %-#
           try
@@ -935,8 +939,8 @@ if ~isMat
                 str = 'FWE|none';
                 thresDesc = spm_input('extent p value adjustment to control','+1','b',str,[],1);
               else
-                % If the user originally ran voxelwise we have no FWE
-                % clusterwise map from the bootstrap.
+                % If the user originally ran voxelwise or TFEC we have no
+                % FWE clusterwise map from the bootstrap.
                 thresDesc = 'none';
               end
           end
@@ -1006,7 +1010,30 @@ if ~isMat
                   Q      = find(Z > u);
           
           end
-              
+          
+      % If we are doing TFCE.    
+      else
+          
+          % Remember we are not doing clusterwise.
+          clustWise = 'None';
+          
+          % Ask user for TFCE FWE alpha.
+          pt = spm_input('p value (TFCE FWE)','+0','r',0.05,1,[0,1]);
+          thresDesc = ['p<' num2str(pt) ' (FWE)'];
+          
+          % Get Tfce Fwe P-values.
+          tfp = 10.^-spm_get_data(xCon(Ic).VspmTFCEFWEP,XYZ);
+          
+          up  = NaN;
+          Pp  = NaN;
+          uc  = NaN;
+          ue  = NaN;
+          Pc  = [];
+          uu = [];
+
+          % Theshold.
+          Q = find(tfp < pt);
+          
       end
 
   end
@@ -1101,11 +1128,7 @@ if ~isMat
 
           k = 0;
 
-      end % (if ~isempty(XYZ))
-  
-  % If we are doing corrected clusterwise ask for p.
-  else
-      % TO DO
+      end 
   end
 end 
 
@@ -1168,7 +1191,7 @@ xSwE   = struct( ...
             'max_nVis_g', SwE.Vis.max_nVis_g,...
             'min_nVis_g', SwE.Vis.min_nVis_g,...
             'SS',         SwE.SS);
-
+        
 % For WB analyses we have already computed uncorrected, FDR, FWE and
 % cluster-FWE P values at this point.
 if isfield(SwE, 'WB')
@@ -1183,6 +1206,20 @@ if isfield(SwE, 'WB')
     xSwE.VspmFWEP = cat(1,xCon(Ic).VspmFWEP);
     if SwE.WB.clusterWise
         xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
+    end
+    if isfield(SwE.WB, 'TFCE')
+        xSwE.VspmTFCE = cat(1,xCon(Ic).VspmTFCE);
+        xSwE.VspmTFCEP = cat(1,xCon(Ic).VspmTFCEP);
+        xSwE.VspmTFCEFWEP = cat(1,xCon(Ic).VspmTFCEFWEP);
+        xSwE.TFCEanaly = 1;
+        xSwE.TFCE = SwE.WB.TFCE;
+    else
+        xSwE.TFCEanaly = 0;
+    end
+    if infType == 2
+        xSwE.TFCEthresh = 1;
+    else
+        xSwE.TFCEthresh = 0;
     end
     
     % Uncorrected P values.
