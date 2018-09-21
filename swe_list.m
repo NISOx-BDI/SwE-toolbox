@@ -299,10 +299,10 @@ case 'table'                                                        %-Table
         TabDat.hdr = {...
             'set',      'p',            '\itp';...
             'set',      'c',            '\itc';...
-            'TFCE',  'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
-            'TFCE',  'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
-            'TFCE',  'equivk',       '\itk\rm_E';...
-            'TFCE',  'p(unc)',       '\itp\rm_{uncorr}';...
+            'TFCE',     'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
+            'TFCE',     '',             '';...
+            'TFCE',     'equivk',       '\itk\rm_E';...
+            'TFCE',     '',             '';...
             'peak',     'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
             'peak',     'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
             'peak',      STATe,         sprintf('\\it%c',STATe);...
@@ -517,7 +517,7 @@ case 'table'                                                        %-Table
      TabDat.ftr{9,2} = VOX;
      
      if xSwE.TFCEanaly
-         TabDat.ftr{10,1} = 'TFCE: E %0.2f, H %0.2f, dH %0.2f';
+         TabDat.ftr{10,1} = 'TFCE: E=%0.1f, H=%0.1f, dH=%0.2f';
          TabDat.ftr{10,2} = [xSwE.TFCE.E, xSwE.TFCE.H, xSwE.TFCE.dh];
      end
 
@@ -638,8 +638,23 @@ case 'table'                                                        %-Table
                     Pk = [];
                 end
                 
+                if xSwE.TFCEanaly
+                    
+                    % Get coordinates of all voxels in the current cluster.
+                    currentClus = find(A == A(i));
+                    XYZ_clus = XYZ(:, currentClus);
+                    
+                    % Read in all TFCE FWE P values in this cluser
+                    tfp = 10.^-spm_get_data(xSwE.VspmTFCEFWEP,XYZ_clus);
+                    
+                    % Record the minimum TFCE FWE P value in said cluster.
+                    Pk  = min(tfp);
+                    
+                else
+                    Pk = [];
+                end
+                
             end
-%         end
         
         if topoFDR
         [TabDat.dat{TabLin,3:11}] = deal(Pk,Qc,N(i),Pn,Pu,Qp,U,Pz,XYZmm(:,i));
