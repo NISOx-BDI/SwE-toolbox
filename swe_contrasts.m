@@ -2,7 +2,7 @@ function [SwE] = swe_contrasts(SwE,Ic)
 % Fills in SwE.xCon and writes con_????.img, ess_????.img and SwE?_????.img
 % FORMAT [SwE] = SwE_contrasts(SwE,Ic)
 %
-% SwE - SwE data structure
+% SwE - SwE data structure 
 % Ic  - indices of xCon to compute
 % Modified version of spm_contrasts adapted for the SwE toolbox
 % By Bryan Guillaume
