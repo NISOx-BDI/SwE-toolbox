@@ -1,11 +1,36 @@
 function varargout = swe_list(varargin)
-% Display an analysis of SPM{.}
-% FORMAT TabDat = spm_list('List',xSwE,hReg,[Num,Dis,Str])
-% Summary list of local maxima for entire volume of interest
-% FORMAT TabDat = spm_list('ListCluster',xSwE,hReg,[Num,Dis,Str])
-% List of local maxima for a single suprathreshold cluster
+% Display an analysis of an SwE parametric map
+% =========================================================================
+% FORMAT TabDat = swe_list('List',xSwE,hReg,[Num,Dis,Str])
+%    Summary list of local maxima for entire volume of interest
+%    xSwE - Structure containing data (format as below)
+%    hReg   - Handle of caller (not used)
+%    Num    - number of maxima per cluster [3]
+%    Dis    - distance among clusters {mm} [8]
+%    Str    - header string
+% 
+% FORMAT TabDat = swe_list('ListCluster',xSwE,hReg,[Num,Dis,Str])
+%    List of local maxima for a single suprathreshold cluster
+%    xSwE - Structure containing data (format as below)
+%    hReg   - Handle of caller (not used)
+%    Num    - number of maxima per cluster [3]
+%    Dis    - distance among clusters {mm} [8]
+%    Str    - header string
 %
-% xSwE    - structure containing SPM, distribution & filtering details
+% FORMAT swe_list('TxtList',TabDat,c)
+%    Prints a tab-delimited text version of the table
+%    TabDat - Structure containing table data (format as below)
+%    c      - Column of table data to start text table at
+%          (E.g. c=3 doesn't print set-level results contained in columns 1
+%           & 2)
+%
+% FORMAT swe_list('SetCoords',xyz,hAx,hReg)
+%    Highlighting of table co-ordinates (used by results section registry)
+%    xyz    - 3-vector of new co-ordinate
+%    hAx    - table axis (the registry object for tables)
+%    hReg   - Handle of caller (not used)
+% -------------------------------------------------------------------------
+% xSwE   - structure containing SPM, distribution & filtering details
 %        - required fields are:
 % .Z     - minimum of n Statistics {filtered on u and k}
 % .n     - number of conjoint tests
@@ -26,6 +51,7 @@ function varargout = swe_list(varargin)
 % .Pp    - uncorrected P values of peaks (for peak FDR)
 % .Pc    - uncorrected P values of cluster extents (for cluster FDR)
 % .uc    - 0.05 critical thresholds for FWEp, FDRp, FWEc, FDRc
+%          Note: .Ps, .Pp, .Pc and .uc may be specified as empty, i.e. []
 % .thresDesc - description of height threshold (string)
 %
 % (see spm_getSPM.m for further details of xSwE structures)
@@ -47,27 +73,28 @@ function varargout = swe_list(varargin)
 %
 %                           ----------------
 %
-% FORMAT spm_list('TxtList',TabDat,c)
+% FORMAT swe_list('TxtList',TabDat,c)
 % Prints a tab-delimited text version of the table
 % TabDat - Structure containing table data (format as above)
 % c      - Column of table data to start text table at
 %          (E.g. c=3 doesn't print set-level results contained in columns 1 & 2)
 %                           ----------------
 %
-% FORMAT spm_list('SetCoords',xyz,hAx,hReg)
+% FORMAT swe_list('SetCoords',xyz,hAx,hReg)
 % Highlighting of table co-ordinates (used by results section registry)
 % xyz    - 3-vector of new co-ordinate
 % hAx    - table axis (the registry object for tables)
 % hReg   - Handle of caller (not used)
 %__________________________________________________________________________
 %
-% spm_list characterizes SPMs (thresholded at u and k) in terms of
+% swe_list characterizes SwE data (thresholded at u and k) in terms of
 % excursion sets (a collection of face, edge and vertex connected subsets
 % or clusters).  The corrected significance of the results are based on
 % set, cluster and voxel-level inferences using distributional
-% approximations from the Theory of Gaussian Fields.  These distributions
-% assume that the SPM is a reasonable lattice approximation of a
-% continuous random field with known component field smoothness.
+% approximations from the Theory of Gaussian Fields and/or common bootstrap 
+% methods. These distributions assume that the SwE map is a reasonable 
+% lattice approximation of a continuous random field with known component 
+% field smoothness.
 %
 % The p values are based on the probability of obtaining c, or more,
 % clusters of k, or more, resels above u, in the volume S analysed =
@@ -88,7 +115,7 @@ function varargout = swe_list(varargin)
 %               - Qc   = lowest FDR bound for which this cluster would be
 %                        declared positive
 %
-% Peak-level    - T/F  = Statistic upon which the SPM is based
+% Peak-level    - T/F  = Statistic upon which the SwE data is based
 %               - Ze   = The equivalent Z score - prob(Z > Ze) = prob(t > T)
 %               - Pc   = prob(Ze or higher in the search volume)
 %               - Qp   = lowest FDR bound for which this peak would be
@@ -98,6 +125,10 @@ function varargout = swe_list(varargin)
 % Voxel-level   - Qu   = Expd(Prop of false positives among voxels >= Ze)
 %
 % x,y,z (mm)    - Coordinates of the voxel
+%
+% Note: For wild bootstrap settings the following will not be available:
+%       - Cluster-level: Pu and Qc
+%       - Set-level: P
 %
 % The table is grouped by regions and sorted on the Ze-variate of the
 % primary maxima.  Ze-variates (based on the uncorrected p value) are the
@@ -116,7 +147,7 @@ function varargout = swe_list(varargin)
 %==========================================================================
 switch lower(varargin{1}), case 'list'                               %-List
 %==========================================================================
-% FORMAT TabDat = spm_list('List',xSwE,hReg,[Num,Dis,Str])
+% FORMAT TabDat = swe_list('List',xSwE,hReg,[Num,Dis,Str])
 
     %-Parse arguments
     %----------------------------------------------------------------------
@@ -142,7 +173,7 @@ switch lower(varargin{1}), case 'list'                               %-List
 %==========================================================================
 case 'table'                                                        %-Table
 %==========================================================================
-    % FORMAT TabDat = spm_list('table',xSwE,[Num,Dis,Str])
+    % FORMAT TabDat = swe_list('table',xSwE,[Num,Dis,Str])
     
     %-Parse arguments
     %----------------------------------------------------------------------
@@ -398,34 +429,41 @@ case 'table'                                                        %-Table
      edf_min = min(edf);
      edf_med = median(edf);
      
-     % Recording effective Degrees of freedom
-     if xSwE.dofType~=0
+     % Work out range of dof values
+     diff = abs(edf_max - edf_min);
+     
+     % Work out dofType
+     switch xSwE.dofType
         
-        % Work out dofType
-        switch xSwE.dofType
-            
-            case 1
-                
-                dofTypeStr = 'Approx I';
-                
-            case 2
-                
-                dofTypeStr = 'Approx II';
-                
-            case 3
-                
-                dofTypeStr = 'Approx III';
-            
-            otherwise
-                
-                dofTypeStr = '';
-                
-        end
+         case 0 
+             
+             dofTypeStr = 'Naive';
+             
+         case 1
+
+             dofTypeStr = 'Approx I';
+
+         case 2
+
+             dofTypeStr = 'Approx II';
+
+         case 3
+
+             dofTypeStr = 'Approx III';
+
+         otherwise
+
+             error('Unknown degrees of freedom.')
+
+     end
+     
+     % Recording effective Degrees of freedom
+     if xSwE.dofType~=0 && diff > 10^-10
         TabDat.ftr{6,1}=['Error DF: (' dofTypeStr '): (min) %0.1f, (median) %0.1f, (max) %0.1f'];
         TabDat.ftr{6,2}=[edf_min, edf_med, edf_max];
      else
-        TabDat.ftr{6,1}='DF: (Naive): %0.1f';
-        TabDat.ftr{6,2}=11;
+        TabDat.ftr{6,1}=['Error DF: (' dofTypeStr '): %0.1f'];
+        TabDat.ftr{6,2}=edf_med;
      end
      
      % Record contrast degrees of freedom.
@@ -485,7 +523,7 @@ case 'table'                                                        %-Table
         %-Find largest remaining local maximum
         %------------------------------------------------------------------
         [U,i]  = max(Z);            %-largest maxima
-        j      = find(A == A(i));   %-maxima in cluster
+        mj     = find(A == A(i));   %-maxima in cluster
 
 
         %-Compute cluster {k} and peak-level {u} p values for this cluster
@@ -524,9 +562,10 @@ case 'table'                                                        %-Table
                   end
             end
             
-            % If we are not running a wild bootstrap we need to calculate
-            % the FDR P value and leave the other values blank.
-            if ~xSwE.WB
+            % If we are not running a wild bootstrap or we are doing a 
+            % small volume correction we need to calculate the FDR P value
+            % and leave the other values blank.
+            if ~xSwE.WB || isfield(xSwE,'svc')
                 Pu      = [];
                 Pk      = [];
                 Pn      = [];
@@ -570,10 +609,10 @@ case 'table'                                                        %-Table
         
         %-Print Num secondary maxima (> Dis mm apart)
         %------------------------------------------------------------------
-        [l,q] = sort(-Z(j));                              % sort on Z value
+        [l,q] = sort(-Z(mj));                              % sort on Z value
         D     = i;
         for i = 1:length(q)
-            d = j(q(i));
+            d = mj(q(i));
             if min(sqrt(sum((XYZmm(:,D)-repmat(XYZmm(:,d),1,size(D,2))).^2)))>Dis
                 if length(D) < Num
                     % voxel-level p values {Z}
@@ -595,9 +634,10 @@ case 'table'                                                        %-Table
 %                         end
 %                     else
 
-                    % If we are not running a wild bootstrap we need to calculate
+                    % If we are not running a wild bootstrap or if we are  
+                    % doing a small volume correction we need to calculate
                     % the FDR P value and leave the other values blank.
-                    if ~xSwE.WB
+                    if ~xSwE.WB || isfield(xSwE,'svc')
                         Pz     = spm_Ncdf(-Z(d));
                         Pu     = [];
                         Qu     = [];
@@ -613,8 +653,8 @@ case 'table'                                                        %-Table
                     else
                         
                         Pz      = spm_Ncdf(-Z(d));
-                        Pu      = 10.^-VspmFWEP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                        Qu      = 10.^-VspmFDRP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                        Pu      = 10.^-VspmFWEP(XYZ(1,d),XYZ(2,d),XYZ(3,d));
+                        Qu      = 10.^-VspmFDRP(XYZ(1,d),XYZ(2,d),XYZ(3,d));
                         ws     = warning('off','SPM:outOfRangeNormal');
                         Ze     = swe_invNcdf(Z(d));
                         warning(ws);
@@ -633,7 +673,7 @@ case 'table'                                                        %-Table
                 end
             end
         end
-        Z(j) = NaN;     % Set local maxima to NaN
+        Z(mj) = NaN;     % Set local maxima to NaN
     end
     
     varargout = {TabDat};
@@ -641,7 +681,7 @@ case 'table'                                                        %-Table
     %======================================================================
     case 'display'                       %-Display table in Graphics window
     %======================================================================
-    % FORMAT spm_list('display',TabDat,hReg)
+    % FORMAT swe_list('display',TabDat,hReg)
     
     %-Parse arguments
     %----------------------------------------------------------------------
@@ -664,12 +704,14 @@ case 'table'                                                        %-Table
         ht = 0.4; bot = 0.1;
     end
     swe_results_ui('Clear',Fgraph)
+    
     FS     = spm('FontSizes');           %-Scaled font sizes
     PF     = spm_platform('fonts');      %-Font names (for this platform)
     
     %-Table axes & Title
     %----------------------------------------------------------------------
-    hAx   = axes('Position',[0.025 bot 0.9 ht],...
+    hAx   = axes('Parent',Fgraph,...
+                 'Position',[0.025 bot 0.9 ht],...
                  'DefaultTextFontSize',FS(8),...
                  'DefaultTextInterpreter','Tex',...
                  'DefaultTextVerticalAlignment','Baseline',...
@@ -781,7 +823,7 @@ case 'table'                                                        %-Table
                     'ButtonDownFcn','get(gcbo,''UserData'')');
         hPage = [hPage, h];
     else
-        set(Hc,'Visible','off');
+        set(Hs,'Visible','off');
     end
     
     %-Cluster and local maxima p-values & statistics
@@ -850,7 +892,7 @@ case 'table'                                                        %-Table
         'XColor','w','YColor','w')
     uimenu(h,'Label','Print text table',...
         'CallBack',...
-        'spm_list(''txtlist'',get(get(gcbo,''Parent''),''UserData''),3)',...
+        'swe_list(''txtlist'',get(get(gcbo,''Parent''),''UserData''),3)',...
         'Interruptible','off','BusyAction','Cancel');
     uimenu(h,'Label','Extract table data structure',...
         'CallBack','TabDat=get(get(gcbo,''Parent''),''UserData'')',...
@@ -858,25 +900,25 @@ case 'table'                                                        %-Table
     if ispc
         uimenu(h,'Label','Export to Excel',...
         'CallBack',...
-        'spm_list(''xlslist'',get(get(gcbo,''Parent''),''UserData''))',...
+        'swe_list(''xlslist'',get(get(gcbo,''Parent''),''UserData''))',...
         'Interruptible','off','BusyAction','Cancel');
     end
     uimenu(h,'Label','Export to CSV file',...
         'CallBack',...
-        'spm_list(''csvlist'',get(get(gcbo,''Parent''),''UserData''))',...
+        'swe_list(''csvlist'',get(get(gcbo,''Parent''),''UserData''))',...
         'Interruptible','off','BusyAction','Cancel');
 
     %-Setup registry
     %----------------------------------------------------------------------
     set(hAx,'UserData',struct('hReg',hReg,'HlistXYZ',HlistXYZ))
-    spm_XYZreg('Add2Reg',hReg,hAx,'spm_list');
+    spm_XYZreg('Add2Reg',hReg,hAx,'swe_list');
 
     varargout = {};
     
     %======================================================================
     case 'listcluster'                      %-List for current cluster only
     %======================================================================
-    % FORMAT TabDat = spm_list('ListCluster',xSwE,hReg,[Num,Dis,Str])
+    % FORMAT TabDat = swe_list('ListCluster',xSwE,hReg,[Num,Dis,Str])
 
         %-Parse arguments
         %------------------------------------------------------------------
@@ -909,10 +951,10 @@ case 'table'                                                        %-Table
             %-Find selected cluster
             %--------------------------------------------------------------
             A          = spm_clusters(xSwE.XYZ);
-            j          = find(A == A(i));
-            xSwE.Z     = xSwE.Z(j);
-            xSwE.XYZ   = xSwE.XYZ(:,j);
-            xSwE.XYZmm = xSwE.XYZmm(:,j);
+            mj          = find(A == A(i));
+            xSwE.Z     = xSwE.Z(mj);
+            xSwE.XYZ   = xSwE.XYZ(:,mj);
+            xSwE.XYZmm = xSwE.XYZmm(:,mj);
         end
 
         %-Call 'list' functionality to produce table
@@ -923,7 +965,7 @@ case 'table'                                                        %-Table
     %======================================================================
     case 'txtlist'                                 %-Print ASCII text table
     %======================================================================
-    % FORMAT spm_list('TxtList',TabDat,c)
+    % FORMAT swe_list('TxtList',TabDat,c)
 
         if nargin<2, error('Not enough input arguments.'); end
         if nargin<3, c = 1; else c = varargin{3}; end
@@ -943,8 +985,8 @@ case 'table'                                                        %-Table
         %-Table data
         %------------------------------------------------------------------
         for i = 1:size(TabDat.dat,1)
-            for j=c:size(TabDat.dat,2)
-                fprintf(TabDat.fmt{j},TabDat.dat{i,j});
+            for mj=c:size(TabDat.dat,2)
+                fprintf(TabDat.fmt{mj},TabDat.dat{i,mj});
                 fprintf('\t')
             end
             fprintf('\n')
@@ -964,7 +1006,7 @@ case 'table'                                                        %-Table
     %======================================================================
     case 'xlslist'                                  %-Export table to Excel
     %======================================================================
-    % FORMAT spm_list('XLSList',TabDat)
+    % FORMAT swe_list('XLSList',TabDat)
 
         if nargin<2, error('Not enough input arguments.'); end
         TabDat = varargin{2};
@@ -982,7 +1024,7 @@ case 'table'                                                        %-Table
     %======================================================================
     case 'csvlist'            %-Export table to comma-separated values file
     %======================================================================
-    % FORMAT spm_list('CSVList',TabDat)
+    % FORMAT swe_list('CSVList',TabDat)
 
         if nargin<2, error('Not enough input arguments.'); end
         TabDat = varargin{2};
@@ -1003,7 +1045,7 @@ case 'table'                                                        %-Table
     %======================================================================
     case 'setcoords'                                    %-Coordinate change
     %======================================================================
-    % FORMAT spm_list('SetCoords',xyz,hAx,hReg)
+    % FORMAT swe_list('SetCoords',xyz,hAx,hReg)
         if nargin<3, error('Not enough input arguments.'); end
         hAx      = varargin{3};
         xyz      = varargin{2};

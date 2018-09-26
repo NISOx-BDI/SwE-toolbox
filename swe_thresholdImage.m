@@ -1,10 +1,14 @@
-function swe_tresholdImage(threshold, minimumClusterSize)
-% Threshold an image that need to be selected by the user from a selection
-% window
-% FORMAT spm_read_vols(threshold, minimumClusterSize)
-% threshold - minimum value (inclusive) of the surviving voxels
-% minimumClusterSize - the minimum size ofthe surviving clusters
+function swe_thresholdImage(threshold, minimumClusterSize)
+% Threshold an image, specified by selection window.
+% =========================================================================
+% FORMAT: spm_read_vols(threshold, minimumClusterSize)
+% -------------------------------------------------------------------------
+% Inputs:
 %
+%  - threshold - minimum value (inclusive) of the surviving voxels
+%  - minimumClusterSize - the minimum size ofthe surviving clusters
+% =========================================================================
+
   inputImageName = spm_select(1, 'image');
   [pth, bnm, ext] = spm_fileparts(inputImageName);
   VI = spm_vol(inputImageName);

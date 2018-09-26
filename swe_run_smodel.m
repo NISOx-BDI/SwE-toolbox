@@ -1,15 +1,14 @@
-function out = swe_run_design(varargin)
-%
-% Sandwich Estimator Method for Neuroimaging Longitudinal Data Analysis, SwE.
-% takes a harvested job data structure and rearranges data into SwE
-% data structure, then saves SwE.mat file.
-%
-% INPUT
-%   job    - harvested job data structure (see matlabbatch help)
-%
-% OUTPUT
-%   out    - filename of saved data structure.
-
+function out = swe_run_smodel(varargin)
+% Harvests job structure to create SwE structure, saved as SwE.mat.
+% =========================================================================
+% FORMAT: swe_run_design(job)
+% -------------------------------------------------------------------------
+% Inputs:
+%  - job: harvested job data structure (see matlabbatch help)
+% -------------------------------------------------------------------------
+% Outputs:
+%  - out: filename of saved data structure.
+% =========================================================================
 % Written by Bryan Guillaume
 
 % Job variable
@@ -54,7 +53,7 @@ end
 %==========================================================================
 
 % %-Generic factor names
-% %--------------------------------------------------------------------------
+% %------------------------------------------------------------------------
 sF = {'sF1','sF2','sF3','sF4'};
 
 %-Covariate by factor interaction options
@@ -90,7 +89,7 @@ sCC = {'around overall mean';...                            %-1
     '(redundant: not doing AnCova)'}';                      %-12
 
 % %-DesMtx I forms for covariate centering options
-% %--------------------------------------------------------------------------
+% %------------------------------------------------------------------------
 % CCforms = {'ones(nScan,1)',CFIforms{2:end,1},''}';
 
 %-Global calculation options                                       (GXcalc)
@@ -188,6 +187,47 @@ H  = []; Hnames = [];
 B  = []; Bnames = [];
 xC = [];                         %-Struct array to hold raw covariates
 
+%-Multiple covariates
+%--------------------------------------------------------------------------
+for m=1:numel(job.multi_cov)
+    for n=1:numel(job.multi_cov(m).files)
+        tmp   = importdata(job.multi_cov(m).files{n});
+        names = {};
+        if isstruct(tmp) % .mat
+            % If it's a manually created structure with field 'R' mandatory
+            % containing matrix and field 'names' optionally containing a
+            % cell array of names.
+            if isfield(tmp,'R') 
+                R = tmp.R;
+                if isfield(tmp,'names')
+                    names = tmp.names;
+                end
+            % If it's a structure created by importdata from reading a
+            % table with column headers.
+            elseif isfield(tmp,'data')
+                R = tmp.data;
+                if isfield(tmp,'colheaders')
+                    names = tmp.colheaders;
+                end
+            else
+                error(['Variable ''R'' not found in multiple ' ...
+                    'covariates file ''%s''.'], job.multi_cov(m).files{n});
+            end
+        elseif isnumeric(tmp) % .txt file with no column headers.
+            R     = tmp;
+        end
+        for j=1:size(R,2)
+            job.cov(end+1).c   = R(:,j);
+            if isempty(names)
+                job.cov(end).cname = sprintf('R%d%s',j);
+            else
+                job.cov(end).cname = names{j};
+            end
+        end
+    end
+end
+
+%-Single covariates
 % Covariate options:
 nc=length(job.cov); % number of covariates
 for i=1:nc

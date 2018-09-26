@@ -1,12 +1,19 @@
 function varargout = swe(varargin)
-% Sandwich Estimator for Neuroimaging Longitudinal Data Analysis, SwE.
-%
-% This function initializes things for the SwE toolbox and provides 
-% some low level functionalities
-
+% This function initializes the SwE toolbox and checks the installation.
+% =========================================================================
+% FORMAT swe, swe(), swe('startup') - starts the SwE toolbox.
+% FORMAT swe('ASCIIwelcome') - display the startup message.
+% FORMAT swe('Colour') - returns the interface colour.
+% -------------------------------------------------------------------------
+% Inputs:
+%  - str - 'ASCIIwelcome' for startup message or 'startup' for toolbox
+% =========================================================================
 % Written by Bryan Guillaume
 % $Id$
-if nargin == 0,
+
+versionNo = '1.2.11';
+
+if nargin == 0
     Action = 'StartUp';
 else
     Action = varargin{1};
@@ -33,6 +40,9 @@ switch lower(Action)
             addpath(fullfile(spm('Dir'),'compat'))
         end
         
+        % Add path to SwE toolbox.
+        addpath(fileparts(mfilename('fullpath')));
+        
         % launch the main GUI
         swe_ui_main;
         
@@ -43,12 +53,19 @@ switch lower(Action)
         %==================================================================
     case 'asciiwelcome'                          %-ASCII swe banner welcome
         %==================================================================
-        disp( '   ___          ___           _      ___     _  ___        ');
-        disp( '  / __) _    _ | __)   _  _  /_|    (__ \   /_||   |       ');
-        disp( '  \__ \ \\/\// | __)   \\//   || _  / __/ _  ||| | |       ');
-        disp( '  (___/  \/\/  |___)    \/    |||_| \___)|_| |||___|       ');
-        fprintf('\n  swe v1.2.10\n');
+        disp( '   ___          ___           _      ___     _  _        ');
+        disp( '  / __) _    _ | __)   _  _  /_|    (__ \   /_|/_|       ');
+        disp( '  \__ \ \\/\// | __)   \\//   || _  / __/ _  || ||       ');
+        disp( '  (___/  \/\/  |___)    \/    |||_| \___)|_| || ||       ');
+        fprintf('\n  swe v%s \n', versionNo);
   
+    case 'colour'
+        
+        varargout = {[0.8 0.8 1.0], 'Diluted Blackcurrent Purple'};
+        
+    case 'ver'
+        
+        varargout{1}=versionNo;
         
         %==================================================================
     otherwise                                       %-Unknown action string

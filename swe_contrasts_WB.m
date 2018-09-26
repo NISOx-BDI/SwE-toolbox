@@ -1,12 +1,16 @@
-% This function creates the missing 'xCon' needed for wild bootstrap SwE
-% objects. Note: Whilst contrasts are created in 'swe_contrasts.m', in 
+function [SwE] = swe_contrasts_WB(SwE)
+% This function creates the missing 'xCon' for wild bootstrap SwE objects.
+% =========================================================================
+% Note: Whilst contrasts are created in 'swe_contrasts.m', in 
 % 'swe_WB_contrasts.m' they are only recorded. They have already been
 % created by 'swe_cp_WB.m'.
-%
-% Author: Tom Maullin (08/06/2018)
 % =========================================================================
-
-function [SwE] = swe_contrasts_WB(SwE)
+% FORMAT [SwE] = SwE_contrasts_WB(SwE)
+% -------------------------------------------------------------------------
+% Inputs/Outputs:
+%   - SwE: SwE data structure
+% =========================================================================
+% Author: Tom Maullin (08/06/2018)
 
     %-Get and change to results directory
     %----------------------------------------------------------------------

@@ -1,5 +1,37 @@
 function swe_cp(SwE)
- 
+% This function computes covariance and beta maps for parametric analyses.
+% =========================================================================
+% For a parametric SwE analysis with nifti input, this function computes 
+% the following maps:
+%
+%   - swe_vox_mask: The mask image for the analysis.
+%   - swe_vox_beta_c{c#}: The beta map for contrast {c#}
+%   - swe_vox_cov_b{b1#}_b{b2#}: The covariance map between betas {b1#}
+%     and {b2#}.
+%   - swe_vox_cov_g{g#}_b{b1#}_b{b2#}: The covariance map between betas
+%     {b1#} and {b2#} for group {g#}.
+%   - swe_vox_cov_g{g#}_v{v1#}_v{v2#}: The covariance map between betas
+%     {v1#} and {v2#} for group {g#}.
+%
+% For a parametric SwE analysis with '.mat' input, this function computes
+% the following analagous maps:
+%
+%   - swe_vox_mask: The mask image for the analysis.
+%   - swe_vox_beta_c: The beta map for each contrast
+%   - swe_vox_cov_bb: The between-betas covariance map.
+%   - swe_vox_cov_g_bb: The groupwise between-betas covariance maps.
+%   - swe_vox_cov_g_vv: The visitwise between-betas covariance maps.
+%
+% For non-parametric SwE analyses, the function `swe_cp_WB` is called
+% instead as these maps must be computed differently. See the header of
+% `swe_cp_WB` for more information.
+% =========================================================================
+% FORMAT swe_cp(SwE)
+% -------------------------------------------------------------------------
+% Inputs:
+%   - SwE: SwE data structure
+% =========================================================================
+
 %-Say hello
 %--------------------------------------------------------------------------
 Finter = spm('CreateIntWin','off');

@@ -1,13 +1,16 @@
 function varargout = swe_results_ui(varargin)
 % User interface for SwE results: Display and analysis of regional effects
-% FORMAT [hReg,xSwE,SwE] = spm_SwE_results_uicB('Setup',[xSwE])
-%
-% hReg   - handle of MIP XYZ registry object
+% =========================================================================
+% FORMAT: [hReg,xSwE,SwE] = spm_spm_results_uicB('Setup',[xSwE])
+% -------------------------------------------------------------------------
+% Inputs/Outputs:
+%  - hReg: handle of MIP XYZ registry object
 %          (see spm_XYZreg.m for details)
-% xSwE   - structure containing specific SwE, distribution & filtering details
-%          (see spm_getSPM.m for contents)
-% SwE    - SwE structure containing generic parameters
-%          (see spm_spm.m for contents)
+%  - xSwE: structure containing specific SwE data, distribution & filtering 
+%          details (see spm_getSPM.m for contents)
+%  - SwE: SwE structure containing generic parameters
+%         (see spm_spm.m for contents)
+% =========================================================================
 %
 % NB: Results section GUI CallBacks use these data structures by name,
 %     which therefore *must* be assigned to the correctly named variables.
@@ -16,12 +19,14 @@ function varargout = swe_results_ui(varargin)
 % The SwE results section is for the interactive exploration and
 % characterisation of the results of a statistical analysis.
 %
-% The user is prompted to select a SwE{T} or SwE{F}, that is
-% thresholded at user specified levels. The specification of the
-% contrasts to use and the height and size thresholds are described in
-% spm_getSPM.m. The resulting SwE is then displayed in the graphics
-% window as a maximum intensity projection, alongside the design matrix
-% and contrasts employed.
+% The user is prompted to select a SwE{T} or SwE{F} image, that is
+% thresholded at user specified levels. For a parametric analysis, the 
+% specification of the contrasts to use and the height and size thresholds 
+% are described in spm_getSPM.m. For a non-parametric analysis the height 
+% threshold may have been set earlier in the matlab batch specification.
+% The resulting SwE data is then displayed in the graphics window as a 
+% maximum intensity projection, alongside the design matrix and contrasts
+% employed.
 %
 % The cursors in the MIP can be moved (dragged) to select a particular
 % voxel. The three mouse buttons give different drag and drop behaviour:
@@ -52,27 +57,6 @@ function varargout = swe_results_ui(varargin)
 %                  suprathreshold voxel, if it is not already at a
 %                  location with suprathreshold statistic.
 %                                            - see swe_list.m
-% (iii)  S.V.C   - Small Volume Correction:
-%                  Tabulates p-values corrected for a small specified
-%                  volume of interest. (Tabulation by swe_list.m)
-%                                            - see spm_VOI.m
-%
-% Data extraction buttons:
-% Eigenvariate/CVA
-%                - Extracts the principal eigenvariate for small volumes 
-%                  of interest; or CVA of data within a specified volume
-%                - Data can be adjusted or not for eigenvariate summaries
-%                - If temporal filtering was specified (fMRI), then it is
-%                  the filtered data that is returned.
-%                - Choose a VOI of radius 0 to extract the (filtered &)
-%                  adjusted data for a single voxel. Note that this vector
-%                  will be scaled to have a 2-norm of 1. (See spm_regions.m
-%                  for further details.)
-%                - The plot button also returns fitted and adjusted
-%                  (after any filtering) data for the voxel being plotted.)
-%                - Note that the cursor will jump to the nearest voxel for
-%                  which raw data was saved.
-%                                            - see spm_regions.m
 %
 % Visualisation buttons:
 %   (i) plot     - Graphs of adjusted and fitted activity against
@@ -83,7 +67,8 @@ function varargout = swe_results_ui(varargin)
 %                - Additionally, returns fitted and adjusted data to the
 %                  MATLAB base workspace.
 %                                               - see swe_graph.m
-%  (ii) overlays - Popup menu: Overlays of filtered SwE on a structural image
+%                  (Currently only works for T contrasts)
+%  (ii) overlays - Popup menu: Overlays of filtered SPM on a structural image
 %     -   slices - Slices of the thresholded statistic image overlaid
 %                  on a secondary image chosen by the user. Three
 %                  transverse slices are shown, being those at the
@@ -95,7 +80,7 @@ function varargout = swe_results_ui(varargin)
 %                                            - see spm_sections.m
 %     -   render - Render blobs on previously extracted cortical surface
 %                                            - see spm_render.m
-% (iii) save     - Write out thresholded SwE as image
+% (iii) save     - Write out thresholded SwE data as image
 %                                            - see spm_write_filtered.m
 %
 % The current cursor location can be set by editing the co-ordinate
@@ -124,7 +109,8 @@ function varargout = swe_results_ui(varargin)
 %__________________________________________________________________________
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
  
-% Karl Friston & Andrew Holmes
+% Original SPM code by Karl Friston & Andrew Holmes
+% Adapted by Bryan Guillaume
 % $Id: swe_results_ui.m 3928 2010-06-16 12:09:22Z guillaume $
  
  
@@ -525,7 +511,11 @@ switch lower(Action), case 'setup'                         %-Set up results
     H  = findobj(H);
     Hv = get(H,'Visible');
     set(hResAx,'Tag','PermRes','UserData',struct('H',H,'Hv',{Hv}))
- 
+    
+    %-Load whole brain table.
+    %------------------------------------------------------------------
+    swe_list('List',xSwE,hReg);
+    
     %-Finished results setup
     %----------------------------------------------------------------------
     varargout = {hReg,xSwE,SwE};
@@ -569,10 +559,6 @@ switch lower(Action), case 'setup'                         %-Set up results
         %-Set up buttons for results functions
         %------------------------------------------------------------------
         swe_results_ui('DrawButts',hReg,DIM,Finter,WS,FS);
-        
-        %-Load whole brain table.
-        %------------------------------------------------------------------
-        swe_list('List',xSwE,hReg);
  
         varargout  = {hReg};
  
@@ -614,10 +600,9 @@ switch lower(Action), case 'setup'                         %-Set up results
         uicontrol(Finter,'Style','PushButton','String','small volume','FontSize',FS(10),...
             'ToolTipString',['Small Volume Correction - corrected p-values ',...
             'for a small search region'],...
-            'Callback','spm_VOI(SwE,xSwE,hReg);',...
+            'Callback','swe_VOI(SwE,xSwE,hReg);',...
             'Interruptible','on','Enable','on',...
-            'Position',[015 095 100 020].*WS,...
-            'Enable','off')
+            'Position',[015 095 100 020].*WS)
  
  
         %-SwE area - used for Volume of Interest analyses
