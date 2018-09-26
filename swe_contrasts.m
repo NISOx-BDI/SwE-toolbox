@@ -686,4 +686,4 @@ elseif spm_matlab_version_chk('7') >=0
     save('SwE','SwE','-V6');
 else
     save('SwE','SwE');
-    endf
+end
