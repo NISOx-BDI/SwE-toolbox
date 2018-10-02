@@ -997,7 +997,7 @@ if ~isMat
   end
   if isempty(Q)
       fprintf('\n');                                                      %-#
-      warning('SwE:NoVoxels','No voxels survive masking at p=%4.2f',pm);
+      warning('SwE:NoVoxels','No voxels survive thresholding at p=%4.2f',pm);
   end
   
   % If we are doing clusterwise ask for threshold.
