@@ -231,7 +231,13 @@ case 'table'                                                        %-Table
         VspmUncP = spm_read_vols(xSwE.VspmUncP);
         VspmFDRP = spm_read_vols(xSwE.VspmFDRP);
         VspmFWEP = spm_read_vols(xSwE.VspmFWEP);
-        VspmFWEP_clus = spm_read_vols(xSwE.VspmFWEP_clus);
+        % If the user didn't originally select clusterwise inference,
+        % clusterwise FWEP values will not have been calculated.
+        if isfield(xSwE, 'VspmFWEP_clus')
+            VspmFWEP_clus = spm_read_vols(xSwE.VspmFWEP_clus);
+        else
+            VspmFWEP_clus = [];
+        end
     end
     
 %     if STAT~='P'
@@ -272,18 +278,37 @@ case 'table'                                                        %-Table
     %----------------------------------------------------------------------
     TabDat.tit = Title;
     
-    TabDat.hdr = {...
-        'set',      'p',            '\itp';...
-        'set',      'c',            '\itc';...
-        'cluster',  'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
-        'cluster',  'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
-        'cluster',  'equivk',       '\itk\rm_E';...
-        'cluster',  'p(unc)',       '\itp\rm_{uncorr}';...
-        'peak',     'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
-        'peak',     'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
-        'peak',      STATe,         sprintf('\\it%c',STATe);...
-        'peak',     'p(unc)',       '\itp\rm_{uncorr}';...
-        ' ',         'x,y,z {mm}',   [units{:}]}';...
+    % If we are doing a clusterwise/voxelwise analysis the header is the
+    % normal SPM header.
+    if ~isfield(xSwE, 'TFCEanaly') || ~xSwE.TFCEanaly
+        TabDat.hdr = {...
+            'set',      'p',            '\itp';...
+            'set',      'c',            '\itc';...
+            'cluster',  'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
+            'cluster',  'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
+            'cluster',  'equivk',       '\itk\rm_E';...
+            'cluster',  'p(unc)',       '\itp\rm_{uncorr}';...
+            'peak',     'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
+            'peak',     'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
+            'peak',      STATe,         sprintf('\\it%c',STATe);...
+            'peak',     'p(unc)',       '\itp\rm_{uncorr}';...
+            ' ',         'x,y,z {mm}',   [units{:}]}';
+    % Otherwise we need a TFCE section in the table instead of a cluster
+    % level section.
+    else
+        TabDat.hdr = {...
+            'set',      'p',            '\itp';...
+            'set',      'c',            '\itc';...
+            'TFCE',     'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
+            'TFCE',     '',             '';...
+            'TFCE',     'equivk',       '\itk\rm_E';...
+            'TFCE',     '',             '';...
+            'peak',     'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
+            'peak',     'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
+            'peak',      STATe,         sprintf('\\it%c',STATe);...
+            'peak',     'p(unc)',       '\itp\rm_{uncorr}';...
+            ' ',         'x,y,z {mm}',   [units{:}]}';        
+    end
         
     %-Coordinate Precisions
     %----------------------------------------------------------------------
@@ -340,9 +365,14 @@ case 'table'                                                        %-Table
      TabDat.ftr      = cell(6,2);
      
      % Record height thresholds.
-     TabDat.ftr{1,1} = ...
-          ['Threshold: Height ' eSTAT ' = %0.2f, p = %0.3f; Extent k = %0.0f voxels.'];
-     TabDat.ftr{1,2} = [u,Pz,k];
+     if ~isfield(xSwE, 'TFCEthresh') || ~xSwE.TFCEthresh
+         TabDat.ftr{1,1} = ...
+              ['Threshold: Height ' eSTAT ' = %0.2f, p = %0.3f; Extent k = %0.0f voxels.'];
+         TabDat.ftr{1,2} = [u,Pz,k];
+     else
+         TabDat.ftr{1,1} = 'Threshold: TFCE %s';
+         TabDat.ftr{1,2} = xSwE.thresDesc;
+     end
      
      if xSwE.WB
      
@@ -352,16 +382,22 @@ case 'table'                                                        %-Table
         Ts(isnan(Ts)) = [];
         Ts = 10.^-Ts;
         Ts = sort(Ts(:));
-        
+            
         % Obtain the FDR p 0.05 value.
         FDRp_05 = spm_uc_FDR(0.05,Inf,'P',n,Ts);
         clear Ts
         
-        % Record FWE/FDR/clus FWE p values.
-        TabDat.ftr{2,1} = ...
-             ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f, clus k(5%% FWE): %0.0f '];
-        TabDat.ftr{2,2} = [xSwE.Pfv, FDRp_05, xSwE.Pfc];
-     
+        % Record FWE/FDR/clus FWE p values. (No clus FWE for voxelwise and
+        % TFCE analyses)
+        if isfield(xSwE, 'Pfc')
+            TabDat.ftr{2,1} = ...
+                 ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f, clus k(5%% FWE): %0.0f '];
+            TabDat.ftr{2,2} = [xSwE.Pfv, FDRp_05, xSwE.Pfc];
+        else
+            TabDat.ftr{2,1} = ...
+                 ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f'];
+            TabDat.ftr{2,2} = [xSwE.Pfv, FDRp_05];
+        end
      else
          
         % Record FDR p value.
@@ -479,6 +515,11 @@ case 'table'                                                        %-Table
      TabDat.ftr{9,1} = ...
          ['Voxel size: ' voxfmt units{:}];
      TabDat.ftr{9,2} = VOX;
+     
+     if isfield(xSwE, 'TFCEanaly') && xSwE.TFCEanaly
+         TabDat.ftr{10,1} = 'TFCE: E=%0.1f, H=%0.1f';
+         TabDat.ftr{10,2} = [xSwE.TFCE.E, xSwE.TFCE.H];
+     end
 
     %-Characterize excursion set in terms of maxima
     % (sorted on Z values and grouped by regions)
@@ -585,7 +626,7 @@ case 'table'                                                        %-Table
                 ws      = warning('off','SPM:outOfRangeNormal');
                 warning(ws);
                 
-                if strcmp(xSwE.clustWise, 'FWE')
+                if isfield(xSwE, 'VspmFWEP_clus')
                     Pk      = 10.^-VspmFWEP_clus(XYZ(1,i),XYZ(2,i),XYZ(3,i));
                     % It is possible to get the results window to display
                     % details about voxels that were thresholded out by the
@@ -593,12 +634,23 @@ case 'table'                                                        %-Table
                     % These regions will have NaN for the cluster FWE P-value
                     % when they should have one. So the below is necessary:
                     Pk(isnan(Pk)) = 1;
+                    
+                elseif xSwE.TFCEanaly
+                    
+                    % Get coordinates of all voxels in the current cluster.
+                    currentClus = find(A == A(i));
+                    XYZ_clus = XYZ(:, currentClus);
+                    
+                    % Read in all TFCE FWE P values in this cluser
+                    tfp = 10.^-spm_get_data(xSwE.VspmTFCEFWEP,XYZ_clus);
+                    
+                    % Record the minimum TFCE FWE P value in said cluster.
+                    Pk  = min(tfp);
                 else
-                    Pk = [];
+                    Pk  = [];
                 end
                 
             end
-%         end
         
         if topoFDR
         [TabDat.dat{TabLin,3:11}] = deal(Pk,Qc,N(i),Pn,Pu,Qp,U,Pz,XYZmm(:,i));

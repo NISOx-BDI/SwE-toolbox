@@ -21,10 +21,11 @@ install:
  - cd SwE-toolbox/test/data
  - if ! [ -d .git ]; then git clone https://github.com/TomMaullin/SwE-toolbox-testdata.git .; fi
  # Delete any previous changes (retry because lfs might download files)
- - travis_retry git reset --hard origin/master
+ - git checkout TFCE_update
+ - travis_retry git reset --hard origin/TFCE_update
  # A second time to allow for 3 more retries as "--retry 9" does not seem to be
  # taken into account by Travis CI
- - travis_retry git reset --hard origin/master
+ - travis_retry git reset --hard origin/TFCE_update
  - cd ../..
 jobs:
   include:
@@ -32,45 +33,75 @@ jobs:
     # results generation stage.
     - stage: Results generation 
       env:
-      - testname='wb_f_mat'
+      - testname='wb_tfce_f_img'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
-      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'f', 'mat')"
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'tfce', 'f', 'img')"
     - env:
-      - testname='wb_t_mat'
+      - testname='wb_tfce_t_img'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
-      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 't', 'mat')"
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'tfce', 't', 'img')"
     - env:
-      - testname='wb_f_img'
+      - testname='wb_clus_f_mat'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
-      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'f', 'img')"
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'clus', 'f', 'mat')"
     - env:
-      - testname='wb_t_img'
+      - testname='wb_clus_t_mat'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
-      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 't', 'img')"
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'clus', 't', 'mat')"
     - env:
-      - testname='p_f_mat'
+      - testname='wb_clus_f_img'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
-      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'f', 'mat')"
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'clus', 'f', 'img')"
     - env:
-      - testname='p_t_mat'
+      - testname='wb_clus_t_img'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
-      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 't', 'mat')"
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'clus', 't', 'img')"
     - env:
-      - testname='p_f_img'
+      - testname='wb_vox_f_img'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
-      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'f', 'img')"
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'vox', 'f', 'img')"
     - env:
-      - testname='p_t_img'
+      - testname='wb_vox_t_img'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
-      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 't', 'img')"
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'vox', 't', 'img')"
+    - env:
+      - testname='wb_vox_f_mat'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'vox', 'f', 'mat')"
+    - env:
+      - testname='wb_vox_t_mat'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'vox', 't', 'mat')"
+    - env:
+      - testname='p_vox_f_mat'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'vox', 'f', 'mat')"
+    - env:
+      - testname='p_vox_t_mat'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'vox', 't', 'mat')"
+    - env:
+      - testname='p_vox_f_img'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'vox', 'f', 'img')"
+    - env:
+      - testname='p_vox_t_img'
+      script:
+      - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'vox', 't', 'img')"
 before_install:
  # Update docker version
  - sudo apt-get update

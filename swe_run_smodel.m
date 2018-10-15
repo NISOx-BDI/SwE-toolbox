@@ -706,35 +706,59 @@ if isfield(job.WB, 'WB_yes')
   WB.SS             = job.WB.WB_yes.WB_ss;
   WB.nB             = job.WB.WB_yes.WB_nB;
   WB.RSwE           = job.WB.WB_yes.WB_SwE;
-  WB.voxelWise      = 1;
   WB.voxelWiseInfo = [];
-  switch char(fieldnames(job.WB.WB_yes.WB_cluster))
-    
-    case 'WB_cluster_no'
-      WB.clusterWise  = 0;
+  switch char(fieldnames(job.WB.WB_yes.WB_infType))
       
-    case 'WB_cluster_yes'
-      WB.clusterWise  = 1;
-      WB.clusterInfo = [];
-      WB.clusterInfo.primaryThreshold = job.WB.WB_yes.WB_cluster.WB_cluster_yes;
-      if WB.clusterInfo.primaryThreshold > 1 || WB.clusterInfo.primaryThreshold < 0
-        error('cluster-forming threshold should be between 0 an 1 (this is a probability)');
-      end
+      case 'WB_voxelwise'
+          WB.clusterWise  = 0;
+          WB.voxelWise    = 1;
+                    
+      case 'WB_clusterwise'
       
-    case 'WB_cluster_yes_mat'
-      WB.clusterWise  = 1;
-      WB.clusterInfo = [];
-      WB.clusterInfo.primaryThreshold = job.WB.WB_yes.WB_cluster.WB_cluster_yes_mat.WB_cluster_yes_mat_clusP;
-      if WB.clusterInfo.primaryThreshold > 1 || WB.clusterInfo.primaryThreshold < 0
-        error('cluster-forming threshold should be between 0 an 1 (this is a probability)');
-      end
-      if job.WB.WB_yes.WB_cluster.WB_cluster_yes_mat.WB_cluster_yes_mat_type == 0
-        WB.clusterInfo.Vxyz = job.WB.WB_yes.WB_cluster.WB_cluster_yes_mat.WB_cluster_yes_mat_loc;
-      elseif job.WB.WB_yes.WB_cluster.WB_cluster_yes_mat.WB_cluster_yes_mat_type == 1
-        WB.clusterInfo.Vfaces = job.WB.WB_yes.WB_cluster.WB_cluster_yes_mat.WB_cluster_yes_mat_loc;
-      else
-        error('wrong specification of the type of ".mat" files')
-      end     
+          WB.clusterWise = 1;
+          WB.voxelWise   = 0;
+          
+          % Cluster forming threshold.
+          WB.clusterInfo.primaryThreshold = job.WB.WB_yes.WB_infType.WB_clusterwise.WB_clusThresh;
+          if WB.clusterInfo.primaryThreshold > 1 || WB.clusterInfo.primaryThreshold < 0
+              error('cluster-forming threshold should be between 0 an 1 (this is a probability)');
+          end
+          
+          % Work out which type of file we are looking at.
+          inputType = job.WB.WB_yes.WB_infType.WB_clusterwise.WB_inputType;
+          
+          % If we are looking at '.mat' we need more information.
+          if isfield(inputType, 'WB_mat')
+              
+              % Check whether we are looking at surface data.
+              if isfield(inputType.WB_mat, 'WB_surface')
+                  WB.clusterInfo.Vfaces = inputType.WB_mat.WB_surface.WB_surfacemask;
+              else
+                  WB.clusterInfo.Vxyz = inputType.WB_mat.WB_volumetric.WB_volumetricmask;
+              end
+              
+          end
+          
+      case 'WB_TFCE'
+          
+          % We have no clusterwise results for TFCE
+          WB.clusterWise  = 0; 
+          WB.voxelWise    = 0;
+          
+          % Create TFCE structure for TFCE analysis.
+          WB.TFCE.H = job.WB.WB_yes.WB_infType.WB_TFCE.WB_TFCE_H;
+          WB.TFCE.E = job.WB.WB_yes.WB_infType.WB_TFCE.WB_TFCE_E;
+          
+          % This is by default set to 0.1 as recommended per Smith &
+          % Nichols (2007). If a user wishes to change this value, change
+          % it on the below line:
+          WB.TFCE.dh = 0.1;
+          
+          % Error if '.mat' input.
+          if isMat
+              error('TFCE is not currently available for ''.mat'' input.')
+          end
+          
   end
   
   switch char(fieldnames(job.WB.WB_yes.WB_stat))

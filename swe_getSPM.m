@@ -553,17 +553,35 @@ if ~isMat
     Ex = [];
 end
 
-% Ask whether to do voxelwise or clusterwise inference.
 if ~isMat
+    % Ask whether to do additional voxelwise or clusterwise inference.
     try
         infType = xSwE.infType;
     catch 
         if isfield(SwE, 'WB')
-            infType = spm_input('inference type','+1','b','voxelwise|clusterwise',[0,1],2);
+            if isfield(SwE.WB, 'TFCE')
+                infType = spm_input('inference type','+1','b','voxelwise|clusterwise|TFCE',[0,1,2],3);
+            else
+                infType = spm_input('inference type','+1','b','voxelwise|clusterwise',[0,1],2);
+            end
         else
             infType = spm_input('inference type','+1','b','voxelwise|clusterwise',[0,1],1);
         end
     end
+    
+    if isfield(SwE, 'WB')
+        % Work out the original form of inference performed. This will tell us
+        % which maps have already been generated. Most importantly, whether we
+        % can do FWE p value clusterwise inference.
+        if SwE.WB.voxelWise
+            orig_infType = 'vox';
+        elseif SwE.WB.clusterWise 
+            orig_infType = 'clus';
+        else
+            orig_infType = 'tfce';
+        end
+    end
+    
 end
 
 %-Compute & store contrast parameters, contrast/ESS images, & SwE images
@@ -687,7 +705,7 @@ end
 if ~isMat
   u   = -Inf;        % height threshold
   k   = 0;           % extent threshold {voxels}
-  clustWise = 'None';% Type of clusterwise inference
+  clustWise = 'None';% Type of clusterwise inference to be performed
 
   %-Height threshold - classical inference
   %--------------------------------------------------------------------------
@@ -908,16 +926,23 @@ if ~isMat
           Pc  = [];
           uu = [];
 
-      % Else we are doing clusterwise WB.
-      else
+      % If we are doing clusterwise WB.
+      elseif isfield(SwE, 'WB') && infType == 1
           
           fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...height threshold')  %-#
           try
               thresDesc = xSwE.thresDesc;
           catch
-              % For WB we have FWE or FDR.
-              str = 'FWE|none';
-              thresDesc = spm_input('extent p value adjustment to control','+1','b',str,[],1);
+              if strcmp(orig_infType, 'clus')
+                % For WB we have FWE or p/k specification if the user
+                % originally ran a clusterwise analysis.
+                str = 'FWE|none';
+                thresDesc = spm_input('extent p value adjustment to control','+1','b',str,[],1);
+              else
+                % If the user originally ran voxelwise or TFEC we have no
+                % FWE clusterwise map from the bootstrap.
+                thresDesc = 'none';
+              end
           end
           
           switch thresDesc
@@ -957,6 +982,7 @@ if ~isMat
                   % Record what type of clusterwise inference we are doing.
                   clustWise = 'Uncorr';
                   
+                  % Cluster-forming threshold.
                   try
                       u = xSwE.u;
                   catch
@@ -984,7 +1010,30 @@ if ~isMat
                   Q      = find(Z > u);
           
           end
-              
+          
+      % If we are doing TFCE.    
+      else
+          
+          % Remember we are not doing clusterwise.
+          clustWise = 'None';
+          
+          % Ask user for TFCE FWE alpha.
+          pt = spm_input('p value (TFCE FWE)','+0','r',0.05,1,[0,1]);
+          thresDesc = ['p<' num2str(pt) ' (FWE)'];
+          
+          % Get Tfce Fwe P-values.
+          tfp = 10.^-spm_get_data(xCon(Ic).VspmTFCEFWEP,XYZ);
+          
+          up  = NaN;
+          Pp  = NaN;
+          uc  = NaN;
+          ue  = NaN;
+          Pc  = [];
+          uu = [];
+
+          % Theshold.
+          Q = find(tfp < pt);
+          
       end
 
   end
@@ -1079,11 +1128,7 @@ if ~isMat
 
           k = 0;
 
-      end % (if ~isempty(XYZ))
-  
-  % If we are doing corrected clusterwise ask for p.
-  else
-      % TO DO
+      end 
   end
 end 
 
@@ -1146,7 +1191,7 @@ xSwE   = struct( ...
             'max_nVis_g', SwE.Vis.max_nVis_g,...
             'min_nVis_g', SwE.Vis.min_nVis_g,...
             'SS',         SwE.SS);
-
+        
 % For WB analyses we have already computed uncorrected, FDR, FWE and
 % cluster-FWE P values at this point.
 if isfield(SwE, 'WB')
@@ -1159,7 +1204,23 @@ if isfield(SwE, 'WB')
     xSwE.VspmUncP = cat(1,xCon(Ic).VspmUncP);
     xSwE.VspmFDRP = cat(1,xCon(Ic).VspmFDRP);
     xSwE.VspmFWEP = cat(1,xCon(Ic).VspmFWEP);
-    xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
+    if SwE.WB.clusterWise
+        xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
+    end
+    if isfield(SwE.WB, 'TFCE')
+        xSwE.VspmTFCE = cat(1,xCon(Ic).VspmTFCE);
+        xSwE.VspmTFCEP = cat(1,xCon(Ic).VspmTFCEP);
+        xSwE.VspmTFCEFWEP = cat(1,xCon(Ic).VspmTFCEFWEP);
+        xSwE.TFCEanaly = 1;
+        xSwE.TFCE = SwE.WB.TFCE;
+    else
+        xSwE.TFCEanaly = 0;
+    end
+    if infType == 2
+        xSwE.TFCEthresh = 1;
+    else
+        xSwE.TFCEthresh = 0;
+    end
     
     % Uncorrected P values.
     Ps_vol = spm_vol(xSwE.VspmUncP);
@@ -1169,9 +1230,11 @@ if isfield(SwE, 'WB')
     
     % 95% percentiles
     maxScore = sort(SwE.WB.maxScore);
-    maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSize);
     xSwE.Pfv = maxScore(ceil(0.95*(xSwE.nB+1))); % Voxelwise FWE P 
-    xSwE.Pfc = maxClusterSize(ceil(0.95*(xSwE.nB+1))); % Clusterwise FWE P 
+    if SwE.WB.clusterWise
+        maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSize);
+        xSwE.Pfc = maxClusterSize(ceil(0.95*(xSwE.nB+1))); % Clusterwise FWE P 
+    end
     
 end
 
