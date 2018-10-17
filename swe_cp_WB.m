@@ -58,6 +58,13 @@ catch %#ok<*CTCH>
   SwE.swd = pwd;
 end
 
+%-Shuffle seed of random number generator
+%--------------------------------------------------------------------------
+if snpm_get_defaults('shuffle_seed')
+  rng('shuffle');
+end
+
+
 %-Ensure data are assigned
 %--------------------------------------------------------------------------
 try
