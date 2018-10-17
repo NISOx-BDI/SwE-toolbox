@@ -60,7 +60,7 @@ end
 
 %-Shuffle seed of random number generator
 %--------------------------------------------------------------------------
-if snpm_get_defaults('shuffle_seed')
+if swe_get_defaults('shuffle_seed')
   rng('shuffle');
 end
 
