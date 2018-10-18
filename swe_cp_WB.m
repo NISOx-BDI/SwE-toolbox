@@ -1639,9 +1639,6 @@ for b = 1:WB.nB
 
             % Obtain P values.
             pvol=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
-
-            % Get indices of current block.
-            index = (1+(bch-1)*blksz) : (bch * blksz);
             
             % Current XYZ indices
             currXYZ = XYZ(1:3, index);
@@ -1658,7 +1655,7 @@ for b = 1:WB.nB
 
             end
 
-        end
+       end
       
     end % (bch)
     
