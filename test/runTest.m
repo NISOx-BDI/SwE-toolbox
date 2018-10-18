@@ -20,6 +20,10 @@ function result=runTest(porwb, torf, matorimg)
 	warning('off','Octave:abbreviated-property-match');
 	warning('off','Octave:num-to-str');
 
+	% Disable random number seeding
+	global SwEdefs
+	SwEdefs.shuffle_seed = false;
+
 	% Work out which test we are running.
 	testname = [porwb '_' torf '_' matorimg];
 
