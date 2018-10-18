@@ -4,3 +4,4 @@ test/data/*
 test/MOxUnit/*
 # Autosaves
 *.asv
+.*~

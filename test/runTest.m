@@ -20,6 +20,10 @@ function result=runTest(porwb, torf, matorimg)
 	warning('off','Octave:abbreviated-property-match');
 	warning('off','Octave:num-to-str');
 
+	% Disable random number seeding
+	global SwEdefs
+	SwEdefs.shuffle_seed = false;
+
 	% Work out which test we are running.
 	testname = [porwb '_' torf '_' matorimg];
 
@@ -72,14 +76,9 @@ function testSetup(porwb, torf, matorimg)
     % run managed to get cached.
     testTearDown(porwb, torf, matorimg);
 
-	% Reset all seeds 
-	% (Footnote: In octave these are all different!!).
+	% Set RNG seed to fixed value
 	load('/swe/test/data/seed.mat');
-	rand('state',seed);
-	randn('state', seed);
-	randp('state', seed);
-	randg('state',seed);
-	rande('state',seed);
+	swe_seed(seed)
 
 	% Make a copy of the original xSwE object for future runs.
 	if exist('xSwE.mat')~=0

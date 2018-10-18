@@ -58,6 +58,10 @@ catch %#ok<*CTCH>
   SwE.swd = pwd;
 end
 
+%-Shuffle seed of random number generator
+%--------------------------------------------------------------------------
+swe_seed
+
 %-Ensure data are assigned
 %--------------------------------------------------------------------------
 try
