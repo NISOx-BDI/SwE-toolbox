@@ -49,7 +49,7 @@ elseif nargin==1
     randg("state",Seed);
     randp("state",Seed);
   else
-    rng(Seed);
+    rng(Seed(1));
   end
 
 else
