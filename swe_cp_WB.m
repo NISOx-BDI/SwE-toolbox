@@ -60,10 +60,7 @@ end
 
 %-Shuffle seed of random number generator
 %--------------------------------------------------------------------------
-if swe_get_defaults('shuffle_seed')
-  rng('shuffle');
-end
-
+swe_seed
 
 %-Ensure data are assigned
 %--------------------------------------------------------------------------
