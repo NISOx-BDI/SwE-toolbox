@@ -1517,6 +1517,14 @@ for b = 1:WB.nB
     end
   end
   if ~isMat
+      
+    if TFCE
+
+        % Instantiate volume for TFCE conversion.
+        scorevol = zeros(DIM(1), DIM(2), DIM(3));
+            
+    end
+    
     for bch = 1:nbch                     %-loop over blocks
       blksz  = ceil(mmv);                             %-block size
       if bch ~= nbch
@@ -1626,33 +1634,44 @@ for b = 1:WB.nB
          minScore(b+1) = min(score);
       end
       
+      % Calculate TFCE uncorrected p image.
+      if TFCE    
+
+            % Obtain P values.
+            pvol=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
+            
+            % Current XYZ indices
+            currXYZ = XYZ(1:3, index);
+
+            if SwE.WB.stat == 'T'
+
+                % T stat from this bootstrap
+                scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = swe_invNcdf(pvol);
+
+            else
+
+                % F stat from this bootstrap (converted to Z).
+                scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = -swe_invNcdf(pvol);
+
+            end
+
+       end
+      
     end % (bch)
     
-    % Calculate TFCE uncorrected p image.
-    if TFCE    
-        
-        % Instantiate volume for TFCE conversion.
-        scorevol = zeros(DIM(1), DIM(2), DIM(3));
-        
-        % Obtain P values.
-        pvol=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
-        
-        if SwE.WB.stat == 'T'
-            
-            % T stat from this boostrap
-            scorevol(sub2ind(DIM,XYZ(1,:),XYZ(2,:),XYZ(3,:))) = swe_invNcdf(pvol);
-            
+    if TFCE
+
+        if SwE.WB.stat == 'T'        
+
             % Bootstrapped tfce vol.
             tfce = swe_tfce_transform(scorevol,H,E,C,dh);
-            tfce_neg = swe_tfce_transform(-scorevol,H,E,C,dh);
-            
+            tfce_neg = swe_tfce_transform(-scorevol,H,E,C,dh);    
+        
         else
-            
-            % F stat from this boostrap (converted to Z).
-            scorevol(sub2ind(DIM,XYZ(1,:),XYZ(2,:),XYZ(3,:))) = -swe_invNcdf(pvol);
-            
+
             % Bootstrapped tfce vol.
             tfce = swe_tfce_transform(scorevol,H,E,C,dh);
+            
         end
         
         % Sum how many voxels are lower than the original parametric tfce.
@@ -1660,16 +1679,17 @@ for b = 1:WB.nB
         if SwE.WB.stat == 'T'
             tfce_uncP_neg = tfce_uncP_neg + (par_tfce_neg<=tfce_neg);
         end
-        
+
         % Record maxima for TFCE FWE p values.
         maxTFCEScore(b+1) = max(tfce(:));
         if SwE.WB.stat == 'T'
             maxTFCEScore_neg(b+1) = max(tfce_neg(:));
         end
-        
+
         clear tfce tfce_neg
         
     end
+    
   else
     
     %-Print progress information in command window
