@@ -19,7 +19,7 @@ install:
  - git lfs install  
  # Download data.
  - cd SwE-toolbox/test/data
- - if ! [ -d .git ]; then git clone https://github.com/TomMaullin/SwE-toolbox-testdata.git .; fi
+ - if ! [ -d .git ]; then git clone https://github.com/NISOx-BDI/SwE-toolbox-testdata.git .; fi
  # Delete any previous changes (retry because lfs might download files)
  - travis_retry git reset --hard origin/master
  # A second time to allow for 3 more retries as "--retry 9" does not seem to be
