@@ -92,7 +92,7 @@ end
 %-Prevent unnecessary octave warning
 %--------------------------------------------------------------------------
 if isOctave
-   warning ("off", "histc: empty EDGES specified\n"); 
+   warning ('off', 'histc: empty EDGES specified\n'); 
 end
 
 %-Delete files from previous analyses
