@@ -27,11 +27,11 @@ if nargin==0
   %----------------------------------------------------------------------
   if swe_get_defaults('shuffle_seed')
     if isOctave
-      rand( "state","reset");
-      randn("state","reset");
-      rande("state","reset");
-      randg("state","reset");
-      randp("state","reset");
+      rand( 'state','reset');
+      randn('state','reset');
+      rande('state','reset');
+      randg('state','reset');
+      randp('state','reset');
     else
       rng('shuffle');
     end
@@ -43,11 +43,11 @@ elseif nargin==1
   %----------------------------------------------------------------------
   Seed=varargin{1};
   if isOctave
-    rand( "state",Seed);
-    randn("state",Seed);
-    rande("state",Seed);
-    randg("state",Seed);
-    randp("state",Seed);
+    rand( 'state',Seed);
+    randn('state',Seed);
+    rande('state',Seed);
+    randg('state',Seed);
+    randp('state',Seed);
   else
     rng(Seed(1));
   end
