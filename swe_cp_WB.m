@@ -2067,17 +2067,18 @@ function [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, m
       nSizeCon = size(SwE.WB.con,1);
       rankCon = rank(SwE.WB.con);
 
-      if nSizeCon == 1
-          Wg_2 = SwE.WB.Wg{1};
-	      Wg_3 = SwE.WB.Wg{1};
-      else
-	      Wg_2 = SwE.WB.Wg{2};
-	      Wg_3 = SwE.WB.Wg{3};
-      end
-
       if isfield(SwE.type,'modified')
          dof_type = SwE.type.modified.dof_mo;
          nGr = length(unique(SwE.Gr.iGr));
+         
+         if nSizeCon == 1
+             Wg_2 = SwE.WB.Wg{1};
+             Wg_3 = SwE.WB.Wg{1};
+         else
+             Wg_2 = SwE.WB.Wg{2};
+             Wg_3 = SwE.WB.Wg{3};
+         end
+         
       else
          dof_type = SwE.type.classic.dof_cl;        
       end
