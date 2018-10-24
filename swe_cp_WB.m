@@ -1150,6 +1150,7 @@ else % ".mat" format
           (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
         cCovBc = cCovBc + Cov_beta_i_tmp;
       end
+      Cov_vis = [];
     end
     
     % compute the score
