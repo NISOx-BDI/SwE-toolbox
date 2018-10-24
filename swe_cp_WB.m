@@ -1150,7 +1150,9 @@ else % ".mat" format
           (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
         cCovBc = cCovBc + Cov_beta_i_tmp;
       end
+      % These variables are left empty for classic SwE.
       Cov_vis = [];
+      dofMat = [];
     end
     
     % compute the score
