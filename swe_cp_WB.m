@@ -2061,7 +2061,6 @@ function [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, m
 
       % setup
       p = zeros(1, matSize);
-      nGr = length(unique(SwE.Gr.iGr));
       nSizeCon = size(SwE.WB.con,1);
       rankCon = rank(SwE.WB.con);
 
@@ -2075,6 +2074,7 @@ function [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, m
 
       if isfield(SwE.type,'modified')
          dof_type = SwE.type.modified.dof_mo;
+         nGr = length(unique(SwE.Gr.iGr));
       else
          dof_type = SwE.type.classic.dof_cl;        
       end
