@@ -211,7 +211,6 @@ case 'table'                                                        %-Table
 %     VRpv      = xSwE.VRpv;
     n         = xSwE.n;
     STAT      = xSwE.STAT;
-    Vedf = spm_read_vols(xSwE.Vedf);
     switch STAT
         case 'T'
             STATe = 'Z';
@@ -339,6 +338,10 @@ case 'table'                                                        %-Table
      % Create footer for display.
      TabDat.ftr      = cell(6,2);
      
+     % Number of `extra` lines inserted that don't have to be present in
+     % every display
+     exlns           = 0;
+     
      % Record height thresholds.
      TabDat.ftr{1,1} = ...
           ['Threshold: Height ' eSTAT ' = %0.2f, p = %0.3f; Extent k = %0.0f voxels.'];
@@ -371,37 +374,42 @@ case 'table'                                                        %-Table
         
      end
      
-     % Record number of subjects per group.
-     nSubjString = 'Number of subjects: ';
-     for i = 1:length(xSwE.nSubj_g)
-         nSubjString = [nSubjString '%0.0f'];
-         if i ~= length(xSwE.nSubj_g)
-             nSubjString = [nSubjString ', '];
-         else
-             nSubjString = [nSubjString '; '];
+     % If we have groups display group details in ftr.
+     if isfield(xSwE, 'nSubj_g')
+         % Record number of subjects per group.
+         nSubjString = 'Number of subjects: ';
+         for i = 1:length(xSwE.nSubj_g)
+             nSubjString = [nSubjString '%0.0f'];
+             if i ~= length(xSwE.nSubj_g)
+                 nSubjString = [nSubjString ', '];
+             else
+                 nSubjString = [nSubjString '; '];
+             end
          end
-     end
-     
-     % Record visits per group.
-     nVisitsString = 'Number of visits ([Mn Max]): ';
-     nVisitsNumbers = [];
-     for i = 1:length(xSwE.max_nVis_g)
-         nVisitsString = [nVisitsString '[%0.0f %0.0f]'];
-         if i ~= length(xSwE.max_nVis_g)
-             nSubjString = [nSubjString ', '];
+
+         % Record visits per group.
+         nVisitsString = 'Number of visits ([Mn Max]): ';
+         nVisitsNumbers = [];
+         for i = 1:length(xSwE.max_nVis_g)
+             nVisitsString = [nVisitsString '[%0.0f %0.0f]'];
+             if i ~= length(xSwE.max_nVis_g)
+                 nSubjString = [nSubjString ', '];
+             end
+             nVisitsNumbers = [nVisitsNumbers xSwE.min_nVis_g(i) xSwE.max_nVis_g(i)];
          end
-         nVisitsNumbers = [nVisitsNumbers xSwE.min_nVis_g(i) xSwE.max_nVis_g(i)];
+         TabDat.ftr{3,1} = [nSubjString nVisitsString];
+         TabDat.ftr{3,2} = [xSwE.nSubj_g nVisitsNumbers];
+         
+         exlns = exlns + 1;
      end
-     TabDat.ftr{3,1} = [nSubjString nVisitsString];
-     TabDat.ftr{3,2} = [xSwE.nSubj_g nVisitsNumbers];
      
      % Record small sample adjustments.
-     TabDat.ftr{4,1}='Resid. Adj.: %s';
+     TabDat.ftr{(3+exlns),1}='Resid. Adj.: %s';
      switch xSwE.SS
          case {0, 1, 2, 3}
-             TabDat.ftr{4,2} = ['Type ' num2str(xSwE.SS)];
+             TabDat.ftr{(3+exlns),2} = ['Type ' num2str(xSwE.SS)];
          case {4, 5}
-             TabDat.ftr{4,2} = ['Type C' num2str(xSwE.SS - 2)];
+             TabDat.ftr{(3+exlns),2} = ['Type C' num2str(xSwE.SS - 2)];
          otherwise
              error('Unknown SS type')
      end
@@ -410,19 +418,19 @@ case 'table'                                                        %-Table
      if xSwE.WB
          
          % Recording number of bootstraps.
-         TabDat.ftr{5,1}='Bootstrap samples = %0.0f';
-         TabDat.ftr{5,2}= xSwE.nB;
+         TabDat.ftr{(4+exlns),1}='Bootstrap samples = %0.0f';
+         TabDat.ftr{(4+exlns),2}= xSwE.nB;
          
-     else
-         
-         % We don't record anything here for parametric.
-         TabDat.ftr{5,1}='';
-         TabDat.ftr{5,2}= '';
+         exlns = exlns + 1;
          
      end
      
      % Retrieve edf data
-     edf = spm_data_read(xSwE.Vedf);
+     if isfield(xSwE, 'Vedf')
+        edf = spm_data_read(xSwE.Vedf);
+     else
+        edf = xSwE.edf;
+     end
      edf(isnan(edf)) = [];
         
      edf_max = max(edf);
@@ -459,26 +467,26 @@ case 'table'                                                        %-Table
      
      % Recording effective Degrees of freedom
      if xSwE.dofType~=0 && diff > 10^-10
-        TabDat.ftr{6,1}=['Error DF: (' dofTypeStr '): (min) %0.1f, (median) %0.1f, (max) %0.1f'];
-        TabDat.ftr{6,2}=[edf_min, edf_med, edf_max];
+        TabDat.ftr{(4+exlns),1}=['Error DF: (' dofTypeStr '): (min) %0.1f, (median) %0.1f, (max) %0.1f'];
+        TabDat.ftr{(4+exlns),2}=[edf_min, edf_med, edf_max];
      else
-        TabDat.ftr{6,1}=['Error DF: (' dofTypeStr '): %0.1f'];
-        TabDat.ftr{6,2}=edf_med;
+        TabDat.ftr{(4+exlns),1}=['Error DF: (' dofTypeStr '): %0.1f'];
+        TabDat.ftr{(4+exlns),2}=edf_med;
      end
      
      % Record contrast degrees of freedom.
-     TabDat.ftr{7,1} = 'Contrast DF: %0.0f; Number of predictors: %0.0f';
-     TabDat.ftr{7,2} = [xSwE.df_Con xSwE.nPredict];
+     TabDat.ftr{(5+exlns),1} = 'Contrast DF: %0.0f; Number of predictors: %0.0f';
+     TabDat.ftr{(5+exlns),2} = [xSwE.df_Con xSwE.nPredict];
      
      % Record volume.
-     TabDat.ftr{8,1} = ...
+     TabDat.ftr{(6+exlns),1} = ...
          ['Volume: %0.0f ' units{:} ' = %0.0f voxels'];
-     TabDat.ftr{8,2} = [S*prod(VOX),S];
+     TabDat.ftr{(6+exlns),2} = [S*prod(VOX),S];
      
      % Record voxel sizes.
-     TabDat.ftr{9,1} = ...
+     TabDat.ftr{(7+exlns),1} = ...
          ['Voxel size: ' voxfmt units{:}];
-     TabDat.ftr{9,2} = VOX;
+     TabDat.ftr{(7+exlns),2} = VOX;
 
     %-Characterize excursion set in terms of maxima
     % (sorted on Z values and grouped by regions)

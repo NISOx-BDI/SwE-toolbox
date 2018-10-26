@@ -1139,13 +1139,20 @@ xSwE   = struct( ...
             'thresDesc',  thresDesc,...
             'WB',         0,...
             'dofType',    dof_type,...
-            'Vedf',       cat(1,xCon(Ic).Vedf),...
-            'nSubj_g',    SwE.Gr.nSubj_g,...
             'nPredict',   size(SwE.xX.X, 2),...
             'df_Con',     rank(xCon(Ic).c),...
-            'max_nVis_g', SwE.Vis.max_nVis_g,...
-            'min_nVis_g', SwE.Vis.min_nVis_g,...
             'SS',         SwE.SS);
+        
+if isfield(SwE.type, 'modified')
+    xSwE.nSubj_g    = SwE.Gr.nSubj_g;
+    xSwE.max_nVis_g = SwE.Vis.max_nVis_g;
+    xSwE.min_nVis_g = SwE.Vis.min_nVis_g;
+    xSwE.Vedf       = cat(1,xCon(Ic).Vedf);
+else
+    if ~isfield(SwE, 'WB')
+        xSwE.edf        = xCon(Ic).edf;
+    end
+end
 
 % For WB analyses we have already computed uncorrected, FDR, FWE and
 % cluster-FWE P values at this point.
@@ -1172,6 +1179,9 @@ if isfield(SwE, 'WB')
     maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSize);
     xSwE.Pfv = maxScore(ceil(0.95*(xSwE.nB+1))); % Voxelwise FWE P 
     xSwE.Pfc = maxClusterSize(ceil(0.95*(xSwE.nB+1))); % Clusterwise FWE P 
+    
+    % edf
+    xSwE.Vedf       = cat(1,xCon(Ic).Vedf);
     
 end
 

@@ -843,6 +843,9 @@ if ~isMat
               (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
             cCovBc = cCovBc + Cov_beta_i_tmp;
           end
+          % These variables are left empty for classic SwE.
+          Cov_vis = [];
+          dofMat = [];
         end
         
         % compute the score
@@ -1147,6 +1150,9 @@ else % ".mat" format
           (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
         cCovBc = cCovBc + Cov_beta_i_tmp;
       end
+      % These variables are left empty for classic SwE.
+      Cov_vis = [];
+      dofMat = [];
     end
     
     % compute the score
@@ -1489,6 +1495,9 @@ for b = 1:WB.nB
             (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
           cCovBc = cCovBc + Cov_beta_i_tmp;
         end
+        % These variables are left empty for classic SwE.
+        Cov_vis = [];
+        dofMat = [];
       end
       
       % compute the score
@@ -1586,6 +1595,10 @@ for b = 1:WB.nB
           (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
         cCovBc = cCovBc + Cov_beta_i_tmp;
       end
+
+      % These variables are left empty for classic SwE.
+      Cov_vis = [];
+      dofMat = [];
     end
     
     % compute the score
@@ -2006,14 +2019,16 @@ function [Cm,Y,CrS]=swe_mask_seperable(SwE, Cm, Y, iGr_dof)
     
       % Setup
       nGr_dof = length(unique(iGr_dof));
-      nGr = SwE.Gr.nGr;
-      iGr = SwE.Gr.iGr;
-      uGr = SwE.Gr.uGr;
-      iVis = SwE.Vis.iVis;
-      iSubj = SwE.Subj.iSubj;
-      nVis_g = SwE.Vis.nVis_g;
-      uVis_g = SwE.Vis.uVis_g;
-      
+      if isfield(SwE.type,'modified')
+          nGr = SwE.Gr.nGr;
+          iGr = SwE.Gr.iGr;
+          uGr = SwE.Gr.uGr;
+          iVis = SwE.Vis.iVis;
+          iSubj = SwE.Subj.iSubj;
+          nVis_g = SwE.Vis.nVis_g;
+          uVis_g = SwE.Vis.uVis_g;
+      end
+
       for g = 1:nGr_dof % first look data for each separable matrix design
         if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)
           Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1); % mask constant data within separable matrix design g (added by BG on 29/08/16)
@@ -2056,20 +2071,21 @@ function [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, m
 
       % setup
       p = zeros(1, matSize);
-      nGr = length(unique(SwE.Gr.iGr));
       nSizeCon = size(SwE.WB.con,1);
       rankCon = rank(SwE.WB.con);
 
-      if nSizeCon == 1
-          Wg_2 = SwE.WB.Wg{1};
-	      Wg_3 = SwE.WB.Wg{1};
-      else
-	      Wg_2 = SwE.WB.Wg{2};
-	      Wg_3 = SwE.WB.Wg{3};
-      end
-
       if isfield(SwE.type,'modified')
          dof_type = SwE.type.modified.dof_mo;
+         nGr = length(unique(SwE.Gr.iGr));
+         
+         if nSizeCon == 1
+             Wg_2 = SwE.WB.Wg{1};
+             Wg_3 = SwE.WB.Wg{1};
+         else
+             Wg_2 = SwE.WB.Wg{2};
+             Wg_3 = SwE.WB.Wg{3};
+         end
+         
       else
          dof_type = SwE.type.classic.dof_cl;        
       end

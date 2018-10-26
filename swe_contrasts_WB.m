@@ -55,7 +55,7 @@ function [SwE] = swe_contrasts_WB(SwE)
     
     % Work out if we are in clusterwise bootstrap or not.
     %----------------------------------------------------------------------
-    if SwE.WB.clusterWise
+    if isfield(SwE,'WB')
         wbstring = '-WB';
     else
         wbstring = '';
