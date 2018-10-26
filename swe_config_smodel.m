@@ -625,7 +625,7 @@ WB_stat.help    = {''
 % ---------------------------------------------------------------------
 WB_ss         = cfg_menu;
 WB_ss.tag     = 'WB_ss';
-WB_ss.name    = 'Small sample adjustments for the WB resampling';
+WB_ss.name    = 'Small sample adjustments for WB resampling';
 WB_ss.labels  = { 'type 0' 'type 1' 'type 2' 'type 3' 'type C2' 'type C3' };
 
 WB_ss.values  = {0 1 2 3 4 5};
