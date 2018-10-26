@@ -1149,7 +1149,9 @@ if isfield(SwE.type, 'modified')
     xSwE.min_nVis_g = SwE.Vis.min_nVis_g;
     xSwE.Vedf       = cat(1,xCon(Ic).Vedf);
 else
-    xSwE.edf        = xCon(Ic).edf;
+    if ~isfield(SwE, 'WB')
+        xSwE.edf        = xCon(Ic).edf;
+    end
 end
 
 % For WB analyses we have already computed uncorrected, FDR, FWE and
@@ -1177,6 +1179,9 @@ if isfield(SwE, 'WB')
     maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSize);
     xSwE.Pfv = maxScore(ceil(0.95*(xSwE.nB+1))); % Voxelwise FWE P 
     xSwE.Pfc = maxClusterSize(ceil(0.95*(xSwE.nB+1))); % Clusterwise FWE P 
+    
+    % edf
+    xSwE.Vedf       = cat(1,xCon(Ic).Vedf);
     
 end
 
