@@ -11,7 +11,7 @@ function varargout = swe(varargin)
 % Written by Bryan Guillaume
 % $Id$
 
-versionNo = '1.2.11';
+versionNo = '2.0.0.rc';
 
 if nargin == 0
     Action = 'StartUp';
