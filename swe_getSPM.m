@@ -711,7 +711,7 @@ if ~isMat
   %--------------------------------------------------------------------------
   if STAT ~= 'P'
       
-      % If we are doing voxelwise parametric.
+      % If we are doing voxelwise inference on a parametric.
       if ~isfield(SwE, 'WB') && infType == 0
           
           %-Get height threshold
@@ -789,7 +789,7 @@ if ~isMat
           
           Q      = find(Z > u);
       
-      % If we are doing clusterwise parametric.
+      % If we are doing clusterwise inference on a parametric.
       elseif ~isfield(SwE, 'WB') && infType == 1
           
           % Record what type of clusterwise inference we are doing.
@@ -833,7 +833,7 @@ if ~isMat
           
           Q      = find(Z > u);
 
-      % If we are doing voxelwise WB.
+      % If we are doing voxelwise inference on a WB.
       elseif isfield(SwE, 'WB') && infType == 0
           
           %-Get height threshold
@@ -863,11 +863,13 @@ if ~isMat
                   
                   Q      = find(FWE_ps  < pu);
                   
-                  % Obtain statistic threshold
-                  if strcmp(STAT, 'T')
-                      u = norminv(1-pu);
+                  % Obtain statistic threshold (this will be the maximum
+                  % statistic value that did not pass thresholding when Q
+                  % was applied to the statistic).
+                  if ~isempty(Q)
+                      u = max(Z(Z<min(Z(Q))));
                   else
-                      u = chi2inv(1-pu, 1);
+                      u = Inf;
                   end
 
               case 'FDR' % False discovery rate
@@ -885,10 +887,11 @@ if ~isMat
                   Q      = find(FDR_ps  < pu);
                   
                   % Obtain statistic threshold
-                  if strcmp(STAT, 'T')
-                      u = norminv(1-pu);
-                  else
-                      u = chi2inv(1-pu, 1);
+                  switch STAT
+                      case 'T'
+                         u = spm_uc_FDR(pu,Inf,'Z',n,VspmSv,0); 
+                      case 'F'
+                         u = spm_uc_FDR(pu,[1 1],'X',n,VspmSv,0); 
                   end
                   
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
@@ -1046,7 +1049,7 @@ if ~isMat
   end
   if isempty(Q)
       fprintf('\n');                                                      %-#
-      warning('SwE:NoVoxels','No voxels survive masking at p=%4.2f',pm);
+      warning('SwE:NoVoxels','No voxels survive thresholding at p=%4.2f',pm);
   end
   
   % If we are doing clusterwise ask for threshold.

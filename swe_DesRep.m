@@ -718,6 +718,10 @@ str='Statistical analysis: Design'; if ~desmtx, str=[str,' orthogonality']; end
 text(0.5,0.95,str,'Fontsize',FS(14),'Fontweight','Bold',...
     'HorizontalAlignment','center');
 
+ver = '\it Design specified using SwE Version 1.2.11'; % When we update to 2.0.0 this should use swe('ver').
+text(0.8,0.04,ver,'Fontsize',FS(8),'Fontweight','Bold',...
+    'HorizontalAlignment','center', 'Interpreter', 'Tex', 'Color', [1 1 1]*.6);
+
 line('Parent',hTax,...
     'XData',[0.3 0.7],'YData',[0.92 0.92],'LineWidth',3,'Color','r');
 
