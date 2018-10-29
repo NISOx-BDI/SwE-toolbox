@@ -13,6 +13,12 @@ function varargout = swe(varargin)
 
 versionNo = '1.2.11';
 
+try
+  Modality = spm_get_defaults('modality');
+catch
+  spm('defaults','FMRI'); % Starting w/out SPM
+end
+
 if nargin == 0
     Action = 'StartUp';
 else
