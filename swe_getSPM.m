@@ -863,11 +863,13 @@ if ~isMat
                   
                   Q      = find(FWE_ps  < pu);
                   
-                  % Obtain statistic threshold
-                  if strcmp(STAT, 'T')
-                      u = norminv(1-pu);
+                  % Obtain statistic threshold (this will be the maximum
+                  % statistic value that did not pass thresholding when Q
+                  % was applied to the statistic).
+                  if ~isempty(Q)
+                      u = max(Z(Z<min(Z(Q))));
                   else
-                      u = chi2inv(1-pu, 1);
+                      u = Inf;
                   end
 
               case 'FDR' % False discovery rate
