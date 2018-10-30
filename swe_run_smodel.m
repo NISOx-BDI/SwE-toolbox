@@ -342,7 +342,6 @@ switch job.globalm.glonorm
         iGloNorm = 1;
 end
 
-factor(1).levels
 if factor(1).levels > 1
     % Override if factor-specific ANCOVA has been specified
     for i=1:length(factor)
