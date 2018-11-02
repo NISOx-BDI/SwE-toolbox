@@ -680,7 +680,7 @@ if ~isMat
     if WB.stat=='T'
       VlP_wb_clusterFWE_neg = swe_create_vol(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
                                              sprintf('Non-parametric clusterwise FWE -log10(P) value data (negative, CFT %g).',...
-                                                   SwE.WB.clusterInfo.primaryThreshold);
+                                                     SwE.WB.clusterInfo.primaryThreshold));
     end
   end
   
