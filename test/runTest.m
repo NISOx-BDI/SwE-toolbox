@@ -1,7 +1,7 @@
-function result=runTest(porwb, torf, matorimg)
+function result=runTest(porwb, inftype, torf, matorimg)
 % This function runs an octave test case for the SwE toolbox.
 % ====================================================================
-% FORMAT result=runTest(porwb, torf, matorimg)
+% FORMAT result=runTest(porwb, inftype, torf, matorimg)
 % --------------------------------------------------------------------
 % Inputs:
 %
@@ -25,7 +25,7 @@ function result=runTest(porwb, torf, matorimg)
 	SwEdefs.shuffle_seed = false;
 
 	% Work out which test we are running.
-	testname = [porwb '_' torf '_' matorimg];
+	testname = [porwb '_' inftype '_' torf '_' matorimg];
 
 	% Tell the user which test case we are running.
 	disp(sprintf('\n=============================================================='))
@@ -33,10 +33,10 @@ function result=runTest(porwb, torf, matorimg)
 	disp(sprintf('==============================================================\n'))
 
 	% Test setup
-	testSetup(porwb, torf, matorimg)
+	testSetup(porwb, inftype, torf, matorimg)
 
 	% Generate the results for the test.
-	generateData(porwb, torf, matorimg);
+	generateData(porwb, inftype, torf, matorimg);
 
 
 	% Tell the user we have run the test.
@@ -47,7 +47,7 @@ function result=runTest(porwb, torf, matorimg)
 	disp(sprintf('==============================================================\n'))
 
 	% Compare test results to ground truth.
-	result = verifyMapsUnchanged(porwb, torf, matorimg);
+	result = verifyMapsUnchanged(porwb, inftype, torf, matorimg);
 
 	% Tell the user whether the tests passed.
 	disp(sprintf('\n=============================================================='))
@@ -60,21 +60,21 @@ function result=runTest(porwb, torf, matorimg)
 	disp(sprintf('==============================================================\n'))
 
 	% Teardown method
-	testTearDown(porwb, torf, matorimg)
+	testTearDown(porwb, inftype, torf, matorimg)
 
 end
 
-function testSetup(porwb, torf, matorimg)
+function testSetup(porwb, inftype, torf, matorimg)
 
 	% Move into the test folder and add the path to tests.
-	cd(['/swe/test/data/test_' porwb '_' torf '_' matorimg]);
+	cd(['/swe/test/data/test_' porwb '_' inftype '_' torf '_' matorimg]);
 	ls;
 	addpath('/swe');
 	addpath('/swe/test');
     
     % Run teardown method just in case some of the files from the previous 
     % run managed to get cached.
-    testTearDown(porwb, torf, matorimg);
+    testTearDown(porwb, inftype, torf, matorimg);
 
 	% Set RNG seed to fixed value
 	load('/swe/test/data/seed.mat');
@@ -87,7 +87,7 @@ function testSetup(porwb, torf, matorimg)
 
 end
 
-function generateData(porwb, torf, matorimg)
+function generateData(porwb, inftype, torf, matorimg)
 
 
 	% Load the test design and run it.
@@ -126,7 +126,7 @@ function generateData(porwb, torf, matorimg)
 
 end
 
-function mapsEqual = verifyMapsUnchanged(porwb, torf, matorimg)
+function mapsEqual = verifyMapsUnchanged(porwb, inftype, torf, matorimg)
 	
 	% List all files for testing
 	if strcmp(matorimg, 'img')
@@ -243,7 +243,7 @@ function mapsEqual = verifyMapsUnchanged(porwb, torf, matorimg)
 
 end
 
-function testTearDown(porwb, torf, matorimg)
+function testTearDown(porwb, inftype, torf, matorimg)
 	
 	% Delete all files from this run.
 	delete('swe_*')

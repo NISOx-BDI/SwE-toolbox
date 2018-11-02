@@ -654,82 +654,82 @@ WB_ss.help    = {  ' '
                 'H_ii is the sub-matrix of the hat matrix H=X''(X''X)^(-1)X corresponding to subject i.'
                 ' '}';
 
-% ---------------------------------------------------------------------
-% WB_cluster_no No
-% ---------------------------------------------------------------------
-WB_cluster_no         = cfg_const;
-WB_cluster_no.tag     = 'WB_cluster_no';
-WB_cluster_no.name    = 'No';
-WB_cluster_no.val     = {0};
-WB_cluster_no.help    = {''
-  'No cluster-wise inference will be performed'
-  ''};
-% ---------------------------------------------------------------------
-% WB_cluster_yes Yes
-% ---------------------------------------------------------------------
-WB_cluster_yes         = cfg_entry;
-WB_cluster_yes.tag     = 'WB_cluster_yes';
-WB_cluster_yes.name    = 'Yes for image input, set the cluster-forming threshold now';
-WB_cluster_yes.val     = {0.001};
-WB_cluster_yes.help    = {''
-                     'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default)'
-''}';
-WB_cluster_yes.strtype = 'e';
-WB_cluster_yes.num     = [1 1];
-
-% ---------------------------------------------------------------------
-% WB_cluster_yes_mat_clusP cluP
-% ---------------------------------------------------------------------
-WB_cluster_yes_mat_clusP         = cfg_entry;
-WB_cluster_yes_mat_clusP.tag     = 'WB_cluster_yes_mat_clusP';
-WB_cluster_yes_mat_clusP.name    = 'Set the cluster-forming threshold now for ".mat" input';
-WB_cluster_yes_mat_clusP.val     = {0.001};
-WB_cluster_yes_mat_clusP.help    = {''
-                     'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default)'
-''}';
-WB_cluster_yes_mat_clusP.strtype = 'e';
-WB_cluster_yes_mat_clusP.num     = [1 1];
-
-% ---------------------------------------------------------------------
-% WB_cluster_yes_mat_type cluP
-% ---------------------------------------------------------------------
-WB_cluster_yes_mat_type         = cfg_menu;
-WB_cluster_yes_mat_type.tag     = 'WB_cluster_yes_mat_type';
-WB_cluster_yes_mat_type.name    = 'Select the type of ".mat" inputs';
-WB_cluster_yes_mat_type.val     = {};
-WB_cluster_yes_mat_type.labels  = { 'Volumetric (voxels)' 'Surface (vertices)'};
-WB_cluster_yes_mat_type.help    = {''
-                     'Select the type of ".mat" inputs. Either volumetric or surface data'
-''}';
-WB_cluster_yes_mat_type.values  = {0 1};
-
-% ---------------------------------------------------------------------
-% WB_cluster_yes_mat_loc loc
-% ---------------------------------------------------------------------
-WB_cluster_yes_mat_loc         = cfg_files;
-WB_cluster_yes_mat_loc.tag     = 'WB_cluster_yes_mat_loc';
-WB_cluster_yes_mat_loc.name    = 'Spatial information';
-WB_cluster_yes_mat_loc.help    = {''
-                     'For volumetric data, the 3D location of voxels is expected in voxel coordinates (XYZ_vox).'
-                     ''
-                     'For surface data, the faces (or triangles) information is expected in vertex coordinates.'
-                     ''
-                     'Note that this spatial information needs to be saved in a ".mat" file as a matrix of size 3 x nVoxels (or its transposed) or nFaces x 3 (or its transposed)'
-}';
-WB_cluster_yes_mat_loc.filter = {'mat'};
-WB_cluster_yes_mat_loc.ufilter = '.*';
-WB_cluster_yes_mat_loc.num     = [1 1];
-
-% ---------------------------------------------------------------------
-% WB_cluster_yesMat Yes
-% ---------------------------------------------------------------------
-WB_cluster_yes_mat         = cfg_branch;
-WB_cluster_yes_mat.tag     = 'WB_cluster_yes_mat';
-WB_cluster_yes_mat.name    = 'Yes for ".mat" input';
-WB_cluster_yes_mat.val     = {WB_cluster_yes_mat_clusP WB_cluster_yes_mat_type WB_cluster_yes_mat_loc};
-WB_cluster_yes_mat.help    = {''
-                     'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default) and some spatial information needs to be specified in order to form clusters.'
-}';
+% % ---------------------------------------------------------------------
+% % WB_cluster_no No
+% % ---------------------------------------------------------------------
+% WB_cluster_no         = cfg_const;
+% WB_cluster_no.tag     = 'WB_cluster_no';
+% WB_cluster_no.name    = 'No';
+% WB_cluster_no.val     = {0};
+% WB_cluster_no.help    = {''
+%   'No cluster-wise inference will be performed'
+%   ''};
+% % ---------------------------------------------------------------------
+% % WB_cluster_yes Yes
+% % ---------------------------------------------------------------------
+% WB_cluster_yes         = cfg_entry;
+% WB_cluster_yes.tag     = 'WB_cluster_yes';
+% WB_cluster_yes.name    = 'Yes for image input, set the cluster-forming threshold now';
+% WB_cluster_yes.val     = {0.001};
+% WB_cluster_yes.help    = {''
+%                      'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default)'
+% ''}';
+% WB_cluster_yes.strtype = 'e';
+% WB_cluster_yes.num     = [1 1];
+% 
+% % ---------------------------------------------------------------------
+% % WB_cluster_yes_mat_clusP cluP
+% % ---------------------------------------------------------------------
+% WB_cluster_yes_mat_clusP         = cfg_entry;
+% WB_cluster_yes_mat_clusP.tag     = 'WB_cluster_yes_mat_clusP';
+% WB_cluster_yes_mat_clusP.name    = 'Set the cluster-forming threshold now for ".mat" input';
+% WB_cluster_yes_mat_clusP.val     = {0.001};
+% WB_cluster_yes_mat_clusP.help    = {''
+%                      'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default)'
+% ''}';
+% WB_cluster_yes_mat_clusP.strtype = 'e';
+% WB_cluster_yes_mat_clusP.num     = [1 1];
+% 
+% % ---------------------------------------------------------------------
+% % WB_cluster_yes_mat_type cluP
+% % ---------------------------------------------------------------------
+% WB_cluster_yes_mat_type         = cfg_menu;
+% WB_cluster_yes_mat_type.tag     = 'WB_cluster_yes_mat_type';
+% WB_cluster_yes_mat_type.name    = 'Select the type of ".mat" inputs';
+% WB_cluster_yes_mat_type.val     = {};
+% WB_cluster_yes_mat_type.labels  = { 'Volumetric (voxels)' 'Surface (vertices)'};
+% WB_cluster_yes_mat_type.help    = {''
+%                      'Select the type of ".mat" inputs. Either volumetric or surface data'
+% ''}';
+% WB_cluster_yes_mat_type.values  = {0 1};
+% 
+% % ---------------------------------------------------------------------
+% % WB_cluster_yes_mat_loc loc
+% % ---------------------------------------------------------------------
+% WB_cluster_yes_mat_loc         = cfg_files;
+% WB_cluster_yes_mat_loc.tag     = 'WB_cluster_yes_mat_loc';
+% WB_cluster_yes_mat_loc.name    = 'Spatial information';
+% WB_cluster_yes_mat_loc.help    = {''
+%                      'For volumetric data, the 3D location of voxels is expected in voxel coordinates (XYZ_vox).'
+%                      ''
+%                      'For surface data, the faces (or triangles) information is expected in vertex coordinates.'
+%                      ''
+%                      'Note that this spatial information needs to be saved in a ".mat" file as a matrix of size 3 x nVoxels (or its transposed) or nFaces x 3 (or its transposed)'
+% }';
+% WB_cluster_yes_mat_loc.filter = {'mat'};
+% WB_cluster_yes_mat_loc.ufilter = '.*';
+% WB_cluster_yes_mat_loc.num     = [1 1];
+% 
+% % ---------------------------------------------------------------------
+% % WB_cluster_yesMat Yes
+% % ---------------------------------------------------------------------
+% WB_cluster_yes_mat         = cfg_branch;
+% WB_cluster_yes_mat.tag     = 'WB_cluster_yes_mat';
+% WB_cluster_yes_mat.name    = 'Yes for ".mat" input';
+% WB_cluster_yes_mat.val     = {WB_cluster_yes_mat_clusP WB_cluster_yes_mat_type WB_cluster_yes_mat_loc};
+% WB_cluster_yes_mat.help    = {''
+%                      'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default) and some spatial information needs to be specified in order to form clusters.'
+% }';
 
 % ---------------------------------------------------------------------
 % WB_nB nB
@@ -745,28 +745,212 @@ WB_nB.strtype = 'i';
 WB_nB.num     = [1 1];
 
 
+% % ---------------------------------------------------------------------
+% % WB_cluster WB cluster-wise inference 
+% % ---------------------------------------------------------------------
+% WB_cluster         = cfg_choice;
+% WB_cluster.tag     = 'WB_cluster';
+% WB_cluster.name    = 'Cluster-wise inference';
+% WB_cluster.values  = {WB_cluster_no WB_cluster_yes WB_cluster_yes_mat};
+% WB_cluster.val     = {WB_cluster_no};
+% WB_cluster.help    = {''
+%   'No: no cluster-wise inference will be performed'
+%   ''
+%   'Yes: a cluster-wise inference will be performed alongside the voxel-wise inference. If this option is selected, the U-SwE will be automatically used in order to produce "meaningful" parametric p-value bootstrap images to be thresholded by the specified cluster-forming threshold.'
+%   ''};
+
 % ---------------------------------------------------------------------
-% WB_cluster WB cluster-wise inference 
+% WB_voxelwise WB voxelwise inference
 % ---------------------------------------------------------------------
-WB_cluster         = cfg_choice;
-WB_cluster.tag     = 'WB_cluster';
-WB_cluster.name    = 'Cluster-wise inference';
-WB_cluster.values  = {WB_cluster_no WB_cluster_yes WB_cluster_yes_mat};
-WB_cluster.val     = {WB_cluster_no};
-WB_cluster.help    = {''
-  'No: no cluster-wise inference will be performed'
-  ''
-  'Yes: a cluster-wise inference will be performed alongside the voxel-wise inference. If this option is selected, the U-SwE will be automatically used in order to produce "meaningful" parametric p-value bootstrap images to be thresholded by the specified cluster-forming threshold.'
+WB_voxelwise         = cfg_const;
+WB_voxelwise.tag     = 'WB_voxelwise';
+WB_voxelwise.name    = 'Voxelwise';
+WB_voxelwise.val     = {0};
+WB_voxelwise.help    = {''
+  'Mass univariate inference will be performed with the option of bootstrapped FWE and FDR.'
   ''};
+
+% ---------------------------------------------------------------------
+% WB_volumetric WB volumetric clusterwise inference mask
+% ---------------------------------------------------------------------
+WB_volumetricmask         = cfg_files;
+WB_volumetricmask.tag     = 'WB_volumetricmask';
+WB_volumetricmask.name    = 'Volumetric mask';
+WB_volumetricmask.help    = {' '
+    'Select a mask/''.mat'' file containing mesh data.'};
+WB_volumetricmask.filter = 'mat';
+WB_volumetricmask.ufilter = '.*';
+WB_volumetricmask.num     = [1 1];
+
+
+% ---------------------------------------------------------------------
+% WB_volumetric WB volumetric clusterwise inference
+% ---------------------------------------------------------------------
+WB_volumetric         = cfg_branch;
+WB_volumetric.tag     = 'WB_volumetric';
+WB_volumetric.name    = 'Volumetric input';
+WB_volumetric.val     = {WB_volumetricmask};
+WB_volumetric.help    = {''
+  'Clusterwise inference will be performed on volumetric input given as a ''.mat'' file.'
+  ''
+  'Please enter a mask/''.mat'' file containing mesh data.'};
+
+% ---------------------------------------------------------------------
+% WB_surfacemask WB surface clusterwise inference mask
+% ---------------------------------------------------------------------
+WB_surfacemask         = cfg_files;
+WB_surfacemask.tag     = 'WB_surfacemask';
+WB_surfacemask.name    = 'Surface mask';
+WB_surfacemask.help    = {' '
+    'Select a mask/''.mat'' file containing mesh data.'};
+WB_surfacemask.filter = 'mat';
+WB_surfacemask.ufilter = '.*';
+WB_surfacemask.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_clusThresh
+% ---------------------------------------------------------------------
+WB_clusThresh         = cfg_entry;
+WB_clusThresh.tag     = 'WB_clusThresh';
+WB_clusThresh.name    = 'Set the cluster-forming threshold';
+WB_clusThresh.val     = {0.001};
+WB_clusThresh.help    = {''
+                     'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default)'
+''}';
+WB_clusThresh.strtype = 'e';
+WB_clusThresh.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_clusterwise WB surface clusterwise inference
+% ---------------------------------------------------------------------
+WB_surface         = cfg_branch;
+WB_surface.tag     = 'WB_surface';
+WB_surface.name    = 'Surface input';
+WB_surface.val     = {WB_surfacemask};
+WB_surface.help    = {''
+  'Clusterwise inference will be performed on surface input given as a ''.mat'' file.'
+  ''
+  'Please enter a mask/''.mat'' file containing mesh data.'};
+
+% --------------------------------------------------------------------- 
+% WB_voxelwise WB clusterwise volumetric .img input
+% ---------------------------------------------------------------------
+WB_volumetric         = cfg_const;
+WB_volumetric.tag     = 'WB_volumetric'; 
+WB_volumetric.name    = 'Volumetric input';
+WB_volumetric.val     = {0};
+WB_volumetric.help    = {''
+  'Clusterwise inference will be performed on volumetric input given as a ''.mat'' file.'
+  ''};
+
+% ---------------------------------------------------------------------
+% WB_infType WB inference type
+% ---------------------------------------------------------------------
+WB_mat         = cfg_choice;
+WB_mat.tag     = 'WB_mat';
+WB_mat.name    = 'mat input';
+WB_mat.values  = {WB_surface WB_volumetric};
+WB_mat.val     = {WB_surface};
+WB_mat.help    = {''
+  'Clusterwise inference will be performed on input given as a ``.mat`` file.'
+  ''
+  'Please select whether the ''.mat'' file contains volumetric or surface data.'};
+
+% --------------------------------------------------------------------- 
+% WB_voxelwise WB clusterwise .img input
+% ---------------------------------------------------------------------
+WB_img         = cfg_const;
+WB_img.tag     = 'WB_img';
+WB_img.name    = 'img/nii input';
+WB_img.val     = {0};
+WB_img.help    = {''
+  'Clusterwise inference will be performed on volumetric input given as nifti/image files.'
+  ''};
+
+% ---------------------------------------------------------------------
+% WB_infType WB inference type
+% ---------------------------------------------------------------------
+WB_inputType         = cfg_choice;
+WB_inputType.tag     = 'WB_inputType';
+WB_inputType.name    = 'Select Input Type:';
+WB_inputType.values  = {WB_mat WB_img};
+WB_inputType.val     = {WB_img};
+WB_inputType.help    = {''
+  'Please select the input type. This should match the extension of the files you have entered under ''Scans''.'};
+
+% ---------------------------------------------------------------------
+% WB_clusterwise WB clusterwise inference
+% ---------------------------------------------------------------------
+WB_clusterwise         = cfg_branch;
+WB_clusterwise.tag     = 'WB_clusterwise';
+WB_clusterwise.name    = 'Clusterwise';
+WB_clusterwise.val     = {WB_inputType WB_clusThresh};
+WB_clusterwise.help    = {''
+                     'Bootstrapped clusterwise inference will be performed with clusterwise FWE p values available at the results stage.'
+}';
+
+% ---------------------------------------------------------------------
+% WB_TFCE_E E parameter for TFCE
+% ---------------------------------------------------------------------
+WB_TFCE_E         = cfg_entry;
+WB_TFCE_E.tag     = 'WB_TFCE_E';
+WB_TFCE_E.name    = 'E';
+WB_TFCE_E.val     = {0.5};
+WB_TFCE_E.help    = {''
+                     'Select the E parameter as defined by Smith & Nichols (2009). The default value of 0.5 is strongly recommended.'
+''}';
+WB_TFCE_E.strtype = 'e';
+WB_TFCE_E.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_TFCE_H H parameter for TFCE
+% ---------------------------------------------------------------------
+WB_TFCE_H         = cfg_entry;
+WB_TFCE_H.tag     = 'WB_TFCE_H';
+WB_TFCE_H.name    = 'H';
+WB_TFCE_H.val     = {2};
+WB_TFCE_H.help    = {''
+                     'Select the H parameter as defined by Smith & Nichols (2009). The default value of 2 is strongly recommended.'
+''}';
+WB_TFCE_H.strtype = 'e';
+WB_TFCE_H.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% WB_clusterwise WB clusterwise inference
+% ---------------------------------------------------------------------
+WB_TFCE         = cfg_branch;
+WB_TFCE.tag     = 'WB_TFCE';
+WB_TFCE.name    = 'TFCE';
+WB_TFCE.val     = {WB_TFCE_E WB_TFCE_H};
+WB_TFCE.help    = {''
+                     'Threshold Free Cluster Enhancement performed will be performed using the wild boostrap. For more information, see Smith & Nichols (2009).'
+}';
+
+% ---------------------------------------------------------------------
+% WB_infType WB inference type
+% ---------------------------------------------------------------------
+WB_infType         = cfg_choice;
+WB_infType.tag     = 'WB_infType';
+WB_infType.name    = 'Select Inference Type:';
+WB_infType.values  = {WB_voxelwise WB_clusterwise WB_TFCE};
+WB_infType.val     = {WB_voxelwise};
+WB_infType.help    = {''
+  'Please select one of:'
+  ''
+  'Voxelwise: Mass univariate inference with the option of bootstrapped FWE.'
+  ''
+  'Clusterwise: Bootstrapped clusterwise inference with clusterwise FWE p values available.'
+  ''
+  'TFCE: Threshold Free Cluster Enhancement performed using the wild boostrap. (Note: this feature is not available for ''.mat'' input.'};
 
 % ---------------------------------------------------------------------
 % WB_yes Yes
 % ---------------------------------------------------------------------
-WB_yes         = cfg_branch;
-WB_yes.tag     = 'WB_yes';
-WB_yes.name    = 'Yes';
-WB_yes.val     = {WB_ss WB_nB WB_SwE WB_stat WB_cluster};
-WB_yes.help    = {''
+WB_clusterwise         = cfg_branch;
+WB_clusterwise.tag     = 'WB_yes';
+WB_clusterwise.name    = 'Yes';
+WB_clusterwise.val     = {WB_ss WB_nB WB_SwE WB_stat WB_infType};
+WB_clusterwise.help    = {''
                      'A non-parametric Wild Bootstrap procedure is considered to analyse the data (see Guillaume, 2015)'
 }';
 
@@ -781,7 +965,7 @@ WB.help    = {''
               ''
               'No: only a "standard" parametric SwE analysis is considered (default)'
 }';
-WB.values = {WB_no WB_yes};
+WB.values = {WB_no WB_clusterwise};
 WB.val    = {WB_no};
 
 

@@ -34,6 +34,17 @@ function swe_cp_WB(SwE)
 %         Log10 map of the clusterwise bootstrap-calculated FWE P values 
 %         for contrast {c#}.
 %
+%   - swe_tfce_c{c#}:
+%         TFCE parametric statistic map for contrast {c#}.
+%
+%   - swe_tfce_lp-WB_c{c#}:
+%         Log10 map of the TFCE bootstrap-calculated P values for contrast
+%         {c#}.
+%    
+%   - swe_tfce_lpFWE-WB_c{c#}:
+%         Log10 map of the TFCE bootstrap-calculated FWE P values for
+%         contrast {c#}.
+%
 % Currently (30/08/2018), the only contrasts computed are activation 
 % (contrast #1) and deactivation (contrast #2) for the contrast vector the 
 % user input during the batch entry.
@@ -89,6 +100,16 @@ else
     isMeshData = false;
 end
 
+%-Check whether we are doing a TFCE analysis
+%--------------------------------------------------------------------------
+TFCE = isfield(SwE.WB, 'TFCE');
+if TFCE
+    H = SwE.WB.TFCE.H;
+    E = SwE.WB.TFCE.E;
+    dh = SwE.WB.TFCE.dh;
+    C = 18;
+end
+
 %-Prevent unnecessary octave warning
 %--------------------------------------------------------------------------
 if isOctave
@@ -115,7 +136,7 @@ files = {'^swe_vox_mask\..{3}$',...
         '^swe_vox_cov_b\d{2}_b\d{2}\..{3}$',...
         '^swe_vox_cov_vv\..{3}$',...
         '^swe_vox_cov\..{3}$',...
-        '^swe_vox_beta_bb\..{3}$',...
+        '^swe_vox_beta_b\..{3}$',...
         '^swe_vox_cov_g\d{2}_v\d{2}_v\d{2}\..{3}$',...
         '^swe_vox_edf_c\d{2}\..{3}$',...
         '^swe_vox_beta_\w{1}\d{2}\..{3}$',...
@@ -556,6 +577,17 @@ if ~isMat
   Vscore = swe_create_vol(sprintf('swe_vox_%cstat_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
 			  sprintf('Original parametric %c statistic data.', WB.stat));
   
+  %-Initialise parametric TFCE score image, if TFCE has been selected.
+  %---------------------------------------------------------------------- 
+  if TFCE
+      Vscore_tfce = swe_create_vol(sprintf('swe_tfce_c%02d%s', 1, file_ext), DIM, M,...
+                  'Original parametric TFCE statistic data.'); 
+      if WB.stat=='T'
+          Vscore_tfce_neg = swe_create_vol(sprintf('swe_tfce_c%02d%s', 2, file_ext), DIM, M,...
+                  'Original parametric TFCE statistic data for a negative contrast.'); 
+      end
+  end
+  
   %-Initialise original parametric edf image
   %----------------------------------------------------------------------
   
@@ -599,41 +631,56 @@ if ~isMat
   %-Initialise result images
   %----------------------------------------------------------------------
   VlP_wb_pos = swe_create_vol(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                              '-log10(uncor. non-para. P, +ve)');
+                              'Non-parametric voxelwise -log10(P) value data (positive).');
 
   VlP_wb_FWE_pos = swe_create_vol(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                                  '-log10(FWE-corr. P, +ve)');
+                                  'Non-parametric voxelwise FWE -log10(P) value data (positive).');
   
   VlP_wb_FDR_pos = swe_create_vol(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                                  '-log10(FDR-corr. P, +ve)');
+                                  'Non-parametric voxelwise FDR -log10(P) value data (positive).');
 
   if WB.stat=='T'
     VlP_wb_neg = swe_create_vol(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-                              '-log10(uncor. non-para. P, -ve)');
+                              'Non-parametric voxelwise -log10(P) value data (negative).');
     
     VlP_wb_FWE_neg = swe_create_vol(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-                                     '-log10(FWE-corr. P, -ve)');
+                                     'Non-parametric voxelwise FWE -log10(P) value data (negative).');
     
     VlP_wb_FDR_neg = swe_create_vol(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-                                     '-log10(FDR-corr. P, -ve)');
+                                     'Non-parametric voxelwise FDR -log10(P) value data (negative).');
 
+  end
+  
+  %-Initialise parametric TFCE results images, if TFCE has been selected.
+  %---------------------------------------------------------------------- 
+  if TFCE
+      VlP_tfce_pos = swe_create_vol(sprintf('swe_tfce_lp-WB_c%02d%s', 1, file_ext), DIM, M,...
+                  'Non-parametric TFCE -log10(P) value data (positive).'); 
+      VlP_tfce_FWE_pos = swe_create_vol(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 1, file_ext), DIM, M,...
+                  'Non-parametric TFCE FWE -log10(P) value data (positive).'); 
+      if WB.stat=='T'
+          VlP_tfce_neg = swe_create_vol(sprintf('swe_tfce_lp-WB_c%02d%s', 2, file_ext), DIM, M,...
+                  'Non-parametric TFCE -log10(P) value data (negative).'); 
+          VlP_tfce_FWE_neg = swe_create_vol(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 2, file_ext), DIM, M,...
+                  'Non-parametric TFCE FWE -log10(P) value data (negative).');
+      end
   end
   
   % Converted score for WB.
   VcScore_wb_pos = swe_create_vol(sprintf('swe_vox_%c%cstat-WB_c%02d%s', eSTAT, WB.stat, 1, file_ext), DIM, M,...
-                                 'Z score image for wild bootstrap voxelwise results.');
+                                  sprintf('Non-parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat));
   
   if WB.clusterWise == 1
       
     % We also need cluster p value maps here.
     VlP_wb_clusterFWE_pos = swe_create_vol(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                                           sprintf('-log10(clusterFWE-corr. P, CFT %g, +ve)',...
-						   SwE.WB.clusterInfo.primaryThreshold));
+                                           sprintf('Non-parametric clusterwise FWE -log10(P) value data (positive, CFT %g).',...
+                                                   SwE.WB.clusterInfo.primaryThreshold));
     
     if WB.stat=='T'
       VlP_wb_clusterFWE_neg = swe_create_vol(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-                                             sprintf('-log10(clusterFWE-corr. P, CFT %g, -ve)',...
-						     SwE.WB.clusterInfo.primaryThreshold));
+                                             sprintf('Non-parametric clusterwise FWE -log10(P) value data (negative, CFT %g).',...
+                                                     SwE.WB.clusterInfo.primaryThreshold));
     end
   end
   
@@ -857,13 +904,14 @@ if ~isMat
           
           % hypothesis test, using clusterwise threshold if available.
           if (SwE.WB.clusterWise == 1)
-            [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+            [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
             clear CovcCovBc cCovBc
           else
-            [p, edf]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
+            [p, edf]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
           end
           
           minScore(1) = min(minScore(1), min(score));
+          
         else
           % need to loop at every voxel
           cBeta = conWB * beta;
@@ -878,9 +926,9 @@ if ~isMat
           
           % hypothesis test, using clusterwise threshold if available.
           if (SwE.WB.clusterWise == 1)
-            [p, edf, activatedVoxels]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
+            [p, edf, activatedVoxels]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels);
           else
-            [p, edf]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat);
+            [p, edf]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
           end
         end
         
@@ -970,6 +1018,32 @@ if ~isMat
     swe_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
     
   end % (for z = 1:zdim)
+  
+  if TFCE
+      % Create parametric TFCE statistic images.
+      if strcmp(WB.stat, 'T')
+          
+          % Read in T statistics to get negative and positive TFCE scores.
+          par_tfce = swe_tfce_transform(spm_read_vols(VcScore), H, E, C, dh);
+          par_tfce_neg = swe_tfce_transform(-spm_read_vols(VcScore), H, E, C, dh);
+      else
+          
+          % Convert F statistics to Z scores.
+          scorevol=-swe_invNcdf(10.^(-spm_read_vols(VlP)));
+          scorevol(isnan(scorevol))=0;
+          
+          % Convert to TFCE.
+          par_tfce = swe_tfce_transform(scorevol, H, E, C, dh);
+          
+          clear scorevol
+      end
+      
+      % Save parametric TFCE statistic images.
+      spm_write_vol(Vscore_tfce, par_tfce);
+      if strcmp(WB.stat, 'T')
+          spm_write_vol(Vscore_tfce_neg, par_tfce_neg);
+      end
+  end
   
   
   fprintf('\n');                                                          %-#
@@ -1073,8 +1147,10 @@ else % ".mat" format
   %------------------------------------------------------------------
   [Cm,Y,CrS] = swe_mask_seperable(SwE, Cm, Y, iGr_dof);
   
-  if isfield(SwE.WB.clusterInfo, 'Vxyz')
-    XYZ   = XYZ(:,Cm);
+  if WB.clusterWise == 1
+    if isfield(SwE.WB.clusterInfo, 'Vxyz')
+      XYZ   = XYZ(:,Cm);
+    end
   end
   %==================================================================
   %-Proceed with General Linear Model (if there are voxels)
@@ -1163,11 +1239,19 @@ else % ".mat" format
       score = (conWB * beta) ./ sqrt(cCovBc);
       
       if (SwE.WB.clusterWise == 1)
-        [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+        [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+        clear CovcCovBc cCovBc
+      else
+        [p, edf]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
         clear CovcCovBc cCovBc
       end
       
       minScore(1) = min(score);
+      
+      if TFCE
+              %%%% TODO: T (MAKE SCORE)
+      end
+      
     else
       % need to loop at every voxel
       cBeta = conWB * beta;
@@ -1181,8 +1265,15 @@ else % ".mat" format
       score = score / rankCon;
       % Perform hypothesis test for activated regions.
       if (SwE.WB.clusterWise == 1)
-        [p, edf, activatedVoxels] = swe_hyptest(SwE, score, CrS, edf, cCovBc, Cov_vis, dofMat, activatedVoxels);
+        [p, edf, activatedVoxels] = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels);
+      else
+        [p, edf]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
       end
+      
+      if TFCE
+              %%%% TODO: F (MAKE SCORE)
+      end
+      
     end
     maxScore(1) = max(score);
     
@@ -1306,11 +1397,15 @@ fprintf('%-40s: %30s','Saving results','...writing');
 
 %-place fields in SwE
 %--------------------------------------------------------------------------
-if isfield(SwE.WB, 'clusterInfo') && isfield(SwE.WB.clusterInfo, 'Vfaces')
-  XYZ = [];
+if WB.clusterWise == 1
+  if isfield(SwE.WB, 'clusterInfo') && isfield(SwE.WB.clusterInfo, 'Vfaces')
+    XYZ = [];
+  end
 end
 
-SwE.xVol.XYZ   = XYZ;               %-InMask XYZ coords (voxels)
+if ~isMat
+    SwE.xVol.XYZ   = XYZ;               %-InMask XYZ coords (voxels)
+end
 SwE.xVol.M     = M;                 %-voxels -> mm
 SwE.xVol.iM    = inv(M);            %-mm -> voxels
 SwE.xVol.DIM   = DIM;               %-image dimensions
@@ -1410,6 +1505,28 @@ str   = sprintf('Parameter estimation\nBootstraping');
 swe_progress_bar('Init',100,str,'');
 
 fprintf('\n')
+
+% If we are doing a TFCE analysis we need to record uncorrected P-values
+% for TFCE and maxima for FWE.
+if TFCE
+    tfce_uncP = zeros(DIM(1), DIM(2), DIM(3));
+    if SwE.WB.stat == 'T'
+        tfce_uncP_neg = zeros(DIM(1), DIM(2), DIM(3));
+    end
+    
+    % We also need to record the TFCE maximas for TFCE FWE (including the
+    % original parametric max).
+    if TFCE
+       maxTFCEScore = nan(1, WB.nB + 1);
+       maxTFCEScore(1) = max(par_tfce(:));
+       if (WB.stat == 'T')
+          maxTFCEScore_neg = nan(1, WB.nB + 1);
+          maxTFCEScore_neg(1) = max(par_tfce_neg(:));
+       end
+    end
+    
+end
+
 for b = 1:WB.nB
   tic
   str   = sprintf('Parameter estimation\nBootstrap # %i', b);
@@ -1423,6 +1540,14 @@ for b = 1:WB.nB
     end
   end
   if ~isMat
+      
+    if TFCE
+
+        % Instantiate volume for TFCE conversion.
+        scorevol = zeros(DIM(1), DIM(2), DIM(3));
+            
+    end
+    
     for bch = 1:nbch                     %-loop over blocks
       blksz  = ceil(mmv);                             %-block size
       if bch ~= nbch
@@ -1525,7 +1650,7 @@ for b = 1:WB.nB
       
       % hypothesis test
       if (WB.clusterWise == 1)
-        [~, ~, activatedVoxels(index)]=swe_hyptest(SwE, score, blksz, edf, cCovBc, Cov_vis, dofMat);
+        [~, ~, activatedVoxels(index)]=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
         clear cCovBc
       end
       uncP(index) = uncP(index) + (score >= originalScore(index));
@@ -1535,7 +1660,62 @@ for b = 1:WB.nB
          minScore(b+1) = min(score);
       end
       
+      % Calculate TFCE uncorrected p image.
+      if TFCE    
+
+            % Obtain P values.
+            pvol=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
+            
+            % Current XYZ indices
+            currXYZ = XYZ(1:3, index);
+
+            if SwE.WB.stat == 'T'
+
+                % T stat from this bootstrap
+                scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = swe_invNcdf(pvol);
+
+            else
+
+                % F stat from this bootstrap (converted to Z).
+                scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = -swe_invNcdf(pvol);
+
+            end
+
+       end
+      
     end % (bch)
+    
+    if TFCE
+
+        if SwE.WB.stat == 'T'        
+
+            % Bootstrapped tfce vol.
+            tfce = swe_tfce_transform(scorevol,H,E,C,dh);
+            tfce_neg = swe_tfce_transform(-scorevol,H,E,C,dh);    
+        
+        else
+
+            % Bootstrapped tfce vol.
+            tfce = swe_tfce_transform(scorevol,H,E,C,dh);
+            
+        end
+        
+        % Sum how many voxels are lower than the original parametric tfce.
+        tfce_uncP = tfce_uncP + (par_tfce<=tfce);
+        if SwE.WB.stat == 'T'
+            tfce_uncP_neg = tfce_uncP_neg + (par_tfce_neg<=tfce_neg);
+        end
+
+        % Record maxima for TFCE FWE p values.
+        maxTFCEScore(b+1) = max(tfce(:));
+        if SwE.WB.stat == 'T'
+            maxTFCEScore_neg(b+1) = max(tfce_neg(:));
+        end
+
+        clear tfce tfce_neg
+        
+    end
+    
   else
     
     %-Print progress information in command window
@@ -1625,7 +1805,7 @@ for b = 1:WB.nB
     
     % hypothesis test
     if (WB.clusterWise == 1)
-        [~, ~, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, S, edf, cCovBc, Cov_vis, dofMat);
+        [~, ~, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);
         clear cCovBc
     end
     uncP = uncP + (score >= originalScore); 
@@ -1903,6 +2083,40 @@ else
   tmp(Q) = -log10(FWERP);
   spm_write_vol(VlP_wb_FWE_pos, tmp);
   
+  % FWE correction for TFCE images.
+  if TFCE
+      
+      % Make new tfce fwe p volume. (Initiate to one to account for
+      % original analysis).
+      tfcefwevol = ones(DIM(1), DIM(2), DIM(3));
+      
+      % Calculate FWE p values.
+      for b = 1:WB.nB
+          tfcefwevol = tfcefwevol + (maxTFCEScore(b+1) > par_tfce - tol);
+      end
+      tfcefwevol = tfcefwevol / (WB.nB + 1);
+      
+      % Write out volume.
+      spm_write_vol(VlP_tfce_FWE_pos, -log10(tfcefwevol));
+      
+      % Same again for negative contrast, if we are using a T statistic.
+      if WB.stat == 'T'
+          
+          % Make new negative tfce fwe p volume. (Initiate to one to 
+          % account for original analysis).
+          tfcefwevol_neg = ones(DIM(1), DIM(2), DIM(3));
+
+          % Calculate FWE negative p values.
+          for b = 1:WB.nB
+              tfcefwevol_neg = tfcefwevol_neg + (maxTFCEScore_neg(b+1) > par_tfce_neg - tol);
+          end
+          tfcefwevol_neg = tfcefwevol_neg / (WB.nB + 1);
+
+          % Write out volume.
+          spm_write_vol(VlP_tfce_FWE_neg, -log10(tfcefwevol_neg));
+      end
+  end
+  
   if WB.stat == 'T'
     FWERPNeg = ones(1, S); % 1 because the original maxScore is always > original Score
     
@@ -1982,6 +2196,16 @@ else
       spm_write_vol(VlP_wb_clusterFWE_neg, tmp);
     end
   end
+  
+  if TFCE
+      tfce_luncP = -log10((tfce_uncP+1)./(WB.nB+1));
+      spm_write_vol(VlP_tfce_pos, tfce_luncP);
+      if WB.stat == 'T'
+          tfce_luncP_neg = -log10((tfce_uncP_neg+1)./(WB.nB+1));
+          spm_write_vol(VlP_tfce_neg, tfce_luncP_neg);
+      end
+  end
+  
 end
       
 %==========================================================================
@@ -2069,7 +2293,7 @@ end
 % This function performs a hypothesis test using the threshold given as the
 % primary threshold in the SwE cluster info. If this is not available it
 % returns unthresholded p values only.
-function [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSize, edf, cCovBc, Cov_vis, dofMat, varargin)
+function [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSize, cCovBc, Cov_vis, dofMat, varargin)
 
       % setup
       p = zeros(1, matSize);
@@ -2127,7 +2351,7 @@ function [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, m
     	  p  = spm_Tcdf(score, edf);
           
           if SwE.WB.clusterWise~=0
-              if nargin <=7
+              if nargin <=6
                 % We may wish to just record the activated voxels. 
                 activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold);
                 activatedVoxelsNeg = p < (SwE.WB.clusterInfo.primaryThreshold);
@@ -2149,7 +2373,7 @@ function [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, m
           end
 
           if SwE.WB.clusterWise~=0
-              if nargin<=7
+              if nargin<=6
                   activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold);
               else
                   activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold)];

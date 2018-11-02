@@ -415,28 +415,38 @@ switch lower(Action), case 'setup'                         %-Set up results
     h     = text(0,24,'SPMresults:','Parent',hResAx,...
         'FontWeight','Bold','FontSize',FS(14));
     text(get(h,'Extent')*[0;0;1;0],24,spm_str_manip(SwE.swd,'a30'),'Parent',hResAx)
-    try
-        thresDesc = xSwE.thresDesc;
-        if ~strcmp(xSwE.thresDesc, 'none') && ~isempty(xSwE.thresDesc)
-            text(0,12,sprintf('Height threshold %c = %0.6f  {%s}',eSTAT,xSwE.u,thresDesc),'Parent',hResAx)
-        else
+    if ~isfield(xSwE, 'TFCEthresh') || ~xSwE.TFCEthresh
+        try
+            thresDesc = xSwE.thresDesc;
+            if ~strcmp(xSwE.thresDesc, 'none') && ~isempty(xSwE.thresDesc)
+                text(0,12,sprintf('Height threshold %c = %0.6f  {%s}',eSTAT,xSwE.u,thresDesc),'Parent',hResAx)
+            else
+                text(0,12,sprintf('Height threshold %c = %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
+            end
+        catch
             text(0,12,sprintf('Height threshold %c = %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
         end
-    catch
-        text(0,12,sprintf('Height threshold %c = %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
-    end
-    if strcmp(xSwE.clustWise, 'FWE') 
-        text(0,00,sprintf('Extent threshold k = %0.0f voxels {p<%0.3f (FWE)}',xSwE.k, xSwE.fwep_c), 'Parent',hResAx)
-    else
-        text(0,00,sprintf('Extent threshold k = %0.0f voxels',xSwE.k), 'Parent',hResAx)
-    end
-    try
-        WB = xSwE.WB;
-        if WB
-            text(0,-12,sprintf('Wild Bootstrap'), 'Parent',hResAx)
+        if strcmp(xSwE.clustWise, 'FWE') 
+            text(0,00,sprintf('Extent threshold k = %0.0f voxels {p<%0.3f (FWE)}',xSwE.k, xSwE.fwep_c), 'Parent',hResAx)
+        else
+            text(0,00,sprintf('Extent threshold k = %0.0f voxels',xSwE.k), 'Parent',hResAx)
         end
-    catch
-        error('Missing details about whether this is a wild boostrap or not.')
+        try
+            WB = xSwE.WB;
+            if WB
+                text(0,-12,sprintf('Wild Bootstrap'), 'Parent',hResAx)
+            end
+        catch
+            error('Missing details about whether this is a wild boostrap or not.')
+        end
+    else
+        try
+            thresDesc = xSwE.thresDesc;
+            text(0,12,sprintf('TFCE threshold %s', thresDesc),'Parent',hResAx)
+            text(0,00,sprintf('Wild Bootstrap'), 'Parent',hResAx)
+        catch
+            error('Unknown TFCE threshold.')
+        end
     end
  
     %-Plot design matrix
