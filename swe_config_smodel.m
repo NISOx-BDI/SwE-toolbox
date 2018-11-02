@@ -302,7 +302,7 @@ ss.help    = {  ' '
                 'type 2: the residuals used in the SwE estimation are multiplied by 1/sqrt(1-h_ik).'
                 '             It tends to correct for the small sample bias, but, even if it generally performs better than the "type 1" adjustment, simulations seems to show that it still may lead to liberal inferences in small samples.'
                 'type 3: the residuals used in the SwE estimation are multiplied by 1/(1-h_ik).'
-                '             It tends to correct fo the small sample bias, but simulations seem to show that it may lead to conservative inferences in small samples.'
+                '             It tends to correct for the small sample bias, but simulations seem to show that it may lead to conservative inferences in small samples.'
                 'type C2: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-0.5.'
                 '             Simulations seem to show that it is the best correction and removes correctly the bias in many scenarios'
                 'type C3: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-1.'
@@ -322,7 +322,7 @@ dof_cl.labels  = { 'naive' 'approx I'};
 dof_cl.values  = { 0 1  }; % dof_cl.values  = { 0 1 2 };
 dof_cl.val     = { 0 };
 dof_cl.help    = {  ' '
-                'naive: naive estimation of the degrees of freedom by the total number of subjects belonging to the unseparable sub-design matrices involved in the contrast tested minus the number of non-zero pure between covariates present in these unseparable sub-design matrices.'
+                'naive: naive estimation of the degrees of freedom by the total number of subjects belonging to the inseparable sub-design matrices involved in the contrast tested minus the number of non-zero pure between covariates present in these inseparable sub-design matrices.'
                 '             This choice tends to overestimate the degrees of freedom, but reduce the quantity of images saved and the computation time.'
                 'approx I: degrees of freedom estimation with the estimate proposed in Guillaume et al. (2014).'
                 '             This choice is not recommended for the classic SwE as, with this SwE version, it generally underestimate  the degrees of freedom in small samples and a large amount of variances/covariances images (sum_i n_i*(n_i+1)/2 images) need to be saved.'
@@ -341,7 +341,7 @@ dof_mo.labels  = { 'naive' 'approx I' 'approx II' 'approx III'};
 dof_mo.values  = { 0 1 2 3};
 dof_mo.val     = { 3 };
 dof_mo.help    = {  ' '
-                'naive: naive estimation of the degrees of freedom by the total number of subjects belonging to the unseparable sub-design matrices involved in the contrast tested minus the number of non-zero pure between covariates present in these unseparable sub-design matrices.'
+                'naive: naive estimation of the degrees of freedom by the total number of subjects belonging to the inseparable sub-design matrices involved in the contrast tested minus the number of non-zero pure between covariates present in these inseparable sub-design matrices.'
                 '             This choice tends to overestimate the degrees of freedom in some designs, but reduce the quantity of images saved and the computation time.'
                 'approx I: degrees of freedom estimation with the estimate proposed in Guillaume et al. (2014).'
                 '             This estimate assumes no missing data and does not correct for the presence of a small sample bias and a missing data bias.'
@@ -625,13 +625,13 @@ WB_stat.help    = {''
 % ---------------------------------------------------------------------
 WB_ss         = cfg_menu;
 WB_ss.tag     = 'WB_ss';
-WB_ss.name    = 'Small sample adjustments for the resampling';
+WB_ss.name    = 'Small sample adjustments for WB resampling';
 WB_ss.labels  = { 'type 0' 'type 1' 'type 2' 'type 3' 'type C2' 'type C3' };
 
 WB_ss.values  = {0 1 2 3 4 5};
 WB_ss.val     = { 4 };
 WB_ss.help    = {  ' '
-                'Small sample adjustment of the residuals to be resampled'
+                'Small sample adjustment applied to the residuals before wild bootstrap resampling'
                 ''
                 'It may be different from the one used for the SwE, but it seems better to consider by default the "type C2" version for both the SwE and the WB resampling as this is the correction which seems to adjust the best the residuals to make their variances/covariances close to the one the errors'
                 ''
@@ -645,7 +645,7 @@ WB_ss.help    = {  ' '
                 'type 2: the residuals used in the SwE estimation are multiplied by 1/sqrt(1-h_ik).'
                 '             It tends to correct for the small sample bias, but, even if it generally performs better than the "type 1" adjustment, simulations seems to show that it still may lead to liberal inferences in small samples.'
                 'type 3: the residuals used in the SwE estimation are multiplied by 1/(1-h_ik).'
-                '             It tends to correct fo the small sample bias, but simulations seem to show that it may lead to conservative inferences in small samples.'
+                '             It tends to correct for the small sample bias, but simulations seem to show that it may lead to conservative inferences in small samples.'
                 'type C2: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-0.5.'
                 '             Simulations seem to show that it is the best correction and removes correctly the bias in many scenarios'
                 'type C3: the subject residuals used in the SwE estimation are multiplied by (I-H_ii)^-1.'

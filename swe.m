@@ -11,7 +11,7 @@ function varargout = swe(varargin)
 % Written by Bryan Guillaume
 % $Id$
 
-versionNo = '1.2.9';
+versionNo = '1.2.11';
 
 if nargin == 0
     Action = 'StartUp';
@@ -21,7 +21,7 @@ end
 
 switch lower(Action)
     %==================================================================
-    case 'startup'                                % Startup the toolbox
+    case 'startup'                                % Startup the toolbox 
     %==================================================================     
         % check installation of toolbox and of SPM8/SPM12
         ok = check_installation;
@@ -53,10 +53,10 @@ switch lower(Action)
         %==================================================================
     case 'asciiwelcome'                          %-ASCII swe banner welcome
         %==================================================================
-        disp( '   ___          ___           _      ___      ___        ');
-        disp( '  / __) _    _ | __)   _  _  /_|    (__ \    | _ |       ');
-        disp( '  \__ \ \\/\// | __)   \\//   || _  / __/ _  | _ |       ');
-        disp( '  (___/  \/\/  |___)    \/    |||_| \___)|_|   |_|       ');
+        disp( '   ___          ___           _      ___     _  _        ');
+        disp( '  / __) _    _ | __)   _  _  /_|    (__ \   /_|/_|       ');
+        disp( '  \__ \ \\/\// | __)   \\//   || _  / __/ _  || ||       ');
+        disp( '  (___/  \/\/  |___)    \/    |||_| \___)|_| || ||       ');
         fprintf('\n  swe v%s \n', versionNo);
   
     case 'colour'
