@@ -34,6 +34,17 @@ function swe_cp_WB(SwE)
 %         Log10 map of the clusterwise bootstrap-calculated FWE P values 
 %         for contrast {c#}.
 %
+%   - swe_tfce_c{c#}:
+%         TFCE parametric statistic map for contrast {c#}.
+%
+%   - swe_tfce_lp-WB_c{c#}:
+%         Log10 map of the TFCE bootstrap-calculated P values for contrast
+%         {c#}.
+%    
+%   - swe_tfce_lpFWE-WB_c{c#}:
+%         Log10 map of the TFCE bootstrap-calculated FWE P values for
+%         contrast {c#}.
+%
 % Currently (30/08/2018), the only contrasts computed are activation 
 % (contrast #1) and deactivation (contrast #2) for the contrast vector the 
 % user input during the batch entry.
@@ -657,7 +668,7 @@ if ~isMat
   
   % Converted score for WB.
   VcScore_wb_pos = swe_create_vol(sprintf('swe_vox_%c%cstat-WB_c%02d%s', eSTAT, WB.stat, 1, file_ext), DIM, M,...
-                                 sprintf('Non-parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat));
+                                  sprintf('Non-parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat));
   
   if WB.clusterWise == 1
       
