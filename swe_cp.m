@@ -5,7 +5,7 @@ function swe_cp(SwE)
 % the following maps:
 %
 %   - swe_vox_mask: The mask image for the analysis.
-%   - swe_vox_beta_c{c#}: The beta map for contrast {c#}
+%   - swe_vox_con_c{c#}: The beta map for contrast {c#}
 %   - swe_vox_cov_b{b1#}_b{b2#}: The covariance map between betas {b1#}
 %     and {b2#}.
 %   - swe_vox_cov_g{g#}_b{b1#}_b{b2#}: The covariance map between betas
@@ -18,7 +18,7 @@ function swe_cp(SwE)
 %
 %   - swe_vox_mask: The mask image for the analysis.
 %   - swe_vox_beta_b: The beta map.
-%   - swe_vox_beta_c: The beta map for each contras.
+%   - swe_vox_con_c: The beta map for each contras.
 %   - swe_vox_cov_bb: The between-betas covariance map.
 %   - swe_vox_cov_g_bb: The groupwise between-betas covariance maps.
 %   - swe_vox_cov_g_vv: The visitwise between-betas covariance maps.
