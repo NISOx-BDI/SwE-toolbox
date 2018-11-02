@@ -620,23 +620,23 @@ if ~isMat
   %-Initialise result images
   %----------------------------------------------------------------------
   VlP_wb_pos = swe_create_vol(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                              '-log10(uncor. non-para. P, +ve)');
+                              'Non-parametric voxelwise -log10(P) value data (positive).');
 
   VlP_wb_FWE_pos = swe_create_vol(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                                  '-log10(FWE-corr. P, +ve)');
+                                  'Non-parametric voxelwise FWE -log10(P) value data (positive).');
   
   VlP_wb_FDR_pos = swe_create_vol(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                                  '-log10(FDR-corr. P, +ve)');
+                                  'Non-parametric voxelwise FDR -log10(P) value data (positive).');
 
   if WB.stat=='T'
     VlP_wb_neg = swe_create_vol(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-                              '-log10(uncor. non-para. P, -ve)');
+                              'Non-parametric voxelwise -log10(P) value data (negative).');
     
     VlP_wb_FWE_neg = swe_create_vol(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-                                     '-log10(FWE-corr. P, -ve)');
+                                     'Non-parametric voxelwise FWE -log10(P) value data (negative).');
     
     VlP_wb_FDR_neg = swe_create_vol(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-                                     '-log10(FDR-corr. P, -ve)');
+                                     'Non-parametric voxelwise FDR -log10(P) value data (negative).');
 
   end
   
@@ -644,30 +644,30 @@ if ~isMat
   %---------------------------------------------------------------------- 
   if TFCE
       VlP_tfce_pos = swe_create_vol(sprintf('swe_tfce_lp-WB_c%02d%s', 1, file_ext), DIM, M,...
-                  'Original parametric TFCE statistic data.'); 
+                  'Non-parametric TFCE -log10(P) value data (positive).'); 
       VlP_tfce_FWE_pos = swe_create_vol(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 1, file_ext), DIM, M,...
-                  'Original parametric TFCE statistic data.'); 
+                  'Non-parametric TFCE FWE -log10(P) value data (positive).'); 
       if WB.stat=='T'
           VlP_tfce_neg = swe_create_vol(sprintf('swe_tfce_lp-WB_c%02d%s', 2, file_ext), DIM, M,...
-                  'Original parametric TFCE statistic data for a negative contrast.'); 
+                  'Non-parametric TFCE -log10(P) value data (negative).'); 
           VlP_tfce_FWE_neg = swe_create_vol(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 2, file_ext), DIM, M,...
-                  'Original parametric TFCE statistic data for a negative contrast.');
+                  'Non-parametric TFCE FWE -log10(P) value data (negative).');
       end
   end
   
   % Converted score for WB.
   VcScore_wb_pos = swe_create_vol(sprintf('swe_vox_%c%cstat-WB_c%02d%s', eSTAT, WB.stat, 1, file_ext), DIM, M,...
-                                 'Z score image for wild bootstrap voxelwise results.');
+                                 sprintf('Non-parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat));
   
   if WB.clusterWise == 1
       
     % We also need cluster p value maps here.
     VlP_wb_clusterFWE_pos = swe_create_vol(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                                           '-log10(clusterFWE-corr. P, +ve)');
+                                           'Non-parametric clusterwise FWE -log10(P) value data (positive).');
     
     if WB.stat=='T'
       VlP_wb_clusterFWE_neg = swe_create_vol(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-                                             '-log10(clusterFWE-corr. P, -ve)');
+                                             'Non-parametric clusterwise FWE -log10(P) value data (negative).');
     end
   end
   
