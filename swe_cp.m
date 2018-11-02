@@ -17,7 +17,8 @@ function swe_cp(SwE)
 % the following analagous maps:
 %
 %   - swe_vox_mask: The mask image for the analysis.
-%   - swe_vox_beta_c: The beta map for each contrast
+%   - swe_vox_beta_b: The beta map.
+%   - swe_vox_beta_c: The beta map for each contras.
 %   - swe_vox_cov_bb: The between-betas covariance map.
 %   - swe_vox_cov_g_bb: The groupwise between-betas covariance maps.
 %   - swe_vox_cov_g_vv: The visitwise between-betas covariance maps.
@@ -1159,7 +1160,7 @@ else % matrix input
 
     beta = NaN(nBeta, nVox);
     beta(:,Cm) = crBeta;
-    save(sprintf('swe_vox_beta_bb%s',file_ext), 'beta');
+    save(sprintf('swe_vox_beta_b%s',file_ext), 'beta');
     clear beta crBeta
 
     if isfield(SwE.type,'modified')
@@ -1189,7 +1190,7 @@ else % matrix input
     DIM         = [];
     S           = CrS;
     VM          = sprintf('swe_vox_mask%s', file_ext);
-    Vbeta       = sprintf('swe_vox_beta_bb%s', file_ext);
+    Vbeta       = sprintf('swe_vox_beta_b%s', file_ext);
     Vcov_beta   = sprintf('swe_vox_cov%s', file_ext);
     Vcov_vis    = sprintf('swe_vox_cov_vv%s', file_ext);
     Vcov_beta_g = sprintf('swe_vox_cov_g_bb%s', file_ext);
