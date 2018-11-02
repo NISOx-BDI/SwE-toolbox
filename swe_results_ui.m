@@ -224,7 +224,6 @@ function varargout = swe_results_ui(varargin)
 %__________________________________________________________________________
 % Modified version of spm_results_ui by Bryan Guillaume 
 
-spm('defaults','FMRI')% to avoid trouble with testing
 %-Condition arguments
 %--------------------------------------------------------------------------
 if nargin == 0, Action='setup'; else Action=varargin{1}; end

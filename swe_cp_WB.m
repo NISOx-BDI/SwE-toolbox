@@ -674,11 +674,13 @@ if ~isMat
       
     % We also need cluster p value maps here.
     VlP_wb_clusterFWE_pos = swe_create_vol(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                                           'Non-parametric clusterwise FWE -log10(P) value data (positive).');
+                                           sprintf('Non-parametric clusterwise FWE -log10(P) value data (positive, CFT %g).',...
+                                                   SwE.WB.clusterInfo.primaryThreshold));
     
     if WB.stat=='T'
       VlP_wb_clusterFWE_neg = swe_create_vol(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-                                             'Non-parametric clusterwise FWE -log10(P) value data (negative).');
+                                             sprintf('Non-parametric clusterwise FWE -log10(P) value data (negative, CFT %g).',...
+                                                   SwE.WB.clusterInfo.primaryThreshold);
     end
   end
   
