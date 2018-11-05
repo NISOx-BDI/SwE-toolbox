@@ -11,7 +11,7 @@ function varargout = swe(varargin)
 % Written by Bryan Guillaume
 % $Id$
 
-versionNo = '1.2.11';
+versionNo = '2.0.0';
 
 try
   Modality = spm_get_defaults('modality');
@@ -59,11 +59,9 @@ switch lower(Action)
         %==================================================================
     case 'asciiwelcome'                          %-ASCII swe banner welcome
         %==================================================================
-        disp( '   ___          ___           _      ___     _  _        ');
-        disp( '  / __) _    _ | __)   _  _  /_|    (__ \   /_|/_|       ');
-        disp( '  \__ \ \\/\// | __)   \\//   || _  / __/ _  || ||       ');
-        disp( '  (___/  \/\/  |___)    \/    |||_| \___)|_| || ||       ');
-        fprintf('\n  swe v%s \n', versionNo);
+        a = generateAscii(['SwE v' versionNo]);
+        fprintf('%s \n', a{1}, a{2}, a{3}, a{4});
+        fprintf('swe v%s \n', versionNo);
   
     case 'colour'
         
@@ -81,6 +79,8 @@ switch lower(Action)
 end
 
 return
+
+end
 
 %=======================================================================
 % SUBFUNCTIONS
@@ -110,3 +110,146 @@ else
 end
 
 return
+
+end
+
+% The following functions are for generating the ascii welcome message for
+% SwE. 
+% -------------------------------------------------------------------------
+% This method converts character 'char' to it's equivalent 4-line ascii
+% art. New characters can be added by creating new cases in the below
+% switch.
+function aChar = char2ascii(char)
+    
+    switch char
+        
+        case '0'
+            
+            aChar = {' ___ ',...
+                     '|   |',...
+                     '| | |',...
+                     '|___|'};
+            
+        case '1'
+            
+            aChar = {' _ ',...
+                     '/_|',...
+                     ' ||',...
+                     ' ||'};
+                
+        case '2'
+            
+            aChar = {' ___ ',...
+                     '(__ \',...
+                     '/ __/',...
+                     '\___)'};
+                
+        case '3'
+            
+            aChar = {' ___ ',...
+                     '(__ )',...
+                     ' (_ \',...
+                     '(___/'};           
+        case '4'
+            
+            aChar = {'  __ ',...
+                     ' /. |',...
+                     '(_  _)',...
+                     '  (_) '};           
+        case '5' 
+            
+            aChar = {' ___ ',...
+                     '| __)',...
+                     '|__ \',...
+                     '(___/'};
+                
+        case '6'
+            
+            aChar = {'  _  ',...
+                     ' / ) ',...
+                     '/ _ \',...
+                     '\___/'};     
+        case '7'
+            
+            aChar = {' ___ ',...
+                     '(__ )',...
+                     ' / / ',...
+                     '(_/  '};      
+        case '8'
+            
+            aChar = {' ___ ',...
+                     '| _ |',...
+                     '| _ |',...
+                     '|___| '};   
+        case '9'
+            
+            aChar = {' ___ ',...
+                     '/ _ \',...
+                     '\_  /',...
+                     ' (_/ '};   
+                
+        case '.'
+            
+            aChar = {'   ',...
+                     '   ',...
+                     ' _ ',...
+                     '|_|'};  
+                
+        case 'S'
+ 
+            aChar = {' ___ ',...
+                     '/ __)',...
+                     '\__ \',...
+                     '(___/'}; 
+                
+         case 'w'
+ 
+            aChar = {'      ',...
+                     '_    _',...
+                     '\\/\//',...
+                     ' \/\/ '};  
+                
+        case 'E'
+ 
+            aChar = {' ___ ',...
+                     '| __)',...
+                     '| __)',...
+                     '|___)'};      
+                
+        case ' '
+            
+            aChar = {'   ',...
+                     '   ',...
+                     '   ',...
+                     '   '};
+                
+        case 'v'
+            
+            aChar = {'     ',...
+                     '_  _ ',...
+                     '\\// ',...
+                     ' \/  '};  
+            
+            
+    end
+    
+end
+
+% This function takes two cell arrays containing ascii art in the form
+% {line1, line2, line3,...} and concatenates them horizontally.
+function c = concatAscii(a,b)
+
+    c = arrayfun(@(i) [a{i} b{i}], 1:length(b),'UniformOutput',false);
+end
+
+% This function takes in a string as input and recursively generates the
+% ASCII art representation of said string.
+function ascii = generateAscii(str)
+    
+    if length(str)~=1
+        ascii = concatAscii(generateAscii(str(1:(end-1))), generateAscii(str(end)));
+    else
+        ascii = char2ascii(str);
+    end
+    
+end
