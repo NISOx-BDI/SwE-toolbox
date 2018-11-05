@@ -711,6 +711,19 @@ if ~isMat
   %--------------------------------------------------------------------------
   if STAT ~= 'P'
       
+      % Get the equivalent statistic
+      switch STAT
+          
+          case 'T'
+              
+              eSTAT = 'Z';
+              
+          case 'F'
+              
+              eSTAT = 'X';
+              
+      end
+      
       % If we are doing voxelwise inference on a parametric.
       if ~isfield(SwE, 'WB') && infType == 0
           
@@ -748,7 +761,7 @@ if ~isMat
                   try
                       u = xSwE.u;
                   catch
-                      u = spm_input(['threshold {',STAT,' or p value}'],'+0','r',0.001,1);
+                      u = spm_input(['threshold {',eSTAT,' or p value}'],'+0','r',0.001,1);
                   end
                   if u <= 1
                       thresDesc = ['p<' num2str(u) ' (unc.)'];
@@ -800,7 +813,7 @@ if ~isMat
           try
               u = xSwE.u;
           catch
-              u = spm_input(['threshold {',STAT,' or p value}'],'+1','r',0.001,1);
+              u = spm_input(['threshold {',eSTAT,' or p value}'],'+1','r',0.001,1);
           end
           if u <= 1
               thresDesc = ['p<' num2str(u) ' (unc.)'];
@@ -900,7 +913,7 @@ if ~isMat
                   try
                       u = xSwE.u;
                   catch
-                      u = spm_input(['threshold {',STAT,' or p value}'],'+0','r',0.001,1);
+                      u = spm_input(['threshold {',eSTAT,' or p value}'],'+0','r',0.001,1);
                   end
                   if u <= 1
                       thresDesc = ['p<' num2str(u) ' (unc.)'];
@@ -989,7 +1002,7 @@ if ~isMat
                   try
                       u = xSwE.u;
                   catch
-                      u = spm_input(['threshold {',STAT,' or p value}'],'+1','r',0.001,1);
+                      u = spm_input(['threshold {',eSTAT,' or p value}'],'+1','r',0.001,1);
                   end
                   if u <= 1
                       thresDesc = ['p<' num2str(u) ' (unc.)'];
