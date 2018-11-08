@@ -33,6 +33,7 @@ if nargin==0
       randg('state','reset');
       randp('state','reset');
     else
+      rng('default');
       rng('shuffle');
     end
   end
