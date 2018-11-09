@@ -2,7 +2,7 @@
 % tbVer  - version of SwE toolbox currently being run.
 function swe_checkCompat(matVer, tbVer)
 
-    if isequal(swe('ver'),SwE.ver)
+    if isequal(matVer,tbVer)
        return; 
     end
     
@@ -34,6 +34,97 @@ function swe_checkCompat(matVer, tbVer)
     
     % Record earliest compatable versions.
     earliestCompatVer('2.0.0') = '2.0.0';
-    earliestCompatVer('2.0.1') = '2.0.1';
+    earliestCompatVer('2.0.1') = '2.0.0';
+    earliestCompatVer('2.0.2') = '2.0.2';
+    earliestCompatVer('2.0.3') = '2.0.4';
+    earliestCompatVer('2.0.4') = '2.0.4';
+    earliestCompatVer('2.0.5') = '2.0.4';
+ 
+    % The below line works out the latest compatable version from the
+    % earliest compatable versions. This code is now redundant but may be
+    % useful in future so has been left in place. Tom Maullin (09/11/2018)
+    %latestCompatVer = latComVer(earliestCompatVer);
+    
+    % Check if the `.mat` version is compatable with this version.
+    if ~strcmp(earliestCompatVer(matVer), earliestCompatVer(tbVer)) || ...
+            strcmp(earliestCompatVer(matVer), 'NaN.NaN.NaN')
+        error(['The SwE version used to create this `.mat` file (version ',...
+               matVer, ') is incompatable with the version being run (ver',...
+               'sion ', tbVer, '). Please re-enter the job specification ',...
+               'in the batch window.']);
+    end
+    
+end
 
+%--------------------------------------------------------------------------
+% The below functions are currently unused but are useful for comparing
+% version numbers. They have been left here only in case they are of use
+% for future development. Tom Maullin (09/11/2018)
+%--------------------------------------------------------------------------
+
+% Latest compatable version from earliest compatable version hashmap.
+function lcv = latComVer(ecv)
+
+    lcv = containers.Map();
+    vers = ecv.keys;
+    for i = 1:length(vers)
+        ver = vers{i};
+        
+        % If it's an old version we have no recorded version history for
+        % earliest or latest compatable versions.
+        if isequal(ecv(ver), 'NaN.NaN.NaN')
+            lcv(ver) = 'NaN.NaN.NaN';
+        % If it's a newer version we need to find the newest version
+        % available.
+        else
+            if ~isKey(lcv, ecv(ver))
+                lcv(ecv(ver)) = ver;
+            else
+                if vercheck(lcv(ecv(ver)), ver, '<=')
+                    lcv(ecv(ver)) = ver;
+                end
+            end
+        end
+    end
+    
+    % Second pass for keys that aren't values in ecv.
+    for i = 1:length(vers)
+        ver = vers{i};
+        
+        if ~isKey(lcv, ver)
+            lcv(ver) = lcv(ecv(ver));
+        end
+    end
+    
+end
+
+% Perform <=, <, >, >= on version numbers.
+function vcheck = vercheck(ver1, ver2, flag)
+
+    % Split version number into parts.
+    ver1 = strsplit(ver1, '.');
+    ver2 = strsplit(ver2, '.');
+    
+    % Work out base for comparison.
+    base = max(cellfun(@(a) str2num(a), {ver1{:} ver2{:}})) + 1;
+    
+    % Convert to num.
+    ver1 = cellfun(@(a) str2num(a), {ver1{:}});
+    ver2 = cellfun(@(a) str2num(a), {ver2{:}});
+    
+    % Make into number in base `base`
+    ver1 = ver1(1)*base^2 + ver1(2)*base^1 + ver1(3)*base^0;
+    ver2 = ver2(1)*base^2 + ver2(2)*base^1 + ver2(3)*base^0;
+    
+    if strcmp(flag, '<=')
+        vcheck = (ver1 <= ver2);
+    elseif strcmp(flag, '<')
+        vcheck = (ver1 < ver2);
+    elseif strcmp(flag, '>')
+        vcheck = (ver1 > ver2);
+    elseif strcmp(flag, '>=')
+        vcheck = (ver1 >= ver2);
+    else
+        error('unknown flag')
+    end
 end
