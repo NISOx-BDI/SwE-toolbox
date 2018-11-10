@@ -800,6 +800,7 @@ SwE.SS        = SS;           % SwE small samples adj. type
 SwE.Subj      = Subj;         % subjects data
 SwE.Vis       = Vis;          % visits data (empty if classic SwE)
 SwE.Gr        = Gr;           % groups data (empty if classic SwE)
+SwE.ver       = swe('ver');   % version number
 if isfield(job.WB, 'WB_yes')
   SwE.WB      = WB;           % WB structure
 end
