@@ -11,7 +11,7 @@
 %_______________________________________________________________________
 % Based on snpm_defaults.m
 % Thomas Nichols
-% $Id$
+% Version Info:  $Format:%ci$ $Format:%h$
 
 global SwEdefs
 

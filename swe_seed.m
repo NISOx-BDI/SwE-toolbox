@@ -17,7 +17,7 @@ function swe_seed(varargin)
 % sure that "shuffle_seed" default is false to prevent re-seeding.
 % =========================================================================
 % T. Nichols
-% $Id$
+% Version Info:  $Format:%ci$ $Format:%h$
 
 isOctave = exist('OCTAVE_VERSION','builtin');
 

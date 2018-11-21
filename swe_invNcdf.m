@@ -11,6 +11,7 @@ function z = swe_invNcdf(p, mu, var)
 % Outputs:
 %   - z: equivalent z-score
 % =========================================================================
+% Version Info:  $Format:%ci$ $Format:%h$
 
     if nargin < 3
       var = 1;

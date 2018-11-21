@@ -7,6 +7,7 @@ function swe_batch
 % FORMAT bch = swe_batch
 % =========================================================================
 % Written by Bryan Guillaume
+% Version Info:  $Format:%ci$ $Format:%h$
 
 	% Check if SwE config tree is there
 	if isempty(cfg_util('tag2cfg_id', 'swe'))

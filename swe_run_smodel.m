@@ -10,6 +10,7 @@ function out = swe_run_smodel(varargin)
 %  - out: filename of saved data structure.
 % =========================================================================
 % Written by Bryan Guillaume
+% Version Info:  $Format:%ci$ $Format:%h$
 
 % Job variable
 % -------------------------------------------------------------------------

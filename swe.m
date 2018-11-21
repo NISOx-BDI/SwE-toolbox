@@ -9,7 +9,7 @@ function varargout = swe(varargin)
 %  - str - 'ASCIIwelcome' for startup message or 'startup' for toolbox
 % =========================================================================
 % Written by Bryan Guillaume
-% $Id$
+% Version Info:  $Format:%ci$ $Format:%h$
 
 versionNo = '2.0.0';
 

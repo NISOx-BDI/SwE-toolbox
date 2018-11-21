@@ -7,6 +7,7 @@ function swe_run_rmodel(varargin)
 %  - job: harvested job data structure (see matlabbatch help)
 % =========================================================================
 % Written by Tom Maullin (05/09/2018)
+% Version Info:  $Format:%ci$ $Format:%h$
 
 % Job variable
 % -------------------------------------------------------------------------

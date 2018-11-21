@@ -4,6 +4,7 @@ function results = swe_config_results
 % FORMAT results = swe_config_results
 % =========================================================================
 % Written by Tom Maullin (05/09/2018)
+% Version Info:  $Format:%ci$ $Format:%h$
 
 % -------------------------------------------------------------------------
 % Results Directory

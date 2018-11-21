@@ -4,6 +4,7 @@ function smodel = swe_config_smodel
 % FORMAT design = swe_config_smodel
 % =========================================================================
 % Written by Bryan Guillaume
+% Version Info:  $Format:%ci$ $Format:%h$
 
 % ---------------------------------------------------------------------
 % dir Directory

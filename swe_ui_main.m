@@ -17,6 +17,7 @@ function swe_ui_main
 %       via the Matlab internet browser.
 % =========================================================================
 % Author: Tom Maullin (05/09/2018)
+% Version Info:  $Format:%ci$ $Format:%h$
     
     %=======================================================================
     close(findobj(get(0,'Children'),'Tag','SwE Menu'))

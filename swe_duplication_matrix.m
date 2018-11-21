@@ -10,6 +10,7 @@ function d = swe_duplication_matrix(n)
 %  - d: duplication matrix
 % =========================================================================
 % By Bryan Guillaume
+% Version Info:  $Format:%ci$ $Format:%h$
 
     d = zeros(n^2, n * (n + 1) / 2);
     it = 0;

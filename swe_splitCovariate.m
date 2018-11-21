@@ -18,6 +18,7 @@ function [crossCov, longCov, avgCov] = swe_splitCovariate(cov, subject)
 %  - avgCrossCov: the average value (scalar) of the time-varying covariate
 % =========================================================================
 % written by Bryan Guillaume
+% Version Info:  $Format:%ci$ $Format:%h$
 
     uSubject = unique(subject);
     nSubj = length(uSubject);
