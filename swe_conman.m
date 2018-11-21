@@ -247,7 +247,7 @@ function varargout=swe_conman(varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % Andrew Holmes
-% $Id$
+% Based on: swe_conman.m 4617 2012-01-11 15:46:16Z will 
 
 
 %==========================================================================

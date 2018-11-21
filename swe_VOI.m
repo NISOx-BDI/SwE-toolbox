@@ -59,7 +59,7 @@ function [TabDat,xSVC] = swe_VOI(SwE,xSwE,hReg,xY)
 % Copyright (C) 1999-2014 Wellcome Trust Centre for Neuroimaging
 
 % Karl Friston
-% $Id$
+% Based on: spm_VOI.m 6080 2014-07-01 16:00:22Z guillaume
 
 
 %-Parse arguments

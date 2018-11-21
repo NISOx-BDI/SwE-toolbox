@@ -122,7 +122,7 @@ function varargout = swe_DesRep(varargin)
 % Copyright (C) 1999-2015 Wellcome Trust Centre for Neuroimaging
 
 % Andrew Holmes
-% $Id$
+% Based on: spm_DesRep.m 6351 2015-02-26 16:37:18Z guillaume
 
 
 %==========================================================================

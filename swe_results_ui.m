@@ -111,7 +111,7 @@ function varargout = swe_results_ui(varargin)
  
 % Original SPM code by Karl Friston & Andrew Holmes
 % Adapted by Bryan Guillaume
-% $Id$
+% Based on: swe_results_ui.m 3928 2010-06-16 12:09:22Z guillaume
  
  
 %==========================================================================
