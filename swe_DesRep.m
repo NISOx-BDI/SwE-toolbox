@@ -122,7 +122,7 @@ function varargout = swe_DesRep(varargin)
 % Copyright (C) 1999-2015 Wellcome Trust Centre for Neuroimaging
 
 % Andrew Holmes
-% $Id: spm_DesRep.m 6351 2015-02-26 16:37:18Z guillaume $
+% $Id$
 
 
 %==========================================================================
@@ -253,6 +253,7 @@ function varargout = swe_DesRep(varargin)
 % of the image object as a structure with fields 'i', 'h' & 'xCon'
 % respectively.
 %__________________________________________________________________________
+% Version Info:  $Format:%ci$ $Format:%h$
 
 
 SVNid = '$Rev: 6351 $'; 

@@ -9,6 +9,7 @@ function swe_checkCompat(matVer, tbVer)
 %   - tbVer:  version of SwE toolbox currently being run.
 % =========================================================================
 % Author: Tom Maullin (09/11/2018)
+% Version Info:  $Format:%ci$ $Format:%h$
 
     if isequal(matVer,tbVer)
        return; 

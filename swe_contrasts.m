@@ -17,6 +17,7 @@ function [SwE] = swe_contrasts(SwE,Ic)
 % =========================================================================
 % Modified version of spm_contrasts adapted for the SwE toolbox
 % By Bryan Guillaume
+% Version Info:  $Format:%ci$ $Format:%h$
 
 % Temporary SwE variable to check for any changes to SwE. We want to avoid
 % always having to save SwE.mat unless it has changed, because this is

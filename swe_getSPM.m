@@ -206,8 +206,9 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 %__________________________________________________________________________
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
-%Modified version of spm_getSPM
-%Written by B. Guillaume
+% Modified version of spm_getSPM
+% Written by B. Guillaume
+% Version Info:  $Format:%ci$ $Format:%h$
 
 %-GUI setup
 %--------------------------------------------------------------------------

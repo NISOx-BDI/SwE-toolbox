@@ -15,7 +15,7 @@ function varargout = swe_get_defaults(defstr, varargin)
 %__________________________________________________________________________
 % Based on swe_get_defaults.m
 % Thomas Nichols
-% $Id$
+% Version Info:  $Format:%ci$ $Format:%h$
 
 global SwEdefs;
 if isempty(SwEdefs)

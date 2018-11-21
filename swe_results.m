@@ -8,6 +8,7 @@ function swe_results
 % FORMAT swe_results
 % =========================================================================
 % Written by Tom Maullin (05/09/2018)
+% Version Info:  $Format:%ci$ $Format:%h$
 
     % Initiate a job 
     if isempty(spm_figure('FindWin','Graphics'))

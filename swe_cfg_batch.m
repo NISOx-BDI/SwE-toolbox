@@ -4,6 +4,7 @@ function swe = swe_cfg_batch
 % FORMAT swe = swe_cfg_batch
 % =========================================================================
 % Written by Bryan Guillaume
+% Version Info:  $Format:%ci$ $Format:%h$
     
     toolboxDir = spm_str_manip(mfilename('fullpath'), 'h');
     addpath(toolboxDir);

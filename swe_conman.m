@@ -247,7 +247,7 @@ function varargout=swe_conman(varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % Andrew Holmes
-% $Id: swe_conman.m 4617 2012-01-11 15:46:16Z will $
+% $Id$
 
 
 %==========================================================================
@@ -436,6 +436,7 @@ function varargout=swe_conman(varargin)
 % .hStatLin  - handle of status line text object (in selection interface)
 % .hNew      - handle of "Define new contrast" pushbutton
 %__________________________________________________________________________
+% Version Info:  $Format:%ci$ $Format:%h$
 
 
 %-Parameters

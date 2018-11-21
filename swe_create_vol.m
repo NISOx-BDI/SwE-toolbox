@@ -10,7 +10,7 @@ function vol=swe_create_vol(fname, DIM, M, varargin)
 %   - descrip:  Description to enter into image header
 %   - meshData: Boolean stating whether we output gifti or not.
 % =========================================================================
-% SwE-toolbox
+% Version Info:  $Format:%ci$ $Format:%h$
     
     if nargin > 3
         descrip = varargin{1};

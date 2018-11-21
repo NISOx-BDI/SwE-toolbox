@@ -8,6 +8,7 @@ function swe_thresholdImage(threshold, minimumClusterSize)
 %  - threshold - minimum value (inclusive) of the surviving voxels
 %  - minimumClusterSize - the minimum size ofthe surviving clusters
 % =========================================================================
+% Version Info:  $Format:%ci$ $Format:%h$
 
   inputImageName = spm_select(1, 'image');
   [pth, bnm, ext] = spm_fileparts(inputImageName);

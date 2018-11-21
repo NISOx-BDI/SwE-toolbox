@@ -4,6 +4,7 @@ function rmodel = swe_config_rmodel
 % FORMAT design = swe_config_rmodel
 % =========================================================================
 % Written by Tom Maullin (05/09/2018)
+% Version Info:  $Format:%ci$ $Format:%h$
 
 % -------------------------------------------------------------------------
 % dir Directory

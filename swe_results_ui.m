@@ -111,7 +111,7 @@ function varargout = swe_results_ui(varargin)
  
 % Original SPM code by Karl Friston & Andrew Holmes
 % Adapted by Bryan Guillaume
-% $Id: swe_results_ui.m 3928 2010-06-16 12:09:22Z guillaume $
+% $Id$
  
  
 %==========================================================================
@@ -223,6 +223,7 @@ function varargout = swe_results_ui(varargin)
 % warning statements from MATLAB.
 %__________________________________________________________________________
 % Modified version of spm_results_ui by Bryan Guillaume 
+% Version Info:  $Format:%ci$ $Format:%h$
 
 %-Condition arguments
 %--------------------------------------------------------------------------
