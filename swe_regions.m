@@ -1,9 +1,9 @@
-function [Y,xY] = swe_regions(xSPM,SPM,hReg,xY)
+function [Y,xY] = swe_regions(xSwE,SwE,hReg,xY)
 % VOI time-series extraction of adjusted data (& local eigenimage analysis)
-% FORMAT [Y,xY] = swe_regions(xSPM,SPM,hReg,[xY])
+% FORMAT [Y,xY] = swe_regions(xSwE,SwE,hReg,[xY])
 %
-% xSPM   - structure containing specific SPM, distribution & filtering details
-% SPM    - structure containing generic analysis details
+% xSwE   - structure containing specific SwE, distribution & filtering details
+% SwE    - structure containing generic analysis details
 % hReg   - Handle of results section XYZ registry (see spm_results_ui.m)
 %
 % Y      - first scaled eigenvariate of VOI {i.e. weighted mean}
@@ -22,8 +22,8 @@ function [Y,xY] = swe_regions(xSPM,SPM,hReg,xY)
 %       xY.s            - eigenvalues
 %       xY.X0           - [whitened] confounds (including drift terms)
 %
-% Y and xY are also saved in VOI_*.mat in the SPM working directory.
-% (See spm_getSPM for details on the SPM & xSPM structures)
+% Y and xY are also saved in VOI_*.mat in the SwE working directory.
+% (See spm_getSwE for details on the SwE & xSwE structures)
 %
 % FORMAT [Y,xY] = swe_regions('Display',[xY])
 %
@@ -48,18 +48,19 @@ function [Y,xY] = swe_regions(xSPM,SPM,hReg,xY)
 % returned by the plotting routine (spm_graph.m) for the same contrast.
 %__________________________________________________________________________
 % Copyright (C) 1999-2016 Wellcome Trust Centre for Neuroimaging
- 
 % Karl Friston
-% $Id: swe_regions.m 6923 2016-11-04 15:35:12Z guillaume $
 
-% Add the design matrix into the xKXs field to match that of an SPM.mat
-SPM.xX.xKXs.X = SPM.xX.X;
+% Code adapted from swe_regions by Tom Maullin (28/11/2018)
+% Based on: swe_regions.m 6923 2016-11-04 15:35:12Z guillaume
+
+% Add the design matrix into the xKXs field to match that of an SwE.mat
+SwE.xX.xKXs.X = SwE.xX.X;
 
 %-Shortcut for VOI display
 %--------------------------------------------------------------------------
-if nargin && ischar(xSPM) && strcmpi(xSPM,'display')
+if nargin && ischar(xSwE) && strcmpi(xSwE,'display')
     if nargin > 1
-        xY = SPM;
+        xY = SwE;
     else
         [xY, sts] = spm_select(1,'^VOI.*\.mat$');
         if ~sts, return; end
@@ -81,7 +82,7 @@ if ~noGraph, spm_figure('GetWin','Graphics'); end
  
 %-Find nearest voxel [Euclidean distance] in point list
 %--------------------------------------------------------------------------
-if isempty(xSPM.XYZmm)
+if isempty(xSwE.XYZmm)
     spm('alert!','No suprathreshold voxels!',mfilename,0);
     Y = []; xY = [];
     return
@@ -90,13 +91,13 @@ try
     xyz    = xY.xyz;
 catch
     xyz    = spm_XYZreg('NearestXYZ',...
-             spm_XYZreg('GetCoords',hReg),xSPM.XYZmm);
+             spm_XYZreg('GetCoords',hReg),xSwE.XYZmm);
     xY.xyz = xyz;
 end
  
 % and update GUI location
 %--------------------------------------------------------------------------
-if spm_mesh_detect(SPM.xY.VY)
+if spm_mesh_detect(SwE.xY.VY)
     spm_XYZreg('SetCoords',xyz,hReg,1);
 else
     spm_XYZreg('SetCoords',xyz,hReg);
@@ -123,10 +124,10 @@ if ~isfield(xY,'Ic')
     Con    = {'<don''t adjust>'};
     q(2)   = NaN;
     Con{2} = '<adjust for everything>';
-    for i = 1:length(SPM.xCon)
-        if strcmp(SPM.xCon(i).STAT,'F')
+    for i = 1:length(SwE.xCon)
+        if strcmp(SwE.xCon(i).STAT,'F')
             q(end + 1) = i;
-            Con{end + 1} = SPM.xCon(i).name;
+            Con{end + 1} = SwE.xCon(i).name;
         end
     end
     if numel(Con) == 2
@@ -138,8 +139,8 @@ end
  
 %-If fMRI data then ask user to select session
 %--------------------------------------------------------------------------
-if isfield(SPM,'Sess') && ~isfield(xY,'Sess')
-    s       = length(SPM.Sess);
+if isfield(SwE,'Sess') && ~isfield(xY,'Sess')
+    s       = length(SwE.Sess);
     if s > 1
         s   = spm_input('which session','!+1','n1',s,Inf);
     end
@@ -148,8 +149,8 @@ end
 
 %-Specify VOI
 %--------------------------------------------------------------------------
-xY.M = xSPM.M;
-[xY, xY.XYZmm, Q] = spm_ROI(xY, xSPM.XYZmm);
+xY.M = xSwE.M;
+[xY, xY.XYZmm, Q] = spm_ROI(xY, xSwE.XYZmm);
 try, xY = rmfield(xY,'M'); end
 try, xY = rmfield(xY,'rej'); end
  
@@ -161,13 +162,13 @@ end
 
 %-Perform time-series extraction to all sessions if Inf is entered
 %--------------------------------------------------------------------------
-if isfield(SPM,'Sess') && isfield(xY,'Sess') && isinf(xY.Sess)
-    if length(SPM.Sess) == 1
+if isfield(SwE,'Sess') && isfield(xY,'Sess') && isinf(xY.Sess)
+    if length(SwE.Sess) == 1
         xY.Sess = 1;
     else
-        for i=1:length(SPM.Sess)
+        for i=1:length(SwE.Sess)
             xY.Sess = i;
-            [tY{i},txY(i)] = swe_regions(xSPM,SPM,hReg,xY);
+            [tY{i},txY(i)] = swe_regions(xSwE,SwE,hReg,xY);
         end
         Y = tY; xY = txY;
         return;
@@ -180,8 +181,8 @@ spm('Pointer','Watch')
  
 %-Get raw data, whiten and filter 
 %--------------------------------------------------------------------------
-y        = spm_data_read(SPM.xY.VY,'xyz',xSPM.XYZ(:,Q));
-%y        = spm_filter(SPM.xX.K,SPM.xX.W*y);
+y        = spm_data_read(SwE.xY.VY,'xyz',xSwE.XYZ(:,Q));
+%y        = spm_filter(SwE.xX.K,SwE.xX.W*y);
  
  
 %-Computation
@@ -193,26 +194,26 @@ if xY.Ic ~= 0
  
     %-Parameter estimates: beta = xX.pKX*xX.K*y
     %----------------------------------------------------------------------
-    beta  = spm_data_read(SPM.Vbeta,'xyz',xSPM.XYZ(:,Q));
+    beta  = spm_data_read(SwE.Vbeta,'xyz',xSwE.XYZ(:,Q));
  
     %-subtract Y0 = XO*beta,  Y = Yc + Y0 + e
     %----------------------------------------------------------------------
     if ~isnan(xY.Ic)
-        y = y - spm_FcUtil('Y0',SPM.xCon(xY.Ic),SPM.xX.xKXs.X,beta);
+        y = y - spm_FcUtil('Y0',SwE.xCon(xY.Ic),SwE.xX.xKXs.X,beta);
     else
-        y = y - SPM.xX.xKXs.X * beta;
+        y = y - SwE.xX.xKXs.X * beta;
     end
  
 end
  
 %-Confounds
 %--------------------------------------------------------------------------
-xY.X0     = SPM.xX.xKXs.X(:,[SPM.xX.iB SPM.xX.iG]);
+xY.X0     = SwE.xX.xKXs.X(:,[SwE.xX.iB SwE.xX.iG]);
  
 %-Extract session-specific rows from data and confounds
 %--------------------------------------------------------------------------
 try
-    i     = SPM.Sess(xY.Sess).row;
+    i     = SwE.Sess(xY.Sess).row;
     y     = y(i,:);
     xY.X0 = xY.X0(i,:);
 end
@@ -220,10 +221,10 @@ end
 % and add session-specific filter confounds
 %--------------------------------------------------------------------------
 try
-    xY.X0 = [xY.X0 SPM.xX.K(xY.Sess).X0];
+    xY.X0 = [xY.X0 SwE.xX.K(xY.Sess).X0];
 end
 try
-    xY.X0 = [xY.X0 SPM.xX.K(xY.Sess).KH]; % Compatibility check
+    xY.X0 = [xY.X0 SwE.xX.K(xY.Sess).KH]; % Compatibility check
 end
  
 %-Remove null space of X0
@@ -260,8 +261,8 @@ xY.s    = s;
 %-Display VOI weighting and eigenvariate
 %==========================================================================
 if ~noGraph
-    if isfield(SPM.xY,'RT')
-        display_VOI(xY, SPM.xY.RT);
+    if isfield(SwE.xY,'RT')
+        display_VOI(xY, SwE.xY.RT);
     else
         display_VOI(xY);
     end
@@ -270,13 +271,13 @@ end
 %-Save
 %==========================================================================
 str = ['VOI_' xY.name '.mat'];
-if isfield(xY,'Sess') && isfield(SPM,'Sess')
+if isfield(xY,'Sess') && isfield(SwE,'Sess')
     str = sprintf('VOI_%s_%i.mat',xY.name,xY.Sess);
 end
-save(fullfile(SPM.swd,str),'Y','xY', spm_get_defaults('mat.format'))
+save(fullfile(SwE.swd,str),'Y','xY', spm_get_defaults('mat.format'))
 
 cmd = 'swe_regions(''display'',''%s'')';
-fprintf('   VOI saved as %s\n',spm_file(fullfile(SPM.swd,str),'link',cmd));
+fprintf('   VOI saved as %s\n',spm_file(fullfile(SwE.swd,str),'link',cmd));
  
 %-Reset title
 %--------------------------------------------------------------------------
