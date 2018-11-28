@@ -52,6 +52,8 @@ function [Y,xY] = swe_regions(xSPM,SPM,hReg,xY)
 % Karl Friston
 % $Id: swe_regions.m 6923 2016-11-04 15:35:12Z guillaume $
 
+% Add the design matrix into the xKXs field to match that of an SPM.mat
+SPM.xX.xKXs.X = SPM.xX.X;
 
 %-Shortcut for VOI display
 %--------------------------------------------------------------------------
@@ -179,7 +181,7 @@ spm('Pointer','Watch')
 %-Get raw data, whiten and filter 
 %--------------------------------------------------------------------------
 y        = spm_data_read(SPM.xY.VY,'xyz',xSPM.XYZ(:,Q));
-y        = spm_filter(SPM.xX.K,SPM.xX.W*y);
+%y        = spm_filter(SPM.xX.K,SPM.xX.W*y);
  
  
 %-Computation
@@ -196,7 +198,7 @@ if xY.Ic ~= 0
     %-subtract Y0 = XO*beta,  Y = Yc + Y0 + e
     %----------------------------------------------------------------------
     if ~isnan(xY.Ic)
-        y = y - spm_FcUtil('Y0',SPM.xCon(xY.Ic),SPM.xX.xKXs,beta);
+        y = y - spm_FcUtil('Y0',SPM.xCon(xY.Ic),SPM.xX.xKXs.X,beta);
     else
         y = y - SPM.xX.xKXs.X * beta;
     end
