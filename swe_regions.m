@@ -51,6 +51,7 @@ function [Y,xY] = swe_regions(xSwE,SwE,hReg,xY)
 % Karl Friston
 
 % Code adapted from swe_regions by Tom Maullin (28/11/2018)
+% Version Info:  $Format:%ci$ $Format:%h$
 % Based on: swe_regions.m 6923 2016-11-04 15:35:12Z guillaume
 
 % Add the design matrix into the xKXs field to match that of an SwE.mat
