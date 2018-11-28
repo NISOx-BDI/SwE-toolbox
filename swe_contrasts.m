@@ -32,10 +32,12 @@ try
 end
 
 % For Wild Bootstrap we already made contrast images, we just need to 
-% record them.
+% record them, if we haven't already.
 %--------------------------------------------------------------------------
 if isfield(SwE, 'WB')
-    SwE = swe_contrasts_WB(SwE);
+    if ~isfield(SwE, 'xCon') || isempty(SwE.xCon)
+        SwE = swe_contrasts_WB(SwE);
+    end
     return
 end
 
