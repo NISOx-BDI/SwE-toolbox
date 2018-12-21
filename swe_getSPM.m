@@ -303,9 +303,13 @@ catch
         xCon = SwE.xCon;
     % If we're doing WB, we already have a contrast. We just need to record it.
     else
-        Ic = 1;
         SwE = swe_contrasts_WB(SwE);
         xCon = SwE.xCon;
+        if numel(xCon) == 2
+            Ic = spm_input('Contrast Type','+1','b','Activation|Deactivation',[1,2],1);
+        else
+            Ic = 1;
+        end
     end
 end
 if isempty(xCon)
@@ -645,6 +649,12 @@ for i = Ic
   else
     Z = min(Z,spm_get_data(xCon(i).Vspm,XYZ));
   end
+  % In WB the second contrast is deactivations but the positive map has
+  % been recorded.
+  if Ic==2 && isfield(SwE, 'WB')
+     Z = -Z; 
+  end
+      
 end
 
 

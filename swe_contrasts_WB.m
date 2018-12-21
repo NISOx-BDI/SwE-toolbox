@@ -79,11 +79,35 @@ function [SwE] = swe_contrasts_WB(SwE)
     end
     DxCon.Vedf = spm_vol(sprintf('swe_vox_edf_c%.2d%s', 1, file_ext));
     
-    % Return SwE.
+    % Add the positive contrast.
     %----------------------------------------------------------------------
     if ~isfield(SwE, 'xCon')
         SwE.xCon = DxCon;
     else
+        SwE.xCon = [SwE.xCon DxCon]; 
+    end
+    
+    % We need to add the negative contrast if we are doing a T test.
+    if strcmpi(STAT, 't')
+        
+        DxCon = spm_FcUtil('Set', 'Contrast 2: Deactivation', STAT, 'c', -c', X);
+        
+        DxCon.Vspm = spm_vol(sprintf('swe_vox_%c%cstat_c%.2d%s', eSTAT, STAT, 1, file_ext));
+        DxCon.VspmUncP = spm_vol(sprintf('swe_vox_%cstat_lp_c%.2d%s', STAT, 2, file_ext));
+        DxCon.VspmFDRP = spm_vol(sprintf('swe_vox_%cstat_lpFDR%s_c%.2d%s', STAT, wbstring, 2, file_ext));
+        DxCon.VspmFWEP = spm_vol(sprintf('swe_vox_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 2, file_ext));
+        if isfield(SwE,'WB')
+            if SwE.WB.clusterWise
+                DxCon.VspmFWEP_clus = spm_vol(sprintf('swe_clustere_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 2, file_ext));
+            end
+            if isfield(SwE.WB, 'TFCE')
+                DxCon.VspmTFCE = spm_vol(sprintf('swe_tfce_c%.2d%s', 2, file_ext));
+                DxCon.VspmTFCEP = spm_vol(sprintf('swe_tfce_lp-WB_c%.2d%s', 2, file_ext));
+                DxCon.VspmTFCEFWEP = spm_vol(sprintf('swe_tfce_lpFWE-WB_c%.2d%s', 2, file_ext));
+            end
+        end
+        DxCon.Vedf = spm_vol(sprintf('swe_vox_edf_c%.2d%s', 1, file_ext));
+    
         SwE.xCon = [SwE.xCon DxCon]; 
     end
 
