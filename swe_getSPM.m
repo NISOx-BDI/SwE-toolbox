@@ -649,11 +649,6 @@ for i = Ic
   else
     Z = min(Z,spm_get_data(xCon(i).Vspm,XYZ));
   end
-  % In WB the second contrast is deactivations but the positive map has
-  % been recorded.
-  if Ic==2 && isfield(SwE, 'WB')
-     Z = -Z; 
-  end
       
 end
 
@@ -882,7 +877,7 @@ if ~isMat
                   end
                   thresDesc = ['p<' num2str(pu) ' (' thresDesc ')'];
                   
-                  FWE_ps = 10.^-spm_get_data(xCon(1).VspmFWEP,XYZum);
+                  FWE_ps = 10.^-spm_get_data(xCon(Ic).VspmFWEP,XYZum);
                   
                   Q      = find(FWE_ps  < pu);
                   
@@ -905,7 +900,7 @@ if ~isMat
                   end
                   thresDesc = ['p<' num2str(pu) ' (' thresDesc ')'];
 
-                  FDR_ps = 10.^-spm_get_data(xCon(1).VspmFDRP,XYZum);
+                  FDR_ps = 10.^-spm_get_data(xCon(Ic).VspmFDRP,XYZum);
                   
                   Q      = find(FDR_ps  < pu);
                   
@@ -1115,7 +1110,7 @@ if ~isMat
 
               %-Calculate extent threshold filtering
               %----------------------------------------------------------------------
-              ps_fwe     = 10.^-spm_get_data(xCon(1).VspmFWEP_clus,XYZ);
+              ps_fwe     = 10.^-spm_get_data(xCon(Ic).VspmFWEP_clus,XYZ);
               Q     = find(ps_fwe<fwep_c);
               
               % To obtain k we find the largest p value below the p value

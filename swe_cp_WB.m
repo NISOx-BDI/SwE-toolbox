@@ -608,7 +608,11 @@ if ~isMat
   %-Initialise converted parametric score image
   %----------------------------------------------------------------------
   VcScore = swe_create_vol(sprintf('swe_vox_%c%cstat_c%02d%s', eSTAT, WB.stat, 1, file_ext), DIM, M,...
+			   sprintf('Parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat));    
+  if WB.stat=='T'
+        VcScore_neg = swe_create_vol(sprintf('swe_vox_%c%cstat_c%02d%s', eSTAT, WB.stat, 2, file_ext), DIM, M,...
 			   sprintf('Parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat));
+  end
   
   %-Initialise residual images for the resampling
   %----------------------------------------------------------------------
@@ -1011,6 +1015,9 @@ if ~isMat
     %------------------------------------------------------------------
     if ~isempty(Q), jj(Q) = CrConScore; end
     VcScore = spm_write_plane(VcScore, jj, CrPl);
+    if WB.stat == 'T'
+        VcScore_neg = spm_write_plane(VcScore_neg, -jj, CrPl);
+    end
     
     %-Report progress
     %----------------------------------------------------------------------
