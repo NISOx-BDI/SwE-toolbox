@@ -2324,31 +2324,31 @@ end
 % Convert P values.
 switch dof_type
   case 1
-   error('degrees of freedom type still not implemented for the WB')
+    error('degrees of freedom type still not implemented for the WB')
   
   case 2
-   CovcCovBc = 0;
-   for g = 1:nGr
-     CovcCovBc = CovcCovBc + Wg_2{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-   end
-   if (SwE.WB.stat == 'T')
-     edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
-   else
-     edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
-   end
+    CovcCovBc = 0;
+    for g = 1:nGr
+      CovcCovBc = CovcCovBc + Wg_2{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
+    end
+    if (SwE.WB.stat == 'T')
+      edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
+    else
+      edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
+    end
 
   case 3
-   CovcCovBc = 0;
-   for g = 1:nGr
-     CovcCovBc = CovcCovBc + Wg_3{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-   end
-   if (SwE.WB.stat == 'T')
-     edf = 2 * cCovBc.^2 ./ CovcCovBc;
-   else
-     tmp = eye(nSizeCon);
-     edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
-	    (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
-   end
+    CovcCovBc = 0;
+    for g = 1:nGr
+      CovcCovBc = CovcCovBc + Wg_3{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
+    end
+    if (SwE.WB.stat == 'T')
+      edf = 2 * cCovBc.^2 ./ CovcCovBc;
+    else
+      tmp = eye(nSizeCon);
+      edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
+	     (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
+    end
 end
        
 % P values and activated voxels (if clusterwise).
