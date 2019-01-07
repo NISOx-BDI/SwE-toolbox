@@ -54,11 +54,12 @@ function [TabDat,xSVC] = swe_VOI(SwE,xSwE,hReg,xY)
 % See also: spm_list
 % Adapted version of `spm_VOI.m`. 
 % Author of Adaptation: Tom Maullin (07/09/2018)
+% Version Info:  $Format:%ci$ $Format:%h$
 %__________________________________________________________________________
 % Copyright (C) 1999-2014 Wellcome Trust Centre for Neuroimaging
 
 % Karl Friston
-% $Id: spm_VOI.m 6080 2014-07-01 16:00:22Z guillaume $
+% Based on: spm_VOI.m 6080 2014-07-01 16:00:22Z guillaume
 
 
 %-Parse arguments

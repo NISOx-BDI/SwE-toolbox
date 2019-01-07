@@ -8,6 +8,7 @@ function swe_rmodel
 % FORMAT swe_rmodel
 % =========================================================================
 % Written by Tom Maullin (05/09/2018)
+% Version Info:  $Format:%ci$ $Format:%h$
 
     % Initiate a job 
     if isempty(spm_figure('FindWin','Graphics'))

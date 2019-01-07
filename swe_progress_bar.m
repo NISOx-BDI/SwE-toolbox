@@ -19,6 +19,7 @@ function swe_progress_bar(varargin)
 % Clear the 'Interactive' window.
 % =========================================================================
 % Author: Tom Maullin (08/06/2018)
+% Version Info:  $Format:%ci$ $Format:%h$
 % =========================================================================
 
     if ~exist('OCTAVE_VERSION','builtin')

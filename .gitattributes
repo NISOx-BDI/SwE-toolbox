@@ -1,0 +1,5 @@
+*.m ident export-subst
+*.yml ident export-subst
+*.md ident export-subst
+.gitignore export-ignore
+.gitattributes export-ignore

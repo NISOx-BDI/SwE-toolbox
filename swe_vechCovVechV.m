@@ -30,6 +30,7 @@ function vechCovVechV = swe_vechCovVechV(covVis,dofMat,type)
 % Note: there are probably ways to compute this quicker, but this will do 
 % for now.
 % By Bryan Guillaume
+% Version Info:  $Format:%ci$ $Format:%h$
 
 [nCovVis, nVox] = size(covVis);
 nVis = -0.5 + sqrt(0.25 + 2 * nCovVis);

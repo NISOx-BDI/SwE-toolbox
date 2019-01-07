@@ -54,6 +54,7 @@ function swe_cp_WB(SwE)
 % Inputs:
 %   - SwE: SwE data structure
 % =========================================================================
+% Version Info:  $Format:%ci$ $Format:%h$
 
 %-Say hello
 %--------------------------------------------------------------------------
@@ -566,6 +567,16 @@ if ~isMat
     'descrip','swe_cp_WB:resultant analysis mask');
   VM    = spm_create_vol(VM);
   
+  %-Initialise beta image files
+  %----------------------------------------------------------------------
+
+  for i = 1:nBeta
+    Vbeta(i) = swe_create_vol(sprintf('swe_vox_beta_b%02d%s',i,file_ext),...
+                              DIM, M,...
+                              sprintf('swe_cp:beta (%02d) - %s',i,xX.name{i}),...
+                              isMeshData);
+  end
+  
   %-Initialise original parametric score image, T or F
   %----------------------------------------------------------------------
   if WB.stat=='T'
@@ -741,6 +752,7 @@ if ~isMat
     CrYWB        = [];                       %-fitted data under H0
     CrResWB      = [];                       %-residuals
     CrP          = [];                        %-parametric p-values
+    CrBl         = [];                        %-parameter estimates
     if (WB.stat == 'T')
      CrPNeg       = [];                       %-negative parametric p-values
     end
@@ -945,6 +957,7 @@ if ~isMat
         CrScore           = [CrScore,  score]; %#ok<AGROW>
         CrP               = [CrP,      -log10(1-p)]; %#ok<AGROW>
         Credf             = [Credf,    edf]; %#ok<AGROW> 
+        CrBl              = [CrBl,    beta]; %#ok<AGROW>
         if (SwE.WB.stat == 'T')
             CrConScore    = [CrConScore, swe_invNcdf(p)]; %#ok<AGROW>
             CrPNeg        = [CrPNeg,   -log10(p)]; %#ok<AGROW>
@@ -977,6 +990,13 @@ if ~isMat
 
     VM    = spm_write_plane(VM, ~isnan(jj), CrPl);    
 
+    %-Write beta images
+    %------------------------------------------------------------------
+    for i = 1:nBeta
+        if ~isempty(Q), jj(Q) = CrBl(i,:); end
+        Vbeta(i) = spm_write_plane(Vbeta(i), jj, CrPl);
+    end
+    
     %-Write WB fitted data images
     %------------------------------------------------------------------
     for i = 1:nScan
@@ -1056,7 +1076,7 @@ if ~isMat
   fprintf('\n');                                                          %-#
   swe_progress_bar('Clear')
 
-  clear beta res Cov_vis CrScore CrYWB CrResWB Q jj%-Clear to save memory
+  clear beta res Cov_vis CrBl CrScore CrYWB CrResWB Q jj%-Clear to save memory
   
   XYZ   = XYZ(:,1:S); % remove all the data not used
   
@@ -1423,6 +1443,7 @@ if ~isMat
   SwE.WB.VYWB       = VYWB;               %-Filehandle - fitted data under H0
   SwE.WB.VResWB     = VResWB;             %-Filehandle - adjusted resticted residuals
   SwE.WB.Vscore     = Vscore;            %-Filehandle - score original image
+  SwE.Vbeta      = Vbeta;             %-Filehandle - Beta
 end
 SwE.WB.weightR    = weightR;
 SwE.WB.corrWB     = corrWB;

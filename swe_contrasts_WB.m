@@ -11,6 +11,7 @@ function [SwE] = swe_contrasts_WB(SwE)
 %   - SwE: SwE data structure
 % =========================================================================
 % Author: Tom Maullin (08/06/2018)
+% Version Info:  $Format:%ci$ $Format:%h$
 
     %-Get and change to results directory
     %----------------------------------------------------------------------

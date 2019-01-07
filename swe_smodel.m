@@ -8,6 +8,7 @@ function swe_smodel
 % FORMAT swe_smodel
 % =========================================================================
 % Written by Bryan Guillaume
+% Version Info:  $Format:%ci$ $Format:%h$
 
     % Initiate a job 
     if isempty(spm_figure('FindWin','Graphics'))

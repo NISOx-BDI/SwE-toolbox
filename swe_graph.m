@@ -72,6 +72,7 @@ function [Y,y,beta,Bcov] = swe_graph(xSwE,SwE,hReg)
 
 % Modified version of swe_graph
 % Modified by Bryan Guillaume
+% Version Info:  $Format:%ci$ $Format:%h$
 
 
 %-Get Graphics figure handle

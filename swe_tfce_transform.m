@@ -17,6 +17,7 @@ function [tfced] = swe_tfce_transform(img,H,E,C,dh)
 % -------------------------------------------------------------------------
 % Additional Octave compatability using SPM functions was added by 
 % Tom Maullin (19/09/2018)
+% Version Info:  $Format:%ci$ $Format:%h$
 %
 % Note: Using the SPM functions is almost 10 times as slow as bwconncomp
 % and only recommended when the latter is not available.

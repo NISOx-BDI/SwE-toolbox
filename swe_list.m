@@ -142,6 +142,7 @@ function varargout = swe_list(varargin)
 % extract the table data to the MATLAB workspace.
 %
 %_________________________________________________________________________
+% Version Info:  $Format:%ci$ $Format:%h$
 
 
 %==========================================================================

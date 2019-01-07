@@ -9,6 +9,7 @@ function swe_update()
 % FORMAT swe_update()
 % =========================================================================
 % Authors: Thomas Nichols, Tom Maullin (23/07/2018).
+% Version Info:  $Format:%ci$ $Format:%h$
 % =========================================================================
 
     % Obtain swe version number.
