@@ -131,6 +131,7 @@ if exist(fullfile(SwE.swd,sprintf('swe_vox_mask%s',file_ext)),'file') == 2
     warning('Overwriting old results\n\t (pwd = %s) ',SwE.swd); %#ok<WNTAG>
     try SwE = rmfield(SwE,'xVol'); end %#ok<TRYNC>
   end
+
 end
 
 files = {'^swe_vox_mask\..{3}$',...
@@ -227,17 +228,17 @@ iGr_dof   = zeros(1,nScan);
 iBeta_dof = zeros(1,nBeta);
 it = 0;
 while ~all(iGr_dof)
-    it = it + 1;
-    scan = find(iGr_dof==0,1);
-    if any(xX.X(scan,:)) % handle the case where a row is all 0s (BG - 05/08/2016; Thanks to Ged Ridgway for finding the bug)
-      for i = find(iGr_dof==0)
-          if any((xX.X(i,:) & xX.X(scan,:)))
-              iGr_dof(i) = it;
-          end
+  it = it + 1;
+  scan = find(iGr_dof==0,1);
+  if any(xX.X(scan,:)) % handle the case where a row is all 0s (BG - 05/08/2016; Thanks to Ged Ridgway for finding the bug)
+    for i = find(iGr_dof==0)
+      if any((xX.X(i,:) & xX.X(scan,:)))
+	iGr_dof(i) = it;
       end
-    else
-      iGr_dof(scan) = it;
     end
+  else
+    iGr_dof(scan) = it;
+  end
 end
 %need to check if the partition is correct
 while 1
@@ -266,30 +267,30 @@ end
 
 pB_dof   = zeros(1,nGr_dof); 
 for i=1:nBeta    
-    tmp=1;
-    for ii=1:nSubj
-        if length(unique(xX.X(iSubj==uSubj(ii)&iGr_dof'==iBeta_dof(i),i)))>1
-            tmp=0;
-            break
-        end
+  tmp=1;
+  for ii=1:nSubj
+    if length(unique(xX.X(iSubj==uSubj(ii)&iGr_dof'==iBeta_dof(i),i)))>1
+      tmp=0;
+      break
     end
-    if tmp == 1
-        pB_dof(iBeta_dof(i)) = pB_dof(iBeta_dof(i)) + 1;
-    end
+  end
+  if tmp == 1
+    pB_dof(iBeta_dof(i)) = pB_dof(iBeta_dof(i)) + 1;
+  end
 end
 
 %-effective dof for each subject
 edof_Subj = zeros(1,nSubj);
 for i = 1:nSubj
-    edof_Subj(i) = 1 - pB_dof(iGr_dof(iSubj==uSubj(i)))/...
-        nSubj_dof(iGr_dof(iSubj==uSubj(i)));
+  edof_Subj(i) = 1 - pB_dof(iGr_dof(iSubj==uSubj(i)))/...
+      nSubj_dof(iGr_dof(iSubj==uSubj(i)));
 end
 
 %-degrees of freedom estimation type
 if isfield(SwE.type,'modified')
-    dof_type = SwE.type.modified.dof_mo;
+  dof_type = SwE.type.modified.dof_mo;
 else
-    dof_type = SwE.type.classic.dof_cl;        
+  dof_type = SwE.type.classic.dof_cl;        
 end
 
 if dof_type == 0 % so naive estimation is used
@@ -302,11 +303,11 @@ if dof_type == 0 % so naive estimation is used
   
   dof_cov = zeros(1,nBeta);
   for i = 1:nBeta
-      dof_cov(i) = nSubj_dof(iBeta_dof(i)) - ...
-          pB_dof(iBeta_dof(i));    
+    dof_cov(i) = nSubj_dof(iBeta_dof(i)) - ...
+	pB_dof(iBeta_dof(i));    
   end
 else
-    edf = NaN;
+  edf = NaN;
 end
 
 %-preprocessing for the modified SwE
@@ -324,24 +325,24 @@ if isfield(SwE.type,'modified')
   uSubj_g = cell(1,nGr); % unique visits for each group
   nSubj_g = zeros(1,nGr); % number of visits for each group
   for g = 1:nGr
-      uVis_g{g}  = unique(iVis(iGr==uGr(g))); 
-      nVis_g(g)  = length(uVis_g{g});
-      iSubj_g = iSubj(iGr==uGr(g)); % Subject number for each subject in group for each visit
-      uSubj_g{g} = unique(iSubj_g); % Unique subject numbers of subjects in group
-      nSubj_g(g) = length(uSubj_g{g});
-      uSubj_g_tmp = uSubj_g{g};
+    uVis_g{g}  = unique(iVis(iGr==uGr(g))); 
+    nVis_g(g)  = length(uVis_g{g});
+    iSubj_g = iSubj(iGr==uGr(g)); % Subject number for each subject in group for each visit
+    uSubj_g{g} = unique(iSubj_g); % Unique subject numbers of subjects in group
+    nSubj_g(g) = length(uSubj_g{g});
+    uSubj_g_tmp = uSubj_g{g};
+    
+    for k = 1:nSubj_g(g)
       
-      for k = 1:nSubj_g(g)
+      % The number of visits for subject uSubj_g(k)
+      vis_g_subj(k) = sum(iSubj_g==uSubj_g_tmp(k));
+      
+    end
 
-          % The number of visits for subject uSubj_g(k)
-          vis_g_subj(k) = sum(iSubj_g==uSubj_g_tmp(k));
-
-      end
-
-      max_nVis_g(g) = max(vis_g_subj);
-      min_nVis_g(g) = min(vis_g_subj);
+    max_nVis_g(g) = max(vis_g_subj);
+    min_nVis_g(g) = min(vis_g_subj);
         
-      clear vis_g_subj
+    clear vis_g_subj
         
   end
   nCov_vis_g  = nVis_g.*(nVis_g+1)/2; % number of covariance elements to be estimated for each group
@@ -366,7 +367,7 @@ if isfield(SwE.type,'modified')
       for kk = k:nVis_g(g)
         it = it + 1;
         id = intersect(iSubj(iGr==uGr(g) & iVis==uVis_g{g}(k)),...
-          iSubj(iGr==uGr(g) & iVis==uVis_g{g}(kk))); % identifiaction of the subjects with both visits k & kk
+		       iSubj(iGr==uGr(g) & iVis==uVis_g{g}(kk))); % identifiaction of the subjects with both visits k & kk
         Flagk(it,:)  = ismember(iSubj,id) & iVis==uVis_g{g}(k);
         Flagkk(it,:) = ismember(iSubj,id) & iVis==uVis_g{g}(kk);
         if k==kk
@@ -399,7 +400,7 @@ if isfield(SwE.type,'modified')
       end
       for jjj = Ind_Cov_vis_off_diag
         weight(it,jjj) = pX(j,Flagk(jjj,:))*pX(jj,Flagkk(jjj,:))' + ...
-          pX(j,Flagkk(jjj,:))*pX(jj,Flagk(jjj,:))';
+	    pX(j,Flagkk(jjj,:))*pX(jj,Flagk(jjj,:))';
       end
     end
   end
@@ -415,61 +416,61 @@ if isfield(SwE.type,'modified')
     Wg_testII{g} = sum(kron(swe_duplication_matrix(nSizeCon),swe_duplication_matrix(nSizeCon)), 1) * Wg{g};
     Wg_testIII{g} = tmp(:)' * (kron(swe_duplication_matrix(nSizeCon),swe_duplication_matrix(nSizeCon))) * Wg{g};
   end
-   
+  
   SwE.WB.Wg{1} = Wg;
   SwE.WB.Wg{2} = Wg_testII;
   SwE.WB.Wg{3} = Wg_testIII;
   
-%-compute the effective dof from each homogeneous group if dof_type
-    switch dof_type
-      case 1
-        dofMat = NaN;
-        edof_Gr = zeros(1,nGr);
-        nSubj_g = zeros(1,nGr);
-        for g = 1:nGr
-          nSubj_g(g) = length(unique(iSubj(iGr == g)));
-          tmp = 0;
-          for j = 1:nSubj_g(g)
-            tmp = tmp + 1/edof_Subj(uSubj == uSubj_g{g}(j));
-          end
-          edof_Gr(g) = nSubj_g(g)^2/tmp;
-        end
-      case {2,3} % compute a matrix containing the variables linked to the degrees of freedom (for test II and III)
-        dofMat = cell(nGr,1);
-        for g = 1:nGr
-          dofMat{g} = zeros(nCov_vis_g(g));
-          it1 =0;
-          for i  = 1:nVis_g(g)
-            for j  = i:nVis_g(g)
-              it1 = it1 + 1;
-              it2 = 0;
-              for a = 1:nVis_g(g)
-                for b = a:nVis_g(g)
-                  it2 = it2 + 1;
-                  mij = 0;mab = 0;tmp = 0;
-                  for ii = 1:nSubj_g(g)
-                    mij = mij + 1*(...
-                      any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(i)) &...
-                      any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(j)));
-                    mab = mab + 1*(...
-                      any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(a)) &...
-                      any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(b)));
-                    tmp = tmp + 1*(...
-                      any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(a)) &...
-                      any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(b)) &...
-                      any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(i)) &...
-                      any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(j)))...
-                      /edof_Subj(uSubj==uSubj_g{g}(ii));
-                  end
-                  dofMat{g}(it1,it2) = tmp/mij/mab;
-                end
-              end
-            end
-          end
-          dofMat{g}(isnan(dofMat{g})) = 0;
-        end
-        clear tmp mij mab
+  %-compute the effective dof from each homogeneous group if dof_type
+  switch dof_type
+   case 1
+    dofMat = NaN;
+    edof_Gr = zeros(1,nGr);
+    nSubj_g = zeros(1,nGr);
+    for g = 1:nGr
+      nSubj_g(g) = length(unique(iSubj(iGr == g)));
+      tmp = 0;
+      for j = 1:nSubj_g(g)
+	tmp = tmp + 1/edof_Subj(uSubj == uSubj_g{g}(j));
+      end
+      edof_Gr(g) = nSubj_g(g)^2/tmp;
     end
+   case {2,3} % compute a matrix containing the variables linked to the degrees of freedom (for test II and III)
+    dofMat = cell(nGr,1);
+    for g = 1:nGr
+      dofMat{g} = zeros(nCov_vis_g(g));
+      it1 =0;
+      for i  = 1:nVis_g(g)
+	for j  = i:nVis_g(g)
+	  it1 = it1 + 1;
+	  it2 = 0;
+	  for a = 1:nVis_g(g)
+	    for b = a:nVis_g(g)
+	      it2 = it2 + 1;
+	      mij = 0;mab = 0;tmp = 0;
+	      for ii = 1:nSubj_g(g)
+		mij = mij + 1*(...
+		    any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(i)) &...
+		    any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(j)));
+		mab = mab + 1*(...
+		    any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(a)) &...
+		    any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(b)));
+		tmp = tmp + 1*(...
+		    any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(a)) &...
+		    any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(b)) &...
+		    any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(i)) &...
+		    any(iSubj==uSubj_g{g}(ii) & iVis==uVis_g{g}(j)))...
+                      /edof_Subj(uSubj==uSubj_g{g}(ii));
+	      end
+	      dofMat{g}(it1,it2) = tmp/mij/mab;
+	    end
+	  end
+	end
+      end
+      dofMat{g}(isnan(dofMat{g})) = 0;
+    end
+    clear tmp mij mab
+  end
 end
 
 %-preprocessing for the classic SwE
@@ -524,10 +525,10 @@ catch
 end
 if ~isstruct(xM)
   xM = struct('T',    [],...
-    'TH',   xM,...
-    'I',    0,...
-    'VM',   {[]},...
-    'xs',   struct('Masking','analysis threshold'));
+	      'TH',   xM,...
+	      'I',    0,...
+	      'VM',   {[]},...
+	      'xs',   struct('Masking','analysis threshold'));
 end
 
 fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done');               %-#
@@ -591,29 +592,29 @@ if ~isMat
   %-Initialise parametric TFCE score image, if TFCE has been selected.
   %---------------------------------------------------------------------- 
   if TFCE
-      Vscore_tfce = swe_create_vol(sprintf('swe_tfce_c%02d%s', 1, file_ext), DIM, M,...
-                  'Original parametric TFCE statistic data.'); 
-      if WB.stat=='T'
-          Vscore_tfce_neg = swe_create_vol(sprintf('swe_tfce_c%02d%s', 2, file_ext), DIM, M,...
-                  'Original parametric TFCE statistic data for a negative contrast.'); 
-      end
+    Vscore_tfce = swe_create_vol(sprintf('swe_tfce_c%02d%s', 1, file_ext), DIM, M,...
+				 'Original parametric TFCE statistic data.'); 
+    if WB.stat=='T'
+      Vscore_tfce_neg = swe_create_vol(sprintf('swe_tfce_c%02d%s', 2, file_ext), DIM, M,...
+				       'Original parametric TFCE statistic data for a negative contrast.'); 
+    end
   end
   
   %-Initialise original parametric edf image
   %----------------------------------------------------------------------
   
   Vedf = swe_create_vol(sprintf('swe_vox_edf_c%02d%s', 1, file_ext), DIM, M,...
-			  sprintf('Original parametric %c edf data.', WB.stat));
+			sprintf('Original parametric %c edf data.', WB.stat));
           
   %-Initialise parametric P-Value image
   %----------------------------------------------------------------------
   
   VlP = swe_create_vol(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                      'Original parametric -log10(P) value data (positive).');
+		       'Original parametric -log10(P) value data (positive).');
   
   if WB.stat=='T'
-        VlP_Neg = swe_create_vol(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-                               'Original parametric -log10(P) value data (negative).');
+    VlP_Neg = swe_create_vol(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+			     'Original parametric -log10(P) value data (negative).');
   end
   
   %-Initialise converted parametric score image
@@ -629,8 +630,8 @@ if ~isMat
   %----------------------------------------------------------------------
   
   for i = 1:nScan
-      descrip = sprintf('adjusted restricted residuals (%04d)', i);
-      VResWB(i) = swe_create_vol(sprintf('swe_vox_resid_y%04d%s', i, file_ext), DIM, M, descrip);
+    descrip = sprintf('adjusted restricted residuals (%04d)', i);
+    VResWB(i) = swe_create_vol(sprintf('swe_vox_resid_y%04d%s', i, file_ext), DIM, M, descrip);
   end
   
   fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-#
@@ -639,8 +640,8 @@ if ~isMat
   %----------------------------------------------------------------------
   
   for i = 1:nScan
-      descrip = sprintf('restricted fitted data  (%04d)', i);
-      VYWB(i) = swe_create_vol(sprintf('swe_vox_fit_y%04d%s',i,file_ext), DIM, M, descrip);
+    descrip = sprintf('restricted fitted data  (%04d)', i);
+    VYWB(i) = swe_create_vol(sprintf('swe_vox_fit_y%04d%s',i,file_ext), DIM, M, descrip);
   end
   
   %-Initialise result images
@@ -656,29 +657,29 @@ if ~isMat
 
   if WB.stat=='T'
     VlP_wb_neg = swe_create_vol(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-                              'Non-parametric voxelwise -log10(P) value data (negative).');
+				'Non-parametric voxelwise -log10(P) value data (negative).');
     
     VlP_wb_FWE_neg = swe_create_vol(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-                                     'Non-parametric voxelwise FWE -log10(P) value data (negative).');
+				    'Non-parametric voxelwise FWE -log10(P) value data (negative).');
     
     VlP_wb_FDR_neg = swe_create_vol(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-                                     'Non-parametric voxelwise FDR -log10(P) value data (negative).');
+				    'Non-parametric voxelwise FDR -log10(P) value data (negative).');
 
   end
   
   %-Initialise parametric TFCE results images, if TFCE has been selected.
   %---------------------------------------------------------------------- 
   if TFCE
-      VlP_tfce_pos = swe_create_vol(sprintf('swe_tfce_lp-WB_c%02d%s', 1, file_ext), DIM, M,...
-                  'Non-parametric TFCE -log10(P) value data (positive).'); 
-      VlP_tfce_FWE_pos = swe_create_vol(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 1, file_ext), DIM, M,...
-                  'Non-parametric TFCE FWE -log10(P) value data (positive).'); 
-      if WB.stat=='T'
-          VlP_tfce_neg = swe_create_vol(sprintf('swe_tfce_lp-WB_c%02d%s', 2, file_ext), DIM, M,...
-                  'Non-parametric TFCE -log10(P) value data (negative).'); 
-          VlP_tfce_FWE_neg = swe_create_vol(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 2, file_ext), DIM, M,...
-                  'Non-parametric TFCE FWE -log10(P) value data (negative).');
-      end
+    VlP_tfce_pos = swe_create_vol(sprintf('swe_tfce_lp-WB_c%02d%s', 1, file_ext), DIM, M,...
+				  'Non-parametric TFCE -log10(P) value data (positive).'); 
+    VlP_tfce_FWE_pos = swe_create_vol(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 1, file_ext), DIM, M,...
+				      'Non-parametric TFCE FWE -log10(P) value data (positive).'); 
+    if WB.stat=='T'
+      VlP_tfce_neg = swe_create_vol(sprintf('swe_tfce_lp-WB_c%02d%s', 2, file_ext), DIM, M,...
+				    'Non-parametric TFCE -log10(P) value data (negative).'); 
+      VlP_tfce_FWE_neg = swe_create_vol(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 2, file_ext), DIM, M,...
+					'Non-parametric TFCE FWE -log10(P) value data (negative).');
+    end
   end
   
   % Converted score for WB.
@@ -749,12 +750,12 @@ if ~isMat
     CrPl         = z:min(z+nbz-1,zdim);       %-plane list
     zords        = CrPl(:)*ones(1,xdim*ydim); %-plane Z coordinates
     CrScore      = [];                        %-scores
-    CrYWB        = [];                       %-fitted data under H0
-    CrResWB      = [];                       %-residuals
+    CrYWB        = [];                        %-fitted data under H0
+    CrResWB      = [];                        %-residuals
     CrP          = [];                        %-parametric p-values
     CrBl         = [];                        %-parameter estimates
     if (WB.stat == 'T')
-     CrPNeg       = [];                       %-negative parametric p-values
+      CrPNeg       = [];                      %-negative parametric p-values
     end
     CrConScore   = [];                        %-converted score values. 
                                               % i.e. Z/X from T/F
@@ -767,7 +768,7 @@ if ~isMat
       %------------------------------------------------------------------
       if numel(CrPl) == 1
         str = sprintf('Plane %3d/%-3d, block %3d/%-3d',...
-          z,zdim,bch,nbch);
+		      z,zdim,bch,nbch);
       else
         str = sprintf('Planes %3d-%-3d/%-3d',z,CrPl(end),zdim);
       end
@@ -846,9 +847,9 @@ if ~isMat
         [resWB, YWB]=swe_fit(SwE, Y, tmpR2, corrWB, beta, SwE.WB.SS);
 
         if WB.RSwE == 1
-            res=swe_fit(SwE, Y, tmpR2, corr, beta, SwE.SS);
+	  res=swe_fit(SwE, Y, tmpR2, corr, beta, SwE.SS);
         else 
-            res=swe_fit(SwE, Y, xX.X, corr, beta, SwE.SS);
+	  res=swe_fit(SwE, Y, xX.X, corr, beta, SwE.SS);
         end
 
         clear Y                           %-Clear to save memory
@@ -876,10 +877,10 @@ if ~isMat
             for i = Ind_Cov_vis_off_diag
               if any(Flagk(i,:))
                 Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
-                  sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
-                  Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
-                  sum(res(Flagk(i,:),:).^2, 1)./...
-                  sum(res(Flagkk(i,:),:).^2, 1));
+		    sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
+			 Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
+			 sum(res(Flagk(i,:),:).^2, 1)./...
+			 sum(res(Flagkk(i,:),:).^2, 1));
               end
             end
             %NaN may be produced in cov. estimation when one correspondant
@@ -905,7 +906,7 @@ if ~isMat
           cCovBc = 0;
           for i = 1:nSubj
             Cov_beta_i_tmp = weightR(:,Ind_Cov_vis_classic==i) *...
-              (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
+		(res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
             cCovBc = cCovBc + Cov_beta_i_tmp;
           end
           % These variables are left empty for classic SwE.
@@ -959,11 +960,11 @@ if ~isMat
         Credf             = [Credf,    edf]; %#ok<AGROW> 
         CrBl              = [CrBl,    beta]; %#ok<AGROW>
         if (SwE.WB.stat == 'T')
-            CrConScore    = [CrConScore, swe_invNcdf(p)]; %#ok<AGROW>
-            CrPNeg        = [CrPNeg,   -log10(p)]; %#ok<AGROW>
+	  CrConScore      = [CrConScore, swe_invNcdf(p)]; %#ok<AGROW>
+	  CrPNeg          = [CrPNeg,   -log10(p)]; %#ok<AGROW>
         end
         if(SwE.WB.stat == 'F')
-            CrConScore    = [CrConScore, spm_invXcdf(p, 1)]; %#ok<AGROW>
+	  CrConScore    = [CrConScore, spm_invXcdf(p, 1)]; %#ok<AGROW>
         end
         
       end % (CrS)
@@ -1027,8 +1028,8 @@ if ~isMat
     VlP = spm_write_plane(VlP, jj, CrPl);
     
     if WB.stat=='T'
-        if ~isempty(Q), jj(Q) = CrPNeg; end
-        VlP_Neg = spm_write_plane(VlP_Neg, jj, CrPl);
+      if ~isempty(Q), jj(Q) = CrPNeg; end
+      VlP_Neg = spm_write_plane(VlP_Neg, jj, CrPl);
     end
     
     %-Write converted parametric score image of the original data
@@ -1047,29 +1048,29 @@ if ~isMat
   end % (for z = 1:zdim)
   
   if TFCE
-      % Create parametric TFCE statistic images.
-      if strcmp(WB.stat, 'T')
-          
-          % Read in T statistics to get negative and positive TFCE scores.
-          par_tfce = swe_tfce_transform(spm_read_vols(VcScore), H, E, C, dh);
-          par_tfce_neg = swe_tfce_transform(-spm_read_vols(VcScore), H, E, C, dh);
-      else
-          
-          % Convert F statistics to Z scores.
-          scorevol=-swe_invNcdf(10.^(-spm_read_vols(VlP)));
-          scorevol(isnan(scorevol))=0;
-          
-          % Convert to TFCE.
-          par_tfce = swe_tfce_transform(scorevol, H, E, C, dh);
-          
-          clear scorevol
-      end
+    % Create parametric TFCE statistic images.
+    if strcmp(WB.stat, 'T')
       
-      % Save parametric TFCE statistic images.
-      spm_write_vol(Vscore_tfce, par_tfce);
-      if strcmp(WB.stat, 'T')
-          spm_write_vol(Vscore_tfce_neg, par_tfce_neg);
-      end
+      % Read in T statistics to get negative and positive TFCE scores.
+      par_tfce = swe_tfce_transform(spm_read_vols(VcScore), H, E, C, dh);
+      par_tfce_neg = swe_tfce_transform(-spm_read_vols(VcScore), H, E, C, dh);
+    else
+      
+      % Convert F statistics to Z scores.
+      scorevol=-swe_invNcdf(10.^(-spm_read_vols(VlP)));
+      scorevol(isnan(scorevol))=0;
+          
+      % Convert to TFCE.
+      par_tfce = swe_tfce_transform(scorevol, H, E, C, dh);
+      
+      clear scorevol
+    end
+    
+    % Save parametric TFCE statistic images.
+    spm_write_vol(Vscore_tfce, par_tfce);
+    if strcmp(WB.stat, 'T')
+      spm_write_vol(Vscore_tfce_neg, par_tfce_neg);
+    end
   end
   
   
@@ -1193,9 +1194,9 @@ else % ".mat" format
     [resWB, YWB]=swe_fit(SwE, Y, tmpR2, corrWB, beta, SwE.WB.SS);
     
     if WB.RSwE == 1
-        res=swe_fit(SwE, Y, tmpR2, corr, beta, SwE.SS);
+      res=swe_fit(SwE, Y, tmpR2, corr, beta, SwE.SS);
     else 
-        res=swe_fit(SwE, Y, xX.X, corr, beta, SwE.SS);
+      res=swe_fit(SwE, Y, xX.X, corr, beta, SwE.SS);
     end
     
     clear Y                           %-Clear to save memory
@@ -1223,10 +1224,10 @@ else % ".mat" format
         for i = Ind_Cov_vis_off_diag
           if any(Flagk(i,:))
             Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
-              sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
-              Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
-              sum(res(Flagk(i,:),:).^2, 1)./...
-              sum(res(Flagkk(i,:),:).^2, 1));
+		sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
+		     Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
+		     sum(res(Flagk(i,:),:).^2, 1)./...
+		     sum(res(Flagkk(i,:),:).^2, 1));
           end
         end
         %NaN may be produced in cov. estimation when one correspondant
@@ -1252,7 +1253,7 @@ else % ".mat" format
       cCovBc = 0;
       for i = 1:nSubj
         Cov_beta_i_tmp = weightR(:,Ind_Cov_vis_classic==i) *...
-          (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
+	    (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
         cCovBc = cCovBc + Cov_beta_i_tmp;
       end
       % These variables are left empty for classic SwE.
@@ -1276,7 +1277,7 @@ else % ".mat" format
       minScore(1) = min(score);
       
       if TFCE
-              %%%% TODO: T (MAKE SCORE)
+	%%%% TODO: T (MAKE SCORE)
       end
       
     else
@@ -1298,7 +1299,7 @@ else % ".mat" format
       end
       
       if TFCE
-              %%%% TODO: F (MAKE SCORE)
+	%%%% TODO: F (MAKE SCORE)
       end
       
     end
@@ -1323,15 +1324,15 @@ else % ".mat" format
   tmp = score;
   score = nan(1, nVox);
   if (SwE.WB.stat == 'T')
-      VT(:,Cm) = tmp;
-      save(Vscore, 'VT');
-      score = tmp;
-      clear tmp VT
+    VT(:,Cm) = tmp;
+    save(Vscore, 'VT');
+    score = tmp;
+    clear tmp VT
   else
-      VF(:,Cm) = tmp;
-      save(Vscore, 'VF');
-      score = tmp;
-      clear tmp VF
+    VF(:,Cm) = tmp;
+    save(Vscore, 'VF');
+    score = tmp;
+    clear tmp VF
   end
   
   VlP = nan(1, nVox);
@@ -1340,24 +1341,24 @@ else % ".mat" format
   clear VlP
   
   if (SwE.WB.stat == 'T')
-      
-       VlP_neg = nan(1, nVox);
-       VlP_neg(:,Cm) =  -log10(p);
-       save(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 2, file_ext), 'VlP_neg');
-       clear VlP_neg
-       
-       z_map = nan(1, nVox);
-       VZ(:,Cm) =  swe_invNcdf(p);
-       save(sprintf('swe_vox_z%cstat_c%02d%s', WB.stat, 1, file_ext), 'VZ');
-       clear VZ
-  
+    
+    VlP_neg = nan(1, nVox);
+    VlP_neg(:,Cm) =  -log10(p);
+    save(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 2, file_ext), 'VlP_neg');
+    clear VlP_neg
+    
+    z_map = nan(1, nVox);
+    VZ(:,Cm) =  swe_invNcdf(p);
+    save(sprintf('swe_vox_z%cstat_c%02d%s', WB.stat, 1, file_ext), 'VZ');
+    clear VZ
+    
   else
       
-       x_map = nan(1, nVox);
-       VX(:,Cm) =  spm_invXcdf(p, 1);
-       save(sprintf('swe_vox_x%cstat_c%02d%s', WB.stat, 1, file_ext), 'VX');
-       clear VX
-       
+    x_map = nan(1, nVox);
+    VX(:,Cm) =  spm_invXcdf(p, 1);
+    save(sprintf('swe_vox_x%cstat_c%02d%s', WB.stat, 1, file_ext), 'VX');
+    clear VX
+    
   end
   
   fprintf('\n');                                                        %-#
@@ -1402,7 +1403,7 @@ else % ".mat" format
           clusterAssignmentNeg = [];
         end
       end
-      nClusterNeg     = max(clusterAssignmentNeg);
+      nClusterNeg    = max(clusterAssignmentNeg);
       clusterSizeNeg = histc(clusterAssignmentNeg,1:nClusterNeg);
       if isempty(clusterSizeNeg)
         warning('no clusters survived the cluster-forming thresholding of the original data for negative effects!')
@@ -1431,7 +1432,7 @@ if WB.clusterWise == 1
 end
 
 if ~isMat
-    SwE.xVol.XYZ   = XYZ;               %-InMask XYZ coords (voxels)
+  SwE.xVol.XYZ   = XYZ;               %-InMask XYZ coords (voxels)
 end
 SwE.xVol.M     = M;                 %-voxels -> mm
 SwE.xVol.iM    = inv(M);            %-mm -> voxels
@@ -1510,7 +1511,7 @@ end
 % Produce the random value following the Rademacher distribution
 resamplingMatrix = NaN(nScan,WB.nB);
 for iS = 1:nSubj
-%     resamplingMatrix(iSubj == uSubj(iS),:) = repmat(binornd(1, 0.5, 1, WB.nB), sum(iSubj == uSubj(iS)), 1);
+  % resamplingMatrix(iSubj == uSubj(iS),:) = repmat(binornd(1, 0.5, 1, WB.nB), sum(iSubj == uSubj(iS)), 1);
   resamplingMatrix(iSubj == uSubj(iS),:) = repmat(randi([0 1], 1, WB.nB), sum(iSubj == uSubj(iS)), 1);  % BG (08/11/2016): using randi instead of binornd (which is from the stats toolbox)
 end
 resamplingMatrix(resamplingMatrix == 0) = -1;
@@ -1537,29 +1538,29 @@ fprintf('\n')
 % If we are doing a TFCE analysis we need to record uncorrected P-values
 % for TFCE and maxima for FWE.
 if TFCE
-    tfce_uncP = zeros(DIM(1), DIM(2), DIM(3));
-    if SwE.WB.stat == 'T'
-        tfce_uncP_neg = zeros(DIM(1), DIM(2), DIM(3));
+  tfce_uncP = zeros(DIM(1), DIM(2), DIM(3));
+  if SwE.WB.stat == 'T'
+    tfce_uncP_neg = zeros(DIM(1), DIM(2), DIM(3));
+  end
+  
+  % We also need to record the TFCE maximas for TFCE FWE (including the
+  % original parametric max).
+  if TFCE
+    maxTFCEScore = nan(1, WB.nB + 1);
+    maxTFCEScore(1) = max(par_tfce(:));
+    if (WB.stat == 'T')
+      maxTFCEScore_neg = nan(1, WB.nB + 1);
+      maxTFCEScore_neg(1) = max(par_tfce_neg(:));
     end
-    
-    % We also need to record the TFCE maximas for TFCE FWE (including the
-    % original parametric max).
-    if TFCE
-       maxTFCEScore = nan(1, WB.nB + 1);
-       maxTFCEScore(1) = max(par_tfce(:));
-       if (WB.stat == 'T')
-          maxTFCEScore_neg = nan(1, WB.nB + 1);
-          maxTFCEScore_neg(1) = max(par_tfce_neg(:));
-       end
-    end
-    
+  end
+  
 end
 
 for b = 1:WB.nB
   tic
   str   = sprintf('Parameter estimation\nBootstrap # %i', b);
   swe_progress_bar('Set','xlabel', str)
-
+  
   % activated voxels for cluster-wise inference
   if (SwE.WB.clusterWise == 1)
     activatedVoxels = false(1,S);
@@ -1570,10 +1571,10 @@ for b = 1:WB.nB
   if ~isMat
       
     if TFCE
-
-        % Instantiate volume for TFCE conversion.
-        scorevol = zeros(DIM(1), DIM(2), DIM(3));
-            
+      
+      % Instantiate volume for TFCE conversion.
+      scorevol = zeros(DIM(1), DIM(2), DIM(3));
+      
     end
     
     for bch = 1:nbch                     %-loop over blocks
@@ -1619,10 +1620,10 @@ for b = 1:WB.nB
         for i = Ind_Cov_vis_off_diag
           if any(Flagk(i,:))
             Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
-              sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
-              Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
-              sum(res(Flagk(i,:),:).^2, 1)./...
-              sum(res(Flagkk(i,:),:).^2, 1));
+		sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
+		     Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
+		     sum(res(Flagk(i,:),:).^2, 1)./...
+		     sum(res(Flagkk(i,:),:).^2, 1));
           end
         end
         %NaN may be produced in cov. estimation when one correspondant
@@ -1647,7 +1648,7 @@ for b = 1:WB.nB
         cCovBc = 0;
         for i = 1:nSubj
           Cov_beta_i_tmp = weightR(:,Ind_Cov_vis_classic==i) *...
-            (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
+	      (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
           cCovBc = cCovBc + Cov_beta_i_tmp;
         end
         % These variables are left empty for classic SwE.
@@ -1657,12 +1658,12 @@ for b = 1:WB.nB
       
       % compute the score
       if (SwE.WB.stat == 'T')
-          
+	
         score = (conWB * beta) ./ sqrt(cCovBc);
         clear beta
         
       else
-
+	
         cBeta = conWB * beta;
         clear beta
         score = zeros(1, blksz);
@@ -1691,56 +1692,56 @@ for b = 1:WB.nB
       % Calculate TFCE uncorrected p image.
       if TFCE    
 
-            % Obtain P values.
-            pvol=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
-            
-            % Current XYZ indices
-            currXYZ = XYZ(1:3, index);
-
-            if SwE.WB.stat == 'T'
-
-                % T stat from this bootstrap
-                scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = swe_invNcdf(pvol);
-
-            else
-
-                % F stat from this bootstrap (converted to Z).
-                scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = -swe_invNcdf(pvol);
-
-            end
-
-       end
+	% Obtain P values.
+	pvol=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
+	
+	% Current XYZ indices
+	currXYZ = XYZ(1:3, index);
+	
+	if SwE.WB.stat == 'T'
+	  
+	  % T stat from this bootstrap
+	  scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = swe_invNcdf(pvol);
+	  
+	else
+	  
+	  % F stat from this bootstrap (converted to Z).
+	  scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = -swe_invNcdf(pvol);
+	  
+	end
+	
+      end
       
     end % (bch)
     
     if TFCE
 
-        if SwE.WB.stat == 'T'        
-
-            % Bootstrapped tfce vol.
-            tfce = swe_tfce_transform(scorevol,H,E,C,dh);
-            tfce_neg = swe_tfce_transform(-scorevol,H,E,C,dh);    
+      if SwE.WB.stat == 'T'        
+	
+	% Bootstrapped tfce vol.
+	tfce = swe_tfce_transform(scorevol,H,E,C,dh);
+	tfce_neg = swe_tfce_transform(-scorevol,H,E,C,dh);    
         
-        else
-
-            % Bootstrapped tfce vol.
-            tfce = swe_tfce_transform(scorevol,H,E,C,dh);
-            
-        end
-        
-        % Sum how many voxels are lower than the original parametric tfce.
-        tfce_uncP = tfce_uncP + (par_tfce<=tfce);
-        if SwE.WB.stat == 'T'
-            tfce_uncP_neg = tfce_uncP_neg + (par_tfce_neg<=tfce_neg);
-        end
-
-        % Record maxima for TFCE FWE p values.
-        maxTFCEScore(b+1) = max(tfce(:));
-        if SwE.WB.stat == 'T'
-            maxTFCEScore_neg(b+1) = max(tfce_neg(:));
-        end
-
-        clear tfce tfce_neg
+      else
+	
+	% Bootstrapped tfce vol.
+	tfce = swe_tfce_transform(scorevol,H,E,C,dh);
+	
+      end
+      
+      % Sum how many voxels are lower than the original parametric tfce.
+      tfce_uncP = tfce_uncP + (par_tfce<=tfce);
+      if SwE.WB.stat == 'T'
+	tfce_uncP_neg = tfce_uncP_neg + (par_tfce_neg<=tfce_neg);
+      end
+      
+      % Record maxima for TFCE FWE p values.
+      maxTFCEScore(b+1) = max(tfce(:));
+      if SwE.WB.stat == 'T'
+	maxTFCEScore_neg(b+1) = max(tfce_neg(:));
+      end
+      
+      clear tfce tfce_neg
         
     end
     
@@ -1774,10 +1775,10 @@ for b = 1:WB.nB
       for i = Ind_Cov_vis_off_diag
         if any(Flagk(i,:))
           Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
-            sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
-            Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
-            sum(res(Flagk(i,:),:).^2, 1)./...
-            sum(res(Flagkk(i,:),:).^2, 1));
+	      sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
+		   Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
+		   sum(res(Flagk(i,:),:).^2, 1)./...
+		   sum(res(Flagkk(i,:),:).^2, 1));
         end
       end
       %NaN may be produced in cov. estimation when one correspondant
@@ -1805,7 +1806,7 @@ for b = 1:WB.nB
           (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
         cCovBc = cCovBc + Cov_beta_i_tmp;
       end
-
+      
       % These variables are left empty for classic SwE.
       Cov_vis = [];
       dofMat = [];
@@ -1833,8 +1834,8 @@ for b = 1:WB.nB
     
     % hypothesis test
     if (WB.clusterWise == 1)
-        [~, ~, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);
-        clear cCovBc
+      [~, ~, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);
+      clear cCovBc
     end
     uncP = uncP + (score >= originalScore); 
     
@@ -1858,7 +1859,7 @@ for b = 1:WB.nB
       clusterAssignment = spm_mesh_clusters(faces,LocActivatedVoxels);
       clusterAssignment = clusterAssignment(LocActivatedVoxels)';
     end
-    nCluster     = max(clusterAssignment);
+    nCluster    = max(clusterAssignment);
     clusterSize = histc(clusterAssignment,1:nCluster);
     if isempty(clusterSize)
       maxClusterSize(b+1) = 0;
@@ -1878,7 +1879,7 @@ for b = 1:WB.nB
           clusterAssignmentNeg = [];
         end
       end
-      nClusterNeg     = max(clusterAssignmentNeg);
+      nClusterNeg    = max(clusterAssignmentNeg);
       clusterSizeNeg = histc(clusterAssignmentNeg,1:nClusterNeg);
       if isempty(clusterSizeNeg)
         maxClusterSizeNeg(b+1) = 0;
@@ -2065,20 +2066,20 @@ if isMat
 else
   
   Q = cumprod([1,SwE.xVol.DIM(1:2)'])*XYZ - ...
-    sum(cumprod(SwE.xVol.DIM(1:2)'));
+      sum(cumprod(SwE.xVol.DIM(1:2)'));
   %
   % - write out lP+ and lP- images;
   %
   uncP = uncP / (WB.nB + 1);
-  tmp= nan(SwE.xVol.DIM');
+  tmp = nan(SwE.xVol.DIM');
   tmp(Q) = -log10(uncP);
   spm_write_vol(VlP_wb_pos, tmp);
   
   % If it's F, write out an X map.
   stat = nan(SwE.xVol.DIM');
   if WB.stat == 'F'
-      stat(Q) = spm_invXcdf(1 - uncP,1);
-      spm_write_vol(VcScore_wb_pos, stat);
+    stat(Q) = spm_invXcdf(1 - uncP,1);
+    spm_write_vol(VcScore_wb_pos, stat);
   end
   
   % If it's T, write out a Z map.
@@ -2114,35 +2115,35 @@ else
   % FWE correction for TFCE images.
   if TFCE
       
-      % Make new tfce fwe p volume. (Initiate to one to account for
-      % original analysis).
-      tfcefwevol = ones(DIM(1), DIM(2), DIM(3));
+    % Make new tfce fwe p volume. (Initiate to one to account for
+    % original analysis).
+    tfcefwevol = ones(DIM(1), DIM(2), DIM(3));
+    
+    % Calculate FWE p values.
+    for b = 1:WB.nB
+      tfcefwevol = tfcefwevol + (maxTFCEScore(b+1) > par_tfce - tol);
+    end
+    tfcefwevol = tfcefwevol / (WB.nB + 1);
       
-      % Calculate FWE p values.
-      for b = 1:WB.nB
-          tfcefwevol = tfcefwevol + (maxTFCEScore(b+1) > par_tfce - tol);
-      end
-      tfcefwevol = tfcefwevol / (WB.nB + 1);
+    % Write out volume.
+    spm_write_vol(VlP_tfce_FWE_pos, -log10(tfcefwevol));
       
-      % Write out volume.
-      spm_write_vol(VlP_tfce_FWE_pos, -log10(tfcefwevol));
-      
-      % Same again for negative contrast, if we are using a T statistic.
-      if WB.stat == 'T'
+    % Same again for negative contrast, if we are using a T statistic.
+    if WB.stat == 'T'
           
-          % Make new negative tfce fwe p volume. (Initiate to one to 
-          % account for original analysis).
-          tfcefwevol_neg = ones(DIM(1), DIM(2), DIM(3));
+      % Make new negative tfce fwe p volume. (Initiate to one to 
+      % account for original analysis).
+      tfcefwevol_neg = ones(DIM(1), DIM(2), DIM(3));
 
-          % Calculate FWE negative p values.
-          for b = 1:WB.nB
-              tfcefwevol_neg = tfcefwevol_neg + (maxTFCEScore_neg(b+1) > par_tfce_neg - tol);
-          end
-          tfcefwevol_neg = tfcefwevol_neg / (WB.nB + 1);
-
-          % Write out volume.
-          spm_write_vol(VlP_tfce_FWE_neg, -log10(tfcefwevol_neg));
+      % Calculate FWE negative p values.
+      for b = 1:WB.nB
+	tfcefwevol_neg = tfcefwevol_neg + (maxTFCEScore_neg(b+1) > par_tfce_neg - tol);
       end
+      tfcefwevol_neg = tfcefwevol_neg / (WB.nB + 1);
+
+      % Write out volume.
+      spm_write_vol(VlP_tfce_FWE_neg, -log10(tfcefwevol_neg));
+    end
   end
   
   if WB.stat == 'T'
@@ -2184,7 +2185,7 @@ else
     % For now, -log(p_{cluster-wise FWER}) image with nan for non-surviving
     % voxels after the thresholding of the original data
     Q = cumprod([1,SwE.xVol.DIM(1:2)']) * SwE.WB.clusterInfo.LocActivatedVoxels - ...
-      sum(cumprod(SwE.xVol.DIM(1:2)'));
+	sum(cumprod(SwE.xVol.DIM(1:2)'));
     tmp= nan(SwE.xVol.DIM');
     
     clusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
@@ -2204,7 +2205,7 @@ else
     spm_write_vol(VlP_wb_clusterFWE_pos, tmp);
     if WB.stat =='T'
       Q = cumprod([1,SwE.xVol.DIM(1:2)']) * SwE.WB.clusterInfo.LocActivatedVoxelsNeg - ...
-        sum(cumprod(SwE.xVol.DIM(1:2)'));
+	  sum(cumprod(SwE.xVol.DIM(1:2)'));
       tmp= nan(SwE.xVol.DIM');
       
       clusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
@@ -2226,12 +2227,12 @@ else
   end
   
   if TFCE
-      tfce_luncP = -log10((tfce_uncP+1)./(WB.nB+1));
-      spm_write_vol(VlP_tfce_pos, tfce_luncP);
-      if WB.stat == 'T'
-          tfce_luncP_neg = -log10((tfce_uncP_neg+1)./(WB.nB+1));
-          spm_write_vol(VlP_tfce_neg, tfce_luncP_neg);
-      end
+    tfce_luncP = -log10((tfce_uncP+1)./(WB.nB+1));
+    spm_write_vol(VlP_tfce_pos, tfce_luncP);
+    if WB.stat == 'T'
+      tfce_luncP_neg = -log10((tfce_uncP_neg+1)./(WB.nB+1));
+      spm_write_vol(VlP_tfce_neg, tfce_luncP_neg);
+    end
   end
   
 end
@@ -2241,23 +2242,23 @@ end
 %==========================================================================
 
 if ~isMat
-    % Remove residual and Y images now we are done with them:
-    files = {'^swe_vox_resid_y.{4}\..{3}$','^swe_vox_fit_y.{4}\..{3}$'};
-    for i = 1:numel(files)
-      j = cellstr(spm_select('FPList',SwE.swd,files{i}));
-      for k = 1:numel(j)
-        spm_unlink(j{k});
-      end
+  % Remove residual and Y images now we are done with them:
+  files = {'^swe_vox_resid_y.{4}\..{3}$','^swe_vox_fit_y.{4}\..{3}$'};
+  for i = 1:numel(files)
+    j = cellstr(spm_select('FPList',SwE.swd,files{i}));
+    for k = 1:numel(j)
+      spm_unlink(j{k});
     end
+  end
 end
 
 %Save SwE.
 if isOctave
-    save('SwE','SwE');
+  save('SwE','SwE');
 elseif spm_matlab_version_chk('7') >=0
-    save('SwE','SwE','-V6');
+  save('SwE','SwE','-V6');
 else
-    save('SwE','SwE');
+  save('SwE','SwE');
 end
 
 fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done')                %-#
@@ -2271,50 +2272,53 @@ end
 % matrix design either in a visit category or within-subject (BG - 27/05/2016)
 function [Cm,Y,CrS]=swe_mask_seperable(SwE, Cm, Y, iGr_dof)
     
-      % Setup
-      nGr_dof = length(unique(iGr_dof));
-      if isfield(SwE.type,'modified')
-          nGr = SwE.Gr.nGr;
-          iGr = SwE.Gr.iGr;
-          uGr = SwE.Gr.uGr;
-          iVis = SwE.Vis.iVis;
-          iSubj = SwE.Subj.iSubj;
-          nVis_g = SwE.Vis.nVis_g;
-          uVis_g = SwE.Vis.uVis_g;
-      end
+% Setup
+nGr_dof = length(unique(iGr_dof));
+if isfield(SwE.type,'modified')
+  nGr = SwE.Gr.nGr;
+  iGr = SwE.Gr.iGr;
+  uGr = SwE.Gr.uGr;
+  iVis = SwE.Vis.iVis;
+  iSubj = SwE.Subj.iSubj;
+  nVis_g = SwE.Vis.nVis_g;
+  uVis_g = SwE.Vis.uVis_g;
+end
 
-      for g = 1:nGr_dof % first look data for each separable matrix design
-        if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)
-          Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1); % mask constant data within separable matrix design g (added by BG on 29/08/16)
-          if isfield(SwE.type,'modified') % added by BG on 29/08/16
-            for g2 = 1:nGr % then look data for each "homogeneous" group
-              % check if the data is contant over subject for each visit category
-              for k = 1:nVis_g(g2)
-                if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
-                  Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
-                  for kk = k:nVis_g(g2)
-                    if k ~= kk
-                      % extract the list of subject with both visit k and kk
-                      subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
-                      % look if some difference are observed within subject
-                      if ~isempty(subjList)
-                        diffVis = Cm(Cm) == 0;
-                        for i = 1:length(subjList)
-                          diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
-                        end
-                        Cm(Cm) = diffVis;
-                      end
-                    end
-                  end
-                end
-              end
-            end
-          end
-        end
+% first look data for each separable matrix design
+for g = 1:nGr_dof
+  % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)
+  if sum(iGr_dof'==g) > 1
+    % mask constant data within separable matrix design g (added by BG on 29/08/16)
+    Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1);
+    if isfield(SwE.type,'modified') % added by BG on 29/08/16
+      % then look data for each "homogeneous" group check if the data is contant over subject for each visit category
+      for g2 = 1:nGr
+	for k = 1:nVis_g(g2)
+	  if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
+	    Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
+	    for kk = k:nVis_g(g2)
+	      if k ~= kk
+		% extract the list of subject with both visit k and kk
+		subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
+		% look if some difference are observed within subject
+		if ~isempty(subjList)
+		  diffVis = Cm(Cm) == 0;
+		  for i = 1:length(subjList)
+		    diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
+		  end
+		  Cm(Cm) = diffVis;
+		end
+	      end
+	    end
+	  end
+	end
       end
+    end
+  end
+end
       
-      Y      = Y(:,Cm);                          %-Data within mask
-      CrS    = sum(Cm);                          %-# current voxels
+Y      = Y(:,Cm);                          %-Data within mask
+CrS    = sum(Cm);                          %-# current voxels
 
 end
 
@@ -2323,94 +2327,94 @@ end
 % returns unthresholded p values only.
 function [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSize, cCovBc, Cov_vis, dofMat, varargin)
 
-      % setup
-      p = zeros(1, matSize);
-      nSizeCon = size(SwE.WB.con,1);
-      rankCon = rank(SwE.WB.con);
+% setup
+p = zeros(1, matSize);
+nSizeCon = size(SwE.WB.con,1);
+rankCon = rank(SwE.WB.con);
 
-      if isfield(SwE.type,'modified')
-         dof_type = SwE.type.modified.dof_mo;
-         nGr = length(unique(SwE.Gr.iGr));
-         
-         if nSizeCon == 1
-             Wg_2 = SwE.WB.Wg{1};
-             Wg_3 = SwE.WB.Wg{1};
-         else
-             Wg_2 = SwE.WB.Wg{2};
-             Wg_3 = SwE.WB.Wg{3};
-         end
-         
-      else
-         dof_type = SwE.type.classic.dof_cl;        
-      end
+if isfield(SwE.type,'modified')
+  dof_type = SwE.type.modified.dof_mo;
+  nGr = length(unique(SwE.Gr.iGr));
+  
+  if nSizeCon == 1
+    Wg_2 = SwE.WB.Wg{1};
+    Wg_3 = SwE.WB.Wg{1};
+  else
+    Wg_2 = SwE.WB.Wg{2};
+    Wg_3 = SwE.WB.Wg{3};
+  end
+  
+else
+  dof_type = SwE.type.classic.dof_cl;        
+end
 
-      % Convert P values.
-	  switch dof_type
-	     case 1
-	        error('degrees of freedom type still not implemented for the WB')
+% Convert P values.
+switch dof_type
+  case 1
+    error('degrees of freedom type still not implemented for the WB')
+  
+  case 2
+    CovcCovBc = 0;
+    for g = 1:nGr
+      CovcCovBc = CovcCovBc + Wg_2{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
+    end
+    if (SwE.WB.stat == 'T')
+      edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
+    else
+      edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
+    end
 
-	     case 2
-	        CovcCovBc = 0;
-	        for g = 1:nGr
-	          CovcCovBc = CovcCovBc + Wg_2{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 1);
-	        end
-	        if (SwE.WB.stat == 'T')
-	           edf = 2 * cCovBc.^2 ./ CovcCovBc - 2;
-	        else
-	           edf = 2 * (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc).^2 ./ CovcCovBc - 2;
-	        end
-
-	     case 3
-	        CovcCovBc = 0;
-	        for g = 1:nGr
-	          CovcCovBc = CovcCovBc + Wg_3{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
-	        end
-	        if (SwE.WB.stat == 'T')
-    	       edf = 2 * cCovBc.^2 ./ CovcCovBc;
-    	    else
-			   tmp = eye(nSizeCon);
-               edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
-                     (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
-            end
-      end
+  case 3
+    CovcCovBc = 0;
+    for g = 1:nGr
+      CovcCovBc = CovcCovBc + Wg_3{g} * swe_vechCovVechV(Cov_vis(SwE.WB.iGr_Cov_vis_g==g,:), dofMat{g}, 2);
+    end
+    if (SwE.WB.stat == 'T')
+      edf = 2 * cCovBc.^2 ./ CovcCovBc;
+    else
+      tmp = eye(nSizeCon);
+      edf = (sum(swe_duplication_matrix(nSizeCon), 1) * cCovBc.^2 +...
+	     (tmp(:)' * swe_duplication_matrix(nSizeCon) * cCovBc).^2) ./ CovcCovBc;
+    end
+end
        
-	   % P values and activated voxels (if clusterwise).
-	   if (SwE.WB.stat == 'T')
-    	  p  = spm_Tcdf(score, edf);
-          
-          if SwE.WB.clusterWise~=0
-              if nargin <=6
-                % We may wish to just record the activated voxels. 
-                activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold);
-                activatedVoxelsNeg = p < (SwE.WB.clusterInfo.primaryThreshold);
-              else
-                % Or we may wish to add the activatedVoxels to a pre-existing list.
-                activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold)];
-                activatedVoxelsNeg = [varargin{2}, p < (SwE.WB.clusterInfo.primaryThreshold)];
-              end
-          end
+% P values and activated voxels (if clusterwise).
+if (SwE.WB.stat == 'T')
+  p  = spm_Tcdf(score, edf);
+  
+  if SwE.WB.clusterWise~=0
+    if nargin <=6
+      % We may wish to just record the activated voxels. 
+      activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold);
+      activatedVoxelsNeg = p < (SwE.WB.clusterInfo.primaryThreshold);
+    else
+      % Or we may wish to add the activatedVoxels to a pre-existing list.
+      activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold)];
+      activatedVoxelsNeg = [varargin{2}, p < (SwE.WB.clusterInfo.primaryThreshold)];
+    end
+  end
+  
+else
+  scoreTmp = (edf-rankCon+1) ./ edf .* score;
+  scoreTmp(scoreTmp < 0 ) = 0;
+  if dof_type == 0
+    p(scoreTmp>0) = 1-betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
+  else
+    p(scoreTmp>0) = 1-betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
+    p(scoreTmp == 0) = 0;
+  end
 
-	   else
-	   	  scoreTmp = (edf-rankCon+1) ./ edf .* score;
-	      scoreTmp(scoreTmp < 0 ) = 0;
-	      if dof_type == 0
-	        p(scoreTmp>0) = 1-betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
-	      else
-	        p(scoreTmp>0) = 1-betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
-	        p(scoreTmp == 0) = 0;
-          end
-
-          if SwE.WB.clusterWise~=0
-              if nargin<=6
-                  activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold);
-              else
-                  activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold)];
-              end
-          end
-          
-          activatedVoxelsNeg = NaN;
-          
-	   end
+  if SwE.WB.clusterWise~=0
+    if nargin<=6
+      activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold);
+    else
+      activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold)];
+    end
+  end
+  
+  activatedVoxelsNeg = NaN;
+  
+end
 
 end
 
@@ -2418,76 +2422,76 @@ end
 % calculates tmpR2 (the adjusted xX.X).
 function [corr, tmpR2] = swe_resid_corr(SwE, restric, ss, pX, varargin)
 
-    xX = SwE.xX;
-    [nScan, nBeta] = size(xX.X);
-    conWB = SwE.WB.con;
-    iSubj = SwE.Subj.iSubj;
-    nSubj = SwE.Subj.nSubj;
-    uSubj = SwE.Subj.uSubj; 
-    rankCon = rank(SwE.WB.con);
+xX = SwE.xX;
+[nScan, nBeta] = size(xX.X);
+conWB = SwE.WB.con;
+iSubj = SwE.Subj.iSubj;
+nSubj = SwE.Subj.nSubj;
+uSubj = SwE.Subj.uSubj; 
+rankCon = rank(SwE.WB.con);
 
-    % This is to prevent tmpR2 being overwritten.
-    if nargin <= 4
-        tmpR2 = false;
-    else
-        tmpR2 = varargin{1};
-    end
-    
-    if restric == 1
-      tmpR = (xX.X' * xX.X) \ conWB';
-      tmpR = tmpR / (conWB * tmpR);
-      tmpR2 = xX.X * (eye(nBeta) - tmpR * conWB);
-      Hat = xX.X * (pX - tmpR * conWB * pX); % Restricted Hat matrix
-    else
-      Hat = xX.X*(pX); % Hat matrix
-    end
+% This is to prevent tmpR2 being overwritten.
+if nargin <= 4
+  tmpR2 = false;
+else
+  tmpR2 = varargin{1};
+end
 
-    switch ss
-        case 0
-          corr = ones(nScan,1);
-        case 1
-          if WB.RSwE == 1
-            corr  = repmat(sqrt(nScan/(nScan - nBeta + rankCon)),nScan,1); % residual correction (type 1)
-          else
-            corr  = repmat(sqrt(nScan/(nScan-nBeta)),nScan,1); 
-          end
-        case 2
-          corr  = (1-diag(Hat)).^(-0.5); % residual correction (type 2)
-        case 3
-          corr  = (1-diag(Hat)).^(-1); % residual correction (type 3)
-        case 4
-          corr =cell(nSubj,1);
-          I_Hat = eye(nScan) - Hat;
-          for i = 1:nSubj
-            tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-            tmp = (tmp + tmp')/2;
-            [tmpV, tmpE] = eig(tmp);
-            corr{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV';
-          end
-        case 5
-          corr  = cell(nSubj,1);
-          I_Hat = eye(nScan) - Hat;
-          for i = 1:nSubj
-            tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
-            tmp = (tmp + tmp')/2;
-            corr{i} = inv(tmp);
-          end
+if restric == 1
+  tmpR = (xX.X' * xX.X) \ conWB';
+  tmpR = tmpR / (conWB * tmpR);
+  tmpR2 = xX.X * (eye(nBeta) - tmpR * conWB);
+  Hat = xX.X * (pX - tmpR * conWB * pX); % Restricted Hat matrix
+else
+  Hat = xX.X*(pX); % Hat matrix
+end
+
+switch ss
+  case 0
+    corr = ones(nScan,1);
+  case 1
+    if WB.RSwE == 1
+      corr  = repmat(sqrt(nScan/(nScan - nBeta + rankCon)),nScan,1); % residual correction (type 1)
+    else
+      corr  = repmat(sqrt(nScan/(nScan-nBeta)),nScan,1); 
     end
+  case 2
+    corr  = (1-diag(Hat)).^(-0.5); % residual correction (type 2)
+  case 3
+    corr  = (1-diag(Hat)).^(-1); % residual correction (type 3)
+  case 4
+    corr =cell(nSubj,1);
+    I_Hat = eye(nScan) - Hat;
+    for i = 1:nSubj
+      tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
+      tmp = (tmp + tmp')/2;
+      [tmpV, tmpE] = eig(tmp);
+      corr{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV';
+    end
+  case 5
+    corr  = cell(nSubj,1);
+    I_Hat = eye(nScan) - Hat;
+    for i = 1:nSubj
+      tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
+      tmp = (tmp + tmp')/2;
+      corr{i} = inv(tmp);
+    end
+end
 end
 
 % This function obtains Y estimates and residuals from fitting data.
 function [res, Y_est]=swe_fit(SwE, Y, crctX, corr, beta, ss)
     
-    Y_est = crctX * beta;
-    if ss >= 4 % SC2 or SC3
-      res = zeros(size(Y));
-      for i = 1:SwE.Subj.nSubj
-        res(SwE.Subj.iSubj==SwE.Subj.uSubj(i),:) = corr{i} *...
-            (Y(SwE.Subj.iSubj==SwE.Subj.uSubj(i),:)-...
-            Y_est(SwE.Subj.iSubj==SwE.Subj.uSubj(i),:));
-      end
-    else
-      res  = diag(corr) * (Y-Y_est);
-    end
-    
+Y_est = crctX * beta;
+if ss >= 4 % SC2 or SC3
+  res = zeros(size(Y));
+  for i = 1:SwE.Subj.nSubj
+    res(SwE.Subj.iSubj==SwE.Subj.uSubj(i),:) = corr{i} *...
+	(Y(SwE.Subj.iSubj==SwE.Subj.uSubj(i),:)-...
+	 Y_est(SwE.Subj.iSubj==SwE.Subj.uSubj(i),:));
+  end
+else
+  res  = diag(corr) * (Y-Y_est);
+end
+
 end
