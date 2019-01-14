@@ -306,6 +306,10 @@ if dof_type == 0 % so naive estimation is used
     dof_cov(i) = nSubj_dof(iBeta_dof(i)) - ...
 	pB_dof(iBeta_dof(i));    
   end
+  
+  % This variable should be left empty for Niave estimation.
+  SwE.xX.erdf_niave = edf;
+  dofMat = [];
 else
   edf = NaN;
 end
@@ -2350,6 +2354,11 @@ end
 
 % Convert P values.
 switch dof_type
+    
+  case 0
+      
+    edf = SwE.xX.erdf_niave;
+    
   case 1
     error('degrees of freedom type still not implemented for the WB')
   
