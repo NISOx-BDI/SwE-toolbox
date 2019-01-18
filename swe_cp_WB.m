@@ -308,8 +308,8 @@ if dof_type == 0 % so naive estimation is used
   end
   
   % This variable should be left empty for Niave estimation.
-  SwE.xX.erdf_niave = edf;
   dofMat = [];
+  SwE.xX.erdf_niave = edf;
 else
   edf = NaN;
 end
@@ -925,10 +925,17 @@ if ~isMat
           
           % hypothesis test, using clusterwise threshold if available.
           if (SwE.WB.clusterWise == 1)
-            [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+            hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+            p = hyptest.positive.p;
+            negp = hyptest.negative.p;
+            edf = hyptest.positive.edf;
+            activatedVoxels = hyptest.positive.activatedVoxels;
+            activatedVoxelsNeg = hyptest.negative.activatedVoxels;
             clear CovcCovBc cCovBc
           else
-            [p, edf]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+            hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+            p = hyptest.positive.p;
+            edf = hyptest.positive.edf;
           end
           
           minScore(1) = min(minScore(1), min(score));
@@ -947,9 +954,14 @@ if ~isMat
           
           % hypothesis test, using clusterwise threshold if available.
           if (SwE.WB.clusterWise == 1)
-            [p, edf, activatedVoxels]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels);
+            hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels);
+            p = hyptest.positive.p;
+            edf = hyptest.positive.edf;
+            activatedVoxels = hyptest.positive.activatedVoxels;
           else
-            [p, edf]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+            hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+            p = hyptest.positive.p;
+            edf = hyptest.positive.edf;
           end
         end
         
@@ -1271,10 +1283,17 @@ else % ".mat" format
       score = (conWB * beta) ./ sqrt(cCovBc);
       
       if (SwE.WB.clusterWise == 1)
-        [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+        hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+        p = hyptest.positive.p; 
+        negp = hyptest.negative.p;
+        edf = hyptest.positive.edf;
+        activatedVoxels = hyptest.positive.activatedVoxels;
+        activatedVoxelsNeg = hyptest.negative.activatedVoxels;
         clear CovcCovBc cCovBc
       else
-        [p, edf]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+        hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+        p = hyptest.positive.p;
+        edf = hyptest.positive.edf;
         clear CovcCovBc cCovBc
       end
       
@@ -1297,9 +1316,14 @@ else % ".mat" format
       score = score / rankCon;
       % Perform hypothesis test for activated regions.
       if (SwE.WB.clusterWise == 1)
-        [p, edf, activatedVoxels] = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels);
+        hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels);
+        p = hyptest.positive.p;
+        edf = hyptest.positive.edf;
+        activatedVoxels = hyptest.positive.activatedVoxels;
       else
-        [p, edf]=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+        hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+        p = hyptest.positive.p;
+        edf = hyptest.positive.edf;
       end
       
       if TFCE
@@ -1683,7 +1707,8 @@ for b = 1:WB.nB
       
       % hypothesis test
       if (WB.clusterWise == 1)
-        [~, ~, activatedVoxels(index)]=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
+        hyptest=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
+        activatedVoxels(index) = hyptest.positive.activatedVoxels;
         clear cCovBc
       end
       uncP(index) = uncP(index) + (score >= originalScore(index));
@@ -1697,7 +1722,8 @@ for b = 1:WB.nB
       if TFCE    
 
 	% Obtain P values.
-	pvol=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
+	hyptest=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
+    pvol = hyptest.positive.p;
 	
 	% Current XYZ indices
 	currXYZ = XYZ(1:3, index);
@@ -1838,7 +1864,9 @@ for b = 1:WB.nB
     
     % hypothesis test
     if (WB.clusterWise == 1)
-      [~, ~, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);
+      hyptest=swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);
+      activatedVoxels = hyptest.positive.activatedVoxels;
+      activatedVoxelsNeg = hyptest.negative.activatedVoxels;
       clear cCovBc
     end
     uncP = uncP + (score >= originalScore); 
@@ -2328,8 +2356,8 @@ end
 
 % This function performs a hypothesis test using the threshold given as the
 % primary threshold in the SwE cluster info. If this is not available it
-% returns unthresholded p values only.
-function [p, edf, activatedVoxels, activatedVoxelsNeg]=swe_hyptest(SwE, score, matSize, cCovBc, Cov_vis, dofMat, varargin)
+% returns unthresholded values only.
+function hyptest =swe_hyptest(SwE, score, matSize, cCovBc, Cov_vis, dofMat, varargin)
 
 % setup
 p = zeros(1, matSize);
@@ -2389,19 +2417,25 @@ end
        
 % P values and activated voxels (if clusterwise).
 if (SwE.WB.stat == 'T')
-  p  = spm_Tcdf(score, edf);
+  % We calculate both p and negative p as both will experience overflow
+  % around 1 which may be undesirable if the user wishes to view both
+  % results.
+  p  = -spm_Tcdf(-score, edf);
+  negp = spm_Tcdf(score, edf);
   
   if SwE.WB.clusterWise~=0
     if nargin <=6
       % We may wish to just record the activated voxels. 
-      activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold);
-      activatedVoxelsNeg = p < (SwE.WB.clusterInfo.primaryThreshold);
+      activatedVoxels = p < (SwE.WB.clusterInfo.primaryThreshold);
+      activatedVoxelsNeg = negp < (SwE.WB.clusterInfo.primaryThreshold);
     else
       % Or we may wish to add the activatedVoxels to a pre-existing list.
-      activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold)];
-      activatedVoxelsNeg = [varargin{2}, p < (SwE.WB.clusterInfo.primaryThreshold)];
+      activatedVoxels = [varargin{1}, p < (SwE.WB.clusterInfo.primaryThreshold)];
+      activatedVoxelsNeg = [varargin{2}, negp < (SwE.WB.clusterInfo.primaryThreshold)];
     end
   end
+  
+  
   
 else
   scoreTmp = (edf-rankCon+1) ./ edf .* score;
@@ -2423,6 +2457,34 @@ else
   
   activatedVoxelsNeg = NaN;
   
+end
+
+% Save results
+hyptest = struct('positive', struct('p', p,...
+                                    'edf', edf));%,...
+%                                    'conScore', conScore));
+
+% Save activated voxels if doing clusterwise.
+if SwE.WB.clusterWise~=0
+    
+    hyptest.positive.activatedVoxels = activatedVoxels;
+    
+end
+    
+                                
+% If it's a T contrast save negative results as well.
+if (SwE.WB.stat == 'T')
+    hyptest.negative = struct('p', negp,...
+                              'edf', edf);%,...
+%                              'conScore', conScoreNeg);
+
+    % Save activated voxels if doing clusterwise.
+    if SwE.WB.clusterWise~=0
+
+        hyptest.negative.activatedVoxels = activatedVoxelsNeg;
+
+    end
+
 end
 
 end
