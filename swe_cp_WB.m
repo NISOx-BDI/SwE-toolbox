@@ -1724,7 +1724,6 @@ for b = 1:WB.nB
 
 	% Obtain P values.
 	hyptest=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
-    pvol = 1-hyptest.positive.p;
 	
 	% Current XYZ indices
 	currXYZ = XYZ(1:3, index);
@@ -2453,13 +2452,32 @@ end
 
 % Calculate converted score in a way which minimizes under/overflow
 if (SwE.WB.stat == 'T')
+    
     conScore = zeros(size(score));
-    if any(score>0)
-        conScore(score>0) = -spm_invNcdf(spm_Tcdf(-score(score>0),edf));
+    
+    switch dof_type
+        % In case 0 edf is the same for everything
+        case 0
+            
+            if any(score>0)
+                conScore(score>0) = -spm_invNcdf(spm_Tcdf(-score(score>0),edf));
+            end
+            if any(score<=0)
+                conScore(score<=0) = spm_invNcdf(spm_Tcdf(score(score<=0),edf));
+            end
+            
+        % In all other cases edf varies over voxels
+        otherwise
+            
+            if any(score>0)
+                conScore(score>0) = -spm_invNcdf(spm_Tcdf(-score(score>0),edf(score>0)));
+            end
+            if any(score<=0)
+                conScore(score<=0) = spm_invNcdf(spm_Tcdf(score(score<=0),edf(score<=0)));
+            end
+
     end
-    if any(score<=0)
-        conScore(score<=0) = spm_invNcdf(spm_Tcdf(score(score<=0),edf));
-    end
+    
 else
     conScore = spm_invXcdf(negp, 1);
 end
