@@ -2446,6 +2446,7 @@ else
     end
   end
   
+  negp = 1-p;
   activatedVoxelsNeg = NaN;
   
 end
