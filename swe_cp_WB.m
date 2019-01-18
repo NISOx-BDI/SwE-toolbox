@@ -935,6 +935,7 @@ if ~isMat
           else
             hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
             p = hyptest.positive.p;
+            negp = hyptest.negative.p;
             edf = hyptest.positive.edf;
           end
           
@@ -972,15 +973,15 @@ if ~isMat
         CrYWB             = [CrYWB,    YWB]; %#ok<AGROW>
         CrResWB           = [CrResWB,  resWB]; %#ok<AGROW>
         CrScore           = [CrScore,  score]; %#ok<AGROW>
-        CrP               = [CrP,      -log10(1-p)]; %#ok<AGROW>
-        Credf             = [Credf,    edf]; %#ok<AGROW> 
+        CrP               = [CrP,      -log10(hyptest.positive.p)]; %#ok<AGROW>
+        Credf             = [Credf,    hyptest.positive.edf]; %#ok<AGROW> 
         CrBl              = [CrBl,    beta]; %#ok<AGROW>
         if (SwE.WB.stat == 'T')
-	  CrConScore      = [CrConScore, swe_invNcdf(p)]; %#ok<AGROW>
-	  CrPNeg          = [CrPNeg,   -log10(p)]; %#ok<AGROW>
+	  CrConScore      = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
+	  CrPNeg          = [CrPNeg,   -log10(hyptest.negative.p)]; %#ok<AGROW>
         end
         if(SwE.WB.stat == 'F')
-	  CrConScore    = [CrConScore, spm_invXcdf(p, 1)]; %#ok<AGROW>
+	  CrConScore    = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
         end
         
       end % (CrS)
@@ -1364,26 +1365,26 @@ else % ".mat" format
   end
   
   VlP = nan(1, nVox);
-  VlP(:,Cm) = -log10(1-p);
+  VlP(:,Cm) = -log10(hyptest.positive.p);
   save(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 1, file_ext), 'VlP');
   clear VlP
   
   if (SwE.WB.stat == 'T')
     
     VlP_neg = nan(1, nVox);
-    VlP_neg(:,Cm) =  -log10(p);
+    VlP_neg(:,Cm) =  -log10(hyptest.negative.p);
     save(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 2, file_ext), 'VlP_neg');
     clear VlP_neg
     
     z_map = nan(1, nVox);
-    VZ(:,Cm) =  swe_invNcdf(p);
+    VZ(:,Cm) =  hyptest.positive.conScore;
     save(sprintf('swe_vox_z%cstat_c%02d%s', WB.stat, 1, file_ext), 'VZ');
     clear VZ
     
   else
       
     x_map = nan(1, nVox);
-    VX(:,Cm) =  spm_invXcdf(p, 1);
+    VX(:,Cm) =  hyptest.positive.conScore;
     save(sprintf('swe_vox_x%cstat_c%02d%s', WB.stat, 1, file_ext), 'VX');
     clear VX
     
@@ -1723,22 +1724,13 @@ for b = 1:WB.nB
 
 	% Obtain P values.
 	hyptest=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
-    pvol = hyptest.positive.p;
+    pvol = 1-hyptest.positive.p;
 	
 	% Current XYZ indices
 	currXYZ = XYZ(1:3, index);
-	
-	if SwE.WB.stat == 'T'
 	  
 	  % T stat from this bootstrap
-	  scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = swe_invNcdf(pvol);
-	  
-	else
-	  
-	  % F stat from this bootstrap (converted to Z).
-	  scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = -swe_invNcdf(pvol);
-	  
-	end
+	  scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = hyptest.positive.conScore;
 	
       end
       
@@ -1866,7 +1858,9 @@ for b = 1:WB.nB
     if (WB.clusterWise == 1)
       hyptest=swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);
       activatedVoxels = hyptest.positive.activatedVoxels;
-      activatedVoxelsNeg = hyptest.negative.activatedVoxels;
+      if (WB.stat == 'T')
+          activatedVoxelsNeg = hyptest.negative.activatedVoxels;
+      end
       clear cCovBc
     end
     uncP = uncP + (score >= originalScore); 
@@ -2420,7 +2414,7 @@ if (SwE.WB.stat == 'T')
   % We calculate both p and negative p as both will experience overflow
   % around 1 which may be undesirable if the user wishes to view both
   % results.
-  p  = -spm_Tcdf(-score, edf);
+  p  = spm_Tcdf(-score, edf);
   negp = spm_Tcdf(score, edf);
   
   if SwE.WB.clusterWise~=0
@@ -2435,23 +2429,21 @@ if (SwE.WB.stat == 'T')
     end
   end
   
-  
-  
 else
   scoreTmp = (edf-rankCon+1) ./ edf .* score;
   scoreTmp(scoreTmp < 0 ) = 0;
   if dof_type == 0
-    p(scoreTmp>0) = 1-betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
+    p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
   else
-    p(scoreTmp>0) = 1-betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
+    p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
     p(scoreTmp == 0) = 0;
   end
 
   if SwE.WB.clusterWise~=0
     if nargin<=6
-      activatedVoxels = p > (1-SwE.WB.clusterInfo.primaryThreshold);
+      activatedVoxels = p < (SwE.WB.clusterInfo.primaryThreshold);
     else
-      activatedVoxels = [varargin{1}, p > (1-SwE.WB.clusterInfo.primaryThreshold)];
+      activatedVoxels = [varargin{1}, p < (SwE.WB.clusterInfo.primaryThreshold)];
     end
   end
   
@@ -2459,30 +2451,38 @@ else
   
 end
 
+% Calculate converted score in a way which minimizes under/overflow
+if (SwE.WB.stat == 'T')
+    conScore = zeros(size(score));
+    if any(score>0)
+        conScore(score>0) = -spm_invNcdf(spm_Tcdf(-score(score>0),edf));
+    end
+    if any(score<=0)
+        conScore(score<=0) = spm_invNcdf(spm_Tcdf(score(score<=0),edf));
+    end
+else
+    conScore = spm_invXcdf(negp, 1);
+end
+    
 % Save results
 hyptest = struct('positive', struct('p', p,...
-                                    'edf', edf));%,...
-%                                    'conScore', conScore));
+                                    'edf', edf,...
+                                    'conScore', conScore));
 
 % Save activated voxels if doing clusterwise.
 if SwE.WB.clusterWise~=0
-    
     hyptest.positive.activatedVoxels = activatedVoxels;
-    
 end
-    
-                                
+                                   
 % If it's a T contrast save negative results as well.
 if (SwE.WB.stat == 'T')
     hyptest.negative = struct('p', negp,...
-                              'edf', edf);%,...
-%                              'conScore', conScoreNeg);
+                              'edf', edf,...
+                              'conScore', -conScore);
 
     % Save activated voxels if doing clusterwise.
     if SwE.WB.clusterWise~=0
-
         hyptest.negative.activatedVoxels = activatedVoxelsNeg;
-
     end
 
 end
