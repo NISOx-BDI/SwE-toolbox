@@ -309,7 +309,8 @@ if dof_type == 0 % so naive estimation is used
   
   % This variable should be left empty for Niave estimation.
   dofMat = [];
-  SwE.xX.erdf_niave = edf;
+  xX.erdf_niave = edf;
+  SwE.xX = xX;
 else
   edf = NaN;
 end
@@ -2504,6 +2505,11 @@ if (SwE.WB.stat == 'T')
         hyptest.negative.activatedVoxels = activatedVoxelsNeg;
     end
 
+else
+    
+    % For an F, negative p-values are still useful
+    hyptest.negative = struct('p', negp);
+    
 end
 
 end
