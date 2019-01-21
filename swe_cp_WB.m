@@ -1074,7 +1074,7 @@ if ~isMat
     else
       
       % Convert F statistics to Z scores.
-      scorevol=-swe_invNcdf(10.^(-spm_read_vols(VlP)));
+      scorevol=swe_invNcdf(10.^(-spm_read_vols(VlP)));
       scorevol(isnan(scorevol))=0;
           
       % Convert to TFCE.
@@ -1746,7 +1746,7 @@ for b = 1:WB.nB
       else
 	
 	% Bootstrapped tfce vol.
-	tfce = swe_tfce_transform(scorevol,H,E,C,dh);
+	tfce = swe_tfce_transform(-scorevol,H,E,C,dh);
 	
       end
       
@@ -2432,9 +2432,9 @@ else
   scoreTmp = (edf-rankCon+1) ./ edf .* score;
   scoreTmp(scoreTmp < 0 ) = 0;
   if dof_type == 0
-    p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
+    p(scoreTmp>0) = 1-betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
   else
-    p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
+    p(scoreTmp>0) = 1-betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
     p(scoreTmp == 0) = 0;
   end
 
