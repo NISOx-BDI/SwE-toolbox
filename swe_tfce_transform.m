@@ -26,7 +26,7 @@ function [tfced] = swe_tfce_transform(img,H,E,C,dh)
 bwfuncexists = exist('bwconncomp','file')==2;
 
 % set cluster thresholds
-threshs = 0:dh:max(img(:));
+threshs = 0:dh:max(img(~isinf(img)));
 threshs = threshs(2:end);
 ndh = length(threshs);
 
