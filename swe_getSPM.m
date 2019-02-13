@@ -592,7 +592,7 @@ end
 %-Compute & store contrast parameters, contrast/ESS images, & SwE images
 %==========================================================================
 SwE.xCon = xCon;
-alreadyComputed = ~isempty(xCon(Ic).Vspm);
+alreadyComputed = all(~cellfun(@isempty,{xCon(Ic).Vspm}));
 
 if isnumeric(Im)
     SwE  = swe_contrasts(SwE, unique([Ic, Im, IcAdd]));
