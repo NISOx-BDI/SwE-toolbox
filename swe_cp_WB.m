@@ -2546,7 +2546,7 @@ switch ss
   case 0
     corr = ones(nScan,1);
   case 1
-    if WB.RSwE == 1
+    if restric == 1
       corr  = repmat(sqrt(nScan/(nScan - nBeta + rankCon)),nScan,1); % residual correction (type 1)
     else
       corr  = repmat(sqrt(nScan/(nScan-nBeta)),nScan,1); 
