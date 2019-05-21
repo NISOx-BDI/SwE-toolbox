@@ -2436,7 +2436,7 @@ else
     p(scoreTmp>0) = betainc((edf-rankCon+1)./(edf-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf-rankCon+1)/2, rankCon/2);
   else
     p(scoreTmp>0) = betainc((edf(scoreTmp>0)-rankCon+1)./(edf(scoreTmp>0)-rankCon+1+rankCon*scoreTmp(scoreTmp>0)),(edf(scoreTmp>0)-rankCon+1)/2, rankCon/2);
-    p(scoreTmp == 0) = 0;
+    p(scoreTmp <= 0) = 1;
   end
 
   if SwE.WB.clusterWise~=0
