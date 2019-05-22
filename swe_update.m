@@ -21,7 +21,11 @@ function swe_update()
     
     % Error if we couldn't contact github.
     if ~stat 
-      error('Can''t contact GitHub');
+      try 
+        s  = webread(url);
+      catch
+        error('Can''t contact GitHub');
+      end
     end
     
     % Look for latest swe version number.
