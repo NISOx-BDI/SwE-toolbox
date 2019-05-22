@@ -1729,8 +1729,18 @@ for b = 1:WB.nB
 	% Current XYZ indices
 	currXYZ = XYZ(1:3, index);
 	  
-	  % T stat from this bootstrap
-	  scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = hyptest.positive.conScore;
+        % T test already converted to Z
+        if strcmp(WB.stat, 'T')
+          scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = hyptest.positive.conScore;
+        % F test needs to be converted to Z
+        else
+          % Get score volume from p values
+          sv = -swe_invNcdf(hyptest.positive.p);
+          % remove NaNs
+          sv(isnan(scorevol))=0;
+          % Save as scorevol
+          scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = sv;
+        end
 	
       end
       
