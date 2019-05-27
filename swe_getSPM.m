@@ -533,10 +533,11 @@ if ~isfield(SwE, 'WB')
           str = [str ')'];
       end
     end
-end
+    
+else % ~isfield(SwE, 'WB')
 
 % Ask for a contrast name.
-if ~isMat
+  if ~isMat
     if nc == 1
       str  = xCon(Ic).name;
     else
@@ -556,7 +557,9 @@ if ~isMat
     Im = [];
     pm = [];
     Ex = [];
-end
+  end
+
+end % ~isfield(SwE, 'WB')
 
 if ~isMat
     % Ask whether to do additional voxelwise or clusterwise inference.
