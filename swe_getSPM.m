@@ -543,14 +543,6 @@ else % ~isfield(SwE, 'WB')
     else
       str  = [sprintf('contrasts {%d',Ic(1)),sprintf(',%d',Ic(2:end)),'}'];
     end
-    try
-      titlestr = xSwE.title;
-      if isempty(titlestr)
-          titlestr = str;
-      end
-    catch
-      titlestr = spm_input('title for comparison','+1','s',str);
-    end
       
     % We have no recorded masks as masking was performed elsewhere for WB,
     % so here we set this to an empty/non-numeric value.
@@ -560,6 +552,17 @@ else % ~isfield(SwE, 'WB')
   end
 
 end % ~isfield(SwE, 'WB')
+
+if ~isMat
+  try
+    titlestr = xSwE.title;
+    if isempty(titlestr)
+        titlestr = str;
+    end
+  catch
+    titlestr = spm_input('title for comparison','+1','s',str);
+  end
+end
 
 if ~isMat
     % Ask whether to do additional voxelwise or clusterwise inference.
