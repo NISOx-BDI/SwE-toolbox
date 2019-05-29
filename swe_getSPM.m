@@ -422,136 +422,120 @@ end
 % end % if nc>1...
 SwE.xCon = xCon;
 
-%-Apply masking (if we are doing WB this has already been done).
+%-Apply masking
 %--------------------------------------------------------------------------
-if ~isfield(SwE, 'WB')
-    try
-        Mask = ~isempty(xSwE.Im) * (isnumeric(xSwE.Im) + 2*iscellstr(xSwE.Im));
-    catch
-        % Mask = spm_input('mask with other contrast(s)','+1','y/n',[1,0],2);
-        if isMat
-          Mask = 0;
-        else
-          Mask = spm_input('apply masking','+1','b','none|contrast|image',[0,1,2],1);
-        end
-    end
-    if Mask == 1
+try
+  Mask = ~isempty(xSwE.Im) * (isnumeric(xSwE.Im) + 2*iscellstr(xSwE.Im));
+catch
+  % Mask = spm_input('mask with other contrast(s)','+1','y/n',[1,0],2);
+  if isMat
+    % no masking optionfor mat format
+    Mask = 0;
+  elseif isfield(SwE, 'WB')
+    % for now, the contrast option  is not suggested because there is only the current contrast available
+    % in the WB and it cannot be fetched fron the contrast manager like for parametric analysis.
+    Mask = spm_input('apply masking','+1','b','none|image',[0,2],1);
+  else
+    Mask = spm_input('apply masking','+1','b','none|contrast|image',[0,1,2],1);
+  end
+end
+if Mask == 1
 
-        %-Get contrasts for masking
-        %----------------------------------------------------------------------
-        try
-            Im = xSwE.Im;
-        catch
-            [Im,xCon] = swe_conman(SwE,'T&F',-Inf,...
-                'Select contrasts for masking...',' for masking',1);
-        end
-
-        %-Threshold for mask (uncorrected p-value)
-        %----------------------------------------------------------------------
-        try
-            pm = xSwE.pm;
-        catch
-            pm = spm_input('uncorrected mask p-value','+1','r',0.05,1,[0,1]);
-        end
-
-        %-Inclusive or exclusive masking
-        %----------------------------------------------------------------------
-        try
-            Ex = xSwE.Ex;
-        catch
-            Ex = spm_input('nature of mask','+1','b','inclusive|exclusive',[0,1],1);
-        end
-
-    elseif Mask == 2
-
-        %-Get mask images
-        %----------------------------------------------------------------------
-        try
-            Im = xSwE.Im;
-        catch
-          if isMat
-            Im = cellstr(spm_select([1 Inf],'mat','Select mask image(s)'));
-          else
-            Im = cellstr(spm_select([1 Inf],'image','Select mask image(s)'));
-          end
-        end
-
-        %-Inclusive or exclusive masking
-        %----------------------------------------------------------------------
-        try
-            Ex = xSwE.Ex;
-        catch
-            Ex = spm_input('nature of mask','+1','b','inclusive|exclusive',[0,1],1);
-        end
-
-        pm = [];
-
-    else
-        Im = [];
-        pm = [];
-        Ex = [];
-    end
-
-
-    %-Create/Get title string for comparison
-    %--------------------------------------------------------------------------
-    if isMat
-      titlestr = xCon(Ic).name;
-    else
-      if nc == 1
-          str  = xCon(Ic).name;
-      else
-          str  = [sprintf('contrasts {%d',Ic(1)),sprintf(',%d',Ic(2:end)),'}'];
-          if n == nc
-              str = [str ' (global null)'];
-          elseif n == 1
-              str = [str ' (conj. null)'];
-          else
-              str = [str sprintf(' (Ha: k>=%d)',(nc-n)+1)];
-          end
-      end
-      if Ex
-          mstr = 'masked [excl.] by';
-      else
-          mstr = 'masked [incl.] by';
-      end
-      if isnumeric(Im)
-          if length(Im) == 1
-              str = sprintf('%s (%s %s at p=%g)',str,mstr,xCon(Im).name,pm);
-          elseif ~isempty(Im)
-              str = [sprintf('%s (%s {%d',str,mstr,Im(1)),...
-                  sprintf(',%d',Im(2:end)),...
-                  sprintf('} at p=%g)',pm)];
-          end
-      elseif iscellstr(Im) && numel(Im) > 0
-          [pf,nf,ef] = spm_fileparts(Im{1});
-          str  = sprintf('%s (%s %s',str,mstr,[nf ef]);
-          for i=2:numel(Im)
-              [pf,nf,ef] = spm_fileparts(Im{i});
-              str =[str sprintf(', %s',[nf ef])];
-          end
-          str = [str ')'];
-      end
-    end
-    
-else % ~isfield(SwE, 'WB')
-
-% Ask for a contrast name.
-  if ~isMat
-    if nc == 1
-      str  = xCon(Ic).name;
-    else
-      str  = [sprintf('contrasts {%d',Ic(1)),sprintf(',%d',Ic(2:end)),'}'];
-    end
-      
-    % We have no recorded masks as masking was performed elsewhere for WB,
-    % so here we set this to an empty/non-numeric value.
-    Im = [];
-    pm = [];
-    Ex = [];
+  %-Get contrasts for masking
+  %----------------------------------------------------------------------
+  try
+    Im = xSwE.Im;
+  catch
+    [Im,xCon] = swe_conman(SwE,'T&F',-Inf,...
+      'Select contrasts for masking...',' for masking',1);
   end
 
-end % ~isfield(SwE, 'WB')
+  %-Threshold for mask (uncorrected p-value)
+  %----------------------------------------------------------------------
+  try
+   pm = xSwE.pm;
+  catch
+    pm = spm_input('uncorrected mask p-value','+1','r',0.05,1,[0,1]);
+  end
+
+  %-Inclusive or exclusive masking
+  %----------------------------------------------------------------------
+  try
+    Ex = xSwE.Ex;
+  catch
+    Ex = spm_input('nature of mask','+1','b','inclusive|exclusive',[0,1],1);
+  end
+
+elseif Mask == 2
+
+  %-Get mask images
+  %----------------------------------------------------------------------
+  try
+    Im = xSwE.Im;
+  catch
+    if isMat
+      Im = cellstr(spm_select([1 Inf],'mat','Select mask image(s)'));
+    else
+      Im = cellstr(spm_select([1 Inf],'image','Select mask image(s)'));
+    end
+  end
+
+  %-Inclusive or exclusive masking
+  %----------------------------------------------------------------------
+  try
+    Ex = xSwE.Ex;
+  catch
+    Ex = spm_input('nature of mask','+1','b','inclusive|exclusive',[0,1],1);
+  end
+
+  pm = [];
+
+else
+  Im = [];
+  pm = [];
+  Ex = [];
+end
+
+%-Create/Get title string for comparison
+%--------------------------------------------------------------------------
+if isMat
+  titlestr = xCon(Ic).name;
+else
+  if nc == 1
+    str  = xCon(Ic).name;
+  else
+    str  = [sprintf('contrasts {%d',Ic(1)),sprintf(',%d',Ic(2:end)),'}'];
+    if n == nc
+      str = [str ' (global null)'];
+    elseif n == 1
+      str = [str ' (conj. null)'];
+    else
+      str = [str sprintf(' (Ha: k>=%d)',(nc-n)+1)];
+    end
+  end
+  if Ex
+    mstr = 'masked [excl.] by';
+  else
+    mstr = 'masked [incl.] by';
+  end
+  if isnumeric(Im)
+    if length(Im) == 1
+      str = sprintf('%s (%s %s at p=%g)',str,mstr,xCon(Im).name,pm);
+    elseif ~isempty(Im)
+      str = [sprintf('%s (%s {%d',str,mstr,Im(1)),...
+        sprintf(',%d',Im(2:end)),...
+        sprintf('} at p=%g)',pm)];
+    end
+  elseif iscellstr(Im) && numel(Im) > 0
+    [pf,nf,ef] = spm_fileparts(Im{1});
+    str  = sprintf('%s (%s %s',str,mstr,[nf ef]);
+    for i=2:numel(Im)
+      [pf,nf,ef] = spm_fileparts(Im{i});
+      str =[str sprintf(', %s',[nf ef])];
+    end
+    str = [str ')'];
+  end
+end
 
 if ~isMat
   try
