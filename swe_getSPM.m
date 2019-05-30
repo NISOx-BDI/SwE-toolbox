@@ -876,7 +876,7 @@ if ~isMat
                   % statistic value that did not pass thresholding when Q
                   % was applied to the statistic).
                   if ~isempty(Q)
-                      u = max(Z(Z<min(Z(Q))));
+                      u = max(Zum(Zum<min(Zum(Q))));
                   else
                       u = Inf;
                   end
@@ -892,9 +892,7 @@ if ~isMat
                   thresDesc = ['p<' num2str(pu) ' (' thresDesc ')'];
 
                   FDR_ps = 10.^-spm_get_data(xCon(Ic).VspmFDRP,XYZum);
-                  
-                  Q      = find(FDR_ps  < pu);
-                  
+                                    
                   % Obtain statistic threshold
                   switch STAT
                       case 'T'
@@ -923,8 +921,6 @@ if ~isMat
                       thresDesc = '';
                   end
 
-                  Q      = find(Z > u);
-
               otherwise
                   %--------------------------------------------------------------
                   fprintf('\n');                                              %-#
@@ -937,6 +933,8 @@ if ~isMat
           ue  = NaN;
           Pc  = [];
           uu = [];
+
+          Q = find(Z > u);
 
       % If we are doing clusterwise WB.
       elseif isfield(SwE, 'WB') && infType == 1
@@ -951,7 +949,7 @@ if ~isMat
                 str = 'FWE|none';
                 thresDesc = spm_input('extent p value adjustment to control','+1','b',str,[],1);
               else
-                % If the user originally ran voxelwise or TFEC we have no
+                % If the user originally ran voxelwise or TFCE we have no
                 % FWE clusterwise map from the bootstrap.
                 thresDesc = 'none';
               end
@@ -968,10 +966,16 @@ if ~isMat
                   
                   % For WB we have performed our thresholding and worked out of 
                   % regions of activation. 
-                  %(Note: Q Currently only set for activation).
-                  locActVox = SwE.WB.clusterInfo.LocActivatedVoxels;
+                  if Ic == 1
+                    locActVox = SwE.WB.clusterInfo.LocActivatedVoxels;
+                  elseif Ic == 2
+                    locActVox = SwE.WB.clusterInfo.LocActivatedVoxelsNeg;
+                  else
+                    error("Unknown contrast");
+                  end
                   [~, index]=ismember(XYZ',locActVox','rows');
                   Q=find(index~=0);
+                  % TODO: should maybe reform the cluster and check if they pass the threshold ser by the FWER p-value
                   
                   % We also should record the cluster forming threshold that was
                   % used.
@@ -1101,6 +1105,7 @@ if ~isMat
 
               %-Calculate extent threshold filtering
               %----------------------------------------------------------------------
+              % TODO: these need to potentially account for the new cluster sizes due to
               ps_fwe     = 10.^-spm_get_data(xCon(Ic).VspmFWEP_clus,XYZ);
               Q     = find(ps_fwe<fwep_c);
               
@@ -1110,13 +1115,26 @@ if ~isMat
               
               % Prevent error if nothing survived threshold.
               if isempty(pofclus)
-                  pofclus = -1;
+                pofclus = -1;
               end
               
               % We then look for the size of the clusters with this p value
               % We do this by first getting this index of clusters with
               % this p value.
               A = spm_clusters(XYZ);
+              clusIndices = unique(A);
+              if Ic == 1
+                for i = 1:length(clusIndices)
+                  sum( SwE.WB.clusterInfo.maxClusterSize >= sum(A==clusIndices(i) )
+                end
+              elseif Ic ==2
+                for i = 1:length(clusIndices)
+                  sum( SwE.WB.clusterInfo.maxClusterSizeNeg >= sum(A==clusIndices(i) )
+                end
+              else
+                error("unknown contrast");
+              end
+
               clusIndices = unique(A(ps_fwe==pofclus));
               
               % And then looping through this indices looking for the
