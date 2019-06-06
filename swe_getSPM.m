@@ -975,7 +975,6 @@ if ~isMat
                   end
                   [~, index]=ismember(XYZ',locActVox','rows');
                   Q=find(index~=0);
-                  % TODO: should maybe reform the cluster and check if they pass the threshold ser by the FWER p-value
                   
                   % We also should record the cluster forming threshold that was
                   % used.
@@ -1105,10 +1104,30 @@ if ~isMat
 
               %-Calculate extent threshold filtering
               %----------------------------------------------------------------------
-              % TODO: these need to potentially account for the new cluster sizes due to
-              ps_fwe     = 10.^-spm_get_data(xCon(Ic).VspmFWEP_clus,XYZ);
+              % recompute the clusters as they may have been reduced due to post-hoc masking
+              A = spm_clusters(XYZ);
+              clusIndices = unique(A);
+              
+              % recompute the p-values as they might have increased due to post-hoc masking
+              if Ic == 1
+                for i = 1:length(clusIndices)
+                  ind = ( A==clusIndices(i) );
+                  ps_fwe(ind) = sum( SwE.WB.clusterInfo.maxClusterSize >= sum(ind) ) / (SwE.WB.nB + 1);
+                end
+              elseif Ic == 2
+                for i = 1:length(clusIndices)
+                  ind = ( A==clusIndices(i) );
+                  ps_fwe(ind) = sum( SwE.WB.clusterInfo.maxClusterSizeNeg >= sum(ind) ) / (SwE.WB.nB + 1);
+                end
+              end
+
+              % select only the voxels surviving the FWER threshold
               Q     = find(ps_fwe<fwep_c);
               
+              % TODO: what is k exactely?
+              % I think we can k using the max cluster sizes
+              % k = sort(SwE.WB.clusterInfo.maxClusterSize)
+              % k = k( fwep_c * (SwE.WB.nB + 1) )
               % To obtain k we find the largest p value below the p value
               % threshold.
               pofclus = max(ps_fwe(ps_fwe<fwep_c));
@@ -1122,15 +1141,7 @@ if ~isMat
               % We do this by first getting this index of clusters with
               % this p value.
               A = spm_clusters(XYZ);
-              clusIndices = unique(A);
-              if Ic == 1
-                for i = 1:length(clusIndices)
-                  sum( SwE.WB.clusterInfo.maxClusterSize >= sum(A==clusIndices(i) )
-                end
-              elseif Ic ==2
-                for i = 1:length(clusIndices)
-                  sum( SwE.WB.clusterInfo.maxClusterSizeNeg >= sum(A==clusIndices(i) )
-                end
+
               else
                 error("unknown contrast");
               end
