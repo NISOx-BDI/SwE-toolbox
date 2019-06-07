@@ -1711,6 +1711,9 @@ for b = 1:WB.nB
       if (WB.clusterWise == 1)
         hyptest=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
         activatedVoxels(index) = hyptest.positive.activatedVoxels;
+        if (WB.stat == 'T')
+          activatedVoxelsNeg(index) = hyptest.negative.activatedVoxels;
+        end
         clear cCovBc
       end
       uncP(index) = uncP(index) + (score >= originalScore(index));
