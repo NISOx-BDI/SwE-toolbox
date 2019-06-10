@@ -432,9 +432,10 @@ catch
     % no masking optionfor mat format
     Mask = 0;
   elseif isfield(SwE, 'WB')
-    % for now, the contrast option  is not suggested because there is only the current contrast available
-    % in the WB and it cannot be fetched fron the contrast manager like for parametric analysis.
-    Mask = spm_input('apply masking','+1','b','none|image',[0,2],1);
+    % for now, the post-hoc masking is disabled for the WB
+    % It may be added later.
+    Mask = 0;
+    % Mask = spm_input('apply masking','+1','b','none|image',[0,2],1);
   else
     Mask = spm_input('apply masking','+1','b','none|contrast|image',[0,1,2],1);
   end
