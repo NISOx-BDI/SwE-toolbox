@@ -1278,11 +1278,23 @@ if isfield(SwE, 'WB')
     xSwE.Ps = Ps;
     
     % 95% percentiles
-    maxScore = sort(SwE.WB.maxScore);
+    if Ic == 1
+      maxScore = sort(SwE.WB.maxScore);
+    elseif Ic == 2
+      maxScore = sort(-SwE.WB.minScore);
+    else
+      error("Unknown contrast");
+    end
     xSwE.Pfv = maxScore(ceil(0.95*(xSwE.nB+1))); % Voxelwise FWE P 
     if SwE.WB.clusterWise
+      if Ic == 1
         maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSize);
-        xSwE.Pfc = maxClusterSize(ceil(0.95*(xSwE.nB+1))); % Clusterwise FWE P 
+      elseif Ic == 2
+        maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSizeNeg);
+      else
+        error("Unknown contrast");
+      end
+      xSwE.Pfc = maxClusterSize(ceil(0.95*(xSwE.nB+1))); % Clusterwise FWE P      
     end
     
     % edf
