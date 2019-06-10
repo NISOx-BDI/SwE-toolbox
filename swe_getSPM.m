@@ -1120,6 +1120,8 @@ if ~isMat
                   ind = ( A==clusIndices(i) );
                   ps_fwe(ind) = sum( SwE.WB.clusterInfo.maxClusterSizeNeg >= sum(ind) ) / (SwE.WB.nB + 1);
                 end
+              else
+                  error("unknown contrast");
               end
 
               % select only the voxels surviving the FWER threshold
@@ -1141,9 +1143,6 @@ if ~isMat
               % We then look for the size of the clusters with this p value
               % We do this by first getting this index of clusters with
               % this p value.
-              else
-                error("unknown contrast");
-              end
 
               clusIndices = unique(A(ps_fwe==pofclus));
               
