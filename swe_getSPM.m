@@ -1141,8 +1141,6 @@ if ~isMat
               % We then look for the size of the clusters with this p value
               % We do this by first getting this index of clusters with
               % this p value.
-              A = spm_clusters(XYZ);
-
               else
                 error("unknown contrast");
               end
