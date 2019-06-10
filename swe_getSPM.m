@@ -288,7 +288,22 @@ end
 
 %-Get contrasts
 %--------------------------------------------------------------------------
-try xCon = SwE.xCon; catch, xCon = {}; end
+try
+  xCon = SwE.xCon; 
+catch
+  if isfield(SwE, 'WB') && ~exist('OCTAVE_VERSION','builtin')
+    SwE = swe_contrasts_WB(SwE);
+    % save SwE with xCon appended to it. This is important for future call of swe_getSPM for a specific Ic
+    if spm_check_version('matlab','7') >=0
+      save('SwE.mat', 'SwE', '-V6');
+    else
+      save('SwE.mat', 'SwE');
+    end
+    xCon = SwE.xCon;    
+  else
+    xCon = {};
+  end
+end
 
 try
     Ic        = xSwE.Ic;
@@ -301,11 +316,8 @@ catch
     % If we're in octave, assume we already have a contrast.
     elseif exist('OCTAVE_VERSION','builtin')
         Ic = 1;
-        xCon = SwE.xCon;
     % If we're doing WB, we already have a contrast. We just need to record it.
     else
-        SwE = swe_contrasts_WB(SwE);
-        xCon = SwE.xCon;
         if numel(xCon) == 2
             Ic = spm_input('Contrast Type','+1','b','Activation|Deactivation',[1,2],1);
         else
