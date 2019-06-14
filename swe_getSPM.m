@@ -288,7 +288,22 @@ end
 
 %-Get contrasts
 %--------------------------------------------------------------------------
-try xCon = SwE.xCon; catch, xCon = {}; end
+try
+  xCon = SwE.xCon; 
+catch
+  if isfield(SwE, 'WB') && ~exist('OCTAVE_VERSION','builtin')
+    SwE = swe_contrasts_WB(SwE);
+    % save SwE with xCon appended to it. This is important for future call of swe_getSPM for a specific Ic
+    if spm_check_version('matlab','7') >=0
+      save('SwE.mat', 'SwE', '-V6');
+    else
+      save('SwE.mat', 'SwE');
+    end
+    xCon = SwE.xCon;    
+  else
+    xCon = {};
+  end
+end
 
 try
     Ic        = xSwE.Ic;
@@ -301,11 +316,8 @@ catch
     % If we're in octave, assume we already have a contrast.
     elseif exist('OCTAVE_VERSION','builtin')
         Ic = 1;
-        xCon = SwE.xCon;
     % If we're doing WB, we already have a contrast. We just need to record it.
     else
-        SwE = swe_contrasts_WB(SwE);
-        xCon = SwE.xCon;
         if numel(xCon) == 2
             Ic = spm_input('Contrast Type','+1','b','Activation|Deactivation',[1,2],1);
         else
@@ -422,140 +434,131 @@ end
 % end % if nc>1...
 SwE.xCon = xCon;
 
-%-Apply masking (if we are doing WB this has already been done).
+%-Apply masking
 %--------------------------------------------------------------------------
-if ~isfield(SwE, 'WB')
-    try
-        Mask = ~isempty(xSwE.Im) * (isnumeric(xSwE.Im) + 2*iscellstr(xSwE.Im));
-    catch
-        % Mask = spm_input('mask with other contrast(s)','+1','y/n',[1,0],2);
-        if isMat
-          Mask = 0;
-        else
-          Mask = spm_input('apply masking','+1','b','none|contrast|image',[0,1,2],1);
-        end
-    end
-    if Mask == 1
+try
+  Mask = ~isempty(xSwE.Im) * (isnumeric(xSwE.Im) + 2*iscellstr(xSwE.Im));
+catch
+  % Mask = spm_input('mask with other contrast(s)','+1','y/n',[1,0],2);
+  if isMat
+    % no masking optionfor mat format
+    Mask = 0;
+  elseif isfield(SwE, 'WB')
+    % for now, the post-hoc masking is disabled for the WB
+    % It may be added later.
+    Mask = 0;
+    % Mask = spm_input('apply masking','+1','b','none|image',[0,2],1);
+  else
+    Mask = spm_input('apply masking','+1','b','none|contrast|image',[0,1,2],1);
+  end
+end
+if Mask == 1
 
-        %-Get contrasts for masking
-        %----------------------------------------------------------------------
-        try
-            Im = xSwE.Im;
-        catch
-            [Im,xCon] = swe_conman(SwE,'T&F',-Inf,...
-                'Select contrasts for masking...',' for masking',1);
-        end
+  %-Get contrasts for masking
+  %----------------------------------------------------------------------
+  try
+    Im = xSwE.Im;
+  catch
+    [Im,xCon] = swe_conman(SwE,'T&F',-Inf,...
+      'Select contrasts for masking...',' for masking',1);
+  end
 
-        %-Threshold for mask (uncorrected p-value)
-        %----------------------------------------------------------------------
-        try
-            pm = xSwE.pm;
-        catch
-            pm = spm_input('uncorrected mask p-value','+1','r',0.05,1,[0,1]);
-        end
+  %-Threshold for mask (uncorrected p-value)
+  %----------------------------------------------------------------------
+  try
+   pm = xSwE.pm;
+  catch
+    pm = spm_input('uncorrected mask p-value','+1','r',0.05,1,[0,1]);
+  end
 
-        %-Inclusive or exclusive masking
-        %----------------------------------------------------------------------
-        try
-            Ex = xSwE.Ex;
-        catch
-            Ex = spm_input('nature of mask','+1','b','inclusive|exclusive',[0,1],1);
-        end
+  %-Inclusive or exclusive masking
+  %----------------------------------------------------------------------
+  try
+    Ex = xSwE.Ex;
+  catch
+    Ex = spm_input('nature of mask','+1','b','inclusive|exclusive',[0,1],1);
+  end
 
-    elseif Mask == 2
+elseif Mask == 2
 
-        %-Get mask images
-        %----------------------------------------------------------------------
-        try
-            Im = xSwE.Im;
-        catch
-          if isMat
-            Im = cellstr(spm_select([1 Inf],'mat','Select mask image(s)'));
-          else
-            Im = cellstr(spm_select([1 Inf],'image','Select mask image(s)'));
-          end
-        end
-
-        %-Inclusive or exclusive masking
-        %----------------------------------------------------------------------
-        try
-            Ex = xSwE.Ex;
-        catch
-            Ex = spm_input('nature of mask','+1','b','inclusive|exclusive',[0,1],1);
-        end
-
-        pm = [];
-
-    else
-        Im = [];
-        pm = [];
-        Ex = [];
-    end
-
-
-    %-Create/Get title string for comparison
-    %--------------------------------------------------------------------------
+  %-Get mask images
+  %----------------------------------------------------------------------
+  try
+    Im = xSwE.Im;
+  catch
     if isMat
-      titlestr = xCon(Ic).name;
+      Im = cellstr(spm_select([1 Inf],'mat','Select mask image(s)'));
     else
-      if nc == 1
-          str  = xCon(Ic).name;
-      else
-          str  = [sprintf('contrasts {%d',Ic(1)),sprintf(',%d',Ic(2:end)),'}'];
-          if n == nc
-              str = [str ' (global null)'];
-          elseif n == 1
-              str = [str ' (conj. null)'];
-          else
-              str = [str sprintf(' (Ha: k>=%d)',(nc-n)+1)];
-          end
-      end
-      if Ex
-          mstr = 'masked [excl.] by';
-      else
-          mstr = 'masked [incl.] by';
-      end
-      if isnumeric(Im)
-          if length(Im) == 1
-              str = sprintf('%s (%s %s at p=%g)',str,mstr,xCon(Im).name,pm);
-          elseif ~isempty(Im)
-              str = [sprintf('%s (%s {%d',str,mstr,Im(1)),...
-                  sprintf(',%d',Im(2:end)),...
-                  sprintf('} at p=%g)',pm)];
-          end
-      elseif iscellstr(Im) && numel(Im) > 0
-          [pf,nf,ef] = spm_fileparts(Im{1});
-          str  = sprintf('%s (%s %s',str,mstr,[nf ef]);
-          for i=2:numel(Im)
-              [pf,nf,ef] = spm_fileparts(Im{i});
-              str =[str sprintf(', %s',[nf ef])];
-          end
-          str = [str ')'];
-      end
+      Im = cellstr(spm_select([1 Inf],'image','Select mask image(s)'));
     end
+  end
+
+  %-Inclusive or exclusive masking
+  %----------------------------------------------------------------------
+  try
+    Ex = xSwE.Ex;
+  catch
+    Ex = spm_input('nature of mask','+1','b','inclusive|exclusive',[0,1],1);
+  end
+
+  pm = [];
+
+else
+  Im = [];
+  pm = [];
+  Ex = [];
 end
 
-% Ask for a contrast name.
-if ~isMat
-    if nc == 1
-      str  = xCon(Ic).name;
+%-Create/Get title string for comparison
+%--------------------------------------------------------------------------
+if isMat
+  titlestr = xCon(Ic).name;
+else
+  if nc == 1
+    str  = xCon(Ic).name;
+  else
+    str  = [sprintf('contrasts {%d',Ic(1)),sprintf(',%d',Ic(2:end)),'}'];
+    if n == nc
+      str = [str ' (global null)'];
+    elseif n == 1
+      str = [str ' (conj. null)'];
     else
-      str  = [sprintf('contrasts {%d',Ic(1)),sprintf(',%d',Ic(2:end)),'}'];
+      str = [str sprintf(' (Ha: k>=%d)',(nc-n)+1)];
     end
-    try
-      titlestr = xSwE.title;
-      if isempty(titlestr)
-          titlestr = str;
-      end
-    catch
-      titlestr = spm_input('title for comparison','+1','s',str);
+  end
+  if Ex
+    mstr = 'masked [excl.] by';
+  else
+    mstr = 'masked [incl.] by';
+  end
+  if isnumeric(Im)
+    if length(Im) == 1
+      str = sprintf('%s (%s %s at p=%g)',str,mstr,xCon(Im).name,pm);
+    elseif ~isempty(Im)
+      str = [sprintf('%s (%s {%d',str,mstr,Im(1)),...
+        sprintf(',%d',Im(2:end)),...
+        sprintf('} at p=%g)',pm)];
     end
-      
-    % We have no recorded masks as masking was performed elsewhere for WB,
-    % so here we set this to an empty/non-numeric value.
-    Im = [];
-    pm = [];
-    Ex = [];
+  elseif iscellstr(Im) && numel(Im) > 0
+    [pf,nf,ef] = spm_fileparts(Im{1});
+    str  = sprintf('%s (%s %s',str,mstr,[nf ef]);
+    for i=2:numel(Im)
+      [pf,nf,ef] = spm_fileparts(Im{i});
+      str =[str sprintf(', %s',[nf ef])];
+    end
+    str = [str ')'];
+  end
+end
+
+if ~isMat
+  try
+    titlestr = xSwE.title;
+    if isempty(titlestr)
+        titlestr = str;
+    end
+  catch
+    titlestr = spm_input('title for comparison','+1','s',str);
+  end
 end
 
 if ~isMat
@@ -886,7 +889,7 @@ if ~isMat
                   % statistic value that did not pass thresholding when Q
                   % was applied to the statistic).
                   if ~isempty(Q)
-                      u = max(Z(Z<min(Z(Q))));
+                      u = max(Zum(Zum<min(Zum(Q))));
                   else
                       u = Inf;
                   end
@@ -902,9 +905,7 @@ if ~isMat
                   thresDesc = ['p<' num2str(pu) ' (' thresDesc ')'];
 
                   FDR_ps = 10.^-spm_get_data(xCon(Ic).VspmFDRP,XYZum);
-                  
-                  Q      = find(FDR_ps  < pu);
-                  
+                                    
                   % Obtain statistic threshold
                   switch STAT
                       case 'T'
@@ -933,8 +934,6 @@ if ~isMat
                       thresDesc = '';
                   end
 
-                  Q      = find(Z > u);
-
               otherwise
                   %--------------------------------------------------------------
                   fprintf('\n');                                              %-#
@@ -947,6 +946,8 @@ if ~isMat
           ue  = NaN;
           Pc  = [];
           uu = [];
+
+          Q = find(Z > u);
 
       % If we are doing clusterwise WB.
       elseif isfield(SwE, 'WB') && infType == 1
@@ -961,7 +962,7 @@ if ~isMat
                 str = 'FWE|none';
                 thresDesc = spm_input('extent p value adjustment to control','+1','b',str,[],1);
               else
-                % If the user originally ran voxelwise or TFEC we have no
+                % If the user originally ran voxelwise or TFCE we have no
                 % FWE clusterwise map from the bootstrap.
                 thresDesc = 'none';
               end
@@ -978,8 +979,13 @@ if ~isMat
                   
                   % For WB we have performed our thresholding and worked out of 
                   % regions of activation. 
-                  %(Note: Q Currently only set for activation).
-                  locActVox = SwE.WB.clusterInfo.LocActivatedVoxels;
+                  if Ic == 1
+                    locActVox = SwE.WB.clusterInfo.LocActivatedVoxels;
+                  elseif Ic == 2
+                    locActVox = SwE.WB.clusterInfo.LocActivatedVoxelsNeg;
+                  else
+                    error("Unknown contrast");
+                  end
                   [~, index]=ismember(XYZ',locActVox','rows');
                   Q=find(index~=0);
                   
@@ -1068,7 +1074,7 @@ if ~isMat
   end
   if isempty(Q)
       fprintf('\n');                                                      %-#
-      warning('SwE:NoVoxels','No voxels survive thresholding at p=%4.2f',pm);
+      warning('SwE:NoVoxels','No voxels survive thresholding');
   end
   
   % If we are doing clusterwise ask for threshold.
@@ -1111,22 +1117,45 @@ if ~isMat
 
               %-Calculate extent threshold filtering
               %----------------------------------------------------------------------
-              ps_fwe     = 10.^-spm_get_data(xCon(Ic).VspmFWEP_clus,XYZ);
+              % recompute the clusters as they may have been reduced due to post-hoc masking
+              A = spm_clusters(XYZ);
+              clusIndices = unique(A);
+              
+              % recompute the p-values as they might have increased due to post-hoc masking
+              if Ic == 1
+                for i = 1:length(clusIndices)
+                  ind = ( A==clusIndices(i) );
+                  ps_fwe(ind) = sum( SwE.WB.clusterInfo.maxClusterSize >= sum(ind) ) / (SwE.WB.nB + 1);
+                end
+              elseif Ic == 2
+                for i = 1:length(clusIndices)
+                  ind = ( A==clusIndices(i) );
+                  ps_fwe(ind) = sum( SwE.WB.clusterInfo.maxClusterSizeNeg >= sum(ind) ) / (SwE.WB.nB + 1);
+                end
+              else
+                  error("unknown contrast");
+              end
+
+              % select only the voxels surviving the FWER threshold
               Q     = find(ps_fwe<fwep_c);
               
+              % TODO: what is k exactely?
+              % I think we can k using the max cluster sizes
+              % k = sort(SwE.WB.clusterInfo.maxClusterSize)
+              % k = k( fwep_c * (SwE.WB.nB + 1) )
               % To obtain k we find the largest p value below the p value
               % threshold.
               pofclus = max(ps_fwe(ps_fwe<fwep_c));
               
               % Prevent error if nothing survived threshold.
               if isempty(pofclus)
-                  pofclus = -1;
+                pofclus = -1;
               end
               
               % We then look for the size of the clusters with this p value
               % We do this by first getting this index of clusters with
               % this p value.
-              A = spm_clusters(XYZ);
+
               clusIndices = unique(A(ps_fwe==pofclus));
               
               % And then looping through this indices looking for the
@@ -1143,7 +1172,7 @@ if ~isMat
           XYZ   = XYZ(:,Q);
           if isempty(Q)
               fprintf('\n');                                                  %-#
-              warning('SwE:NoVoxels','No voxels survive masking at p=%4.2f',pm);
+              warning('SwE:NoVoxels','No voxels survive cluster extent threshoding');
           end
           
       else
@@ -1258,11 +1287,23 @@ if isfield(SwE, 'WB')
     xSwE.Ps = Ps;
     
     % 95% percentiles
-    maxScore = sort(SwE.WB.maxScore);
+    if Ic == 1
+      maxScore = sort(SwE.WB.maxScore);
+    elseif Ic == 2
+      maxScore = sort(-SwE.WB.minScore);
+    else
+      error("Unknown contrast");
+    end
     xSwE.Pfv = maxScore(ceil(0.95*(xSwE.nB+1))); % Voxelwise FWE P 
     if SwE.WB.clusterWise
+      if Ic == 1
         maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSize);
-        xSwE.Pfc = maxClusterSize(ceil(0.95*(xSwE.nB+1))); % Clusterwise FWE P 
+      elseif Ic == 2
+        maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSizeNeg);
+      else
+        error("Unknown contrast");
+      end
+      xSwE.Pfc = maxClusterSize(ceil(0.95*(xSwE.nB+1))); % Clusterwise FWE P      
     end
     
     % edf
