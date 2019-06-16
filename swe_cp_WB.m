@@ -1740,7 +1740,7 @@ for b = 1:WB.nB
           % Get score volume from p values
           sv = -swe_invNcdf(hyptest.positive.p);
           % remove NaNs
-          sv(isnan(scorevol))=0;
+          sv(isnan(sv))=0;
           % Save as scorevol
           scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = sv;
         end
