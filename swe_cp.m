@@ -667,7 +667,7 @@ if ~isMat
             % (note that these may not have same orientations)
             %------------------------------------------------------------------
             for i = 1:length(xM.VM)
-
+              if ~(isfield(SwE,'xVol') && isfield(SwE.xVol,'G'))
                 %-Coordinates in mask image
                 %--------------------------------------------------------------
                 j = xM.VM(i).mat\M*[xyz;ones(1,nVox)];
@@ -675,6 +675,15 @@ if ~isMat
                 %-Load mask image within current mask & update mask
                 %--------------------------------------------------------------
                 Cm(Cm) = spm_get_data(xM.VM(i),j(:,Cm),false) > 0;
+              else
+                if spm_mesh_detect(xM.VM(i))
+                  v = xM.VM(i).private.cdata() > 0;
+                else
+                  v = spm_mesh_project(gifti(SwE.xVol.G), xM.VM(i)) > 0;
+                end
+                Cm = v(:);
+                clear v
+              end
             end
 
             %-Get the data in mask, compute threshold & implicit masks
