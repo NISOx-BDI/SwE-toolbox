@@ -271,6 +271,13 @@ else
   M    = SwE.xVol.M(1:3,1:3);         %-voxels to mm matrix
   VOX  = sqrt(diag(M'*M))';           %-voxel dimensions
 end
+
+% Tolerance for comparing real numbers for WB analyses
+% Use a value < to the smallest WB p-value as it will be used to include WB p-values equal to alpha
+if isfield(SwE, 'WB') 
+  tol = 0.1 / (SwE.WB.nB + 1);
+end
+
 % check the data and other files have valid filenames
 %--------------------------------------------------------------------------
 %something here occurs and the paths to spm and swe toolboxes disappear????
@@ -1047,9 +1054,12 @@ if ~isMat
           
           % Ask user for TFCE FWE alpha.
           pt = spm_input('p value (TFCE FWE)','+0','r',0.05,1,[0,1]);
-          thresDesc = ['p<' num2str(pt) ' (FWE)'];
+          thresDesc = ['p<=' num2str(pt) ' (FWE)'];
           
           % Get Tfce Fwe P-values.
+          % In older version of the toolbox, the max TFCE scores were not saved.
+          % Thus, to avoid retro-compatibility issues, we cannot threshold using 
+          % the (1-pt)th percentile of the max distribution, but only using the FWER p-values
           tfp = 10.^-spm_get_data(xCon(Ic).VspmTFCEFWEP,XYZ);
           
           up  = NaN;
@@ -1059,8 +1069,10 @@ if ~isMat
           Pc  = [];
           uu = [];
 
-          % Theshold.
-          Q = find(tfp < pt);
+          % When thresholding on WB p-values, we should include those = to pu
+          % Here, we are using a - tol < b instead of a <= b due to numerical errors
+          % tol was set to 0.1/(nB+1) in order to make sure it is smaller than the smallest WB p-value
+          Q = find(tfp - tol < pt);
           
       end
 
