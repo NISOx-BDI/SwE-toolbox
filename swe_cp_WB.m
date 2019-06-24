@@ -1942,10 +1942,16 @@ SwE.WB.maxScore = maxScore;
 if (WB.clusterWise == 1)
     SwE.WB.clusterInfo.maxClusterSize = maxClusterSize;
 end
+if isfield(SwE.WB, 'TFCE')
+  SwE.WB.TFCE.maxTFCEScore = maxTFCEScore;
+end
 if (WB.stat == 'T')
     SwE.WB.minScore = minScore;
     if (WB.clusterWise == 1)
         SwE.WB.clusterInfo.maxClusterSizeNeg = maxClusterSizeNeg;
+    end
+    if isfield(SwE.WB, 'TFCE')
+        SwE.WB.TFCE.maxTFCEScore_neg = maxTFCEScore_neg;
     end
 end
 
