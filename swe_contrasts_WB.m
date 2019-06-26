@@ -65,7 +65,7 @@ function [SwE] = swe_contrasts_WB(SwE)
     % Add the SwE volumes.
     %----------------------------------------------------------------------
     DxCon.Vspm = spm_vol(sprintf('swe_vox_%c%cstat_c%.2d%s', eSTAT, STAT, 1, file_ext));
-    DxCon.VspmUncP = spm_vol(sprintf('swe_vox_%cstat_lp%s_c%.2d%s', STAT, wbstring,1, file_ext));
+    DxCon.VspmUncP = spm_vol(sprintf('swe_vox_%cstat_lp%s_c%.2d%s', STAT, wbstring, 1, file_ext));
     DxCon.VspmFDRP = spm_vol(sprintf('swe_vox_%cstat_lpFDR%s_c%.2d%s', STAT, wbstring, 1, file_ext));
     DxCon.VspmFWEP = spm_vol(sprintf('swe_vox_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 1, file_ext));
     if isfield(SwE,'WB')
