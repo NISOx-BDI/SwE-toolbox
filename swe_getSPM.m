@@ -1014,28 +1014,27 @@ if ~isMat
                       '+1','b',['(pre-set: P=' num2str(pu) ')'],[0],0)
                   
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
-                  % This is performed in the normal manor on the Z map.
+                  % This should be performed on the uncorrected WB p-values
                   %--------------------------------------------------------
                   % Record what type of clusterwise inference we are doing.
                   clustWise = 'Uncorr';
                   
                   % Cluster-forming threshold.
                   try
-                      u = xSwE.u;
+                      pu = xSwE.u;
                   catch
-                      u = spm_input(['threshold {',eSTAT,' or p value}'],'+1','r',0.001,1);
+                      pu = spm_input(['threshold {p value}'],'+0','r',0.001,1,[0,1]);
                   end
-                  if u <= 1
-                      thresDesc = ['p<' num2str(u) ' (unc.)'];
-                      switch STAT
-                          case 'T'
-                              u  = swe_invNcdf(1-u^(1/n));
-                          case 'F'
-                              u  = spm_invXcdf(1-u^(1/n),1);
-                      end
-                  else
-                      thresDesc = '';
-                  end
+                  thresDesc = ['p<' num2str(pu) ' (unc.)'];
+                  % select the WB unc. p-values within the mask
+                  unc_ps = 10.^-spm_get_data(xCon(Ic).VspmP,XYZ);
+  
+                  % Here, a parametric score threshold u would differ from voxel to voxel
+                  % Thus, setting it to NaN
+                  u = NaN
+                  
+                  % exclusive thresholding like in SPM
+                  Q = find(unc_ps < pu);
                   
                   up  = NaN;
                   Pp  = NaN;
@@ -1043,9 +1042,7 @@ if ~isMat
                   ue  = NaN;
                   Pc  = [];
                   uu = [];
-                  
-                  Q      = find(Z > u);
-          
+                            
           end
           
       % If we are doing TFCE.    
