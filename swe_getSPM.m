@@ -915,17 +915,17 @@ if ~isMat
                       pu = spm_input('p value (FDR)','+0','r',0.05,1,[0,1]);
                   end
                   thresDesc = ['p<' num2str(pu) ' (' thresDesc ')'];
-
-                  FDR_ps = 10.^-spm_get_data(xCon(Ic).VspmFDRP,XYZum);
-                                    
-                  % Obtain statistic threshold
-                  switch STAT
-                      case 'T'
-                         u = spm_uc_FDR(pu,Inf,'Z',n,VspmSv,0); 
-                      case 'F'
-                         u = spm_uc_FDR(pu,[1 1],'X',n,VspmSv,0); 
-                  end
                   
+                  % select the WB FDR p-values within the mask
+                  FDR_ps = 10.^-spm_get_data(xCon(Ic).VspmFDRP,XYZ);
+
+                  % Here, a parametric score threshold u would differ from voxel to voxel
+                  % Thus, setting it to NaN
+                  u = NaN
+                  
+                  % exclusive thresholding like in SPM
+                  Q = find(FDR_ps < pu);
+
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
                   % This is performed in the normal manor on the Z map.
                   %--------------------------------------------------------
@@ -958,8 +958,6 @@ if ~isMat
           ue  = NaN;
           Pc  = [];
           uu = [];
-
-          Q = find(Z > u);
 
       % If we are doing clusterwise WB.
       elseif isfield(SwE, 'WB') && infType == 1
