@@ -101,6 +101,10 @@ else
     isMeshData = false;
 end
 
+%-Check whether the WB p-values are based on the param. X or Z (or on the raw T or F) 
+%--------------------------------------------------------------------------
+isWbBasedOnParamXOrZ = isfield(SwE.WB, 'isWbBasedOnParamXOrZ') && SwE.WB.isWbBasedOnParamXOrZ;
+
 %-Check whether we are doing a TFCE analysis
 %--------------------------------------------------------------------------
 TFCE = isfield(SwE.WB, 'TFCE');
@@ -155,6 +159,9 @@ for i = 1:length(files)
     spm_unlink(deblank(j(k,:)));
   end
 end
+
+% Tolerance for comparing real numbers
+tol = 1e-4;	
 
 %==========================================================================
 % - A N A L Y S I S   P R E L I M I N A R I E S
@@ -939,8 +946,13 @@ if ~isMat
             negp = hyptest.negative.p;
             edf = hyptest.positive.edf;
           end
-          
-          minScore(1) = min(minScore(1), min(score));
+
+          % if the voxelwise WB p-values are based on the parametric X or Z scores, use them instead of the raw T or F 
+          if (isWbBasedOnParamXOrZ)
+            minScore(1) = min(minScore(1), min(hyptest.positive.conScore));
+          else          
+            minScore(1) = min(minScore(1), min(score));
+          end
           
         else
           % need to loop at every voxel
@@ -967,8 +979,13 @@ if ~isMat
           end
         end
         
-        maxScore(1) = max(maxScore(1), max(score));
-        
+        % if the voxelwise WB p-values are based on the parametric X or Z scores, use them instead of the raw T or F 
+        if (isWbBasedOnParamXOrZ)
+          maxScore(1) = max(maxScore(1), max(hyptest.positive.conScore));
+        else
+          maxScore(1) = max(maxScore(1), max(score));
+        end
+
         %-Save betas etc. for current plane as we go along
         %----------------------------------------------------------
         CrYWB             = [CrYWB,    YWB]; %#ok<AGROW>
@@ -978,11 +995,11 @@ if ~isMat
         Credf             = [Credf,    hyptest.positive.edf]; %#ok<AGROW> 
         CrBl              = [CrBl,    beta]; %#ok<AGROW>
         if (SwE.WB.stat == 'T')
-	  CrConScore      = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
-	  CrPNeg          = [CrPNeg,   -log10(hyptest.negative.p)]; %#ok<AGROW>
+	        CrConScore      = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
+	        CrPNeg          = [CrPNeg,   -log10(hyptest.negative.p)]; %#ok<AGROW>
         end
         if(SwE.WB.stat == 'F')
-	  CrConScore    = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
+	        CrConScore    = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
         end
         
       end % (CrS)
@@ -1298,8 +1315,13 @@ else % ".mat" format
         edf = hyptest.positive.edf;
         clear CovcCovBc cCovBc
       end
-      
-      minScore(1) = min(score);
+         
+      % if the voxelwise WB p-values are based on the parametric X or Z scores, use them instead of the raw T or F 
+      if (isWbBasedOnParamXOrZ)
+        minScore(1) = min(hyptest.positive.conScore);
+      else
+        minScore(1) = min(score);
+      end
       
       if TFCE
 	%%%% TODO: T (MAKE SCORE)
@@ -1333,7 +1355,13 @@ else % ".mat" format
       end
       
     end
-    maxScore(1) = max(score);
+
+    % if the voxelwise WB p-values are based on the parametric X or Z scores, use them instead of the raw T or F 
+    if (isWbBasedOnParamXOrZ)
+      maxScore(1) = max(hyptest.positive.conScore);
+    else
+      maxScore(1) = max(score);
+    end
     
   end % (CrS)
   M           = [];
@@ -1548,10 +1576,18 @@ resamplingMatrix(resamplingMatrix == 0) = -1;
 
 % load original score
 if isMat
-  originalScore = score;
+  if isWbBasedOnParamXOrZ
+    originalScore = hyptest.positive.conScore;
+  else
+    originalScore = score;
+  end
   clear score;
 else
-  originalScore = spm_get_data(Vscore, XYZ);
+  if isWbBasedOnParamXOrZ
+    originalScore = spm_get_data(VcScore, XYZ);
+  else
+    originalScore = spm_get_data(Vscore, XYZ);
+  end
   % # blocks
   blksz  = ceil(mmv);                             %-block size
   nbch   = ceil(S/ blksz);          
@@ -1707,20 +1743,31 @@ for b = 1:WB.nB
         
       end
       
-      % hypothesis test
-      if (WB.clusterWise == 1)
+      % hypothesis testing if needed
+      if isWbBasedOnParamXOrZ || WB.clusterWise == 1
         hyptest=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
+      end
+
+      if (WB.clusterWise == 1)
         activatedVoxels(index) = hyptest.positive.activatedVoxels;
         if (WB.stat == 'T')
           activatedVoxelsNeg(index) = hyptest.negative.activatedVoxels;
         end
         clear cCovBc
       end
-      uncP(index) = uncP(index) + (score >= originalScore(index));
-          
-      maxScore(b+1) = max(maxScore(b+1), max(score));
-      if (SwE.WB.stat == 'T')
+
+      if isWbBasedOnParamXOrZ 
+        uncP(index) = uncP(index) + (hyptest.positive.conScore > originalScore(index) - tol);
+        maxScore(b+1) = max(maxScore(b+1), max(hyptest.positive.conScore));
+        if (SwE.WB.stat == 'T')
+          minScore(b+1) = min(minScore(b+1), min(hyptest.positive.conScore));
+        end     
+      else
+        uncP(index) = uncP(index) + (score > originalScore(index) - tol);   
+        maxScore(b+1) = max(maxScore(b+1), max(score));
+        if (SwE.WB.stat == 'T')
           minScore(b+1) = min(minScore(b+1), min(score));
+        end
       end
       
       % Calculate TFCE uncorrected p image.
@@ -1867,22 +1914,32 @@ for b = 1:WB.nB
       score = score / rankCon;     
     end
     
-    % hypothesis test
+    % hypothesis testing if needed
+    if isWbBasedOnParamXOrZ || WB.clusterWise == 1
+      hyptest=swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);      
+    end
+
     if (WB.clusterWise == 1)
-      hyptest=swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);
       activatedVoxels = hyptest.positive.activatedVoxels;
       if (WB.stat == 'T')
           activatedVoxelsNeg = hyptest.negative.activatedVoxels;
       end
       clear cCovBc
     end
-    uncP = uncP + (score >= originalScore); 
-    
-    maxScore(b+1) = max(score);
-    if (SwE.WB.stat == 'T')
-      minScore(b+1) = min(score);
-    end
-        
+
+    if isWbBasedOnParamXOrZ 
+      uncP = uncP + (hyptest.positive.conScore > originalScore - tol);
+      maxScore(b+1) = max(hyptest.positive.conScore);
+      if (SwE.WB.stat == 'T')
+        minScore(b+1) = min(hyptest.positive.conScore);
+      end     
+    else
+      uncP = uncP + (score > originalScore - tol); 
+      maxScore(b+1) = max(score);
+      if (SwE.WB.stat == 'T')
+        minScore(b+1) = min(score);
+      end
+    end  
     
   end
   
@@ -1978,7 +2035,6 @@ if isMat
   %
   % - write out lP_FWE+ and lP_FWE- ;
   %
-  tol = 1e-4;	% Tolerance for comparing real numbers
   
   FWERP = ones(1, S); % 1 because the original maxScore is always > original Score
   
