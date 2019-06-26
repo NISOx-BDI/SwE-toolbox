@@ -886,20 +886,25 @@ if ~isMat
                   catch
                       pu = spm_input('p value (FWE)','+0','r',0.05,1,[0,1]);
                   end
-                  thresDesc = ['p<' num2str(pu) ' (' thresDesc ')'];
+                  thresDesc = ['p=<' num2str(pu) ' (' thresDesc ')'];
                   
-                  FWE_ps = 10.^-spm_get_data(xCon(Ic).VspmFWEP,XYZum);
+                  FWE_ps = 10.^-spm_get_data(xCon(Ic).VspmFWEP,XYZ);
                   
-                  Q      = find(FWE_ps  < pu);
+                  % When thresholding on WB FWER p-values, we should include those = to pu
+                  % Here, we are using a - tol < b instead of a <= b due to numerical errors
+                  % tol was set to 0.1/(nB+1) in order to make sure it is smaller than the smallest WB p-value
+                  Q = find(FWE_ps - tol  < pu);
                   
-                  % Obtain statistic threshold (this will be the maximum
-                  % statistic value that did not pass thresholding when Q
-                  % was applied to the statistic).
-                  if ~isempty(Q)
-                      u = max(Zum(Zum<min(Zum(Q))));
+                  % Obtain the exclusive statistic threshold. This will be the (1-pu)th
+                  % percentile of the max. statistic distribution
+                  if Ic == 1
+                    maxScore = sort(SwE.WB.maxScore);
+                  elseif Ic == 2
+                    maxScore = sort(-SwE.WB.minScore);
                   else
-                      u = Inf;
+                    error("Unknown contrast");
                   end
+                  u = maxScore( ceil( (1-pu) * (xSwE.nB+1) ) );
 
               case 'FDR' % False discovery rate
                   % This is performed on the FDR P value map
