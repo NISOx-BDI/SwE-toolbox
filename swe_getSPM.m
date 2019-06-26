@@ -944,7 +944,7 @@ if ~isMat
                   
                   % exclusive thresholding like in SPM
                   Q = find(unc_ps < pu);
-                  
+
               otherwise
                   %--------------------------------------------------------------
                   fprintf('\n');                                              %-#
@@ -1150,34 +1150,20 @@ if ~isMat
                   error("unknown contrast");
               end
 
-              % select only the voxels surviving the FWER threshold
-              Q     = find(ps_fwe<fwep_c);
+              % select only the voxels surviving the FWER threshold 
+              % Here, we use an inclusive p-value threshold to be consistent with an exclusive cluster threshold
+              Q = find(ps_fwe - tol < fwep_c);
               
-              % TODO: what is k exactely?
-              % I think we can k using the max cluster sizes
-              % k = sort(SwE.WB.clusterInfo.maxClusterSize)
-              % k = k( fwep_c * (SwE.WB.nB + 1) )
-              % To obtain k we find the largest p value below the p value
-              % threshold.
-              pofclus = max(ps_fwe(ps_fwe<fwep_c));
-              
-              % Prevent error if nothing survived threshold.
-              if isempty(pofclus)
-                pofclus = -1;
+              % The exclusive threshold k should be the (1-fwep_c)th percentile of the max cluster size distribution
+              if Ic == 1
+                maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSize);
+              elseif Ic == 2
+                maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSizeNeg);
+              else
+                error("Unknown contrast");
               end
-              
-              % We then look for the size of the clusters with this p value
-              % We do this by first getting this index of clusters with
-              % this p value.
+              k = maxClusterSize( ceil( (1-fwep_c) * (xSwE.nB+1) ) );
 
-              clusIndices = unique(A(ps_fwe==pofclus));
-              
-              % And then looping through this indices looking for the
-              % smallest cluster.
-              k = Inf;
-              for i = 1:length(clusIndices)
-                 k = min(k, sum(A==clusIndices(i)));
-              end
           end
 
           % ...eliminate voxels
