@@ -934,7 +934,7 @@ if ~isMat
                   catch
                       pu = spm_input(['threshold {p value}'],'+0','r',0.001,1,[0,1]);
                   end
-                  thresDesc = ['p<' num2str(u) ' (unc.)'];
+                  thresDesc = ['p<' num2str(pu) ' (unc.)'];
                   % select the WB unc. p-values within the mask
                   unc_ps = 10.^-spm_get_data(xCon(Ic).VspmP,XYZ);
 
