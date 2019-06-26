@@ -944,13 +944,29 @@ WB_infType.help    = {''
   ''
   'TFCE: Threshold Free Cluster Enhancement performed using the wild boostrap. (Note: this feature is not available for ''.mat'' input.'};
 
+
+% ---------------------------------------------------------------------
+% WB_isWbBasedOnParamXOrZ 
+% ---------------------------------------------------------------------
+WB_isWbBasedOnParamXOrZ         = cfg_menu;
+WB_isWbBasedOnParamXOrZ.tag     = 'WB_isWbBasedOnParamXOrZ';
+WB_isWbBasedOnParamXOrZ.name    = 'Parametric conversion of the statistics for voxel-wise inference';
+WB_isWbBasedOnParamXOrZ.labels  = {'no' 'yes'};
+WB_isWbBasedOnParamXOrZ.values  = { false true };
+WB_isWbBasedOnParamXOrZ.val     = { true };
+WB_isWbBasedOnParamXOrZ.help    = {  ' '
+                'no: the voxel-wise non-parametric p-values will be directly computed based on the T- or F-scores'
+                ' '
+                'yes: the T- or F-scores will be first converted to equivalent Z- or X-scores, respectively, using the parametric test specified above. The voxel-wise non-parametric p-values will then be computed based on these equivalent Z- or X-scores.'
+                ' '
+                };
 % ---------------------------------------------------------------------
 % WB_yes Yes
 % ---------------------------------------------------------------------
 WB_clusterwise         = cfg_branch;
 WB_clusterwise.tag     = 'WB_yes';
 WB_clusterwise.name    = 'Yes';
-WB_clusterwise.val     = {WB_ss WB_nB WB_SwE WB_stat WB_infType};
+WB_clusterwise.val     = {WB_ss WB_nB WB_SwE WB_stat WB_isWbBasedOnParamXOrZ WB_infType};
 WB_clusterwise.help    = {''
                      'A non-parametric Wild Bootstrap procedure is considered to analyse the data (see Guillaume, 2015)'
 }';

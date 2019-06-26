@@ -780,6 +780,10 @@ if isfield(job.WB, 'WB_yes')
     otherwise
       error('unexpected statistic type');
   end
+
+  if isfield(job.WB.WB_yes, 'WB_isWbBasedOnParamXOrZ')
+    WB.isWbBasedOnParamXOrZ = job.WB.WB_yes.WB_isWbBasedOnParamXOrZ;
+  end
  
 end
 
