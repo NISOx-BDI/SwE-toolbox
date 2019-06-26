@@ -1720,7 +1720,7 @@ for b = 1:WB.nB
           
       maxScore(b+1) = max(maxScore(b+1), max(score));
       if (SwE.WB.stat == 'T')
-         minScore(b+1) = min(score);
+          minScore(b+1) = min(minScore(b+1), min(score));
       end
       
       % Calculate TFCE uncorrected p image.
