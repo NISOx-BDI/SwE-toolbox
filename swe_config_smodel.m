@@ -25,11 +25,11 @@ scans         = cfg_files;
 scans.tag     = 'scans';
 scans.name    = 'Scans';
 scans.help    = {' '
-    'Select the images (".img" or ".nii") or a single ".mat" object containing the matrix of data with the scans in rows.'
+    'Select the images (".gii", ".img" or ".nii") or a single ".mat" object containing the matrix of data with the scans in rows.'
     'The images must all have the same image dimensions, orientation, voxel size etc.'
     'The order of images or of the rows in the matrix in the ".mat" file does not matter, but the indicator vectors "Subjects", "Visits" (only for the modified SwE) and "Groups" (only for the modified SwE) must reflect this order.'};
 scans.filter  = 'any';
-scans.ufilter = '.*(img|nii|nii.gz|mat)';
+scans.ufilter = '.*(gii|img|nii|nii.gz|mat)';
 scans.num     = [1 Inf];
 
 % ---------------------------------------------------------------------
