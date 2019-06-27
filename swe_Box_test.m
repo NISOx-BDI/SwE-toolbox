@@ -13,6 +13,32 @@ function [p,F,f1,f2] = swe_Box_test()
 % no missingness in the data. See Box (1950) for more information.
 % Written by Bryan Guillaume
 % Version Info:  $Format:%ci$ $Format:%h$
+    
+    %-Check data format
+    %--------------------------------------------------------------------------
+    [~,~,file_ext] = fileparts(SwE.xY.P{1});
+    isMat          = strcmpi(file_ext,'.mat');
+    isOctave = exist('OCTAVE_VERSION','builtin');
+
+    if ~isMat
+        isMeshData = spm_mesh_detect(SwE.xY.VY);
+        if isMeshData
+            file_ext = '.gii';
+            g        = SPM.xY.VY(1).private;
+            metadata = g.private.metadata;
+            name     = {metadata.name};
+            if any(ismember(name,'SurfaceID'))
+                metadata = metadata(ismember(name,'SurfaceID'));
+                metadata = {metadata.name, metadata.value};
+            elseif isfield(g,'faces') && ~isempty(g.faces)
+                metadata = {'SurfaceID', SPM.xY.VY(1).fname};
+            else
+                metadata = {};
+        else
+            file_ext = spm_file_ext;
+            metadata = {};
+        end
+    end
 
     %select a SwE.
     P     = cellstr(spm_select(1,'^SwE\.mat$','Select SwE.mat[s]'));
@@ -36,7 +62,7 @@ function [p,F,f1,f2] = swe_Box_test()
     A2      = (k-1)*k*(k+1)*(k+2)/(6*df^2*(k^2+k-4));
     f2      = (f1+2)/(A2-A1^2);
     coeff   = df * (1-A1-f1/f2)/f1;
-    cov_vis = spm_get_data(SwE.Vcov_vis,SwE.xVol.XYZ);
+    cov_vis = spm_data_read(SwE.Vcov_vis,'xyz',SwE.xVol.XYZ);
     p       = zeros(1,size(cov_vis,2));
     F       = zeros(1,size(cov_vis,2));
 
@@ -68,22 +94,28 @@ function [p,F,f1,f2] = swe_Box_test()
         'dt',     [16, spm_platform('bigend')],...
         'mat',    SwE.xVol.M,...
         'pinfo',  [1,0,0]',...
-        'descrip',sprintf('CS_test F-scores'));
-
+        'descrip',sprintf('CS_test F-scores'),...
+        metadata{:});
+    
+    CS_test_F = spm_data_hdr_write(CS_test_F);
+    
     CS_test_p = struct(...
         'fname',  sprintf('swe_vox_Fstat-Box_lp%s', spm_file_ext),...
         'dim',    SwE.xVol.DIM',...
         'dt',     [16, spm_platform('bigend')],...
         'mat',    SwE.xVol.M,...
         'pinfo',  [1,0,0]',...
-        'descrip',sprintf('CS_test p-values'));
+        'descrip',sprintf('CS_test p-values'),...
+        metadata{:});
+
+    CS_test_p = spm_data_hdr_write(CS_test_p);
 
     tmp           = zeros(SwE.xVol.DIM');
     Q             = cumprod([1,SwE.xVol.DIM(1:2)'])*SwE.xVol.XYZ - ...
         sum(cumprod(SwE.xVol.DIM(1:2)'));
     tmp(Q)        = F;
-    spm_write_vol(CS_test_F,tmp);
+    spm_data_write(CS_test_F,tmp);
     tmp(Q)        = p;
-    spm_write_vol(CS_test_p,tmp);
+    spm_data_write(CS_test_p,tmp);
 
 end
