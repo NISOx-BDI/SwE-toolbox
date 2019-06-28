@@ -502,18 +502,17 @@ if ~isMat
 
     %-Initialise new mask name: current mask & conditions on voxels
     %----------------------------------------------------------------------
-    disp(file_ext)
-    VM    = swe_create_vol(sprintf('swe_vox_mask%s', file_ext), DIM, M,...
-                           'swe_cp:resultant analysis mask', isMeshData);
+    VM    = swe_data_hdr_write(sprintf('swe_vox_mask%s', file_ext), DIM, M,...
+                           'swe_cp:resultant analysis mask', metadata, 'uint8');
 
     %-Initialise beta image files
     %----------------------------------------------------------------------
 
     for i = 1:nBeta
-        Vbeta(i) = swe_create_vol(sprintf('swe_vox_beta_b%02d%s',i,file_ext),...
+        Vbeta(i) = swe_data_hdr_write(sprintf('swe_vox_beta_b%02d%s',i,file_ext),...
                                   DIM, M,...
                                   sprintf('swe_cp:beta (%02d) - %s',i,xX.name{i}),...
-                                  isMeshData);
+                                  metadata);
     end
 
     %-Initialise Cov_beta image files
@@ -523,10 +522,10 @@ if ~isMat
     for i=1:nBeta
         for ii=i:nBeta
             it=it+1;
-            Vcov_beta(it) = swe_create_vol(sprintf('swe_vox_cov_b%02d_b%02d%s',i,ii,file_ext),...
+            Vcov_beta(it) = swe_data_hdr_write(sprintf('swe_vox_cov_b%02d_b%02d%s',i,ii,file_ext),...
                                            DIM, M, sprintf('cov_beta_%02d_%02d hats - %s/%s',...
                                                 i,ii,xX.name{i},xX.name{ii}),...
-                                           isMeshData);
+                                           metadata);
         end
     end
 
@@ -544,9 +543,9 @@ if ~isMat
             for ii=1:nBeta
                 for iii=ii:nBeta
                     it=it+1;
-                    Vcov_beta_g(it) = swe_create_vol([sprintf('swe_vox_cov_g%02d_b%02d_b%02d',g,ii,iii) file_ext],...
+                    Vcov_beta_g(it) = swe_data_hdr_write([sprintf('swe_vox_cov_g%02d_b%02d_b%02d',g,ii,iii) file_ext],...
                         DIM, M, sprintf('cov_beta_g_%02d_%02d_%02d hats - group %s - %s/%s',...
-                            g,ii,iii,num2str(uGr(g)),xX.name{ii},xX.name{iii}), isMeshData);
+                            g,ii,iii,num2str(uGr(g)),xX.name{ii},xX.name{iii}), metadata);
                 end
             end
         end
@@ -560,10 +559,10 @@ if ~isMat
             for ii=1:nVis_g(g)
                 for iii=ii:nVis_g(g)
                     it=it+1;
-                    Vcov_vis(it) = swe_create_vol([sprintf('swe_vox_cov_g%02d_v%02d_v%02d',g,ii,iii) file_ext],...
+                    Vcov_vis(it) = swe_data_hdr_write([sprintf('swe_vox_cov_g%02d_v%02d_v%02d',g,ii,iii) file_ext],...
                                                   DIM, M, sprintf('cov_vis_%02d_%02d_%02d hats - group %s - visits %s/%s',...
                                                        g,ii,iii,num2str(uGr(g)),num2str(uVis_g{g}(ii)),num2str(uVis_g{g}(iii))),...
-                                                       isMeshData);
+                                                       metadata);
                 end
             end
         end

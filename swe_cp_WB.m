@@ -565,13 +565,8 @@ if ~isMat
   
   %-Initialise new mask name: current mask & conditions on voxels
   %----------------------------------------------------------------------
-  VM    = struct('fname',  sprintf('swe_vox_mask%s', file_ext),...
-    'dim',    DIM',...
-    'dt',     [spm_type('uint8') spm_platform('bigend')],...
-    'mat',    M,...
-    'pinfo',  [1 0 0]',...
-    'descrip','swe_cp_WB:resultant analysis mask');
-  VM    = spm_create_vol(VM);
+  VM    = swe_data_hdr_write(sprintf('swe_vox_mask%s', file_ext), DIM, M,...
+                              'swe_cp:resultant analysis mask', metadata, 'uint8');
   
   %-Initialise beta image files
   %----------------------------------------------------------------------
@@ -591,44 +586,44 @@ if ~isMat
     eSTAT='x';
   end
   
-  Vscore = swe_create_vol(sprintf('swe_vox_%cstat_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-			  sprintf('Original parametric %c statistic data.', WB.stat));
+  Vscore = swe_data_hdr_write(sprintf('swe_vox_%cstat_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+			  sprintf('Original parametric %c statistic data.', WB.stat), metadata);
   
   %-Initialise parametric TFCE score image, if TFCE has been selected.
   %---------------------------------------------------------------------- 
   if TFCE
-    Vscore_tfce = swe_create_vol(sprintf('swe_tfce_c%02d%s', 1, file_ext), DIM, M,...
-				 'Original parametric TFCE statistic data.'); 
+    Vscore_tfce = swe_data_hdr_write(sprintf('swe_tfce_c%02d%s', 1, file_ext), DIM, M,...
+				 'Original parametric TFCE statistic data.', metadata); 
     if WB.stat=='T'
-      Vscore_tfce_neg = swe_create_vol(sprintf('swe_tfce_c%02d%s', 2, file_ext), DIM, M,...
-				       'Original parametric TFCE statistic data for a negative contrast.'); 
+      Vscore_tfce_neg = swe_data_hdr_write(sprintf('swe_tfce_c%02d%s', 2, file_ext), DIM, M,...
+				       'Original parametric TFCE statistic data for a negative contrast.', metadata); 
     end
   end
   
   %-Initialise original parametric edf image
   %----------------------------------------------------------------------
   
-  Vedf = swe_create_vol(sprintf('swe_vox_edf_c%02d%s', 1, file_ext), DIM, M,...
-			sprintf('Original parametric %c edf data.', WB.stat));
+  Vedf = swe_data_hdr_write(sprintf('swe_vox_edf_c%02d%s', 1, file_ext), DIM, M,...
+			sprintf('Original parametric %c edf data.', WB.stat), metadata);
           
   %-Initialise parametric P-Value image
   %----------------------------------------------------------------------
   
-  VlP = swe_create_vol(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-		       'Original parametric -log10(P) value data (positive).');
+  VlP = swe_data_hdr_write(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+		       'Original parametric -log10(P) value data (positive).', metadata);
   
   if WB.stat=='T'
-    VlP_Neg = swe_create_vol(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-			     'Original parametric -log10(P) value data (negative).');
+    VlP_Neg = swe_data_hdr_write(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+			     'Original parametric -log10(P) value data (negative).', metadata);
   end
   
   %-Initialise converted parametric score image
   %----------------------------------------------------------------------
-  VcScore = swe_create_vol(sprintf('swe_vox_%c%cstat_c%02d%s', eSTAT, WB.stat, 1, file_ext), DIM, M,...
-			   sprintf('Parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat));    
+  VcScore = swe_data_hdr_write(sprintf('swe_vox_%c%cstat_c%02d%s', eSTAT, WB.stat, 1, file_ext), DIM, M,...
+			   sprintf('Parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat), metadata);    
   if WB.stat=='T'
-        VcScore_neg = swe_create_vol(sprintf('swe_vox_%c%cstat_c%02d%s', eSTAT, WB.stat, 2, file_ext), DIM, M,...
-			   sprintf('Parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat));
+        VcScore_neg = swe_data_hdr_write(sprintf('swe_vox_%c%cstat_c%02d%s', eSTAT, WB.stat, 2, file_ext), DIM, M,...
+			   sprintf('Parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat), metadata);
   end
   
   %-Initialise residual images for the resampling
@@ -636,7 +631,7 @@ if ~isMat
   
   for i = 1:nScan
     descrip = sprintf('adjusted restricted residuals (%04d)', i);
-    VResWB(i) = swe_create_vol(sprintf('swe_vox_resid_y%04d%s', i, file_ext), DIM, M, descrip);
+    VResWB(i) = swe_data_hdr_write(sprintf('swe_vox_resid_y%04d%s', i, file_ext), DIM, M, descrip, metadata);
   end
   
   fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-#
@@ -646,62 +641,62 @@ if ~isMat
   
   for i = 1:nScan
     descrip = sprintf('restricted fitted data  (%04d)', i);
-    VYWB(i) = swe_create_vol(sprintf('swe_vox_fit_y%04d%s',i,file_ext), DIM, M, descrip);
+    VYWB(i) = swe_data_hdr_write(sprintf('swe_vox_fit_y%04d%s',i,file_ext), DIM, M, descrip, metadata);
   end
   
   %-Initialise result images
   %----------------------------------------------------------------------
-  VlP_wb_pos = swe_create_vol(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                              'Non-parametric voxelwise -log10(P) value data (positive).');
+  VlP_wb_pos = swe_data_hdr_write(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+                              'Non-parametric voxelwise -log10(P) value data (positive).', metadata);
 
-  VlP_wb_FWE_pos = swe_create_vol(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                                  'Non-parametric voxelwise FWE -log10(P) value data (positive).');
+  VlP_wb_FWE_pos = swe_data_hdr_write(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+                                  'Non-parametric voxelwise FWE -log10(P) value data (positive).', metadata);
   
-  VlP_wb_FDR_pos = swe_create_vol(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                                  'Non-parametric voxelwise FDR -log10(P) value data (positive).');
+  VlP_wb_FDR_pos = swe_data_hdr_write(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+                                  'Non-parametric voxelwise FDR -log10(P) value data (positive).', metadata);
 
   if WB.stat=='T'
-    VlP_wb_neg = swe_create_vol(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-				'Non-parametric voxelwise -log10(P) value data (negative).');
+    VlP_wb_neg = swe_data_hdr_write(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+				'Non-parametric voxelwise -log10(P) value data (negative).', metadata);
     
-    VlP_wb_FWE_neg = swe_create_vol(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-				    'Non-parametric voxelwise FWE -log10(P) value data (negative).');
+    VlP_wb_FWE_neg = swe_data_hdr_write(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+				    'Non-parametric voxelwise FWE -log10(P) value data (negative).', metadata);
     
-    VlP_wb_FDR_neg = swe_create_vol(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-				    'Non-parametric voxelwise FDR -log10(P) value data (negative).');
+    VlP_wb_FDR_neg = swe_data_hdr_write(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+				    'Non-parametric voxelwise FDR -log10(P) value data (negative).', metadata);
 
   end
   
   %-Initialise parametric TFCE results images, if TFCE has been selected.
   %---------------------------------------------------------------------- 
   if TFCE
-    VlP_tfce_pos = swe_create_vol(sprintf('swe_tfce_lp-WB_c%02d%s', 1, file_ext), DIM, M,...
-				  'Non-parametric TFCE -log10(P) value data (positive).'); 
-    VlP_tfce_FWE_pos = swe_create_vol(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 1, file_ext), DIM, M,...
-				      'Non-parametric TFCE FWE -log10(P) value data (positive).'); 
+    VlP_tfce_pos = swe_data_hdr_write(sprintf('swe_tfce_lp-WB_c%02d%s', 1, file_ext), DIM, M,...
+				  'Non-parametric TFCE -log10(P) value data (positive).', metadata); 
+    VlP_tfce_FWE_pos = swe_data_hdr_write(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 1, file_ext), DIM, M,...
+				      'Non-parametric TFCE FWE -log10(P) value data (positive).', metadata); 
     if WB.stat=='T'
-      VlP_tfce_neg = swe_create_vol(sprintf('swe_tfce_lp-WB_c%02d%s', 2, file_ext), DIM, M,...
-				    'Non-parametric TFCE -log10(P) value data (negative).'); 
-      VlP_tfce_FWE_neg = swe_create_vol(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 2, file_ext), DIM, M,...
-					'Non-parametric TFCE FWE -log10(P) value data (negative).');
+      VlP_tfce_neg = swe_data_hdr_write(sprintf('swe_tfce_lp-WB_c%02d%s', 2, file_ext), DIM, M,...
+				    'Non-parametric TFCE -log10(P) value data (negative).', metadata); 
+      VlP_tfce_FWE_neg = swe_data_hdr_write(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 2, file_ext), DIM, M,...
+					'Non-parametric TFCE FWE -log10(P) value data (negative).', metadata);
     end
   end
   
   % Converted score for WB.
-  VcScore_wb_pos = swe_create_vol(sprintf('swe_vox_%c%cstat-WB_c%02d%s', eSTAT, WB.stat, 1, file_ext), DIM, M,...
-                                  sprintf('Non-parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat));
+  VcScore_wb_pos = swe_data_hdr_write(sprintf('swe_vox_%c%cstat-WB_c%02d%s', eSTAT, WB.stat, 1, file_ext), DIM, M,...
+                                  sprintf('Non-parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat), metadata);
   
   if WB.clusterWise == 1
       
     % We also need cluster p value maps here.
-    VlP_wb_clusterFWE_pos = swe_create_vol(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+    VlP_wb_clusterFWE_pos = swe_data_hdr_write(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
                                            sprintf('Non-parametric clusterwise FWE -log10(P) value data (positive, CFT %g).',...
-                                                   SwE.WB.clusterInfo.primaryThreshold));
+                                                   SwE.WB.clusterInfo.primaryThreshold), metadata);
     
     if WB.stat=='T'
-      VlP_wb_clusterFWE_neg = swe_create_vol(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+      VlP_wb_clusterFWE_neg = swe_data_hdr_write(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
                                              sprintf('Non-parametric clusterwise FWE -log10(P) value data (negative, CFT %g).',...
-                                                     SwE.WB.clusterInfo.primaryThreshold));
+                                                     SwE.WB.clusterInfo.primaryThreshold), metadata);
     end
   end
   
