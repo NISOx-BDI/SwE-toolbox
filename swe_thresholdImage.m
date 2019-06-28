@@ -20,7 +20,7 @@ function swe_thresholdImage(threshold, minimumClusterSize)
   Z = spm_data_read(inputImageName, 'xyz', XYZ);
   VI.fname = fullfile(pth, [bnm '_thresholded' ext]);
   VI.descrip = [VI.descrip sprintf(' thresholdValue: %fminimumClusterSize: %i', threshold, minimumClusterSize)];
-  VI = spm_create_vol(VI);
+  VI = spm_data_hdr_write(VI);
 
   %-Calculate height threshold filtering
   %--------------------------------------------------------------------------
