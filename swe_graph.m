@@ -184,8 +184,8 @@ catch
     try
         % remap files in SPM.xY.P if SPM.xY.VY is no longer valid
         %------------------------------------------------------------------
-        SwE.xY.VY = spm_vol(SwE.xY.P);
         y = spm_get_data(SwE.xY.VY,XYZ);
+        SwE.xY.VY = spm_data_hdr_read(SwE.xY.P);
         
     catch
         % data has been moved or renamed
@@ -204,7 +204,7 @@ catch
                     spm('Pointer','Arrow');
                     return;
                 end
-                SwE.xY.VY = spm_vol(SwE.xY.P);
+                SwE.xY.VY = spm_data_hdr_read(SwE.xY.P);
                 for i = 1:numel(SwE.xY.VY)
                     SwE.xY.VY(i).pinfo(1:2,:) = ...
                         SwE.xY.VY(i).pinfo(1:2,:)*SwE.xGX.gSF(i);

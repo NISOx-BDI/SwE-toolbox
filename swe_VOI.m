@@ -154,7 +154,7 @@ switch SPACE
     else
         VM = xY.spec;
     end
-    D      = spm_vol(VM);
+    D      = spm_data_hdr_read(VM);
     if numel(D) > 1
         fprintf('Computing union of all masks.\n');
         spm_check_orientations(D);

@@ -690,8 +690,8 @@ for i = 1:numel(Im)
       if isMat
         Mask = importdata(Im{i});
       else
-        v = spm_vol(Im{i});
         Mask = spm_get_data(v,v.mat\SwE.xVol.M*[XYZ; ones(1,size(XYZ,2))]);
+        v = spm_data_hdr_read(Im{i});
       end
       Q = Mask ~= 0 & ~isnan(Mask);
       if Ex, Q = ~Q; end
@@ -1281,8 +1281,8 @@ if isfield(SwE, 'WB')
     end
     
     % Uncorrected P values.
-    Ps_vol = spm_vol(xSwE.VspmUncP);
     Ps = spm_read_vols(Ps_vol);
+    Ps_vol = spm_data_hdr_read(xSwE.VspmUncP);
     Ps = 10.^(-Ps(~isnan(Ps)));
     xSwE.Ps = Ps;
     
