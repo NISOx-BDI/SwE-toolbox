@@ -91,14 +91,30 @@ isMat          = strcmpi(file_ext,'.mat');
 isOctave = exist('OCTAVE_VERSION','builtin');
 
 if ~isMat
-    isMeshData = spm_mesh_detect(SwE.xY.VY);
-    if isMeshData
-        file_ext = '.gii';
-    else
-        file_ext = spm_file_ext;
-    end
+  isMeshData = spm_mesh_detect(SwE.xY.VY);
+  if isMeshData
+      file_ext = '.gii';
+      g        = SwE.xY.VY(1).private;
+      metadata = g.private.metadata;
+      name     = {metadata.name};
+      if any(ismember(name,'SurfaceID'))
+          metadata = metadata(ismember(name,'SurfaceID'));
+          metadata = {metadata.name, metadata.value};
+      elseif isfield(g,'faces') && ~isempty(g.faces)
+          metadata = {'SurfaceID', SwE.xY.VY(1).fname};
+      else
+          error('SurfaceID not found in GIfTI''s metadata.');
+      end
+      if isempty(spm_file(metadata{2},'path'))
+          metadata{2} = fullfile(spm_file(SwE.xY.VY(1).fname,'path'),metadata{2});
+      end
+      SwE.xVol.G = metadata{2};
+  else
+      file_ext = spm_file_ext;
+      metadata = {};
+  end
 else
-    isMeshData = false;
+  isMeshData = false;
 end
 
 %-Check whether we are doing a TFCE analysis
