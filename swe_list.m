@@ -228,13 +228,13 @@ case 'table'                                                        %-Table
     % For WB analyses we have already calculated the information for the
     % table and footer. We just need to read it in.
     if xSwE.WB
-        VspmUncP = spm_read_vols(xSwE.VspmUncP);
-        VspmFDRP = spm_read_vols(xSwE.VspmFDRP);
-        VspmFWEP = spm_read_vols(xSwE.VspmFWEP);
+        VspmUncP = spm_data_read(xSwE.VspmUncP);
+        VspmFDRP = spm_data_read(xSwE.VspmFDRP);
+        VspmFWEP = spm_data_read(xSwE.VspmFWEP);
         % If the user didn't originally select clusterwise inference,
         % clusterwise FWEP values will not have been calculated.
         if isfield(xSwE, 'VspmFWEP_clus')
-            VspmFWEP_clus = spm_read_vols(xSwE.VspmFWEP_clus);
+            VspmFWEP_clus = spm_data_read(xSwE.VspmFWEP_clus);
         else
             VspmFWEP_clus = [];
         end

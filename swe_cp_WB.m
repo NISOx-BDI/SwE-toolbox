@@ -1070,12 +1070,12 @@ if ~isMat
     if strcmp(WB.stat, 'T')
       
       % Read in T statistics to get negative and positive TFCE scores.
-      par_tfce = swe_tfce_transform(spm_read_vols(VcScore), H, E, C, dh);
-      par_tfce_neg = swe_tfce_transform(-spm_read_vols(VcScore), H, E, C, dh);
+      par_tfce = swe_tfce_transform(spm_data_read(VcScore), H, E, C, dh);
+      par_tfce_neg = swe_tfce_transform(-spm_data_read(VcScore), H, E, C, dh);
     else
       
       % Convert F statistics to Z scores.
-      scorevol=-swe_invNcdf(10.^(-spm_read_vols(VlP)));
+      scorevol=-swe_invNcdf(10.^(-spm_data_read(VlP)));
       scorevol(isnan(scorevol))=0;
           
       % Convert to TFCE.

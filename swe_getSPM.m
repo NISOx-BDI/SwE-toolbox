@@ -1281,8 +1281,8 @@ if isfield(SwE, 'WB')
     end
     
     % Uncorrected P values.
-    Ps = spm_read_vols(Ps_vol);
     Ps_vol = spm_data_hdr_read(xSwE.VspmUncP);
+    Ps = spm_data_read(Ps_vol);
     Ps = 10.^(-Ps(~isnan(Ps)));
     xSwE.Ps = Ps;
     
