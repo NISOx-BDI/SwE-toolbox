@@ -17,7 +17,7 @@ function swe_thresholdImage(threshold, minimumClusterSize)
   XYZ = inv(VI.mat) * [XYZ; ones(1,VI.dim(1)*VI.dim(2)*VI.dim(3))];
   XYZ = round(XYZ(1:3,:));
 
-  Z = spm_get_data(inputImageName, XYZ);
+  Z = spm_data_read(inputImageName, 'xyz', XYZ);
   VI.fname = fullfile(pth, [bnm '_thresholded' ext]);
   VI.descrip = [VI.descrip sprintf(' thresholdValue: %fminimumClusterSize: %i', threshold, minimumClusterSize)];
   VI = spm_create_vol(VI);

@@ -179,13 +179,13 @@ spm('Pointer','Watch');
 %-Extract filtered and whitened data from files
 %==========================================================================
 try
-    y = spm_get_data(SwE.xY.VY,XYZ);
+    y = spm_data_read(SwE.xY.VY, 'xyz', XYZ);
 catch
     try
         % remap files in SPM.xY.P if SPM.xY.VY is no longer valid
         %------------------------------------------------------------------
-        y = spm_get_data(SwE.xY.VY,XYZ);
         SwE.xY.VY = spm_data_hdr_read(SwE.xY.P);
+        y = spm_data_read(SwE.xY.VY, 'xyz', XYZ);
         
     catch
         % data has been moved or renamed
@@ -209,10 +209,10 @@ catch
                     SwE.xY.VY(i).pinfo(1:2,:) = ...
                         SwE.xY.VY(i).pinfo(1:2,:)*SwE.xGX.gSF(i);
                 end
-                y = spm_get_data(SwE.xY.VY,XYZ);
+                y = spm_data_read(SwE.xY.VY, 'xyz', XYZ);
             case 'Search'
                 SwE.xY.VY = spm_check_filename(SwE.xY.VY);
-                y = spm_get_data(SwE.xY.VY,XYZ);
+                y = spm_data_read(SwE.xY.VY, 'xyz', XYZ);
             otherwise
                 y = [];
         end

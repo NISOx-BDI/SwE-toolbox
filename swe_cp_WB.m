@@ -812,7 +812,7 @@ if ~isMat
         %-Load mask image within current mask & update mask
         %--------------------------------------------------------------
 
-        Cm(Cm) = spm_get_data(xM.VM(i),j(:,Cm),false) > 0;
+        Cm(Cm) = spm_data_read(xM.VM(i), 'xyz', j(:,Cm)) > 0;
 
       end
       
@@ -824,7 +824,7 @@ if ~isMat
         %-Load data in mask
         %--------------------------------------------------------------
         if ~any(Cm), break, end                %-Break if empty mask
-        Y(i,Cm)  = spm_get_data(VY(i),xyz(:,Cm),false);
+        Y(i,Cm)  = spm_data_read(VY(i), 'xyz', xyz(:,Cm));
         
         Cm(Cm)   = Y(i,Cm) > xM.TH(i);         %-Threshold (& NaN) mask
         if xM.I && ~YNaNrep && xM.TH(i) < 0    %-Use implicit mask
@@ -1551,7 +1551,7 @@ if isMat
   originalScore = score;
   clear score;
 else
-  originalScore = spm_get_data(Vscore, XYZ);
+  originalScore = spm_data_read(Vscore, 'xyz', XYZ);
   % # blocks
   blksz  = ceil(mmv);                             %-block size
   nbch   = ceil(S/ blksz);          
@@ -1627,8 +1627,8 @@ for b = 1:WB.nB
       end
       fprintf('%s%-40s: %1s',str2,str,' ');
       
-      Y_b = spm_get_data(VYWB, XYZ(:,index),false) + ...
-        spm_get_data(VResWB, XYZ(:,index),false) .* repmat(resamplingMatrix(:,b),1,blksz);
+      Y_b = spm_data_read(VYWB, 'xyz', XYZ(:,index)) + ...
+      spm_data_read(VResWB, 'xyz', XYZ(:,index)) .* repmat(resamplingMatrix(:,b),1,blksz);
       
       beta  = pX * Y_b;                     %-Parameter estimates
       if WB.RSwE == 0

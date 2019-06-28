@@ -674,7 +674,7 @@ if ~isMat
 
                 %-Load mask image within current mask & update mask
                 %--------------------------------------------------------------
-                Cm(Cm) = spm_get_data(xM.VM(i),j(:,Cm),false) > 0;
+                Cm(Cm) = spm_data_read(xM.VM(i), 'xyz', j(:,Cm)) > 0;
               else
                 if spm_mesh_detect(xM.VM(i))
                   v = xM.VM(i).private.cdata() > 0;
@@ -694,7 +694,7 @@ if ~isMat
                 %-Load data in mask
                 %--------------------------------------------------------------
                 if ~any(Cm), break, end                %-Break if empty mask
-                Y(i,Cm)  = spm_get_data(VY(i),xyz(:,Cm),false);
+                Y(i,Cm)  = spm_data_read(VY(i), 'xyz', xyz(:,Cm));
 
                 Cm(Cm)   = Y(i,Cm) > xM.TH(i);         %-Threshold (& NaN) mask
                 if xM.I && ~YNaNrep && xM.TH(i) < 0    %-Use implicit mask
@@ -929,7 +929,7 @@ if ~isMat
         %----------------------------------------------------------------------
         fprintf('Loading the visit covariance for the SwE computation...'); %-#
 
-        Cov_vis = spm_get_data(Vcov_vis,XYZ);
+        Cov_vis = spm_data_read(Vcov_vis, 'xyz', XYZ);
 
         %- Spatial regularization of the visit covariance if required
         %----------------------------------------------------------------------

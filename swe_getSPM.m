@@ -651,7 +651,7 @@ for i = Ic
     Z = min(Z,equivalentScore);
     clear equivalentScore
   else
-    Z = min(Z,spm_get_data(xCon(i).Vspm,XYZ));
+    Z = min(Z, spm_data_read(xCon(i).Vspm, 'xyz', XYZ));
   end
       
 end
@@ -673,7 +673,7 @@ for i = 1:numel(Im)
         Mask = equivalentScore;
         clear equivalentScore
       else
-        Mask = spm_get_data(xCon(Im(i)).Vspm,XYZ);
+        Mask = spm_data_read(xCon(Im(i)).Vspm, 'xyz', XYZ);
       end
       switch xCon(Im(i)).STAT
         case 'T'
@@ -690,8 +690,8 @@ for i = 1:numel(Im)
       if isMat
         Mask = importdata(Im{i});
       else
-        Mask = spm_get_data(v,v.mat\SwE.xVol.M*[XYZ; ones(1,size(XYZ,2))]);
         v = spm_data_hdr_read(Im{i});
+        Mask = spm_data_read(v, 'xyz', v.mat\SwE.xVol.M*[XYZ; ones(1,size(XYZ,2))]);
       end
       Q = Mask ~= 0 & ~isnan(Mask);
       if Ex, Q = ~Q; end
@@ -881,7 +881,7 @@ if ~isMat
                   end
                   thresDesc = ['p<' num2str(pu) ' (' thresDesc ')'];
                   
-                  FWE_ps = 10.^-spm_get_data(xCon(Ic).VspmFWEP,XYZum);
+                  FWE_ps = 10.^-spm_data_read(xCon(Ic).VspmFWEP,'xyz', XYZ);
                   
                   Q      = find(FWE_ps  < pu);
                   
@@ -904,7 +904,7 @@ if ~isMat
                   end
                   thresDesc = ['p<' num2str(pu) ' (' thresDesc ')'];
 
-                  FDR_ps = 10.^-spm_get_data(xCon(Ic).VspmFDRP,XYZum);
+                  FDR_ps = 10.^-spm_data_read(xCon(Ic).VspmFDRP, 'xyz', XYZ);
                                     
                   % Obtain statistic threshold
                   switch STAT
@@ -1050,7 +1050,7 @@ if ~isMat
           thresDesc = ['p<' num2str(pt) ' (FWE)'];
           
           % Get Tfce Fwe P-values.
-          tfp = 10.^-spm_get_data(xCon(Ic).VspmTFCEFWEP,XYZ);
+          tfp = 10.^-spm_data_read(xCon(Ic).VspmTFCEFWEP, 'xyz', XYZ);
           
           up  = NaN;
           Pp  = NaN;
