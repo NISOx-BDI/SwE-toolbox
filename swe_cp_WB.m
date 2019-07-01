@@ -103,7 +103,7 @@ end
 
 %-Check whether the WB p-values are based on the param. X or Z (or on the raw T or F) 
 %--------------------------------------------------------------------------
-isWbBasedOnParamXOrZ = isfield(SwE.WB, 'isWbBasedOnParamXOrZ') && SwE.WB.isWbBasedOnParamXOrZ;
+isWbBasedOnParamXOrZ = true;
 
 %-Check whether we are doing a TFCE analysis
 %--------------------------------------------------------------------------

@@ -966,7 +966,7 @@ WB_isWbBasedOnParamXOrZ.help    = {  ' '
 WB_clusterwise         = cfg_branch;
 WB_clusterwise.tag     = 'WB_yes';
 WB_clusterwise.name    = 'Yes';
-WB_clusterwise.val     = {WB_ss WB_nB WB_SwE WB_stat WB_isWbBasedOnParamXOrZ WB_infType};
+WB_clusterwise.val     = {WB_ss WB_nB WB_SwE WB_stat WB_infType};
 WB_clusterwise.help    = {''
                      'A non-parametric Wild Bootstrap procedure is considered to analyse the data (see Guillaume, 2015)'
 }';
