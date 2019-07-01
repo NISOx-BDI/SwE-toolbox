@@ -716,6 +716,10 @@ if ~isMat
   k   = 0;           % extent threshold {voxels}
   clustWise = 'None';% Type of clusterwise inference to be performed
 
+  if  spm_mesh_detect(xCon(Ic(1)).Vspm)
+    G = export(gifti(SwE.xVol.G),'patch');
+  end
+
   %-Height threshold - classical inference
   %--------------------------------------------------------------------------
   if STAT ~= 'P'
@@ -1097,7 +1101,14 @@ if ~isMat
 
               %-Calculate extent threshold filtering
               %----------------------------------------------------------------------
-              A     = spm_clusters(XYZ);
+              if  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
+                A = spm_clusters(XYZ);
+              else
+                T = false(SwE.xVol.DIM');
+                T(XYZ(1,:)) = true;
+                A = spm_mesh_clusters(G,T)';
+                A = A(XYZ(1,:));
+              end
               Q     = [];
               for i = 1:max(A)
                   j = find(A == i);
@@ -1330,6 +1341,13 @@ try
     xSwE.units = SwE.xVol.units;
 catch
     try, xSwE.units = varargin{1}.units; end
+end
+
+%-Topology for surface-based inference
+%--------------------------------------------------------------------------
+if spm_mesh_detect(xCon(Ic(1)).Vspm)
+  xSwE.G     = G;
+  xSwE.XYZmm = xSwE.G.vertices(xSwE.XYZ(1,:),:)';
 end
 
 %-p-values for topological and voxel-wise FDR
