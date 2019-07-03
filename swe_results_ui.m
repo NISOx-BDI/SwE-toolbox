@@ -1218,7 +1218,7 @@ xSwE2.pm    = xSwE.pm;
 xSwE2.Ex    = xSwE.Ex;
 xSwE2.title = '';
 if ~isempty(xSwE.thresDesc)
-    td = regexp(xSwE.thresDesc,'p\D?(?<u>[\.\d]+) \((?<thresDesc>\S+)\)','names');
+    td = regexp(xSwE.thresDesc,'p\D+?(?<u>[\.\d]+) \((?<thresDesc>\S+)\)','names');
     if isempty(td)
         td = regexp(xSwE.thresDesc,'\w=(?<u>[\.\d]+)','names');
         td.thresDesc = 'none';
