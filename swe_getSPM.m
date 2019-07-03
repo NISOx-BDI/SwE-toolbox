@@ -259,6 +259,15 @@ end
 [~,~,file_ext] = fileparts(SwE.xY.P{1});
 isMat          = strcmpi(file_ext,'.mat');
 
+if ~isMat
+  isMeshData = spm_mesh_detect(SwE.xY.VY);
+  if isMeshData
+      file_ext = '.gii';
+  else
+      file_ext = spm_file_ext;
+  end
+end
+
 xX   = SwE.xX;                      %-Design definition structure
 XYZ  = SwE.xVol.XYZ;                %-XYZ coordinates
 S    = SwE.xVol.S;                  %-search Volume {voxels}
@@ -296,7 +305,20 @@ end
 %-Get contrasts
 %--------------------------------------------------------------------------
 try
-  xCon = SwE.xCon; 
+  xCon = SwE.xCon;
+  % check if the Uncorrected p-value image is correctly set to the non-parametric version for WB (for retro-compatibility)
+  if isfield(SwE, 'WB') && ~exist('OCTAVE_VERSION','builtin') && ~contains(xCon(1).VspmUncP.fname, '-WB')
+    for i = 1:numel(xCon)
+      SwE.xCon(i).VspmUncP = spm_vol(sprintf('swe_vox_%cstat_lp%s_c%.2d%s', SwE.WB.stat, '-WB', i, file_ext));
+    end
+    % save the modified SwE.mat
+    if spm_check_version('matlab','7') >=0
+      save('SwE.mat', 'SwE', '-V6');
+    else
+      save('SwE.mat', 'SwE');
+    end
+    xCon = SwE.xCon; 
+  end
 catch
   if isfield(SwE, 'WB') && ~exist('OCTAVE_VERSION','builtin')
     SwE = swe_contrasts_WB(SwE);
