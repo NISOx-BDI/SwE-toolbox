@@ -914,7 +914,7 @@ if ~isMat
                   catch
                       pu = spm_input('p value (FDR)','+0','r',0.05,1,[0,1]);
                   end
-                  thresDesc = ['p<' num2str(pu) ' (' thresDesc ')'];
+                  thresDesc = ['p<=' num2str(pu) ' (' thresDesc ')'];
                   
                   % select the WB FDR p-values within the mask
                   FDR_ps = 10.^-spm_get_data(xCon(Ic).VspmFDRP,XYZ);
@@ -923,8 +923,8 @@ if ~isMat
                   % Thus, setting it to NaN
                   u = NaN
                   
-                  % exclusive thresholding like in SPM
-                  Q = find(FDR_ps < pu);
+                  % inclusive thresholding for WB
+                  Q = find(FDR_ps - tol < pu);
 
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
                   % This should be performed on the uncorrected WB p-values
@@ -934,7 +934,7 @@ if ~isMat
                   catch
                       pu = spm_input(['threshold {p value}'],'+0','r',0.001,1,[0,1]);
                   end
-                  thresDesc = ['p<' num2str(pu) ' (unc.)'];
+                  thresDesc = ['p<=' num2str(pu) ' (unc.)'];
                   % select the WB unc. p-values within the mask
                   unc_ps = 10.^-spm_get_data(xCon(Ic).VspmP,XYZ);
 
@@ -942,8 +942,8 @@ if ~isMat
                   % Thus, setting it to NaN
                   u = NaN
                   
-                  % exclusive thresholding like in SPM
-                  Q = find(unc_ps < pu);
+                  % inclusive thresholding for WB
+                  Q = find(unc_ps - tol < pu);
 
               otherwise
                   %--------------------------------------------------------------
@@ -1025,7 +1025,7 @@ if ~isMat
                   catch
                       pu = spm_input(['threshold {p value}'],'+0','r',0.001,1,[0,1]);
                   end
-                  thresDesc = ['p<' num2str(pu) ' (unc.)'];
+                  thresDesc = ['p<=' num2str(pu) ' (unc.)'];
                   % select the WB unc. p-values within the mask
                   unc_ps = 10.^-spm_get_data(xCon(Ic).VspmP,XYZ);
   
@@ -1033,8 +1033,8 @@ if ~isMat
                   % Thus, setting it to NaN
                   u = NaN
                   
-                  % exclusive thresholding like in SPM
-                  Q = find(unc_ps < pu);
+                  % inclusive thresholding for WB
+                  Q = find(unc_ps - tol < pu);
                   
                   up  = NaN;
                   Pp  = NaN;
