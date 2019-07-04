@@ -419,8 +419,16 @@ switch lower(Action), case 'setup'                         %-Set up results
     if ~isfield(xSwE, 'TFCEthresh') || ~xSwE.TFCEthresh
         try
             thresDesc = xSwE.thresDesc;
+            td = regexp(xSwE.thresDesc,'p\D+?(?<u>[\.\d]+) \((?<thresDesc>\S+)\)','names');
             if ~strcmp(xSwE.thresDesc, 'none') && ~isempty(xSwE.thresDesc)
-                text(0,12,sprintf('Height threshold %c = %0.6f  {%s}',eSTAT,xSwE.u,thresDesc),'Parent',hResAx)
+              % Do not show height threshold if unc or FDR voxel-wise WB threshold
+              if isfield(xSwE, 'WB') && xSwE.WB && ~strcmp(td.thresDesc, 'FWE') % (voxel-wise WB inference)
+                text(0,12,sprintf('Wild Bootstrap p-value threshold %s',thresDesc),'Parent',hResAx)
+              elseif isfield(xSwE, 'WB') && xSwE.WB && xSwE.infType == 0 && strcmp(td.thresDesc, 'FWE')
+                text(0,12,sprintf('Wild Bootstrap height threshold %c > %0.6f  {%s}',eSTAT,xSwE.u,thresDesc),'Parent',hResAx)
+              else
+                text(0,12,sprintf('Height threshold %c = %0.6f  {%s}',eSTAT,xSwE.u,thresDesc),'Parent',hResAx)               
+              end
             else
                 text(0,12,sprintf('Height threshold %c = %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
             end
@@ -428,9 +436,9 @@ switch lower(Action), case 'setup'                         %-Set up results
             text(0,12,sprintf('Height threshold %c = %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
         end
         if strcmp(xSwE.clustWise, 'FWE') 
-            text(0,00,sprintf('Extent threshold k = %0.0f voxels {p<%0.3f (FWE)}',xSwE.k, xSwE.fwep_c), 'Parent',hResAx)
+            text(0,00,sprintf('Extent threshold k > %0.0f voxels {p<=%0.3f (FWE)}',xSwE.k, xSwE.fwep_c), 'Parent',hResAx)
         else
-            text(0,00,sprintf('Extent threshold k = %0.0f voxels',xSwE.k), 'Parent',hResAx)
+            text(0,00,sprintf('Extent threshold k >= %0.0f voxels',xSwE.k), 'Parent',hResAx)
         end
         try
             WB = xSwE.WB;
