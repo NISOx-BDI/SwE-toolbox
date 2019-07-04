@@ -101,10 +101,6 @@ else
     isMeshData = false;
 end
 
-%-Check whether the WB p-values are based on the param. X or Z (or on the raw T or F) 
-%--------------------------------------------------------------------------
-isWbBasedOnParamXOrZ = true;
-
 %-Check whether we are doing a TFCE analysis
 %--------------------------------------------------------------------------
 TFCE = isfield(SwE.WB, 'TFCE');
@@ -947,12 +943,8 @@ if ~isMat
             edf = hyptest.positive.edf;
           end
 
-          % if the voxelwise WB p-values are based on the parametric X or Z scores, use them instead of the raw T or F 
-          if (isWbBasedOnParamXOrZ)
-            minScore(1) = min(minScore(1), min(hyptest.positive.conScore));
-          else          
-            minScore(1) = min(minScore(1), min(score));
-          end
+          minScore(1) = min(minScore(1), min(hyptest.positive.conScore));
+
           
         else
           % need to loop at every voxel
@@ -979,12 +971,7 @@ if ~isMat
           end
         end
         
-        % if the voxelwise WB p-values are based on the parametric X or Z scores, use them instead of the raw T or F 
-        if (isWbBasedOnParamXOrZ)
-          maxScore(1) = max(maxScore(1), max(hyptest.positive.conScore));
-        else
-          maxScore(1) = max(maxScore(1), max(score));
-        end
+        maxScore(1) = max(maxScore(1), max(hyptest.positive.conScore));
 
         %-Save betas etc. for current plane as we go along
         %----------------------------------------------------------
@@ -1316,12 +1303,7 @@ else % ".mat" format
         clear CovcCovBc cCovBc
       end
          
-      % if the voxelwise WB p-values are based on the parametric X or Z scores, use them instead of the raw T or F 
-      if (isWbBasedOnParamXOrZ)
-        minScore(1) = min(hyptest.positive.conScore);
-      else
-        minScore(1) = min(score);
-      end
+      minScore(1) = min(hyptest.positive.conScore);
       
       if TFCE
 	%%%% TODO: T (MAKE SCORE)
@@ -1356,12 +1338,7 @@ else % ".mat" format
       
     end
 
-    % if the voxelwise WB p-values are based on the parametric X or Z scores, use them instead of the raw T or F 
-    if (isWbBasedOnParamXOrZ)
-      maxScore(1) = max(hyptest.positive.conScore);
-    else
-      maxScore(1) = max(score);
-    end
+    maxScore(1) = max(hyptest.positive.conScore);
     
   end % (CrS)
   M           = [];
@@ -1576,18 +1553,10 @@ resamplingMatrix(resamplingMatrix == 0) = -1;
 
 % load original score
 if isMat
-  if isWbBasedOnParamXOrZ
-    originalScore = hyptest.positive.conScore;
-  else
-    originalScore = score;
-  end
+  originalScore = hyptest.positive.conScore;
   clear score;
 else
-  if isWbBasedOnParamXOrZ
-    originalScore = spm_get_data(VcScore, XYZ);
-  else
-    originalScore = spm_get_data(Vscore, XYZ);
-  end
+  originalScore = spm_get_data(VcScore, XYZ);
   % # blocks
   blksz  = ceil(mmv);                             %-block size
   nbch   = ceil(S/ blksz);          
@@ -1743,10 +1712,7 @@ for b = 1:WB.nB
         
       end
       
-      % hypothesis testing if needed
-      if isWbBasedOnParamXOrZ || WB.clusterWise == 1
-        hyptest=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
-      end
+      hyptest=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
 
       if (WB.clusterWise == 1)
         activatedVoxels(index) = hyptest.positive.activatedVoxels;
@@ -1756,18 +1722,10 @@ for b = 1:WB.nB
         clear cCovBc
       end
 
-      if isWbBasedOnParamXOrZ 
-        uncP(index) = uncP(index) + (hyptest.positive.conScore > originalScore(index) - tol);
-        maxScore(b+1) = max(maxScore(b+1), max(hyptest.positive.conScore));
-        if (SwE.WB.stat == 'T')
-          minScore(b+1) = min(minScore(b+1), min(hyptest.positive.conScore));
-        end     
-      else
-        uncP(index) = uncP(index) + (score > originalScore(index) - tol);   
-        maxScore(b+1) = max(maxScore(b+1), max(score));
-        if (SwE.WB.stat == 'T')
-          minScore(b+1) = min(minScore(b+1), min(score));
-        end
+      uncP(index) = uncP(index) + (hyptest.positive.conScore > originalScore(index) - tol);
+      maxScore(b+1) = max(maxScore(b+1), max(hyptest.positive.conScore));
+      if (SwE.WB.stat == 'T')
+        minScore(b+1) = min(minScore(b+1), min(hyptest.positive.conScore));
       end
       
       % Calculate TFCE uncorrected p image.
@@ -1914,10 +1872,7 @@ for b = 1:WB.nB
       score = score / rankCon;     
     end
     
-    % hypothesis testing if needed
-    if isWbBasedOnParamXOrZ || WB.clusterWise == 1
-      hyptest=swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);      
-    end
+    hyptest=swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);      
 
     if (WB.clusterWise == 1)
       activatedVoxels = hyptest.positive.activatedVoxels;
@@ -1927,19 +1882,11 @@ for b = 1:WB.nB
       clear cCovBc
     end
 
-    if isWbBasedOnParamXOrZ 
-      uncP = uncP + (hyptest.positive.conScore > originalScore - tol);
-      maxScore(b+1) = max(hyptest.positive.conScore);
-      if (SwE.WB.stat == 'T')
-        minScore(b+1) = min(hyptest.positive.conScore);
-      end     
-    else
-      uncP = uncP + (score > originalScore - tol); 
-      maxScore(b+1) = max(score);
-      if (SwE.WB.stat == 'T')
-        minScore(b+1) = min(score);
-      end
-    end  
+    uncP = uncP + (hyptest.positive.conScore > originalScore - tol);
+    maxScore(b+1) = max(hyptest.positive.conScore);
+    if (SwE.WB.stat == 'T')
+      minScore(b+1) = min(hyptest.positive.conScore);
+    end     
     
   end
   
