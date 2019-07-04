@@ -908,7 +908,7 @@ if ~isMat
                   catch
                       pu = spm_input('p value (FWE)','+0','r',0.05,1,[0,1]);
                   end
-                  thresDesc = ['p=<' num2str(pu) ' (' thresDesc ')'];
+                  thresDesc = ['p<=' num2str(pu) ' (' thresDesc ')'];
                   
                   FWE_ps = 10.^-spm_get_data(xCon(Ic).VspmFWEP,XYZ);
                   
