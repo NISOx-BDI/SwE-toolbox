@@ -926,7 +926,7 @@ if ~isMat
                   else
                     error("Unknown contrast");
                   end
-                  u = maxScore( ceil( (1-pu) * (xSwE.nB+1) ) );
+                  u = maxScore( ceil( (1-pu) * (SwE.WB.nB+1) ) );
 
               case 'FDR' % False discovery rate
                   % This is performed on the FDR P value map
@@ -1181,7 +1181,7 @@ if ~isMat
               else
                 error("Unknown contrast");
               end
-              k = maxClusterSize( ceil( (1-fwep_c) * (xSwE.nB+1) ) );
+              k = maxClusterSize( ceil( (1-fwep_c) * (SwE.WB.nB+1) ) );
 
           end
 
