@@ -367,19 +367,27 @@ case 'table'                                                        %-Table
      % Number of `extra` lines inserted that don't have to be present in
      % every display
      exlns           = 0;
-     
-     % Record height thresholds.
-     if ~isfield(xSwE, 'TFCEthresh') || ~xSwE.TFCEthresh
-         TabDat.ftr{1,1} = ...
-              ['Threshold: Height ' eSTAT ' = %0.2f, p = %0.3f; Extent k = %0.0f voxels.'];
-         TabDat.ftr{1,2} = [u,Pz,k];
-     else
-         TabDat.ftr{1,1} = 'Threshold: TFCE %s';
-         TabDat.ftr{1,2} = xSwE.thresDesc;
-     end
-     
+
      if xSwE.WB
-     
+        % Record thresholds.
+        if ~isfield(xSwE, 'TFCEthresh') || ~xSwE.TFCEthresh
+            td = regexp(xSwE.thresDesc,'p\D+?(?<u>[\.\d]+) \((?<thresDesc>\S+)\)','names');
+            if strcmpr(td.thresDesc, 'FWE')
+              TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p >= %0.3f (FWE); Extent k >= %0.0f voxels.'];;
+              TabDat.ftr{1,2} = [u, td.u, k];
+            elseif strcmpr(td.thresDesc, 'FDR')
+              TabDat.ftr{1,1} = ['Threshold: p >= %0.3f (FDR); Extent k >= %0.0f voxels.'];;
+              TabDat.ftr{1,2} = [td.u, k];
+            elseif strcmpr(td.thresDesc, 'Unc.')
+              TabDat.ftr{1,1} = ['Threshold: p >= %0.3f (Unc.); Extent k >= %0.0f voxels.'];;
+              TabDat.ftr{1,2} = [td.u, k];
+            else
+              error('Unknown inference type detected')
+            end
+        else
+            TabDat.ftr{1,1} = 'Threshold: TFCE %s';
+            TabDat.ftr{1,2} = xSwE.thresDesc;
+        end
         % We need the P uncorrected P values to be in the correct form to
         % use spm_uc_FDR.
         Ts = spm_data_read(xSwE.VspmUncP);
@@ -403,7 +411,10 @@ case 'table'                                                        %-Table
             TabDat.ftr{2,2} = [xSwE.Pfv, FDRp_05];
         end
      else
-         
+        % Record height thresholds.
+        TabDat.ftr{1,1} = ...
+        ['Threshold: Height ' eSTAT ' = %0.2f, p = %0.3f; Extent k = %0.0f voxels.'];
+        TabDat.ftr{1,2} = [u,Pz,k];         
         % Record FDR p value.
         TabDat.ftr{2,1} = ...
              'vox P(5%% FDR): %0.3f';
