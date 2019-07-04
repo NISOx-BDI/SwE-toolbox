@@ -425,7 +425,7 @@ case 'table'                                                        %-Table
          end
 
          % Record visits per group.
-         nVisitsString = 'Number of visits ([Mn Max]): ';
+         nVisitsString = 'Number of visits ([Min Max]): ';
          nVisitsNumbers = [];
          for i = 1:length(xSwE.max_nVis_g)
              nVisitsString = [nVisitsString '[%0.0f %0.0f]'];
