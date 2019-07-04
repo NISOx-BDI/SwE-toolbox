@@ -598,21 +598,25 @@ case 'table'                                                        %-Table
 %                 Qp  = [];
 %             end
 %         else
-            switch STATe
-                case 'Z'
-                  try
-                    Pz      = normcdf(-U);
-                  catch
-                    Pz      = spm_Ncdf(-U);
-                  end
-                case 'X'
-                  try
-                    Pz      = 1-chi2cdf(U,1);
-                  catch 
-                    Pz      = 1-spm_Xcdf(U,1);
-                  end
+            if ~xSwE.WB
+              switch STATe
+                  case 'Z'
+                    try
+                      Pz      = normcdf(-U);
+                    catch
+                      Pz      = spm_Ncdf(-U);
+                    end
+                  case 'X'
+                    try
+                      Pz      = 1-chi2cdf(U,1);
+                    catch 
+                      Pz      = 1-spm_Xcdf(U,1);
+                    end
+              end
+            else
+              Pz = 10.^-VspmUncP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
             end
-            
+
             % If we are not running a wild bootstrap or we are doing a 
             % small volume correction we need to calculate the FDR P value
             % and leave the other values blank.
@@ -714,7 +718,7 @@ case 'table'                                                        %-Table
                     % results we calculated earlier.
                     else
                         
-                        Pz      = spm_Ncdf(-Z(d));
+                        Pz      = 10.^-VspmUncP(XYZ(1,d),XYZ(2,d),XYZ(3,d));
                         Pu      = 10.^-VspmFWEP(XYZ(1,d),XYZ(2,d),XYZ(3,d));
                         Qu      = 10.^-VspmFDRP(XYZ(1,d),XYZ(2,d),XYZ(3,d));
                         ws     = warning('off','SPM:outOfRangeNormal');
