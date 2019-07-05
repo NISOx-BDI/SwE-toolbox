@@ -2279,6 +2279,8 @@ else
   
 end
 
+% save the version number of the toolbox
+SwE.ver = swe('ver');
 
 %==========================================================================
 %- E N D: Cleanup GUI
