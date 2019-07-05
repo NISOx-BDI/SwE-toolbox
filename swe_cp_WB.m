@@ -2279,8 +2279,6 @@ else
   
 end
 
-% add a flag indicating that the WB analysis was done based on Z or X scores instead of T or F (like in older analyses)
-SwE.WB.isWbBasedOnParamXOrZ = true;
 
 %==========================================================================
 %- E N D: Cleanup GUI
