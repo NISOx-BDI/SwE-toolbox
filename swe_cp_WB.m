@@ -157,7 +157,7 @@ for i = 1:length(files)
 end
 
 % Tolerance for comparing real numbers
-tol = 1e-4;
+tol = 1e-4;	
 
 %==========================================================================
 % - A N A L Y S I S   P R E L I M I N A R I E S
@@ -942,8 +942,9 @@ if ~isMat
             negp = hyptest.negative.p;
             edf = hyptest.positive.edf;
           end
-          
-          minScore(1) = min(minScore(1), min(score));
+
+          minScore(1) = min(minScore(1), min(hyptest.positive.conScore));
+
           
         else
           % need to loop at every voxel
@@ -970,8 +971,8 @@ if ~isMat
           end
         end
         
-        maxScore(1) = max(maxScore(1), max(score));
-        
+        maxScore(1) = max(maxScore(1), max(hyptest.positive.conScore));
+
         %-Save betas etc. for current plane as we go along
         %----------------------------------------------------------
         CrYWB             = [CrYWB,    YWB]; %#ok<AGROW>
@@ -981,11 +982,11 @@ if ~isMat
         Credf             = [Credf,    hyptest.positive.edf]; %#ok<AGROW> 
         CrBl              = [CrBl,    beta]; %#ok<AGROW>
         if (SwE.WB.stat == 'T')
-	  CrConScore      = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
-	  CrPNeg          = [CrPNeg,   -log10(hyptest.negative.p)]; %#ok<AGROW>
+	        CrConScore      = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
+	        CrPNeg          = [CrPNeg,   -log10(hyptest.negative.p)]; %#ok<AGROW>
         end
         if(SwE.WB.stat == 'F')
-	  CrConScore    = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
+	        CrConScore    = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
         end
         
       end % (CrS)
@@ -1301,8 +1302,8 @@ else % ".mat" format
         edf = hyptest.positive.edf;
         clear CovcCovBc cCovBc
       end
-      
-      minScore(1) = min(score);
+         
+      minScore(1) = min(hyptest.positive.conScore);
       
       if TFCE
 	%%%% TODO: T (MAKE SCORE)
@@ -1336,7 +1337,8 @@ else % ".mat" format
       end
       
     end
-    maxScore(1) = max(score);
+
+    maxScore(1) = max(hyptest.positive.conScore);
     
   end % (CrS)
   M           = [];
@@ -1551,10 +1553,10 @@ resamplingMatrix(resamplingMatrix == 0) = -1;
 
 % load original score
 if isMat
-  originalScore = score;
+  originalScore = hyptest.positive.conScore;
   clear score;
 else
-  originalScore = spm_get_data(Vscore, XYZ);
+  originalScore = spm_get_data(VcScore, XYZ);
   % # blocks
   blksz  = ceil(mmv);                             %-block size
   nbch   = ceil(S/ blksz);          
@@ -1710,20 +1712,20 @@ for b = 1:WB.nB
         
       end
       
-      % hypothesis test
+      hyptest=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
+
       if (WB.clusterWise == 1)
-        hyptest=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
         activatedVoxels(index) = hyptest.positive.activatedVoxels;
         if (WB.stat == 'T')
           activatedVoxelsNeg(index) = hyptest.negative.activatedVoxels;
         end
         clear cCovBc
       end
-      uncP(index) = uncP(index) + (score > originalScore(index) - tol);
-          
-      maxScore(b+1) = max(maxScore(b+1), max(score));
+
+      uncP(index) = uncP(index) + (hyptest.positive.conScore > originalScore(index) - tol);
+      maxScore(b+1) = max(maxScore(b+1), max(hyptest.positive.conScore));
       if (SwE.WB.stat == 'T')
-         minScore(b+1) = min(score);
+        minScore(b+1) = min(minScore(b+1), min(hyptest.positive.conScore));
       end
       
       % Calculate TFCE uncorrected p image.
@@ -1870,22 +1872,21 @@ for b = 1:WB.nB
       score = score / rankCon;     
     end
     
-    % hypothesis test
+    hyptest=swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);      
+
     if (WB.clusterWise == 1)
-      hyptest=swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);
       activatedVoxels = hyptest.positive.activatedVoxels;
       if (WB.stat == 'T')
           activatedVoxelsNeg = hyptest.negative.activatedVoxels;
       end
       clear cCovBc
     end
-    uncP = uncP + (score > originalScore - tol); 
-    
-    maxScore(b+1) = max(score);
+
+    uncP = uncP + (hyptest.positive.conScore > originalScore - tol);
+    maxScore(b+1) = max(hyptest.positive.conScore);
     if (SwE.WB.stat == 'T')
-      minScore(b+1) = min(score);
-    end
-        
+      minScore(b+1) = min(hyptest.positive.conScore);
+    end     
     
   end
   
@@ -2282,7 +2283,10 @@ else
   end
   
 end
-      
+
+% save the version number of the toolbox
+SwE.ver = swe('ver');
+
 %==========================================================================
 %- E N D: Cleanup GUI
 %==========================================================================
