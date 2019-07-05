@@ -86,7 +86,7 @@ function lcv = latComVer(ecv)
             if ~isKey(lcv, ecv(ver))
                 lcv(ecv(ver)) = ver;
             else
-                if vercheck(lcv(ecv(ver)), ver, '<=')
+                if swe_compareVersions(lcv(ecv(ver)), ver, '<=')
                     lcv(ecv(ver)) = ver;
                 end
             end
@@ -102,35 +102,4 @@ function lcv = latComVer(ecv)
         end
     end
     
-end
-
-% Perform <=, <, >, >= on version numbers.
-function vcheck = vercheck(ver1, ver2, flag)
-
-    % Split version number into parts.
-    ver1 = strsplit(ver1, '.');
-    ver2 = strsplit(ver2, '.');
-    
-    % Work out base for comparison.
-    base = max(cellfun(@(a) str2num(a), {ver1{:} ver2{:}})) + 1;
-    
-    % Convert to num.
-    ver1 = cellfun(@(a) str2num(a), {ver1{:}});
-    ver2 = cellfun(@(a) str2num(a), {ver2{:}});
-    
-    % Make into number in base `base`
-    ver1 = ver1(1)*base^2 + ver1(2)*base^1 + ver1(3)*base^0;
-    ver2 = ver2(1)*base^2 + ver2(2)*base^1 + ver2(3)*base^0;
-    
-    if strcmp(flag, '<=')
-        vcheck = (ver1 <= ver2);
-    elseif strcmp(flag, '<')
-        vcheck = (ver1 < ver2);
-    elseif strcmp(flag, '>')
-        vcheck = (ver1 > ver2);
-    elseif strcmp(flag, '>=')
-        vcheck = (ver1 >= ver2);
-    else
-        error('unknown flag')
-    end
 end
