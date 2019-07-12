@@ -1770,15 +1770,15 @@ for b = 1:WB.nB
       end
       
       % Sum how many voxels are lower than the original parametric tfce.
-      tfce_uncP = tfce_uncP + (par_tfce<=tfce);
+      tfce_uncP = tfce_uncP + (par_tfce  - tol < tfce);
       if SwE.WB.stat == 'T'
-	tfce_uncP_neg = tfce_uncP_neg + (par_tfce_neg<=tfce_neg);
+	      tfce_uncP_neg = tfce_uncP_neg + (par_tfce_neg - tol < tfce_neg);
       end
       
       % Record maxima for TFCE FWE p values.
       maxTFCEScore(b+1) = max(tfce(:));
       if SwE.WB.stat == 'T'
-	maxTFCEScore_neg(b+1) = max(tfce_neg(:));
+	      maxTFCEScore_neg(b+1) = max(tfce_neg(:));
       end
       
       clear tfce tfce_neg
@@ -1943,10 +1943,16 @@ SwE.WB.maxScore = maxScore;
 if (WB.clusterWise == 1)
     SwE.WB.clusterInfo.maxClusterSize = maxClusterSize;
 end
+if isfield(SwE.WB, 'TFCE')
+  SwE.WB.TFCE.maxTFCEScore = maxTFCEScore;
+end
 if (WB.stat == 'T')
     SwE.WB.minScore = minScore;
     if (WB.clusterWise == 1)
         SwE.WB.clusterInfo.maxClusterSizeNeg = maxClusterSizeNeg;
+    end
+    if isfield(SwE.WB, 'TFCE')
+        SwE.WB.TFCE.maxTFCEScore_neg = maxTFCEScore_neg;
     end
 end
 
@@ -2053,7 +2059,7 @@ if isMat
     clusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
     if (~isempty(SwE.WB.clusterInfo.clusterSize))
       for b = 1:WB.nB
-        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize);
+        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) > SwE.WB.clusterInfo.clusterSize - tol);
       end
       clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster / (WB.nB + 1);
     end
@@ -2081,7 +2087,7 @@ if isMat
       clusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
       if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
         for b = 1:WB.nB
-          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg);
+          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) > SwE.WB.clusterInfo.clusterSizeNeg - tol);
         end
         clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster / (WB.nB + 1);
       end
@@ -2139,7 +2145,6 @@ else
   %
   % - write out lP_FWE+ and lP_FWE- images;
   %
-  tol = 1e-4;	% Tolerance for comparing real numbers
   
   FWERP = ones(1, S); % 1 because the original maxScore is always > original Score
   
@@ -2233,7 +2238,7 @@ else
     clusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
     if (~isempty(SwE.WB.clusterInfo.clusterSize))
       for b = 1:WB.nB
-        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize);
+        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) > SwE.WB.clusterInfo.clusterSize - tol);
       end
       clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster / (WB.nB + 1);
     end
@@ -2253,7 +2258,7 @@ else
       clusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
       if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
         for b = 1:WB.nB
-          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg);
+          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) > SwE.WB.clusterInfo.clusterSizeNeg - tol);
         end
         clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster / (WB.nB + 1);
       end

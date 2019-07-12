@@ -266,6 +266,14 @@ switch lower(Action), case 'setup'                         %-Set up results
         case 'F'
             eSTAT = 'X';
     end
+
+    % detect whether the WB was done based on Z/X or on T/F using the version number (2.1.1 was the last using T/F)
+    if swe_compareVersions(swe('ver'), '2.1.1', '>')
+      displaySTAT = eSTAT;
+    else
+      displaySTAT = xSwE.STAT;
+    end
+
     %-Ensure pwd = swd so that relative filenames are valid
     %----------------------------------------------------------------------
     cd(SwE.swd)
@@ -419,18 +427,28 @@ switch lower(Action), case 'setup'                         %-Set up results
     if ~isfield(xSwE, 'TFCEthresh') || ~xSwE.TFCEthresh
         try
             thresDesc = xSwE.thresDesc;
+            td = regexp(xSwE.thresDesc,'p\D+?(?<u>[\.\d]+) \((?<thresDesc>\S+)\)','names');
             if ~strcmp(xSwE.thresDesc, 'none') && ~isempty(xSwE.thresDesc)
-                text(0,12,sprintf('Height threshold %c = %0.6f  {%s}',eSTAT,xSwE.u,thresDesc),'Parent',hResAx)
+              % Do not show height threshold if unc or FDR voxel-wise WB threshold
+              if isfield(xSwE, 'WB') && xSwE.WB && xSwE.infType == 0 && ~strcmp(td.thresDesc, 'FWE') % (voxel-wise WB inference)
+                text(0,12,sprintf('Wild Bootstrap p-value threshold %s',thresDesc),'Parent',hResAx)
+              elseif isfield(xSwE, 'WB') && xSwE.WB && xSwE.infType == 0 && strcmp(td.thresDesc, 'FWE')
+                text(0,12,sprintf('Wild Bootstrap height threshold %c > %0.6f  {%s}',displaySTAT,xSwE.u,thresDesc),'Parent',hResAx)
+              elseif isfield(xSwE, 'WB') && xSwE.WB && xSwE.infType == 1 && strcmp(xSwE.clustWise, 'Uncorr')
+                text(0,12,sprintf('Wild Bootstrap p-value threshold %s',thresDesc),'Parent',hResAx)
+              else
+                text(0,12,sprintf('Height threshold %c > %0.6f  {%s}',eSTAT,xSwE.u,thresDesc),'Parent',hResAx)               
+              end
             else
-                text(0,12,sprintf('Height threshold %c = %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
+                text(0,12,sprintf('Height threshold %c > %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
             end
         catch
-            text(0,12,sprintf('Height threshold %c = %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
+            text(0,12,sprintf('Height threshold %c > %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
         end
         if strcmp(xSwE.clustWise, 'FWE') 
-            text(0,00,sprintf('Extent threshold k = %0.0f voxels {p<%0.3f (FWE)}',xSwE.k, xSwE.fwep_c), 'Parent',hResAx)
+            text(0,00,sprintf('Wild Bootstrap extent threshold k > %0.0f voxels {p<=%0.3f (FWE)}',xSwE.k, xSwE.fwep_c), 'Parent',hResAx)
         else
-            text(0,00,sprintf('Extent threshold k = %0.0f voxels',xSwE.k), 'Parent',hResAx)
+            text(0,00,sprintf('Extent threshold k >= %0.0f voxels',xSwE.k), 'Parent',hResAx)
         end
         try
             WB = xSwE.WB;
@@ -443,7 +461,7 @@ switch lower(Action), case 'setup'                         %-Set up results
     else
         try
             thresDesc = xSwE.thresDesc;
-            text(0,12,sprintf('TFCE threshold %s', thresDesc),'Parent',hResAx)
+            text(0,12,sprintf('Wild Bootstrap TFCE threshold %s', thresDesc),'Parent',hResAx)
             text(0,00,sprintf('Wild Bootstrap'), 'Parent',hResAx)
         catch
             error('Unknown TFCE threshold.')
@@ -1218,7 +1236,7 @@ xSwE2.pm    = xSwE.pm;
 xSwE2.Ex    = xSwE.Ex;
 xSwE2.title = '';
 if ~isempty(xSwE.thresDesc)
-    td = regexp(xSwE.thresDesc,'p\D?(?<u>[\.\d]+) \((?<thresDesc>\S+)\)','names');
+    td = regexp(xSwE.thresDesc,'p\D+?(?<u>[\.\d]+) \((?<thresDesc>\S+)\)','names');
     if isempty(td)
         td = regexp(xSwE.thresDesc,'\w=(?<u>[\.\d]+)','names');
         td.thresDesc = 'none';
