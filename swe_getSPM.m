@@ -1262,11 +1262,12 @@ if isfield(SwE.type, 'modified')
     xSwE.nSubj_g    = SwE.Gr.nSubj_g;
     xSwE.max_nVis_g = SwE.Vis.max_nVis_g;
     xSwE.min_nVis_g = SwE.Vis.min_nVis_g;
-    xSwE.Vedf       = cat(1,xCon(Ic).Vedf);
+end
+
+if SwE.dof.dof_type == 0
+  xSwE.edf = xCon(Ic).edf;
 else
-    if ~isfield(SwE, 'WB')
-        xSwE.edf        = xCon(Ic).edf;
-    end
+  xSwE.Vedf = cat(1,xCon(Ic).Vedf);
 end
 
 % For WB analyses we have already computed uncorrected, FDR, FWE and
