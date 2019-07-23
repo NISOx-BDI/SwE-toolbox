@@ -1543,13 +1543,21 @@ end
 %- Produce bootstraps and maximum stats 
 %==========================================================================
 
-% Produce the random value following the Rademacher distribution
-resamplingMatrix = NaN(nScan,WB.nB);
-for iS = 1:nSubj
-  % resamplingMatrix(iSubj == uSubj(iS),:) = repmat(binornd(1, 0.5, 1, WB.nB), sum(iSubj == uSubj(iS)), 1);
-  resamplingMatrix(iSubj == uSubj(iS),:) = repmat(randi([0 1], 1, WB.nB), sum(iSubj == uSubj(iS)), 1);  % BG (08/11/2016): using randi instead of binornd (which is from the stats toolbox)
+% check whether a resampling Matrix exists in SwE. If yes, use it. If not, produce it.
+if isfield(SwE.WB, 'resamplingMatrix')
+  resamplingMatrix = SwE.WB.resamplingMatrix;
+  if any(size(resamplingMatrix) ~= [nScan WB.nB])
+    error('The supplied resampling matrix does not have the good dimensions');
+  end
+else
+  % Produce the random value following the Rademacher distribution
+  resamplingMatrix = NaN(nScan,WB.nB);
+  for iS = 1:nSubj
+    % resamplingMatrix(iSubj == uSubj(iS),:) = repmat(binornd(1, 0.5, 1, WB.nB), sum(iSubj == uSubj(iS)), 1);
+    resamplingMatrix(iSubj == uSubj(iS),:) = repmat(randi([0 1], 1, WB.nB), sum(iSubj == uSubj(iS)), 1);  % BG (08/11/2016): using randi instead of binornd (which is from the stats toolbox)
+  end
+  resamplingMatrix(resamplingMatrix == 0) = -1;
 end
-resamplingMatrix(resamplingMatrix == 0) = -1;
 
 % load original score
 if isMat
