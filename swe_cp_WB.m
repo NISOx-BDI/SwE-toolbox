@@ -1413,7 +1413,6 @@ else % ".mat" format
         else
           hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
         end
-        hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
         p = hyptest.positive.p;
         edf = hyptest.positive.edf;
         clear CovcCovBc cCovBc
@@ -1911,11 +1910,8 @@ for b = 1:WB.nB
       % Calculate TFCE uncorrected p image.
       if TFCE    
 
-	% Obtain P values.
-	hyptest=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
-	
-	% Current XYZ indices
-	currXYZ = XYZ(1:3, index);
+        % Current XYZ indices
+        currXYZ = XYZ(1:3, index);
 	  
         % T test already converted to Z
         if strcmp(WB.stat, 'T')
