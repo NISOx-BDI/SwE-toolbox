@@ -172,6 +172,9 @@ for i = 1:length(files)
   end
 end
 
+% Tolerance for comparing real numbers
+tol = 1e-4;	
+
 %==========================================================================
 % - A N A L Y S I S   P R E L I M I N A R I E S
 %==========================================================================
@@ -950,8 +953,9 @@ if ~isMat
             negp = hyptest.negative.p;
             edf = hyptest.positive.edf;
           end
-          
-          minScore(1) = min(minScore(1), min(score));
+
+          minScore(1) = min(minScore(1), min(hyptest.positive.conScore));
+
           
         else
           % need to loop at every voxel
@@ -978,8 +982,8 @@ if ~isMat
           end
         end
         
-        maxScore(1) = max(maxScore(1), max(score));
-        
+        maxScore(1) = max(maxScore(1), max(hyptest.positive.conScore));
+
         %-Save betas etc. for current plane as we go along
         %----------------------------------------------------------
         CrYWB             = [CrYWB,    YWB]; %#ok<AGROW>
@@ -989,11 +993,11 @@ if ~isMat
         Credf             = [Credf,    hyptest.positive.edf]; %#ok<AGROW> 
         CrBl              = [CrBl,    beta]; %#ok<AGROW>
         if (SwE.WB.stat == 'T')
-	  CrConScore      = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
-	  CrPNeg          = [CrPNeg,   -log10(hyptest.negative.p)]; %#ok<AGROW>
+	        CrConScore      = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
+	        CrPNeg          = [CrPNeg,   -log10(hyptest.negative.p)]; %#ok<AGROW>
         end
         if(SwE.WB.stat == 'F')
-	  CrConScore    = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
+	        CrConScore    = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
         end
         
       end % (CrS)
@@ -1309,8 +1313,8 @@ else % ".mat" format
         edf = hyptest.positive.edf;
         clear CovcCovBc cCovBc
       end
-      
-      minScore(1) = min(score);
+         
+      minScore(1) = min(hyptest.positive.conScore);
       
       if TFCE
 	%%%% TODO: T (MAKE SCORE)
@@ -1344,7 +1348,8 @@ else % ".mat" format
       end
       
     end
-    maxScore(1) = max(score);
+
+    maxScore(1) = max(hyptest.positive.conScore);
     
   end % (CrS)
   M           = [];
@@ -1549,20 +1554,28 @@ end
 %- Produce bootstraps and maximum stats 
 %==========================================================================
 
-% Produce the random value following the Rademacher distribution
-resamplingMatrix = NaN(nScan,WB.nB);
-for iS = 1:nSubj
-  % resamplingMatrix(iSubj == uSubj(iS),:) = repmat(binornd(1, 0.5, 1, WB.nB), sum(iSubj == uSubj(iS)), 1);
-  resamplingMatrix(iSubj == uSubj(iS),:) = repmat(randi([0 1], 1, WB.nB), sum(iSubj == uSubj(iS)), 1);  % BG (08/11/2016): using randi instead of binornd (which is from the stats toolbox)
+% check whether a resampling Matrix exists in SwE. If yes, use it. If not, produce it.
+if isfield(SwE.WB, 'resamplingMatrix')
+  resamplingMatrix = SwE.WB.resamplingMatrix;
+  if any(size(resamplingMatrix) ~= [nScan WB.nB])
+    error('The supplied resampling matrix does not have the good dimensions');
+  end
+else
+  % Produce the random value following the Rademacher distribution
+  resamplingMatrix = NaN(nScan,WB.nB);
+  for iS = 1:nSubj
+    % resamplingMatrix(iSubj == uSubj(iS),:) = repmat(binornd(1, 0.5, 1, WB.nB), sum(iSubj == uSubj(iS)), 1);
+    resamplingMatrix(iSubj == uSubj(iS),:) = repmat(randi([0 1], 1, WB.nB), sum(iSubj == uSubj(iS)), 1);  % BG (08/11/2016): using randi instead of binornd (which is from the stats toolbox)
+  end
+  resamplingMatrix(resamplingMatrix == 0) = -1;
 end
-resamplingMatrix(resamplingMatrix == 0) = -1;
 
 % load original score
 if isMat
-  originalScore = score;
+  originalScore = hyptest.positive.conScore;
   clear score;
 else
-  originalScore = spm_data_read(Vscore, 'xyz', XYZ);
+  originalScore = spm_data_read(VcScore, 'xyz', XYZ);
   % # blocks
   blksz  = ceil(mmv);                             %-block size
   nbch   = ceil(S/ blksz);          
@@ -1718,20 +1731,20 @@ for b = 1:WB.nB
         
       end
       
-      % hypothesis test
+      hyptest=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
+
       if (WB.clusterWise == 1)
-        hyptest=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
         activatedVoxels(index) = hyptest.positive.activatedVoxels;
         if (WB.stat == 'T')
           activatedVoxelsNeg(index) = hyptest.negative.activatedVoxels;
         end
         clear cCovBc
       end
-      uncP(index) = uncP(index) + (score >= originalScore(index));
-          
-      maxScore(b+1) = max(maxScore(b+1), max(score));
+
+      uncP(index) = uncP(index) + (hyptest.positive.conScore > originalScore(index) - tol);
+      maxScore(b+1) = max(maxScore(b+1), max(hyptest.positive.conScore));
       if (SwE.WB.stat == 'T')
-         minScore(b+1) = min(score);
+        minScore(b+1) = min(minScore(b+1), min(hyptest.positive.conScore));
       end
       
       % Calculate TFCE uncorrected p image.
@@ -1776,15 +1789,15 @@ for b = 1:WB.nB
       end
       
       % Sum how many voxels are lower than the original parametric tfce.
-      tfce_uncP = tfce_uncP + (par_tfce<=tfce);
+      tfce_uncP = tfce_uncP + (par_tfce  - tol < tfce);
       if SwE.WB.stat == 'T'
-	tfce_uncP_neg = tfce_uncP_neg + (par_tfce_neg<=tfce_neg);
+	      tfce_uncP_neg = tfce_uncP_neg + (par_tfce_neg - tol < tfce_neg);
       end
       
       % Record maxima for TFCE FWE p values.
       maxTFCEScore(b+1) = max(tfce(:));
       if SwE.WB.stat == 'T'
-	maxTFCEScore_neg(b+1) = max(tfce_neg(:));
+	      maxTFCEScore_neg(b+1) = max(tfce_neg(:));
       end
       
       clear tfce tfce_neg
@@ -1878,22 +1891,21 @@ for b = 1:WB.nB
       score = score / rankCon;     
     end
     
-    % hypothesis test
+    hyptest=swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);      
+
     if (WB.clusterWise == 1)
-      hyptest=swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);
       activatedVoxels = hyptest.positive.activatedVoxels;
       if (WB.stat == 'T')
           activatedVoxelsNeg = hyptest.negative.activatedVoxels;
       end
       clear cCovBc
     end
-    uncP = uncP + (score >= originalScore); 
-    
-    maxScore(b+1) = max(score);
+
+    uncP = uncP + (hyptest.positive.conScore > originalScore - tol);
+    maxScore(b+1) = max(hyptest.positive.conScore);
     if (SwE.WB.stat == 'T')
-      minScore(b+1) = min(score);
-    end
-        
+      minScore(b+1) = min(hyptest.positive.conScore);
+    end     
     
   end
   
@@ -1950,10 +1962,16 @@ SwE.WB.maxScore = maxScore;
 if (WB.clusterWise == 1)
     SwE.WB.clusterInfo.maxClusterSize = maxClusterSize;
 end
+if isfield(SwE.WB, 'TFCE')
+  SwE.WB.TFCE.maxTFCEScore = maxTFCEScore;
+end
 if (WB.stat == 'T')
     SwE.WB.minScore = minScore;
     if (WB.clusterWise == 1)
         SwE.WB.clusterInfo.maxClusterSizeNeg = maxClusterSizeNeg;
+    end
+    if isfield(SwE.WB, 'TFCE')
+        SwE.WB.TFCE.maxTFCEScore_neg = maxTFCEScore_neg;
     end
 end
 
@@ -1989,7 +2007,6 @@ if isMat
   %
   % - write out lP_FWE+ and lP_FWE- ;
   %
-  tol = 1e-4;	% Tolerance for comparing real numbers
   
   FWERP = ones(1, S); % 1 because the original maxScore is always > original Score
   
@@ -2061,7 +2078,7 @@ if isMat
     clusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
     if (~isempty(SwE.WB.clusterInfo.clusterSize))
       for b = 1:WB.nB
-        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize);
+        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) > SwE.WB.clusterInfo.clusterSize - tol);
       end
       clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster / (WB.nB + 1);
     end
@@ -2089,7 +2106,7 @@ if isMat
       clusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
       if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
         for b = 1:WB.nB
-          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg);
+          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) > SwE.WB.clusterInfo.clusterSizeNeg - tol);
         end
         clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster / (WB.nB + 1);
       end
@@ -2147,7 +2164,6 @@ else
   %
   % - write out lP_FWE+ and lP_FWE- images;
   %
-  tol = 1e-4;	% Tolerance for comparing real numbers
   
   FWERP = ones(1, S); % 1 because the original maxScore is always > original Score
   
@@ -2241,7 +2257,7 @@ else
     clusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
     if (~isempty(SwE.WB.clusterInfo.clusterSize))
       for b = 1:WB.nB
-        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) >= SwE.WB.clusterInfo.clusterSize);
+        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (maxClusterSize(b+1) > SwE.WB.clusterInfo.clusterSize - tol);
       end
       clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster / (WB.nB + 1);
     end
@@ -2261,7 +2277,7 @@ else
       clusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
       if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
         for b = 1:WB.nB
-          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) >= SwE.WB.clusterInfo.clusterSizeNeg);
+          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (maxClusterSizeNeg(b+1) > SwE.WB.clusterInfo.clusterSizeNeg - tol);
         end
         clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster / (WB.nB + 1);
       end
@@ -2286,7 +2302,10 @@ else
   end
   
 end
-      
+
+% save the version number of the toolbox
+SwE.ver = swe('ver');
+
 %==========================================================================
 %- E N D: Cleanup GUI
 %==========================================================================

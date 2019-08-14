@@ -1296,6 +1296,9 @@ else
     SwE.dof.dofMat = dofMat; 
 end
 
+% save the version number of the toolbox
+SwE.ver = swe('ver');
+
 %-Save analysis parameters in SwE.mat file
 %--------------------------------------------------------------------------
 if isOctave

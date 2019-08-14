@@ -367,19 +367,47 @@ case 'table'                                                        %-Table
      % Number of `extra` lines inserted that don't have to be present in
      % every display
      exlns           = 0;
-     
-     % Record height thresholds.
-     if ~isfield(xSwE, 'TFCEthresh') || ~xSwE.TFCEthresh
-         TabDat.ftr{1,1} = ...
-              ['Threshold: Height ' eSTAT ' = %0.2f, p = %0.3f; Extent k = %0.0f voxels.'];
-         TabDat.ftr{1,2} = [u,Pz,k];
+
+     % detect whether the WB was done based on Z/X or on T/F using the version number (2.1.1 was the last using T/F)
+     if swe_compareVersions(swe('ver'), '2.1.1', '>')
+      displaySTAT = eSTAT;
      else
-         TabDat.ftr{1,1} = 'Threshold: TFCE %s';
-         TabDat.ftr{1,2} = xSwE.thresDesc;
+      displaySTAT = STAT;
      end
-     
+
      if xSwE.WB
-     
+        % Record thresholds.
+        % For voxel-wise FDR and unc. thresholding, we cannot display a score threshold as it varies per voxel
+        td = regexp(xSwE.thresDesc,'p\D+?(?<u>[\.\d]+) \((?<thresDesc>\S+)\)','names');
+        if xSwE.infType == 0 % voxel-wise
+            if strcmp(td.thresDesc, 'FWE')
+              TabDat.ftr{1,1} = ['Threshold: Height ' displaySTAT ' > %0.2f, p <= %0.3f (FWE); Extent k >= %0.0f voxels.'];
+              TabDat.ftr{1,2} = [u, str2num(td.u), k];
+            elseif strcmp(td.thresDesc, 'FDR')
+              TabDat.ftr{1,1} = ['Threshold: p <= %0.3f (FDR); Extent k >= %0.0f voxels.'];
+              TabDat.ftr{1,2} = [str2num(td.u), k];
+            elseif strcmp(td.thresDesc, 'unc.')
+              TabDat.ftr{1,1} = ['Threshold: p <= %0.3f (unc.); Extent k >= %0.0f voxels.'];
+              TabDat.ftr{1,2} = [str2num(td.u), k];
+            else
+              error('Unknown inference type detected')
+            end
+        elseif xSwE.infType == 1 % cluster-wise
+            if strcmp(xSwE.clustWise, 'FWE')
+              TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); Extent k > %0.0f voxels, p <= %0.3f (FWE).'];
+              TabDat.ftr{1,2} = [u, str2num(td.u), k, xSwE.fwep_c];
+            elseif strcmp(xSwE.clustWise, 'Uncorr')
+              TabDat.ftr{1,1} = ['Threshold: p <= %0.3f (unc.); Extent k >= %0.0f voxels.'];
+              TabDat.ftr{1,2} = [str2num(td.u), k];
+            else
+              error('Unknown inference type detected')
+            end
+        elseif xSwE.infType == 2 % TFCE
+            TabDat.ftr{1,1} = 'Threshold: TFCE %s';
+            TabDat.ftr{1,2} = xSwE.thresDesc;
+        else
+            error('Unknown inference type detected')
+        end
         % We need the P uncorrected P values to be in the correct form to
         % use spm_uc_FDR.
         Ts = spm_data_read(xSwE.VspmUncP);
@@ -393,17 +421,20 @@ case 'table'                                                        %-Table
         
         % Record FWE/FDR/clus FWE p values. (No clus FWE for voxelwise and
         % TFCE analyses)
-        if isfield(xSwE, 'Pfc')
+        if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE')
             TabDat.ftr{2,1} = ...
-                 ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f, clus k(5%% FWE): %0.0f '];
+                 ['vox ' displaySTAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f, clus k(5%% FWE): %0.0f '];
             TabDat.ftr{2,2} = [xSwE.Pfv, FDRp_05, xSwE.Pfc];
         else
             TabDat.ftr{2,1} = ...
-                 ['vox ' STAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f'];
+                 ['vox ' displaySTAT '(5%% FWE): %0.3f, vox P(5%% FDR): %0.3f'];
             TabDat.ftr{2,2} = [xSwE.Pfv, FDRp_05];
         end
      else
-         
+        % Record height thresholds.
+        TabDat.ftr{1,1} = ...
+        ['Threshold: Height ' eSTAT ' = %0.2f, p = %0.3f; Extent k = %0.0f voxels.'];
+        TabDat.ftr{1,2} = [u,Pz,k];         
         % Record FDR p value.
         TabDat.ftr{2,1} = ...
              'vox P(5%% FDR): %0.3f';
@@ -425,7 +456,7 @@ case 'table'                                                        %-Table
          end
 
          % Record visits per group.
-         nVisitsString = 'Number of visits ([Mn Max]): ';
+         nVisitsString = 'Number of visits ([Min Max]): ';
          nVisitsNumbers = [];
          for i = 1:length(xSwE.max_nVis_g)
              nVisitsString = [nVisitsString '[%0.0f %0.0f]'];
@@ -598,21 +629,25 @@ case 'table'                                                        %-Table
 %                 Qp  = [];
 %             end
 %         else
-            switch STATe
-                case 'Z'
-                  try
-                    Pz      = normcdf(-U);
-                  catch
-                    Pz      = spm_Ncdf(-U);
-                  end
-                case 'X'
-                  try
-                    Pz      = 1-chi2cdf(U,1);
-                  catch 
-                    Pz      = 1-spm_Xcdf(U,1);
-                  end
+            if ~xSwE.WB
+              switch STATe
+                  case 'Z'
+                    try
+                      Pz      = normcdf(-U);
+                    catch
+                      Pz      = spm_Ncdf(-U);
+                    end
+                  case 'X'
+                    try
+                      Pz      = 1-chi2cdf(U,1);
+                    catch 
+                      Pz      = 1-spm_Xcdf(U,1);
+                    end
+              end
+            else
+              Pz = 10.^-VspmUncP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
             end
-            
+
             % If we are not running a wild bootstrap or we are doing a 
             % small volume correction we need to calculate the FDR P value
             % and leave the other values blank.
@@ -636,7 +671,7 @@ case 'table'                                                        %-Table
                 ws      = warning('off','SPM:outOfRangeNormal');
                 warning(ws);
                 
-                if isfield(xSwE, 'VspmFWEP_clus')
+                if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') % only for FWER clusterwise WB
                     Pk      = 10.^-VspmFWEP_clus(XYZ(1,i),XYZ(2,i),XYZ(3,i));
                     % It is possible to get the results window to display
                     % details about voxels that were thresholded out by the
@@ -714,7 +749,7 @@ case 'table'                                                        %-Table
                     % results we calculated earlier.
                     else
                         
-                        Pz      = spm_Ncdf(-Z(d));
+                        Pz      = 10.^-VspmUncP(XYZ(1,d),XYZ(2,d),XYZ(3,d));
                         Pu      = 10.^-VspmFWEP(XYZ(1,d),XYZ(2,d),XYZ(3,d));
                         Qu      = 10.^-VspmFDRP(XYZ(1,d),XYZ(2,d),XYZ(3,d));
                         ws     = warning('off','SPM:outOfRangeNormal');
@@ -834,7 +869,7 @@ case 'table'                                                        %-Table
         set(gca,'DefaultTextFontName',PF.helvetica,...
             'DefaultTextInterpreter','None','DefaultTextFontSize',FS(8))
         
-        fx = repmat([0 0.5],ceil(size(TabDat.ftr,1)/2),1);
+        fx = repmat([0 0.645],ceil(size(TabDat.ftr,1)/2),1);
         fy = repmat((1:ceil(size(TabDat.ftr,1)/2))',1,2);
         for i=1:size(TabDat.ftr,1)
             text(fx(i),-fy(i)*dy,sprintf(TabDat.ftr{i,1},TabDat.ftr{i,2}),...
