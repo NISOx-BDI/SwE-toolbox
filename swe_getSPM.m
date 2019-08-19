@@ -518,7 +518,8 @@ elseif Mask == 2
     if isMat
       Im = cellstr(spm_select([1 Inf],'mat','Select mask image(s)'));
     else
-      Im = cellstr(spm_select([1 Inf],'image','Select mask image(s)'));
+      [Im, sts] = spm_select([1 Inf],{'image','mesh'},'Select mask image(s)');
+      if ~sts, Im = []; else Im = cellstr(Im); end
     end
   end
 
