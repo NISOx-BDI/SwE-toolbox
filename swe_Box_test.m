@@ -24,14 +24,14 @@ function [p,F,f1,f2] = swe_Box_test()
         isMeshData = spm_mesh_detect(SwE.xY.VY);
         if isMeshData
             file_ext = '.gii';
-            g        = SPM.xY.VY(1).private;
+            g        = SwE.xY.VY(1).private;
             metadata = g.private.metadata;
             name     = {metadata.name};
             if any(ismember(name,'SurfaceID'))
                 metadata = metadata(ismember(name,'SurfaceID'));
                 metadata = {metadata.name, metadata.value};
             elseif isfield(g,'faces') && ~isempty(g.faces)
-                metadata = {'SurfaceID', SPM.xY.VY(1).fname};
+                metadata = {'SurfaceID', SwE.xY.VY(1).fname};
             else
                 metadata = {};
         else
