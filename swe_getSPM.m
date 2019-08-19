@@ -1111,8 +1111,17 @@ if ~isMat
     XYZ    = XYZ(:,Q);
   end
   if isempty(Q)
-      fprintf('\n');                                                      %-#
-      warning('SwE:NoVoxels','No voxels survive thresholding');
+      fprintf('\n');
+      if isMat
+        strDataType = 'data elements';
+      else
+        if spm_mesh_detect(xCon(Ic(1)).Vspm)
+          strDataType = 'vertices'
+        else 
+          strDataType = 'voxels'; 
+        end
+      end
+      warning('SwE:NoVoxels','No %s survive thresholding', strDataType);
   end
   
   % If we are doing clusterwise ask for threshold.
@@ -1203,7 +1212,7 @@ if ~isMat
           XYZ   = XYZ(:,Q);
           if isempty(Q)
               fprintf('\n');                                                  %-#
-              warning('SwE:NoVoxels','No voxels survive cluster extent threshoding');
+              warning('SwE:NoVoxels','No %s survive cluster extent threshoding', strDataType);
           end
           
       else
