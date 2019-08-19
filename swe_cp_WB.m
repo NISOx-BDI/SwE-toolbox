@@ -1100,9 +1100,9 @@ if ~isMat
     end
     
     % Save parametric TFCE statistic images.
-    spm_write_vol(Vscore_tfce, par_tfce);
+    spm_data_write(Vscore_tfce, par_tfce);
     if strcmp(WB.stat, 'T')
-      spm_write_vol(Vscore_tfce_neg, par_tfce_neg);
+      spm_data_write(Vscore_tfce_neg, par_tfce_neg);
     end
   end
   
@@ -2140,13 +2140,13 @@ else
   uncP = uncP / (WB.nB + 1);
   tmp = nan(SwE.xVol.DIM');
   tmp(Q) = -log10(uncP);
-  spm_write_vol(VlP_wb_pos, tmp);
+  spm_data_write(VlP_wb_pos, tmp);
   
   % If it's F, write out an X map.
   stat = nan(SwE.xVol.DIM');
   if WB.stat == 'F'
     stat(Q) = spm_invXcdf(1 - uncP,1);
-    spm_write_vol(VcScore_wb_pos, stat);
+    spm_data_write(VcScore_wb_pos, stat);
   end
   
   % If it's T, write out a Z map.
@@ -2154,11 +2154,11 @@ else
       
     % Positive map.
     stat(Q) = swe_invNcdf(1 - uncP);
-    spm_write_vol(VcScore_wb_pos, stat);
+    spm_data_write(VcScore_wb_pos, stat);
 
     % T is two tailed so we need a negative map as well.
     tmp(Q) = -log10(1 + 1/(WB.nB + 1) - uncP);
-    spm_write_vol(VlP_wb_neg, tmp);
+    spm_data_write(VlP_wb_neg, tmp);
   end
   
   %
@@ -2176,7 +2176,7 @@ else
   end
   FWERP = FWERP / (WB.nB + 1);
   tmp(Q) = -log10(FWERP);
-  spm_write_vol(VlP_wb_FWE_pos, tmp);
+  spm_data_write(VlP_wb_FWE_pos, tmp);
   
   % FWE correction for TFCE images.
   if TFCE
@@ -2192,7 +2192,7 @@ else
     tfcefwevol = tfcefwevol / (WB.nB + 1);
       
     % Write out volume.
-    spm_write_vol(VlP_tfce_FWE_pos, -log10(tfcefwevol));
+    spm_data_write(VlP_tfce_FWE_pos, -log10(tfcefwevol));
       
     % Same again for negative contrast, if we are using a T statistic.
     if WB.stat == 'T'
@@ -2208,7 +2208,7 @@ else
       tfcefwevol_neg = tfcefwevol_neg / (WB.nB + 1);
 
       % Write out volume.
-      spm_write_vol(VlP_tfce_FWE_neg, -log10(tfcefwevol_neg));
+      spm_data_write(VlP_tfce_FWE_neg, -log10(tfcefwevol_neg));
     end
   end
   
@@ -2224,7 +2224,7 @@ else
     end
     FWERPNeg = FWERPNeg / (WB.nB + 1);
     tmp(Q) = -log10(FWERPNeg);
-    spm_write_vol(VlP_wb_FWE_neg, tmp);
+    spm_data_write(VlP_wb_FWE_neg, tmp);
   end
   
   %
@@ -2235,7 +2235,7 @@ else
   catch
     tmp(Q) = -log10(spm_P_FDR(uncP,[],'P',[],sort(uncP)'));
   end
-  spm_write_vol(VlP_wb_FDR_pos, tmp);
+  spm_data_write(VlP_wb_FDR_pos, tmp);
   
   if WB.stat =='T'
     try
@@ -2243,7 +2243,7 @@ else
     catch
       tmp(Q) = -log10(spm_P_FDR(1 + 1/(WB.nB + 1) - uncP,[],'P',[],sort(1 + 1/(WB.nB + 1) - uncP)'));
     end
-    spm_write_vol(VlP_wb_FDR_neg, tmp);
+    spm_data_write(VlP_wb_FDR_neg, tmp);
   end
   
   if WB.clusterWise == 1
@@ -2268,7 +2268,7 @@ else
       tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = tmp2(iC);
     end
     tmp(Q) = tmp3;
-    spm_write_vol(VlP_wb_clusterFWE_pos, tmp);
+    spm_data_write(VlP_wb_clusterFWE_pos, tmp);
     if WB.stat =='T'
       Q = cumprod([1,SwE.xVol.DIM(1:2)']) * SwE.WB.clusterInfo.LocActivatedVoxelsNeg - ...
 	  sum(cumprod(SwE.xVol.DIM(1:2)'));
@@ -2288,16 +2288,16 @@ else
         tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = tmp2(iC);
       end
       tmp(Q) = tmp3;
-      spm_write_vol(VlP_wb_clusterFWE_neg, tmp);
+      spm_data_write(VlP_wb_clusterFWE_neg, tmp);
     end
   end
   
   if TFCE
     tfce_luncP = -log10((tfce_uncP+1)./(WB.nB+1));
-    spm_write_vol(VlP_tfce_pos, tfce_luncP);
+    spm_data_write(VlP_tfce_pos, tfce_luncP);
     if WB.stat == 'T'
       tfce_luncP_neg = -log10((tfce_uncP_neg+1)./(WB.nB+1));
-      spm_write_vol(VlP_tfce_neg, tfce_luncP_neg);
+      spm_data_write(VlP_tfce_neg, tfce_luncP_neg);
     end
   end
   
