@@ -1172,7 +1172,14 @@ if ~isMat
               %-Calculate extent threshold filtering
               %----------------------------------------------------------------------
               % recompute the clusters as they may have been reduced due to post-hoc masking
-              A = spm_clusters(XYZ);
+              if  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
+                A = spm_clusters(XYZ);
+              else
+                T = false(SwE.xVol.DIM');
+                T(XYZ(1,:)) = true;
+                A = spm_mesh_clusters(G,T)';
+                A = A(XYZ(1,:));
+            	end
               clusIndices = unique(A);
               
               % recompute the p-values as they might have increased due to post-hoc masking
