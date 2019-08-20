@@ -324,7 +324,18 @@ switch lower(Action), case 'setup'                         %-Set up results
                 error('Unknown data type.');
         end
     end
-    if ~isMat && DIM(3) == 1, units{3} = ''; end
+    if ~isMat
+        if spm_mesh_detect(xSwE.Vspm)
+            DIM(3) = Inf; % force 3D coordinates
+            strDataType = 'vertices';
+        elseif DIM(3) == 1
+            units{3} = '';
+            if DIM(2) == 1
+                units{2} = '';
+            end
+            strDataType = 'voxels';
+        end
+    end
     xSwE.units      = units;
     SwE.xVol.units  = units;
     
@@ -446,9 +457,9 @@ switch lower(Action), case 'setup'                         %-Set up results
             text(0,12,sprintf('Height threshold %c > %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
         end
         if strcmp(xSwE.clustWise, 'FWE') 
-            text(0,00,sprintf('Wild Bootstrap extent threshold k > %0.0f voxels {p<=%0.3f (FWE)}',xSwE.k, xSwE.fwep_c), 'Parent',hResAx)
+            text(0,00,sprintf('Wild Bootstrap extent threshold k > %0.0f %s {p<=%0.3f (FWE)}', xSwE.k, strDataType, xSwE.fwep_c), 'Parent', hResAx)
         else
-            text(0,00,sprintf('Extent threshold k >= %0.0f voxels',xSwE.k), 'Parent',hResAx)
+            text(0,00,sprintf('Extent threshold k >= %0.0f %s', xSwE.k, strDataType), 'Parent', hResAx)
         end
         try
             WB = xSwE.WB;
