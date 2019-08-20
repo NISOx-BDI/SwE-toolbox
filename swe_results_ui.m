@@ -395,10 +395,31 @@ switch lower(Action), case 'setup'                         %-Set up results
     
     %-Setup Maximum intensity projection (MIP) & register
     %----------------------------------------------------------------------
-    hMIPax = axes('Parent',Fgraph,'Position',[0.05 0.60 0.55 0.36],'Visible','off');
-    hMIPax = spm_mip_ui(xSwE.Z,xSwE.XYZmm,M,DIM,hMIPax,units);
- 
-    spm_XYZreg('XReg',hReg,hMIPax,'spm_mip_ui');
+    hMIPax = axes('Parent',Fgraph,'Position',[0.05 0.60 0.55 0.36],'Visible','off'); 
+
+    if spm_mesh_detect(xSwE.Vspm)
+        hMax = spm_mesh_render('Disp',SwE.xVol.G,'Parent',hMIPax);
+        tmp = zeros(1,prod(xSwE.DIM));
+        tmp(xSwE.XYZ(1,:)) = xSwE.Z;
+        hMax = spm_mesh_render('Overlay',hMax,tmp);
+        hMax = spm_mesh_render('Register',hMax,hReg);
+    elseif isequal(units(2:3),{'' ''})
+        set(hMIPax, 'Position',[0.05 0.65 0.55 0.25]);
+        [allS,allXYZmm] = spm_read_vols(xSwE.Vspm);
+        plot(hMIPax,allXYZmm(1,:),allS,'Color',[0.6 0.6 0.6]);
+        set(hMIPax,'NextPlot','add');
+        MIP = NaN(1,xSwE.DIM(1));
+        MIP(xSwE.XYZ(1,:)) = xSwE.Z;
+        XYZmm = xSwE.M(1,:)*[1:xSwE.DIM(1);zeros(2,xSwE.DIM(1));ones(1,xSwE.DIM(1))];
+        plot(hMIPax,XYZmm,MIP,'b-+','LineWidth',2);
+        plot(hMIPax,[XYZmm(1) XYZmm(end)],[xSwE.u xSwE.u],'r');
+        clim = get(hMIPax,'YLim');
+        axis(hMIPax,[sort([XYZmm(1) XYZmm(end)]) 0 clim(2)]);
+    else
+        hMIPax = spm_mip_ui(xSwE.Z,xSwE.XYZmm,M,DIM,hMIPax,units);
+        spm_XYZreg('XReg',hReg,hMIPax,'spm_mip_ui');
+    end
+
     if xSwE.STAT == 'P'
         str = xSwE.STATstr;
     else
