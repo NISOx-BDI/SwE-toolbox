@@ -768,14 +768,25 @@ switch lower(Action), case 'setup'                         %-Set up results
             'UserData',tmp,...
             'Interruptible','on','Enable','on',...
             'Position',[285 120 100 020].*WS)
- 
-        uicontrol(Finter,'Style','PushButton','String','save','FontSize',FS(10),...
-            'ToolTipString','save thresholded SwE as image',...
-            'Callback',['spm_write_filtered(xSwE.Z,xSwE.XYZ,xSwE.DIM,xSwE.M,',...
-              'sprintf(''SwE{%c}-filtered: u = %5.3f, k = %d'',',...
-              'xSwE.STAT,xSwE.u,xSwE.k));'],...
+        
+        str = {'save...',...
+            'thresholded SPM',...
+            'all clusters (binary)',...
+            'all clusters (n-ary)',...
+            'current cluster'};
+        tmp = {{@mysavespm, 'thresh' },...
+            {@mysavespm, 'binary' },...
+            {@mysavespm, 'n-ary'  },...
+            {@mysavespm, 'current'}};
+     
+        uicontrol('Parent',hPan,'Style','popupmenu','String',str,...
+            'FontSize',FS(10),...
+            'ToolTipString','Save as image',...
+            'Callback','spm(''PopUpCB'',gcbo)',...
+            'UserData',tmp,...
             'Interruptible','on','Enable','on',...
-            'Position',[285 095 100 020].*WS)
+            'Position',[005 005 100 020].*WS);
+            % 'Position',[285 095 100 020].*WS)
  
         %-ResultsUI controls
         %------------------------------------------------------------------
@@ -1286,3 +1297,74 @@ assignin('base','hReg',hReg);
 assignin('base','xSwE',xSwE);
 assignin('base','SwE',SwE);
 figure(spm_figure('GetWin','Interactive'));
+
+%==========================================================================
+function mysavespm(action)
+%==========================================================================
+xSwE = evalin('base','xSwE;');
+XYZ  = xSwE.XYZ;
+
+switch lower(action)
+    case 'thresh'
+        Z = xSwE.Z;
+        
+    case 'binary'
+        Z = ones(size(xSwE.Z));
+        
+    case 'n-ary'
+        if ~isfield(xSwE,'G')
+            Z       = spm_clusters(XYZ);
+            num     = max(Z);
+            [n, ni] = sort(histc(Z,1:num), 2, 'descend');
+            n       = size(ni);
+            n(ni)   = 1:num;
+            Z       = n(Z);
+        else
+            C       = NaN(1,size(xSwE.G.vertices,1));
+            C(xSwE.XYZ(1,:)) = ones(size(xSwE.Z));
+            C       = spm_mesh_clusters(xSwE.G,C);
+            Z       = C(xSwE.XYZ(1,:));
+        end
+        
+    case 'current'
+        [xyzmm,i] = spm_XYZreg('NearestXYZ',...
+            spm_results_ui('GetCoords'),xSwE.XYZmm);
+        spm_results_ui('SetCoords',xSwE.XYZmm(:,i));
+        
+        if ~isfield(xSwE,'G')
+            A   = spm_clusters(XYZ);
+            j   = find(A == A(i));
+            Z   = ones(1,numel(j));
+            XYZ = xSwE.XYZ(:,j);
+        else
+            C   = NaN(1,size(xSwE.G.vertices,1));
+            C(xSwE.XYZ(1,:)) = ones(size(xSwE.Z));
+            C   = spm_mesh_clusters(xSwE.G,C);
+            C   = C==C(xSwE.XYZ(1,i));
+            Z   = C(xSwE.XYZ(1,:));
+        end
+        
+    otherwise
+        error('Unknown action.');
+end
+
+if isfield(xSwE,'G')
+    F     = spm_input('Output filename',1,'s');
+    if isempty(spm_file(F,'ext'))
+        F = spm_file(F,'ext','.gii');
+    end
+    F     = spm_file(F,'CPath');
+    M     = gifti(xSwE.G);
+    C     = zeros(1,size(xSwE.G.vertices,1));
+    C(xSwE.XYZ(1,:)) = Z; % or use NODE_INDEX
+    M.cdata = C;
+    save(M,F);
+    cmd   = 'spm_mesh_render(''Disp'',''%s'')';
+else
+    V   = spm_write_filtered(Z, XYZ, xSwE.DIM, xSwE.M,...
+    sprintf('SPM{%c}-filtered: u = %5.3f, k = %d',xSwE.STAT,xSwE.u,xSwE.k));
+    cmd = 'spm_image(''display'',''%s'')';
+    F   = V.fname;
+end
+
+fprintf('Written %s\n',spm_file(F,'link',cmd));   
