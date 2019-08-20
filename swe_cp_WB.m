@@ -724,29 +724,46 @@ if ~isMat
   % - F I T   M O D E L   &   W R I T E   P A R A M E T E R    I M A G E S
   %==========================================================================
   
-  %-MAXMEM is the maximum amount of data processed at a time (bytes)
-  %--------------------------------------------------------------------------
-  MAXMEM = spm_get_defaults('stats.maxmem');
-  mmv    = MAXMEM/8/nScan;
-  blksz  = min(xdim*ydim,ceil(mmv));                             %-block size
-  nbch   = ceil(xdim*ydim/blksz);                                %-# blocks
-  nbz    = max(1,min(zdim,floor(mmv/(xdim*ydim)))); nbz = 1;     %-# planes forced to 1 so far
-  blksz  = blksz * nbz;
-  
-  %-Initialise variables used in the loop
+  %-Get explicit mask(s)
   %==========================================================================
-  [xords, yords] = ndgrid(1:xdim, 1:ydim);
-  xords = xords(:)'; yords = yords(:)';           % plane X,Y coordinates
-  S     = 0;                                      % Volume (voxels)
-  
-  %-Initialise XYZ matrix of in-mask voxel co-ordinates (real space)
-  %--------------------------------------------------------------------------
-  XYZ   = zeros(3,xdim*ydim*zdim);
-  
-  %-Cycle over bunches blocks within planes to avoid memory problems
+  mask = true(DIM);
+  for i = 1:numel(xM.VM)
+    if ~(isfield(SwE,'xVol') && isfield(SwE.xVol,'G'))
+        %-Assume it fits entirely in memory
+        C = spm_bsplinc(xM.VM(i), [0 0 0 0 0 0]');
+        v = true(DIM);
+        [x1,x2] = ndgrid(1:DIM(1),1:DIM(2));
+        for x3 = 1:DIM(3)
+            M2  = inv(M\xM.VM(i).mat);
+            y1 = M2(1,1)*x1+M2(1,2)*x2+(M2(1,3)*x3+M2(1,4));
+            y2 = M2(2,1)*x1+M2(2,2)*x2+(M2(2,3)*x3+M2(2,4));
+            y3 = M2(3,1)*x1+M2(3,2)*x2+(M2(3,3)*x3+M2(3,4));
+            v(:,:,x3) = spm_bsplins(C, y1,y2,y3, [0 0 0 0 0 0]') > 0;
+        end
+        mask = mask & v;
+        clear C v x1 x2 x3 M2 y1 y2 y3
+    else
+        if spm_mesh_detect(xM.VM(i))
+            v = xM.VM(i).private.cdata() > 0;
+        else
+            v = spm_mesh_project(gifti(SwE.xVol.G), xM.VM(i)) > 0;
+        end
+        mask = mask & v(:);
+        clear v
+    end
+  end
+
+  %-Split data into chunks
   %==========================================================================
-  str   = 'parameter estimation';
-  swe_progress_bar('Init',100,str,'');
+  chunksize = floor(spm_get_defaults('stats.maxmem') / 8 / nScan);
+  nbchunks  = ceil(prod(DIM) / chunksize);
+  chunks    = min(cumsum([1 repmat(chunksize,1,nbchunks)]),prod(DIM)+1);
+  
+  %-Split data into chunks
+  %==========================================================================
+  chunksize = floor(spm_get_defaults('stats.maxmem') / 8 / nScan);
+  nbchunks  = ceil(prod(DIM) / chunksize);
+  chunks    = min(cumsum([1 repmat(chunksize,1,nbchunks)]),prod(DIM)+1);
   
   % activated voxels for cluster-wise inference
   if (WB.clusterWise == 1)
@@ -762,8 +779,13 @@ if ~isMat
     minScore = nan(1, WB.nB + 1);
   end
   
-  for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
-    
+  %-Cycle over bunches blocks within planes to avoid memory problems
+  %==========================================================================
+  swe_progress_bar('Init',nbchunks,'Parameter estimation','Chunks');
+
+  for iChunk=1:nbchunks
+    chunk = chunks(iChunk):chunks(iChunk+1)-1;
+
     % current plane-specific parameters
     %----------------------------------------------------------------------
     CrPl         = z:min(z+nbz-1,zdim);       %-plane list

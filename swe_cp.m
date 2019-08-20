@@ -627,8 +627,6 @@ if ~isMat
       if iChunk > 1, fprintf(repmat(sprintf('\b'),1,72)); end                  %-# 
       fprintf('%-40s: %30s', sprintf('Chunk %3d/%-3d',i,nbchunks),...
                              '...processing');
-                             Y     = zeros(nScan,numel(chunk));
-                             cmask = mask(chunk);
 
       %-Get the data in mask, compute threshold & implicit masks
       %------------------------------------------------------------------
