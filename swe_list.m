@@ -589,9 +589,13 @@ case 'table'                                                        %-Table
     %----------------------------------------------------------------------
     minz           = abs(min(min(Z)));
     Z              = 1 + minz + Z;
-    [N Z XYZ A L]  = spm_max(Z,XYZ);
+    if ~spm_mesh_detect(xSwE.Vspm)
+        [N Z XYZ A L]  = spm_max(Z,XYZ);
+    else
+        [N Z XYZ A L]  = spm_mesh_max(Z,XYZ,xSwE.G);
+    end
     Z              = Z - minz - 1;
-    
+
     %-Convert cluster sizes from voxels (N) to resels (K)
     %----------------------------------------------------------------------
     c              = max(A);                           %-Number of clusters
@@ -599,8 +603,12 @@ case 'table'                                                        %-Table
     
     %-Convert maxima locations from voxels to mm
     %----------------------------------------------------------------------
-    XYZmm = M(1:3,:)*[XYZ; ones(1,size(XYZ,2))];
-    
+    if spm_mesh_detect(xSwE.Vspm)
+        XYZmm = xSwE.G.vertices(XYZ(1,:),:)';
+    else
+        XYZmm = M(1:3,:)*[XYZ; ones(1,size(XYZ,2))];
+    end
+
     %-Set-level p values {c} - do not display if reporting a single cluster
     %----------------------------------------------------------------------
 %     if STAT ~= 'P'
@@ -1036,6 +1044,12 @@ case 'table'                                                        %-Table
         if nargin < 2, error('Not enough input arguments.'); end
         if nargin < 3, hReg = []; else hReg = varargin{3};   end
         xSwE = varargin{2};
+        
+        if isfield(xSwE,'G')
+            warning('"current cluster" option not implemented for meshes.');
+            varargout = { evalin('base','TabDat') };
+            return;
+        end
 
         %-Get number of maxima per cluster to be reported
         %------------------------------------------------------------------
