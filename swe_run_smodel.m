@@ -396,10 +396,19 @@ switch iGXcalc,
         %-Compute as mean voxel value (within per image fullmean/8 mask)
         g = zeros(nScan,1);
         fprintf('%-40s: %30s','Calculating globals',' ')                %-#
-        for i = 1:nScan
-            str = sprintf('%3d/%-3d',i,nScan);
-            fprintf('%s%30s',repmat(sprintf('\b'),1,30),str)            %-#
-            g(i) = spm_global(VY(i)); % FIXME % for meshes
+        if spm_mesh_detect(VY)
+            for i = 1:nScan
+                    str = sprintf('%3d/%-3d',i,nScan);
+                    fprintf('%s%30s',repmat(sprintf('\b'),1,30),str)            %-#
+                    dat = spm_data_read(VY(i));
+                    g(i) = mean(dat(~isnan(dat)));
+            end
+        else
+            for i = 1:nScan
+                str = sprintf('%3d/%-3d',i,nScan);
+                fprintf('%s%30s',repmat(sprintf('\b'),1,30),str)            %-#
+                g(i) = spm_global(VY(i));
+            end
         end
         fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done')        %-#
     otherwise
