@@ -821,10 +821,7 @@ if ~isMat
     end % iChunk=1:nbchunks
 
     fprintf('\n');                                                          %-#
-    swe_progress_bar('Clear');
-
-    if ~any(mask(:))
-        
+    swe_progress_bar('Clear');        
     
     %==========================================================================
     % - P O S T   E S T I M A T I O N   C L E A N U P
