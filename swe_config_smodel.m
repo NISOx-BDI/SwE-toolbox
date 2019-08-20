@@ -269,7 +269,7 @@ em.help    = {
               'Note that, when the data is specified as a matrix save as a ".mat" file, the mask is expected to be specified as a mask vector saved as a ".mat" file.'
 
 }';
-em.filter = {'image', 'mat'};
+em.filter = {'image', 'mesh', 'mat'};
 em.ufilter = '.*';
 em.num     = [0 1];
 
