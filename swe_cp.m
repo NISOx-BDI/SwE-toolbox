@@ -485,10 +485,7 @@ if ~isMat
     end
 
     M        = VY(1).mat;
-    DIM      = VY(1).dim(1:3)';
-    % VOX      = sqrt(diag(M(1:3, 1:3)'*M(1:3, 1:3)))'; (commented by BG on 08/11/2016)
-    xdim     = DIM(1); ydim = DIM(2); zdim = DIM(3);
-    %vFWHM    = SwE.vFWHM; to be added later (for the variance smoothing)
+    DIM      = VY(1).dim;
 
     % check how the data image treat 0 (as NaN or not)
     YNaNrep = VY(1).dt(2);
@@ -1061,7 +1058,7 @@ end
 SwE.xVol.XYZ   = XYZ;               %-InMask XYZ coords (voxels)
 SwE.xVol.M     = M;                 %-voxels -> mm
 SwE.xVol.iM    = inv(M);            %-mm -> voxels
-SwE.xVol.DIM   = DIM;               %-image dimensions
+SwE.xVol.DIM   = DIM';               %-image dimensions
 % SwE.xVol.FWHM  = FWHM;              %-Smoothness data
 % SwE.xVol.R     = R;                 %-Resel counts
 SwE.xVol.S     = S;                 %-Volume (voxels)

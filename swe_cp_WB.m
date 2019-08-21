@@ -574,11 +574,9 @@ if ~isMat
   end
   
   M        = VY(1).mat;
-  DIM      = VY(1).dim(1:3)';
+  DIM      = VY(1).dim;
   VOX      = sqrt(diag(M(1:3, 1:3)'*M(1:3, 1:3)))';
-  xdim     = DIM(1); ydim = DIM(2); zdim = DIM(3);
-  %vFWHM    = SwE.vFWHM; to be added later (for the variance smoothing)
-  % YNaNrep  = spm_type(VY(1).dt(1),'nanrep');
+
   YNaNrep = VY(1).dt(2);
     
   fprintf('%-40s: %30s','Output images','...initialising');           %-#
@@ -1435,7 +1433,7 @@ if ~isMat
 end
 SwE.xVol.M     = M;                 %-voxels -> mm
 SwE.xVol.iM    = inv(M);            %-mm -> voxels
-SwE.xVol.DIM   = DIM;               %-image dimensions
+SwE.xVol.DIM   = DIM';               %-image dimensions
 SwE.xVol.S     = S;
 SwE.xVol.units = {'mm' 'mm' 'mm'};
 
@@ -1705,7 +1703,7 @@ for b = 1:WB.nB
 	  
         % T test already converted to Z
         if strcmp(WB.stat, 'T')
-          scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = hyptest.positive.conScore;
+          scorevol(sub2ind(DIM',currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = hyptest.positive.conScore;
         % F test needs to be converted to Z
         else
           % Get score volume from p values
@@ -1713,7 +1711,7 @@ for b = 1:WB.nB
           % remove NaNs
           sv(isnan(sv))=0;
           % Save as scorevol
-          scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = sv;
+          scorevol(sub2ind(DIM',currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = sv;
         end
 	
       end
