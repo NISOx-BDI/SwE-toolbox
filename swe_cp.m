@@ -800,7 +800,7 @@ if ~isMat
       %----------------------------------------------------------------------
       if isfield(SwE.type,'modified') 
         for iCov_vis=1:nCov_vis
-          c(cmask) = Cov_vis(iCov_visBeta,:);
+          c(cmask) = Cov_vis(iCov_vis,:);
           Vcov_vis(iCov_vis) = spm_data_write(Vcov_vis(iCov_vis), c, chunk);
         end
       end
@@ -808,7 +808,7 @@ if ~isMat
       %-Write CovBeta files
       %----------------------------------------------------------------------
       for iCov_beta=1:nCov_beta
-        c(cmask) = Cov_beta(iCov_visBeta,:);
+        c(cmask) = Cov_beta(iCov_beta,:);
         Vcov_beta(iCov_beta) = spm_data_write(Vcov_beta(iCov_beta), c, chunk);
       end
       
