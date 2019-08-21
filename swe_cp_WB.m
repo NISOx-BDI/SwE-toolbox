@@ -760,12 +760,6 @@ if ~isMat
   nbchunks  = ceil(prod(DIM) / chunksize);
   chunks    = min(cumsum([1 repmat(chunksize,1,nbchunks)]),prod(DIM)+1);
   
-  %-Split data into chunks
-  %==========================================================================
-  chunksize = floor(spm_get_defaults('stats.maxmem') / 8 / nScan);
-  nbchunks  = ceil(prod(DIM) / chunksize);
-  chunks    = min(cumsum([1 repmat(chunksize,1,nbchunks)]),prod(DIM)+1);
-  
   % activated voxels for cluster-wise inference
   if (WB.clusterWise == 1)
     activatedVoxels = false(0);
