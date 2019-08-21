@@ -787,252 +787,166 @@ if ~isMat
   for iChunk=1:nbchunks
     chunk = chunks(iChunk):chunks(iChunk+1)-1;
 
-    % current plane-specific parameters
-    %----------------------------------------------------------------------
-    CrPl         = z:min(z+nbz-1,zdim);       %-plane list
-    zords        = CrPl(:)*ones(1,xdim*ydim); %-plane Z coordinates
-    CrScore      = [];                        %-scores
-    CrYWB        = [];                        %-fitted data under H0
-    CrResWB      = [];                        %-residuals
-    CrP          = [];                        %-parametric p-values
-    CrBl         = [];                        %-parameter estimates
-    if (WB.stat == 'T')
-      CrPNeg       = [];                      %-negative parametric p-values
+    %-Report progress
+    %======================================================================
+    if iChunk > 1, fprintf(repmat(sprintf('\b'),1,72)); end                  %-# 
+    fprintf('%-40s: %30s', sprintf('Chunk %3d/%-3d',i,nbchunks),...
+                              '...processing');
+      
+    %-Get the data in mask, compute threshold & implicit masks
+    %------------------------------------------------------------------
+    Y = zeros(nScan, numel(chunk));
+    cmask = mask(chunk);
+    for iScan=1:nScan
+      if ~any(cmask), break, end                 %-Break if empty mask
+      
+      Y(iScan, cmask) = spm_data_read(VY(iScan), chunk(cmask));%-Read chunk of data
+      
+      cmask(cmask) = Y(iScan, cmask) > xM.TH(iScan);      %-Threshold (& NaN) mask
+      if xM.I && ~YNaNrep && xM.TH(iScan) < 0        %-Use implicit mask
+          cmask(cmask) = abs(Y(iScan, cmask)) > eps;
+      end
     end
-    CrConScore   = [];                        %-converted score values. 
-                                              % i.e. Z/X from T/F
-    Q            = [];                        %-in mask indices for this plane
-    Credf        = [];                        %-edf
-    
-    for bch = 1:nbch                     %-loop over blocks
+    cmask(cmask) = any(diff(Y(:,cmask),1));  
       
-      %-Print progress information in command window
-      %------------------------------------------------------------------
-      if numel(CrPl) == 1
-        str = sprintf('Plane %3d/%-3d, block %3d/%-3d',...
-		      z,zdim,bch,nbch);
-      else
-        str = sprintf('Planes %3d-%-3d/%-3d',z,CrPl(end),zdim);
-      end
-      if z == 1 && bch == 1
-        str2 = '';
-      else
-        str2 = repmat(sprintf('\b'),1,72);
-      end
-      fprintf('%s%-40s: %30s',str2,str,' ');
+    %-Mask out voxels where data is constant in at least one separable
+    % matrix design either in a visit category or within-subject (BG - 27/05/2016)
+    %------------------------------------------------------------------
+    [cmask, Y, CrS] = swe_mask_seperable(SwE, cmask, Y, iGr_dof);
       
+    %==================================================================
+    %-Proceed with General Linear Model (if there are voxels)
+    %==================================================================
+    if CrS
       
-      %-construct list of voxels in this block
-      %------------------------------------------------------------------
-      I     = (1:blksz) + (bch - 1)*blksz;       %-voxel indices
-      I     = I(I <= numel(CrPl)*xdim*ydim);     %-truncate
-      xyz   = [repmat(xords,1,numel(CrPl)); ...
-        repmat(yords,1,numel(CrPl)); ...
-        reshape(zords',1,[])];
-      xyz   = xyz(:,I);                          %-voxel coordinates
-      nVox  = size(xyz,2);                       %-number of voxels
+      %-General linear model: Ordinary least squares estimation
+      %--------------------------------------------------------------        
+      beta  = pX*Y;                     %-Parameter estimates
       
-      %-Get data & construct analysis mask
-      %=================================================================
-      fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...read & mask data')
-      Cm    = true(1,nVox);                      %-current mask
-      
-      %-Compute explicit mask
-      % (note that these may not have same orientations)
-      %------------------------------------------------------------------
-      for i = 1:length(xM.VM)
-        
-        %-Coordinates in mask image
-        %--------------------------------------------------------------
-        j = xM.VM(i).mat\M*[xyz;ones(1,nVox)];
-        
-        %-Load mask image within current mask & update mask
-        %--------------------------------------------------------------
+      % restricted fitted data
+      [resWB, YWB] = swe_fit(SwE, Y, tmpR2, corrWB, beta, SwE.WB.SS);
 
-        Cm(Cm) = spm_data_read(xM.VM(i), 'xyz', j(:,Cm)) > 0;
-
+      if WB.RSwE == 1
+        res = swe_fit(SwE, Y, tmpR2, corr, beta, SwE.SS);
+      else 
+        res = swe_fit(SwE, Y, xX.X, corr, beta, SwE.SS);
       end
-      
-      %-Get the data in mask, compute threshold & implicit masks
-      %------------------------------------------------------------------
-      Y     = zeros(nScan,nVox);
-      for i = 1:nScan
-        
-        %-Load data in mask
-        %--------------------------------------------------------------
-        if ~any(Cm), break, end                %-Break if empty mask
-        Y(i,Cm)  = spm_data_read(VY(i), 'xyz', xyz(:,Cm));
-        
-        Cm(Cm)   = Y(i,Cm) > xM.TH(i);         %-Threshold (& NaN) mask
-        if xM.I && ~YNaNrep && xM.TH(i) < 0    %-Use implicit mask
-          Cm(Cm) = abs(Y(i,Cm)) > eps;
+
+      clear Y                           %-Clear to save memory
+      %-Estimation of the data variance-covariance components (modified SwE)
+      %-SwE estimation (classic version)
+      %--------------------------------------------------------------
+      if isfield(SwE.type,'modified')
+        Cov_vis=zeros(nCov_vis,CrS);
+        for i = Ind_Cov_vis_diag
+          Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2, 1);
         end
-      end
-      
-      %-Mask out voxels where data is constant in at least one separable
-      % matrix design either in a visit category or within-subject (BG - 27/05/2016)
-      %------------------------------------------------------------------
-      [Cm, Y, CrS] = swe_mask_seperable(SwE, Cm, Y, iGr_dof);
-      
-      %==================================================================
-      %-Proceed with General Linear Model (if there are voxels)
-      %==================================================================
-      if CrS
         
-        %-General linear model: Ordinary least squares estimation
-        %--------------------------------------------------------------
-        fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...estimation');%-#
-        
-        beta  = pX*Y;                     %-Parameter estimates
-        
-        % restricted fitted data
-        [resWB, YWB]=swe_fit(SwE, Y, tmpR2, corrWB, beta, SwE.WB.SS);
-
-        if WB.RSwE == 1
-	  res=swe_fit(SwE, Y, tmpR2, corr, beta, SwE.SS);
-        else 
-	  res=swe_fit(SwE, Y, xX.X, corr, beta, SwE.SS);
+        % Check if some voxels have variance < eps and mask them
+        tmp = ~any(Cov_vis(Ind_Cov_vis_diag,:) < eps); % modified by BG on 29/08/16
+        if any(~tmp)
+          beta    = beta(:,tmp);
+          resWB   = resWB(:,tmp);
+          res     = res(:,tmp);
+          YWB      = YWB(:,tmp);
+          cmask(cmask)  = tmp;
+          CrS     = sum(cmask);
+          Cov_vis = Cov_vis(:,tmp);
         end
-
-        clear Y                           %-Clear to save memory
-        %-Estimation of the data variance-covariance components (modified SwE)
-        %-SwE estimation (classic version)
-        %--------------------------------------------------------------
-        if isfield(SwE.type,'modified')
-          Cov_vis=zeros(nCov_vis,CrS);
-          for i = Ind_Cov_vis_diag
-            Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2, 1);
-          end
-          
-          % Check if some voxels have variance < eps and mask them
-          tmp = ~any(Cov_vis(Ind_Cov_vis_diag,:) < eps); % modified by BG on 29/08/16
-          if any(~tmp)
-            beta    = beta(:,tmp);
-            resWB   = resWB(:,tmp);
-            res     = res(:,tmp);
-            YWB      = YWB(:,tmp);
-            Cm(Cm)  = tmp;
-            CrS     = sum(Cm);
-            Cov_vis = Cov_vis(:,tmp);
-          end
-          if CrS % Check if there is at least one voxel left
-            for i = Ind_Cov_vis_off_diag
-              if any(Flagk(i,:))
-                Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
-		    sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
-			 Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
-			 sum(res(Flagk(i,:),:).^2, 1)./...
-			 sum(res(Flagkk(i,:),:).^2, 1));
-              end
+        if CrS % Check if there is at least one voxel left
+          % compute the visit covariance matrices
+          for i = Ind_Cov_vis_off_diag
+            if any(Flagk(i,:))
+              Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
+                sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
+                Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
+                sum(res(Flagk(i,:),:).^2, 1)./...
+                sum(res(Flagkk(i,:),:).^2, 1));
             end
-            %NaN may be produced in cov. estimation when one correspondant
-            %variance are = 0, so set them to 0
-            Cov_vis(isnan(Cov_vis))=0;
-            %need to check if the eigenvalues of Cov_vis matrices are >=0
-            for g = 1:nGr
-              for iVox = 1:CrS
-                tmp = zeros(nVis_g(g));
-                tmp(tril(ones(nVis_g(g)))==1) = Cov_vis(iGr_Cov_vis_g==g,iVox);
-                tmp = tmp + tmp' - diag(diag(tmp));
-                [V D] = eig(tmp);
-                if any (diag(D)<0) %Bug corrected (BG - 19/09/13)
-                  D(D<0) = 0;
-                  tmp = V * D * V';
-                  Cov_vis(iGr_Cov_vis_g==g,iVox) = tmp(tril(ones(nVis_g(g)))==1); %Bug corrected (BG - 19/09/13)
-                end
+          end
+          %NaN may be produced in cov. estimation when one correspondant
+          %variance are = 0, so set them to 0
+          Cov_vis(isnan(Cov_vis))=0;
+          %need to check if the eigenvalues of Cov_vis matrices are >=0
+          for g = 1:nGr
+            for iVox = 1:CrS
+              tmp = zeros(nVis_g(g));
+              tmp(tril(ones(nVis_g(g)))==1) = Cov_vis(iGr_Cov_vis_g==g,iVox);
+              tmp = tmp + tmp' - diag(diag(tmp));
+              [V D] = eig(tmp);
+              if any (diag(D)<0) %Bug corrected (BG - 19/09/13)
+                D(D<0) = 0;
+                tmp = V * D * V';
+                Cov_vis(iGr_Cov_vis_g==g,iVox) = tmp(tril(ones(nVis_g(g)))==1); %Bug corrected (BG - 19/09/13)
               end
             end
           end
-          cCovBc = weightR * Cov_vis;
+        end
+        cCovBc = weightR * Cov_vis;
+      else % else for "if isfield(SwE.type,'modified')"
+        cCovBc = 0;
+        for i = 1:nSubj
+          Cov_beta_i_tmp = weightR(:,Ind_Cov_vis_classic==i) *...
+              (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
+          cCovBc = cCovBc + Cov_beta_i_tmp;
+        end
+        % These variables are left empty for classic SwE.
+        Cov_vis = [];
+        dofMat = [];
+      end
+        
+      % compute the score
+      if (SwE.WB.stat == 'T')
+        
+        score = (conWB * beta) ./ sqrt(cCovBc);
+        
+        % hypothesis test, using clusterwise threshold if available.
+        if (SwE.WB.clusterWise == 1)
+          hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+          p = hyptest.positive.p;
+          negp = hyptest.negative.p;
+          edf = hyptest.positive.edf;
+          activatedVoxels = hyptest.positive.activatedVoxels;
+          activatedVoxelsNeg = hyptest.negative.activatedVoxels;
+          clear CovcCovBc cCovBc
         else
-          cCovBc = 0;
-          for i = 1:nSubj
-            Cov_beta_i_tmp = weightR(:,Ind_Cov_vis_classic==i) *...
-		(res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
-            cCovBc = cCovBc + Cov_beta_i_tmp;
-          end
-          % These variables are left empty for classic SwE.
-          Cov_vis = [];
-          dofMat = [];
+          hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+          p = hyptest.positive.p;
+          negp = hyptest.negative.p;
+          edf = hyptest.positive.edf;
         end
+
+        minScore(1) = min(minScore(1), min(hyptest.positive.conScore));
+
         
-        % compute the score
-        if (SwE.WB.stat == 'T')
-          
-          score = (conWB * beta) ./ sqrt(cCovBc);
-          
-          % hypothesis test, using clusterwise threshold if available.
-          if (SwE.WB.clusterWise == 1)
-            hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
-            p = hyptest.positive.p;
-            negp = hyptest.negative.p;
-            edf = hyptest.positive.edf;
-            activatedVoxels = hyptest.positive.activatedVoxels;
-            activatedVoxelsNeg = hyptest.negative.activatedVoxels;
-            clear CovcCovBc cCovBc
-          else
-            hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
-            p = hyptest.positive.p;
-            negp = hyptest.negative.p;
-            edf = hyptest.positive.edf;
-          end
-
-          minScore(1) = min(minScore(1), min(hyptest.positive.conScore));
-
-          
+      else
+        % need to loop at every voxel
+        cBeta = conWB * beta;
+        score = zeros(1, CrS);
+        for iVox = 1:CrS
+          cCovBc_vox = zeros(nSizeCon);
+          cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
+          cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
+          score(iVox) = cBeta(:,iVox)' / cCovBc_vox * cBeta(:,iVox);
+        end
+        score = score / rankCon;
+        
+        % hypothesis test, using clusterwise threshold if available.
+        if (SwE.WB.clusterWise == 1)
+          hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels);
+          p = hyptest.positive.p;
+          edf = hyptest.positive.edf;
+          activatedVoxels = hyptest.positive.activatedVoxels;
         else
-          % need to loop at every voxel
-          cBeta = conWB * beta;
-          score = zeros(1, CrS);
-          for iVox = 1:CrS
-            cCovBc_vox = zeros(nSizeCon);
-            cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
-            cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
-            score(iVox) = cBeta(:,iVox)' / cCovBc_vox * cBeta(:,iVox);
-          end
-          score = score / rankCon;
-          
-          % hypothesis test, using clusterwise threshold if available.
-          if (SwE.WB.clusterWise == 1)
-            hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels);
-            p = hyptest.positive.p;
-            edf = hyptest.positive.edf;
-            activatedVoxels = hyptest.positive.activatedVoxels;
-          else
-            hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
-            p = hyptest.positive.p;
-            edf = hyptest.positive.edf;
-          end
+          hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+          p = hyptest.positive.p;
+          edf = hyptest.positive.edf;
         end
-        
-        maxScore(1) = max(maxScore(1), max(hyptest.positive.conScore));
-
-        %-Save betas etc. for current plane as we go along
-        %----------------------------------------------------------
-        CrYWB             = [CrYWB,    YWB]; %#ok<AGROW>
-        CrResWB           = [CrResWB,  resWB]; %#ok<AGROW>
-        CrScore           = [CrScore,  score]; %#ok<AGROW>
-        CrP               = [CrP,      -log10(hyptest.positive.p)]; %#ok<AGROW>
-        Credf             = [Credf,    hyptest.positive.edf]; %#ok<AGROW> 
-        CrBl              = [CrBl,    beta]; %#ok<AGROW>
-        if (SwE.WB.stat == 'T')
-	        CrConScore      = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
-	        CrPNeg          = [CrPNeg,   -log10(hyptest.negative.p)]; %#ok<AGROW>
-        end
-        if(SwE.WB.stat == 'F')
-	        CrConScore    = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
-        end
-        
-      end % (CrS)
+      end
       
-      %-Append new inmask voxel locations and volumes
-      %------------------------------------------------------------------
-      XYZ(:,S + (1:CrS)) = xyz(:,Cm);     %-InMask XYZ voxel coords
-      Q                  = [Q I(Cm)];     %#ok<AGROW> %-InMask XYZ voxel indices
-      S                  = S + CrS;       %-Volume analysed (voxels)
+      maxScore(1) = max(maxScore(1), max(hyptest.positive.conScore));
       
-    end % (bch)
-    
+    end % (CrS)
 
     %-Plane complete, write plane to image files (unless 1st pass)
     %======================================================================
