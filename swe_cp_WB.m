@@ -1536,8 +1536,8 @@ if isMat
 else
   originalScore = spm_data_read(VcScore, 'xyz', XYZ);
   % # blocks
-  blksz  = ceil(mmv);                             %-block size
-  nbch   = ceil(S/ blksz);          
+  nbchunks = ceil(S / chunksize);
+  chunks = min(cumsum([1 repmat(chunksize, 1, nbchunks)]), S+1);  
 end
 % variables for results
 uncP = ones(1, S); % one because of the original score
@@ -1601,17 +1601,17 @@ for b = 1:WB.nB
       end
       %-Print progress information in command window
       %------------------------------------------------------------------
-      str = sprintf('Bootstrap # %i  Block %i/%i', b, bch, nbch);
+      str = sprintf('Bootstrap # %i  Chunk %i/%i', b, iChunk, nbchunks);
       
-      if  bch == 1
+      if  iChunk == 1
         str2 = '';
       else
         str2 = repmat(sprintf('\b'),1,43);
       end
       fprintf('%s%-40s: %1s',str2,str,' ');
       
-      Y_b = spm_data_read(VYWB, 'xyz', XYZ(:,index)) + ...
-      spm_data_read(VResWB, 'xyz', XYZ(:,index)) .* repmat(resamplingMatrix(:,b),1,blksz);
+      Y_b = spm_data_read(VYWB, 'xyz', XYZ(:,chunk)) + ...
+      spm_data_read(VResWB, 'xyz', XYZ(:,chunk)) .* repmat(resamplingMatrix(:,b),1,sizeChunk);
       
       beta  = pX * Y_b;                     %-Parameter estimates
       if WB.RSwE == 0
@@ -1626,17 +1626,17 @@ for b = 1:WB.nB
       %-SwE estimation (classic version)
       %--------------------------------------------------------------
       if isfield(SwE.type,'modified')
-        Cov_vis=zeros(nCov_vis,blksz);
+        Cov_vis=zeros(nCov_vis,sizeChunk);
         for i = Ind_Cov_vis_diag
           Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2);
         end
         for i = Ind_Cov_vis_off_diag
           if any(Flagk(i,:))
             Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
-		sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
-		     Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
-		     sum(res(Flagk(i,:),:).^2, 1)./...
-		     sum(res(Flagkk(i,:),:).^2, 1));
+		              sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
+		              Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
+		              sum(res(Flagk(i,:),:).^2, 1)./...
+		              sum(res(Flagkk(i,:),:).^2, 1));
           end
         end
         %NaN may be produced in cov. estimation when one correspondant
@@ -1644,7 +1644,7 @@ for b = 1:WB.nB
         Cov_vis(isnan(Cov_vis))=0;
         %need to check if the eigenvalues of Cov_vis matrices are >=0
         for g = 1:SwE.Gr.nGr
-          for iVox = 1:blksz
+          for iVox = 1:sizeChunk
             tmp = zeros(nVis_g(g));
             tmp(tril(ones(nVis_g(g)))==1) = Cov_vis(iGr_Cov_vis_g==g,iVox);
             tmp = tmp + tmp' - diag(diag(tmp));
@@ -1679,8 +1679,8 @@ for b = 1:WB.nB
 	
         cBeta = conWB * beta;
         clear beta
-        score = zeros(1, blksz);
-        for iVox = 1:blksz
+        score = zeros(1, sizeChunk);
+        for iVox = 1:sizeChunk
           cCovBc_vox = zeros(nSizeCon);
           cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
           cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
@@ -1690,30 +1690,30 @@ for b = 1:WB.nB
         
       end
       
-      hyptest=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
+      hyptest=swe_hyptest(SwE, score, sizeChunk, cCovBc, Cov_vis, dofMat);
 
       if (WB.clusterWise == 1)
-        activatedVoxels(index) = hyptest.positive.activatedVoxels;
+        activatedVoxels(chunk) = hyptest.positive.activatedVoxels;
         if (WB.stat == 'T')
-          activatedVoxelsNeg(index) = hyptest.negative.activatedVoxels;
+          activatedVoxelsNeg(chunk) = hyptest.negative.activatedVoxels;
         end
         clear cCovBc
       end
 
-      uncP(index) = uncP(index) + (hyptest.positive.conScore > originalScore(index) - tol);
+      uncP(chunk) = uncP(chunk) + (hyptest.positive.conScore > originalScore(chunk) - tol);
       maxScore(b+1) = max(maxScore(b+1), max(hyptest.positive.conScore));
       if (SwE.WB.stat == 'T')
         minScore(b+1) = min(minScore(b+1), min(hyptest.positive.conScore));
       end
       
       % Calculate TFCE uncorrected p image.
-      if TFCE    
+      if TFCE
 
-	% Obtain P values.
-	hyptest=swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
-	
-	% Current XYZ indices
-	currXYZ = XYZ(1:3, index);
+        % Obtain P values.
+        hyptest=swe_hyptest(SwE, score, sizeChunk, cCovBc, Cov_vis, dofMat);
+        
+        % Current XYZ indices
+        currXYZ = XYZ(:, chunk);
 	  
         % T test already converted to Z
         if strcmp(WB.stat, 'T')
@@ -1730,20 +1730,20 @@ for b = 1:WB.nB
 	
       end
       
-    end % (bch)
+    end % (iChunk)
     
     if TFCE
 
       if SwE.WB.stat == 'T'        
 	
-	% Bootstrapped tfce vol.
-	tfce = swe_tfce_transform(scorevol,H,E,C,dh);
-	tfce_neg = swe_tfce_transform(-scorevol,H,E,C,dh);    
+        % Bootstrapped tfce vol.
+        tfce = swe_tfce_transform(scorevol,H,E,C,dh);
+        tfce_neg = swe_tfce_transform(-scorevol,H,E,C,dh);    
         
       else
 	
-	% Bootstrapped tfce vol.
-	tfce = swe_tfce_transform(scorevol,H,E,C,dh);
+        % Bootstrapped tfce vol.
+        tfce = swe_tfce_transform(scorevol,H,E,C,dh);
 	
       end
       
@@ -1763,7 +1763,7 @@ for b = 1:WB.nB
         
     end
     
-  else
+  else %isMat
     
     %-Print progress information in command window
     %------------------------------------------------------------------
