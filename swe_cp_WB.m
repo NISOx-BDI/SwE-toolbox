@@ -1382,7 +1382,6 @@ else % ".mat" format
       LocActivatedVoxels(cmask) = activatedVoxels;
       clusterAssignment = spm_mesh_clusters(faces,LocActivatedVoxels);
       clusterAssignment = clusterAssignment(LocActivatedVoxels)';
-    end
       if isnan(clusterAssignment)
         clusterAssignment = [];
       end
