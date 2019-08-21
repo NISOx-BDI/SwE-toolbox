@@ -119,7 +119,8 @@ end
 
 %-Check whether we are doing a TFCE analysis
 %--------------------------------------------------------------------------
-TFCE = isfield(SwE.WB, 'TFCE');
+% deactivate for now TFCE if we analyse surface data
+TFCE = isfield(SwE.WB, 'TFCE') && ~isMeshData;
 if TFCE
     H = SwE.WB.TFCE.H;
     E = SwE.WB.TFCE.E;
