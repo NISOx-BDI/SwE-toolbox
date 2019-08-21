@@ -777,6 +777,7 @@ if ~isMat
                     it = it + 1;
                     c(cmask) = Cov_beta_i_tmp(ii);
                     Vcov_beta_g(it) = spm_data_write(Vcov_beta_g(it), c, chunk);
+                  end
                 end
             end
         end
