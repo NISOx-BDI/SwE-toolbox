@@ -252,7 +252,7 @@ case 'table'                                                        %-Table
     units{1}  = [units{1} ' '];
     units{2}  = [units{2} ' '];
     
-    if ~spm_mesh_detect(xSPM.Vspm)
+    if ~spm_mesh_detect(xSwE.Vspm)
         DIM   = DIM > 1;                  % non-empty dimensions
         strDataType = 'voxels';
     else
@@ -553,7 +553,7 @@ case 'table'                                                        %-Table
      TabDat.ftr{(5+exlns),2} = [xSwE.df_Con xSwE.nPredict];
      
      % Record volume.
-     if spm_mesh_detect(xSPM.Vspm)
+     if spm_mesh_detect(xSwE.Vspm)
         TabDat.ftr{(6+exlns),1} = ...
             ['Surface: %0.0f ' strDataType ''];
         TabDat.ftr{(6+exlns),2} = [S];

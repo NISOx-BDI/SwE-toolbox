@@ -1,7 +1,7 @@
 function [Y,y,beta,Bcov] = swe_graph(xSwE,SwE,hReg)
 % Graphical display of adjusted data
 % =========================================================================
-% FORMAT [Y y beta Bcov] = swe_graph(xSPM,SPM,hReg)
+% FORMAT [Y y beta Bcov] = swe_graph(xSwE,SPM,hReg)
 % -------------------------------------------------------------------------
 % Inputs: 
 %  - xSwE   - structure containing SPM, distributional & filtering details
