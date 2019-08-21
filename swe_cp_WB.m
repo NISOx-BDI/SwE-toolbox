@@ -977,7 +977,7 @@ if ~isMat
       c(cmask) = resWB(iScan,:);
       VResWB(iScan) = spm_data_write(VResWB(iScan), c, chunk);
     end
-    
+
     %-Write parametric score image of the original data
     %------------------------------------------------------------------
     c(cmask) = score;
@@ -1017,6 +1017,16 @@ if ~isMat
   % - P O S T   E S T I M A T I O N   C L E A N U P
   %==========================================================================
   
+  S = nnz(mask);
+  if S == 0
+    error('Please check your data: There are no inmask voxels.');
+  end
+    
+  %-Compute coordinates of voxels within mask
+  %--------------------------------------------------------------------------
+  [x,y,z]        = ind2sub(DIM,find(mask));
+  XYZ            = [x y z]';
+    
   if TFCE
     % Create parametric TFCE statistic images.
     if strcmp(WB.stat, 'T')
@@ -1043,13 +1053,7 @@ if ~isMat
     end
   end
   
-  
-  fprintf('\n');                                                          %-#
-  swe_progress_bar('Clear')
-
-  clear beta res Cov_vis CrBl CrScore CrYWB CrResWB Q jj%-Clear to save memory
-  
-  XYZ   = XYZ(:,1:S); % remove all the data not used
+  clear beta res Cov_vis c %-Clear to save memory
   
   % compute the max cluster size if needed (so many ways this can be
   % done... Not sure this solution is the best)
