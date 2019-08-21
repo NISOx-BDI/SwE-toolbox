@@ -1096,6 +1096,10 @@ if ~isMat
       end
     end
   end
+
+  fprintf('\n');                                                          %-#
+  swe_progress_bar('Clear')
+
 else % ".mat" format
   % check how the data image treat 0 (as NaN or not)
   YNaNrep = 0;
