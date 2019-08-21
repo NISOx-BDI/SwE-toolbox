@@ -571,7 +571,7 @@ if ~isMat
     %                               DIM, M, sprintf('spm_spm:ResI (%02d)', i),...
     %                               isMeshData);
     % end
-    % fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-# 
+    fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-# 
     %  
     %==========================================================================
     % - F I T   M O D E L   &   W R I T E   P A R A M E T E R    I M A G E S
@@ -622,7 +622,7 @@ if ~isMat
       %-Report progress
       %======================================================================
       if iChunk > 1, fprintf(repmat(sprintf('\b'),1,72)); end                  %-# 
-      fprintf('%-40s: %30s', sprintf('Chunk %3d/%-3d',i,nbchunks),...
+      fprintf('%-40s: %30s', sprintf('Chunk %3d/%-3d',iChunk,nbchunks),...
                              '...processing');
 
       %-Get the data in mask, compute threshold & implicit masks
@@ -814,11 +814,10 @@ if ~isMat
       
       %-Report progress
       %======================================================================
-      fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');             %-#
+      fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done');             %-#
       swe_progress_bar('Set',i);
     end % iChunk=1:nbchunks
 
-    fprintf('\n');                                                          %-#
     swe_progress_bar('Clear');        
     
     %==========================================================================
@@ -1133,6 +1132,7 @@ SwE.ver = swe('ver');
 
 %-Save analysis parameters in SwE.mat file
 %--------------------------------------------------------------------------
+fprintf('%-40s: %30s','Saving SwE.mat','...writing');                   %-#
 if isOctave
     save('SwE.mat','SwE');
 elseif spm_matlab_version_chk('7') >=0
@@ -1140,11 +1140,11 @@ elseif spm_matlab_version_chk('7') >=0
 else
     save('SwE','SwE');
 end
+fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done')                %-#
 
 %==========================================================================
 %- E N D: Cleanup GUI
 %==========================================================================
-fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done')                %-#
 %spm('FigName','Stats: done',Finter); spm('Pointer','Arrow')
 fprintf('%-40s: %30s\n','Completed',spm('time'))                        %-#
 fprintf('...use the results section for assessment\n\n')  
