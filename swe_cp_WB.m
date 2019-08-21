@@ -1149,27 +1149,27 @@ else % ".mat" format
   nVox = size(Y, 2);
   
   %-Produce the mask
-  Cm = true(1, nVox);
+  cmask = true(1, nVox);
   %-Use the explicit mask if specified
   if length(SwE.xM.VM) == 1
-    Cm(:) = importdata(SwE.xM.VM{1}) > 0;
+    cmask(:) = importdata(SwE.xM.VM{1}) > 0;
   end
   %-check if some data need to be masked
   for i = 1:nScan
-    if ~any(Cm), break, end                %-Break if empty mask
-    Cm(Cm)   = Y(i,Cm) > xM.TH(i);         %-Threshold (& NaN) mask
+    if ~any(cmask), break, end                %-Break if empty mask
+    cmask(cmask)   = Y(i,cmask) > xM.TH(i);         %-Threshold (& NaN) mask
     if xM.I && ~YNaNrep && xM.TH(i) < 0    %-Use implicit mask
-      Cm(Cm) = abs(Y(i,Cm)) > eps;
+      cmask(cmask) = abs(Y(i,cmask)) > eps;
     end
   end
   %-Mask out voxels where data is constant in at least one separable
   % matrix design either in a visit category or within-subject (BG - 27/05/2016)
   %------------------------------------------------------------------
-  [Cm,Y,CrS] = swe_mask_seperable(SwE, Cm, Y, iGr_dof);
+  [cmask,Y,CrS] = swe_mask_seperable(SwE, cmask, Y, iGr_dof);
   
   if WB.clusterWise == 1
     if isfield(SwE.WB.clusterInfo, 'Vxyz')
-      XYZ   = XYZ(:,Cm);
+      XYZ   = XYZ(:,cmask);
     end
   end
   %==================================================================
@@ -1208,8 +1208,8 @@ else % ".mat" format
         resWB   = resWB(:,tmp);
         res     = res(:,tmp);
         YWB     = YWB(:,tmp);
-        Cm(Cm)  = tmp;
-        CrS     = sum(Cm);
+        cmask(cmask)  = tmp;
+        CrS     = sum(cmask);
         Cov_vis = Cov_vis(:,tmp);
       end
       if CrS % Check if there is at least one voxel left
@@ -1318,49 +1318,49 @@ else % ".mat" format
   Vscore      = sprintf('swe_vox_%cstat_c%02d%s', WB.stat, 1, file_ext);
   Vedf        = sprintf('swe_vox_edf_c%02d%s', 1, file_ext);
 
-  mask = Cm;       
+  mask = cmask;       
   save(sprintf('swe_vox_mask%s',  file_ext), 'mask');
   clear mask
   
-  edf(:,Cm) = edf;
+  edf(:,cmask) = edf;
   save(Vedf, 'edf');
   clear Vedf
   
   tmp = score;
   score = nan(1, nVox);
   if (SwE.WB.stat == 'T')
-    VT(:,Cm) = tmp;
+    VT(:,cmask) = tmp;
     save(Vscore, 'VT');
     score = tmp;
     clear tmp VT
   else
-    VF(:,Cm) = tmp;
+    VF(:,cmask) = tmp;
     save(Vscore, 'VF');
     score = tmp;
     clear tmp VF
   end
   
   VlP = nan(1, nVox);
-  VlP(:,Cm) = -log10(hyptest.positive.p);
+  VlP(:,cmask) = -log10(hyptest.positive.p);
   save(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 1, file_ext), 'VlP');
   clear VlP
   
   if (SwE.WB.stat == 'T')
     
     VlP_neg = nan(1, nVox);
-    VlP_neg(:,Cm) =  -log10(hyptest.negative.p);
+    VlP_neg(:,cmask) =  -log10(hyptest.negative.p);
     save(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 2, file_ext), 'VlP_neg');
     clear VlP_neg
     
     z_map = nan(1, nVox);
-    VZ(:,Cm) =  hyptest.positive.conScore;
+    VZ(:,cmask) =  hyptest.positive.conScore;
     save(sprintf('swe_vox_z%cstat_c%02d%s', WB.stat, 1, file_ext), 'VZ');
     clear VZ
     
   else
       
     x_map = nan(1, nVox);
-    VX(:,Cm) =  hyptest.positive.conScore;
+    VX(:,cmask) =  hyptest.positive.conScore;
     save(sprintf('swe_vox_x%cstat_c%02d%s', WB.stat, 1, file_ext), 'VX');
     clear VX
     
@@ -1379,7 +1379,7 @@ else % ".mat" format
       clusterAssignment = spm_clusters(LocActivatedVoxels);
     else %surface data      
       LocActivatedVoxels = false(nVox,1);
-      LocActivatedVoxels(Cm) = activatedVoxels;
+      LocActivatedVoxels(cmask) = activatedVoxels;
       clusterAssignment = spm_mesh_clusters(faces,LocActivatedVoxels);
       clusterAssignment = clusterAssignment(LocActivatedVoxels)';
       if isnan(clusterAssignment)
@@ -1401,7 +1401,7 @@ else % ".mat" format
         clusterAssignmentNeg = spm_clusters(LocActivatedVoxelsNeg);
       else %surface data
         LocActivatedVoxelsNeg = false(nVox,1);
-        LocActivatedVoxelsNeg(Cm) = activatedVoxelsNeg;
+        LocActivatedVoxelsNeg(cmask) = activatedVoxelsNeg;
         clusterAssignmentNeg = spm_mesh_clusters(faces,LocActivatedVoxelsNeg);
         clusterAssignmentNeg = clusterAssignmentNeg(LocActivatedVoxelsNeg)';
         if isnan(clusterAssignmentNeg)
@@ -1883,7 +1883,7 @@ for b = 1:WB.nB
       end     
     else %surface data
       LocActivatedVoxels = false(nVox,1);
-      LocActivatedVoxels(Cm) = activatedVoxels;
+      LocActivatedVoxels(cmask) = activatedVoxels;
       clusterAssignment = spm_mesh_clusters(faces,LocActivatedVoxels);
       clusterAssignment = clusterAssignment(LocActivatedVoxels)';
     end
@@ -1907,7 +1907,7 @@ for b = 1:WB.nB
         end  
       else %surface data
         LocActivatedVoxelsNeg = false(nVox,1);
-        LocActivatedVoxelsNeg(Cm) = activatedVoxelsNeg;
+        LocActivatedVoxelsNeg(cmask) = activatedVoxelsNeg;
         clusterAssignmentNeg = spm_mesh_clusters(faces,LocActivatedVoxelsNeg);
         clusterAssignmentNeg = clusterAssignmentNeg(LocActivatedVoxelsNeg)';
         if isnan(clusterAssignmentNeg)
@@ -1954,7 +1954,7 @@ end
 if isMat
   uncP = uncP / (WB.nB + 1);
   uncP_pos = nan(1, nVox);
-  uncP_pos(:,Cm) = uncP;
+  uncP_pos(:,cmask) = uncP;
   VlP_wb_pos = -log10(uncP);
   save(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 1, file_ext), 'VlP_wb_pos');
   clear VlP_wb_pos
@@ -1992,7 +1992,7 @@ if isMat
   end
   FWERP = FWERP / (WB.nB + 1);
   fwerP_pos = nan(1, nVox);
-  fwerP_pos(:,Cm) = FWERP;
+  fwerP_pos(:,cmask) = FWERP;
   VlP_wb_FWE_pos = -log10(fwerP_pos);
   save(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s',WB.stat,1,file_ext), 'VlP_wb_FWE_pos');
   clear VlP_wb_FWE_pos fwerP_pos FWERP
@@ -2010,7 +2010,7 @@ if isMat
     end
     FWERPNeg = FWERPNeg / (WB.nB + 1);
     fwerP_neg = nan(1, nVox);
-    fwerP_neg(:,Cm) = FWERPNeg;
+    fwerP_neg(:,cmask) = FWERPNeg;
     VlP_wb_FWE_neg = -log10(fwerP_neg);
     save(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s',WB.stat,2,file_ext), 'VlP_wb_FWE_neg');
     clear VlP_wb_FWE_neg fwerP_neg
@@ -2025,7 +2025,7 @@ if isMat
     fdrP = spm_P_FDR(uncP,[],'P',[],sort(uncP)');
   end
   fdrP_pos = nan(1, nVox);
-  fdrP_pos(:,Cm) = fdrP;
+  fdrP_pos(:,cmask) = fdrP;
   VlP_wb_FDR_pos = -log10(fdrP_pos);
   save(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s',WB.stat,1,file_ext), 'VlP_wb_FDR_pos');
   clear VlP_wb_FDR_pos fdrP_pos fdrP
@@ -2037,7 +2037,7 @@ if isMat
       fdrP = spm_P_FDR(1 + 1/(WB.nB + 1) - uncP,[],'P',[],sort(1 + 1/(WB.nB + 1) - uncP)');
     end
     fdrP_neg = nan(1, nVox);
-    fdrP_neg(:,Cm) = fdrP;
+    fdrP_neg(:,cmask) = fdrP;
     VlP_wb_FDR_neg = -log10(fdrP_neg);
     save(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s',WB.stat,2,file_ext), 'VlP_wb_FDR_neg');
     clear VlP_wb_FDR_neg fdrP_neg fdrP
@@ -2058,7 +2058,7 @@ if isMat
     
     clusterFwerP_pos_perElement = nan(1, nVox);
     if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')      
-      tmp = find(Cm);
+      tmp = find(cmask);
       tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
       for iC = 1:SwE.WB.clusterInfo.nCluster
         tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = clusterFwerP_pos_perCluster(iC);
@@ -2086,7 +2086,7 @@ if isMat
       
       clusterFwerP_neg_perElement = nan(1, nVox);
       if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')
-        tmp = find(Cm);
+        tmp = find(cmask);
         tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
         for iC = 1:SwE.WB.clusterInfo.nClusterNeg
           tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = clusterFwerP_neg_perCluster(iC);
@@ -2312,7 +2312,7 @@ end
 
 %-Mask out voxels where data is constant in at least one separable
 % matrix design either in a visit category or within-subject (BG - 27/05/2016)
-function [Cm,Y,CrS]=swe_mask_seperable(SwE, Cm, Y, iGr_dof)
+function [cmask,Y,CrS]=swe_mask_seperable(SwE, cmask, Y, iGr_dof)
     
 % Setup
 nGr_dof = length(unique(iGr_dof));
@@ -2331,36 +2331,36 @@ for g = 1:nGr_dof
   % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)
   if sum(iGr_dof'==g) > 1
     % mask constant data within separable matrix design g (added by BG on 29/08/16)
-    Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1);
+    cmask(cmask) = any(abs(diff(Y(iGr_dof'==g,cmask),1)) > eps, 1);
     if isfield(SwE.type,'modified') % added by BG on 29/08/16
       % then look data for each "homogeneous" group check if the data is contant over subject for each visit category
       for g2 = 1:nGr
-	for k = 1:nVis_g(g2)
-	  if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
-	    Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
-	    for kk = k:nVis_g(g2)
-	      if k ~= kk
-		% extract the list of subject with both visit k and kk
-		subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
-		% look if some difference are observed within subject
-		if ~isempty(subjList)
-		  diffVis = Cm(Cm) == 0;
-		  for i = 1:length(subjList)
-		    diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
-		  end
-		  Cm(Cm) = diffVis;
-		end
-	      end
-	    end
-	  end
-	end
+        for k = 1:nVis_g(g2)
+          if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
+            cmask(cmask) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,cmask),1)) > eps, 1);
+            for kk = k:nVis_g(g2)
+              if k ~= kk
+                % extract the list of subject with both visit k and kk
+                subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
+                % look if some difference are observed within subject
+                if ~isempty(subjList)
+                  diffVis = cmask(cmask) == 0;
+                  for i = 1:length(subjList)
+                    diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), cmask) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), cmask)) > eps);
+                  end
+                  cmask(cmask) = diffVis;
+                end
+              end
+            end
+          end
+        end
       end
     end
   end
 end
       
-Y      = Y(:,Cm);                          %-Data within mask
-CrS    = sum(Cm);                          %-# current voxels
+Y      = Y(:,cmask);                          %-Data within mask
+CrS    = sum(cmask);                          %-# current voxels
 
 end
 
