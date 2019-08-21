@@ -1059,7 +1059,14 @@ if ~isMat
   % done... Not sure this solution is the best)
   if (SwE.WB.clusterWise == 1)
     LocActivatedVoxels = XYZ(:,activatedVoxels);
-    clusterAssignment = spm_clusters(LocActivatedVoxels);
+    if isMeshData
+      T = false(SwE.xVol.DIM');
+      T(LocActivatedVoxels(1,:)) = true;
+      clusterAssignment = spm_mesh_clusters(SwE.xVol.G, T)';
+      clusterAssignment = clusterAssignment(LocActivatedVoxels(1,:));
+    else
+      clusterAssignment = spm_clusters(LocActivatedVoxels);
+    end
     nCluster     = max(clusterAssignment);
     clusterSize = histc(clusterAssignment,1:nCluster);
     
@@ -1071,7 +1078,14 @@ if ~isMat
     end
     if (SwE.WB.stat == 'T')
       LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);
-      clusterAssignmentNeg = spm_clusters(LocActivatedVoxelsNeg);
+      if isMeshData
+        T = false(SwE.xVol.DIM');
+        T(LocActivatedVoxelsNeg(1,:)) = true;
+        clusterAssignmentNeg = spm_mesh_clusters(SwE.xVol.G, T)';
+        clusterAssignmentNeg = clusterAssignmentNeg(LocActivatedVoxelsNeg(1,:));
+      else
+        clusterAssignmentNeg = spm_clusters(LocActivatedVoxelsNeg);
+      end
       nClusterNeg     = max(clusterAssignmentNeg);
       clusterSizeNeg = histc(clusterAssignmentNeg,1:nClusterNeg);
       if isempty(clusterSizeNeg)
@@ -1853,9 +1867,16 @@ for b = 1:WB.nB
   % compute the max cluster size if needed (so many ways this can be
   % done... Not sure this solution is the best)
   if (WB.clusterWise == 1)
-    if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')      
+    if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')
       LocActivatedVoxels = XYZ(:,activatedVoxels);
-      clusterAssignment = spm_clusters(LocActivatedVoxels);
+      if isMeshData
+        T = false(SwE.xVol.DIM');
+        T(LocActivatedVoxels(1,:)) = true;
+        clusterAssignment = spm_mesh_clusters(SwE.xVol.G, T)';
+        clusterAssignment = clusterAssignment(LocActivatedVoxels(1,:));
+      else
+        clusterAssignment = spm_clusters(LocActivatedVoxels);
+      end     
     else %surface data
       LocActivatedVoxels = false(nVox,1);
       LocActivatedVoxels(Cm) = activatedVoxels;
@@ -1872,7 +1893,14 @@ for b = 1:WB.nB
     if (WB.stat == 'T')
       if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz') 
         LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);
-        clusterAssignmentNeg = spm_clusters(LocActivatedVoxelsNeg);
+        if isMeshData
+          T = false(SwE.xVol.DIM');
+          T(LocActivatedVoxelsNeg(1,:)) = true;
+          clusterAssignmentNeg = spm_mesh_clusters(SwE.xVol.G, T)';
+          clusterAssignmentNeg = clusterAssignmentNeg(LocActivatedVoxelsNeg(1,:));
+        else
+          clusterAssignmentNeg = spm_clusters(LocActivatedVoxelsNeg);
+        end  
       else %surface data
         LocActivatedVoxelsNeg = false(nVox,1);
         LocActivatedVoxelsNeg(Cm) = activatedVoxelsNeg;
