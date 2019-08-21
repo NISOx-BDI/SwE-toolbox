@@ -782,7 +782,7 @@ if ~isMat
     %-Report progress
     %======================================================================
     if iChunk > 1, fprintf(repmat(sprintf('\b'),1,72)); end                  %-# 
-    fprintf('%-40s: %30s', sprintf('Chunk %3d/%-3d',i,nbchunks),...
+    fprintf('%-40s: %30s', sprintf('Chunk %3d/%-3d',iChunk,nbchunks),...
                               '...processing');
       
     %-Get the data in mask, compute threshold & implicit masks
@@ -1001,7 +1001,7 @@ if ~isMat
 
     %-Report progress
     %======================================================================
-    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');             %-#
+    fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done');             %-#
     swe_progress_bar('Set',i);
   end % iChunk=1:nbchunks  
 
@@ -1089,7 +1089,6 @@ if ~isMat
     end
   end
 
-  fprintf('\n');                                                          %-#
   swe_progress_bar('Clear')
 
 else % ".mat" format
@@ -1126,7 +1125,7 @@ else % ".mat" format
   
   %-Get data & construct analysis mask
   %=================================================================
-  fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...read & mask data')
+  fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...read & mask data')
   
   %-Get the data in mask, compute threshold & implicit masks
   %------------------------------------------------------------------
@@ -1171,7 +1170,7 @@ else % ".mat" format
     
     %-General linear model: Ordinary least squares estimation
     %--------------------------------------------------------------
-    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...estimation');%-#
+    fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...estimation');%-#
     
     beta  = pX*Y;                     %-Parameter estimates
     
@@ -1358,7 +1357,6 @@ else % ".mat" format
     
   end
   
-  fprintf('\n');                                                        %-#
   swe_progress_bar('Clear')
 
   clear res Cov_vis jj%-Clear to save memory
