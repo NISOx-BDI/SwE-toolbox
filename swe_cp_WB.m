@@ -948,74 +948,74 @@ if ~isMat
       
     end % (CrS)
 
-    %-Plane complete, write plane to image files (unless 1st pass)
+    %-Write output files
     %======================================================================
-    
-    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...saving plane'); %-#
-    
-    jj = NaN(xdim,ydim,numel(CrPl));
-    
-    %-Write Mask image
-    %------------------------------------------------------------------
-    if ~isempty(Q), jj(Q) = 1; end
+    c = NaN(numel(chunk),1);
 
-    VM    = spm_write_plane(VM, ~isnan(jj), CrPl);    
-
-    %-Write beta images
-    %------------------------------------------------------------------
-    for i = 1:nBeta
-        if ~isempty(Q), jj(Q) = CrBl(i,:); end
-        Vbeta(i) = spm_write_plane(Vbeta(i), jj, CrPl);
+      %-Write mask file
+    %----------------------------------------------------------------------
+    mask(chunk)  = cmask;
+    VM           = spm_data_write(VM, cmask', chunk);
+    
+    %-Write beta files
+    %----------------------------------------------------------------------
+    for iBeta = 1:nBeta
+      c(cmask) = beta(iBeta,:);
+      Vbeta(iBeta) = spm_data_write(Vbeta(iBeta), c, chunk); 
     end
-    
+
     %-Write WB fitted data images
     %------------------------------------------------------------------
-    for i = 1:nScan
-      if ~isempty(Q), jj(Q) = CrYWB(i,:); end
-      VYWB(i) = spm_write_plane(VYWB(i), jj, CrPl);
+    for iScan = 1:nScan
+      c(cmask) = YWB(iScan,:);
+      VYWB(iScan) = spm_data_write(VYWB(iScan), c, chunk);
     end
     
     %-Write WB residuals
     %------------------------------------------------------------------
-    for i = 1:nScan
-      if ~isempty(Q), jj(Q) = CrResWB(i,:); end
-      VResWB(i) = spm_write_plane(VResWB(i), jj, CrPl);
+    for iScan = 1:nScan
+      c(cmask) = resWB(iScan,:);
+      VResWB(iScan) = spm_data_write(VResWB(iScan), c, chunk);
     end
     
     %-Write parametric score image of the original data
     %------------------------------------------------------------------
-    if ~isempty(Q), jj(Q) = CrScore; end
-    Vscore = spm_write_plane(Vscore, jj, CrPl);
+    c(cmask) = score;
+    Vscore = spm_data_write(Vscore,  c, chunk);
     
     %-Write parametric edf image of the original data
     %------------------------------------------------------------------
-    if ~isempty(Q), jj(Q) = Credf; end
-    Vedf = spm_write_plane(Vedf, jj, CrPl);
+    c(cmask) = hyptest.positive.edf;
+    Vedf = spm_data_write(Vedf,  c, chunk);
     
     %-Write parametric p-value image
     %------------------------------------------------------------------
-    if ~isempty(Q), jj(Q) = CrP; end
-    VlP = spm_write_plane(VlP, jj, CrPl);
+    c(cmask) = -log10(hyptest.positive.p);
+    VlP = spm_data_write(VlP,  c, chunk);
     
     if WB.stat=='T'
-      if ~isempty(Q), jj(Q) = CrPNeg; end
-      VlP_Neg = spm_write_plane(VlP_Neg, jj, CrPl);
+      c(cmask) = -log10(hyptest.negative.p);
+      VlP_Neg = spm_data_write(VlP_Neg,  c, chunk);
     end
     
     %-Write converted parametric score image of the original data
     %------------------------------------------------------------------
-    if ~isempty(Q), jj(Q) = CrConScore; end
-    VcScore = spm_write_plane(VcScore, jj, CrPl);
+    c(cmask) = hyptest.positive.conScore;
+    VcScore = spm_data_write(VcScore,  c, chunk);
+
     if WB.stat == 'T'
-        VcScore_neg = spm_write_plane(VcScore_neg, -jj, CrPl);
+        VcScore_neg = spm_data_write(VcScore_neg,  -c, chunk);
     end
-    
+
     %-Report progress
-    %----------------------------------------------------------------------
-    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');
-    swe_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
-    
-  end % (for z = 1:zdim)
+    %======================================================================
+    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');             %-#
+    swe_progress_bar('Set',i);
+  end % iChunk=1:nbchunks  
+
+  %==========================================================================
+  % - P O S T   E S T I M A T I O N   C L E A N U P
+  %==========================================================================
   
   if TFCE
     % Create parametric TFCE statistic images.
