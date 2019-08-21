@@ -1590,15 +1590,9 @@ for b = 1:WB.nB
       
     end
     
-    for bch = 1:nbch                     %-loop over blocks
-      blksz  = ceil(mmv);                             %-block size
-      if bch ~= nbch
-        index = (1+(bch-1)*blksz) : (bch * blksz);
-        count = (bch-1)*blksz;
-      else
-        index = (1+(bch-1)*blksz) : size(XYZ,2);
-        blksz = length(index);
-      end
+    for iChunk=1:nbchunks
+      chunk = chunks(iChunk):chunks(iChunk+1)-1;
+      sizeChunk = length(chunk);
       %-Print progress information in command window
       %------------------------------------------------------------------
       str = sprintf('Bootstrap # %i  Chunk %i/%i', b, iChunk, nbchunks);
