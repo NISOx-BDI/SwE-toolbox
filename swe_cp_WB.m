@@ -651,9 +651,7 @@ if ~isMat
     descrip = sprintf('adjusted restricted residuals (%04d)', i);
     VResWB(i) = swe_data_hdr_write(sprintf('swe_vox_resid_y%04d%s', i, file_ext), DIM, M, descrip, metadata);
   end
-  
-  fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-#
-  
+    
   %-Initialise fitted data images for the resampling
   %----------------------------------------------------------------------
   
@@ -782,7 +780,7 @@ if ~isMat
     %-Report progress
     %======================================================================
     if iChunk > 1, fprintf(repmat(sprintf('\b'),1,72)); end                  %-# 
-    fprintf('%-40s: %30s', sprintf('Chunk %3d/%-3d',iChunk,nbchunks),...
+    fprintf('%-40s: %30s', sprintf('Original statistics: Chunk %3d/%-3d',iChunk,nbchunks),...
                               '...processing');
       
     %-Get the data in mask, compute threshold & implicit masks
@@ -1001,7 +999,6 @@ if ~isMat
 
     %-Report progress
     %======================================================================
-    fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done');             %-#
     swe_progress_bar('Set',i);
   end % iChunk=1:nbchunks  
 
@@ -1416,7 +1413,6 @@ if S == 0, spm('alert!','No inmask voxels - empty analysis!'); return; end
 
 %-Save remaining results files and analysis parameters
 %==========================================================================
-fprintf('%-40s: %30s','Saving results','...writing');
 
 %-place fields in SwE
 %--------------------------------------------------------------------------
@@ -1499,6 +1495,8 @@ else
   save('SwE','SwE');
 end
 
+fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done');             %-#
+
 %==========================================================================
 %- Produce bootstraps and maximum stats 
 %==========================================================================
@@ -1535,8 +1533,6 @@ uncP = ones(1, S); % one because of the original score
 str   = sprintf('Parameter estimation\nBootstraping');
 
 swe_progress_bar('Init',100,str,'');
-
-fprintf('\n')
 
 % If we are doing a TFCE analysis we need to record uncorrected P-values
 % for TFCE and maxima for FWE.
@@ -1585,14 +1581,9 @@ for b = 1:WB.nB
       sizeChunk = length(chunk);
       %-Print progress information in command window
       %------------------------------------------------------------------
-      str = sprintf('Bootstrap # %i  Chunk %i/%i', b, iChunk, nbchunks);
-      
-      if  iChunk == 1
-        str2 = '';
-      else
-        str2 = repmat(sprintf('\b'),1,43);
-      end
-      fprintf('%s%-40s: %1s',str2,str,' ');
+      if iChunk > 1, fprintf(repmat(sprintf('\b'),1,72)); end                  %-# 
+      fprintf('%-40s: %30s', sprintf('Bootstrap # %i: Chunk %3d/%-3d', b, iChunk, nbchunks),...
+																	'...processing');
       
       Y_b = spm_data_read(VYWB, 'xyz', XYZ(:,chunk)) + ...
       spm_data_read(VResWB, 'xyz', XYZ(:,chunk)) .* repmat(resamplingMatrix(:,b),1,sizeChunk);
@@ -1907,7 +1898,7 @@ for b = 1:WB.nB
       end
     end
   end
-  toc
+  fprintf('%s%30s\n', repmat(sprintf('\b'),1,30), sprintf('..done in %0.4f seconds', toc));
   swe_progress_bar('Set',100 * b / WB.nB);
 end
 
@@ -1915,6 +1906,7 @@ swe_progress_bar('Clear');
 
 %-Save analysis original max min in SwE structure
 %--------------------------------------------------------------------------
+fprintf('%-40s: %30s','Saving results','...writing');
 SwE.WB.maxScore = maxScore;
 if (WB.clusterWise == 1)
     SwE.WB.clusterInfo.maxClusterSize = maxClusterSize;
