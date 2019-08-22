@@ -1110,17 +1110,17 @@ if ~isMat
   if ~isMat
     XYZ    = XYZ(:,Q);
   end
+	if isMat
+		strDataType = 'data elements';
+	else
+		if spm_mesh_detect(xCon(Ic(1)).Vspm)
+			strDataType = 'vertices'
+		else 
+			strDataType = 'voxels'; 
+		end
+	end
   if isempty(Q)
       fprintf('\n');
-      if isMat
-        strDataType = 'data elements';
-      else
-        if spm_mesh_detect(xCon(Ic(1)).Vspm)
-          strDataType = 'vertices'
-        else 
-          strDataType = 'voxels'; 
-        end
-      end
       warning('SwE:NoVoxels','No %s survive thresholding', strDataType);
   end
   
