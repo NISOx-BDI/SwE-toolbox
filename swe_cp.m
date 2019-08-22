@@ -761,10 +761,8 @@ if ~isMat
                 end
             end
         else % else for "if isfield(SwE.type,'modified')"
-            if dof_type == 1 %need to save all subject contributions...
-                Cov_beta_i =  NaN(nSubj,nCov_beta,CrS);
-            end
             Cov_beta = 0;
+            it = 0;
             for i = 1:nSubj
                 Cov_beta_i_tmp = weight(:,Ind_Cov_vis_classic==i) *...
                     (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
@@ -772,7 +770,7 @@ if ~isMat
                 if dof_type == 1 %need to save all subject contributions...
                   for ii=1:nCov_beta
                     it = it + 1;
-                    c(cmask) = Cov_beta_i_tmp(ii);
+                    c(cmask) = Cov_beta_i_tmp(ii,:);
                     Vcov_beta_g(it) = spm_data_write(Vcov_beta_g(it), c, chunk);
                   end
                 end
