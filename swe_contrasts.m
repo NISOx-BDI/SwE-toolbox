@@ -133,14 +133,14 @@ for i = 1:length(Ic)
           S = size(beta,2);
         end
         
+        %-Compute contrast
+        %------------------------------------------------------
+        fprintf('\t%-32s: %30s',sprintf('contrast image %2d',ic),...
+            '...computing');                                %-#
+        str   = 'contrast computation';
+        swe_progress_bar('Init',100,str,'');
         % if the Co is a vector, then create Co * Beta (Vcon)
         if nSizeCon==1
-            %-Compute contrast
-            %------------------------------------------------------
-            fprintf('\t%-32s: %30s',sprintf('contrast image %2d',ic),...
-                '...computing');                                %-#
-            str   = 'contrast computation';
-            swe_progress_bar('Init',100,str,'');
             if ~isMat
               V      = Vbeta(ind);
             end
@@ -181,17 +181,8 @@ for i = 1:length(Ic)
               xCon(ic).Vcon = spm_data_write(xCon(ic).Vcon, tmp);
               
               clear tmp
-              fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
-                '...written %s',spm_file(xCon(ic).Vcon.fname,'filename')))%-#
             end
         else
-            %-Compute contrast
-            %------------------------------------------------------
-            fprintf('\t%-32s: %30s',sprintf('contrast image %2d',ic),...
-                '...computing');                                %-#
-            str   = 'contrast computation';
-            swe_progress_bar('Init',100,str,'');
-
             if ~isMat
               V      = Vbeta(ind);
             end
@@ -206,6 +197,14 @@ for i = 1:length(Ic)
             end
             swe_progress_bar('Clear')
         end     
+
+        if ~isMat
+          fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+            '...written %s', xCon(ic).Vcon.fname))
+        else
+          fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+            '...written %s', xCon(ic).Vcon))         
+        end
         
         % clear beta for memory
         if isMat
@@ -215,7 +214,13 @@ for i = 1:length(Ic)
         %======================================================================
         
         %-compute the contrasted beta covariances and edof for the contrast
-        fprintf('\t%-32s: %30s',sprintf('spm{%c} image %2d',xCon(ic).STAT,ic),...
+        switch(xCon(ic).STAT)
+          case 'T'
+            eSTAT = 'Z';
+          case 'F'
+            eSTAT = 'X';
+        end
+        fprintf('\t%-32s: %30s',sprintf('spm{%c} image %2d',eSTAT,ic),...
             '...computing');                                %-#
         str   = 'contrasted beta covariance computation';
         swe_progress_bar('Init',100,str,'');        
@@ -279,7 +284,6 @@ for i = 1:length(Ic)
         switch(xCon(ic).STAT)
             case 'T'                                 %-Compute spm{t} image
                 %----------------------------------------------------------
-                eSTAT = 'Z';
                 score = cBeta ./ sqrt(cCovBc);
                 swe_progress_bar('Set',100*(0.1));
                 switch dof_type 
@@ -381,7 +385,6 @@ for i = 1:length(Ic)
                 
             case 'F'                                 %-Compute spm{F} image
                 %---------------------------------------------------------
-                eSTAT = 'X';
                 if nSizeCon==1
                     score = abs(cBeta ./ sqrt(cCovBc));
                     indNotNan = ~isnan(score);
@@ -621,8 +624,9 @@ for i = 1:length(Ic)
           fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
             '...written %s',spm_str_manip(xCon(ic).Vspm.fname,'t')));
         end
-        %-# 
-        fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...writing');      %-#
+        
+        fprintf('\t%-32s: %30s',sprintf('spm{%c} image %2d',xCon(ic).STAT,ic),...
+        '...writing');  
 
         if isMat
           xCon(ic).Vspm2 = sprintf('swe_vox_%cstat_c%02d%s',xCon(ic).STAT,ic,file_ext);
@@ -653,6 +657,8 @@ for i = 1:length(Ic)
         end
         
         % save raw uncorrected p-values (new on 05/11/2017)
+        fprintf('\t%-32s: %30s',sprintf('-log10(uncP) image %2d',ic),...
+        '...writing');  
         if isMat
           xCon(ic).VspmUncP = sprintf('swe_vox_%cstat_lp_c%02d%s',xCon(ic).STAT,ic,file_ext);
           save(xCon(ic).VspmUncP, 'luncP');
@@ -680,7 +686,10 @@ for i = 1:length(Ic)
           fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
             '...written %s',spm_str_manip(xCon(ic).VspmUncP.fname,'t')));
         end
-        
+ 
+        fprintf('\t%-32s: %30s',sprintf('edf image %2d',ic),...
+        '...writing');
+
         if dof_type
           if isMat
             xCon(ic).Vedf = sprintf('swe_vox_edf_c%02d%s',ic,file_ext);
