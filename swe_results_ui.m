@@ -388,7 +388,7 @@ switch lower(Action), case 'setup'                         %-Set up results
 %     xSPMtmp = xSwE; xSPMtmp.thresDesc = 'p<0.05 (FWE)';
 %     uimenu(hC1,'Label','Set to 0.05 (FWE)','UserData',struct('Ic',xSwE.Ic),...
 %         'Callback',{@mychgcon,xSPMtmp});
-    xSwEtmp = xSwE; xSwEtmp.thresDesc = 'p<0.001 (unc.)';
+    xSwEtmp = xSwE; xSwEtmp.thresDesc = 'p<0.001 (unc.)'; xSwEtmp.infType = 0;
     uimenu(hC1,'Label','Set to 0.001 (unc.)','UserData',struct('Ic',xSwE.Ic),...
         'Callback',{@mychgcon,xSwEtmp});
     
@@ -1254,6 +1254,7 @@ if ~isempty(xSwE.thresDesc)
     xSwE2.thresDesc = td.thresDesc;
     xSwE2.u     = str2double(td.u);
     xSwE2.k     = xSwE.k;
+    xSwE2.infType = xSwE.infType;
 end
 hReg = spm_XYZreg('FindReg',spm_figure('GetWin','Interactive'));
 xyz  = spm_XYZreg('GetCoords',hReg);
