@@ -182,6 +182,13 @@ for i = 1:length(Ic)
               
               clear tmp
             end
+            if ~isMat
+              fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+                '...written %s', xCon(ic).Vcon.fname))
+            else
+              fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+                '...written %s', xCon(ic).Vcon))         
+            end
         else
             if ~isMat
               V      = Vbeta(ind);
@@ -196,15 +203,14 @@ for i = 1:length(Ic)
               swe_progress_bar('Set',100*(j/numel(ind)));
             end
             swe_progress_bar('Clear')
+            if ~isMat
+              fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+                '...computed'))
+            else
+              fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+                '...computed'))         
+            end
         end     
-
-        if ~isMat
-          fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
-            '...written %s', xCon(ic).Vcon.fname))
-        else
-          fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
-            '...written %s', xCon(ic).Vcon))         
-        end
         
         % clear beta for memory
         if isMat
