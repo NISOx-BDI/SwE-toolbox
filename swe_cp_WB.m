@@ -1730,7 +1730,7 @@ for b = 1:WB.nB
       %-SwE estimation (classic version)
       %--------------------------------------------------------------
       if dof_type == 1
-        tmpSum = zeros(1,blksz);
+        tmpSum = zeros(1,sizeChunk);
       end
       if isfield(SwE.type,'modified')
         Cov_vis=zeros(nCov_vis,sizeChunk);
@@ -1767,7 +1767,7 @@ for b = 1:WB.nB
             if nSizeCon == 1
               tmpSum = tmpSum + Cov_beta_g_tmp.^2/edof_Gr(g);
             else
-              for iVox = 1:blksz
+              for iVox = 1:sizeChunk
                 cCovBc_g_vox = zeros(nSizeCon);
                 cCovBc_g_vox(tril(ones(nSizeCon))==1) = Cov_beta_g_tmp(:, iVox);
                 cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
@@ -1787,7 +1787,7 @@ for b = 1:WB.nB
             if nSizeCon == 1 
               tmpSum = tmpSum + Cov_beta_i_tmp.^2/edof_Gr(i);
             else
-              for iVox = 1:blksz
+              for iVox = 1:sizeChunk
                 cCovBc_g_vox = zeros(nSizeCon);
                 cCovBc_g_vox(tril(ones(nSizeCon))==1) = Cov_beta_i_tmp(:,iVox);
                 cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
@@ -1807,8 +1807,8 @@ for b = 1:WB.nB
         if nSizeCon == 1
           edf = cCovBc.^2 ./ tmpSum;
         else
-          edf = zeros(1,blksz);
-          for iVox = 1:blksz
+          edf = zeros(1,sizeChunk);
+          for iVox = 1:sizeChunk
             cCovBc_vox = zeros(nSizeCon);
             cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
             cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
