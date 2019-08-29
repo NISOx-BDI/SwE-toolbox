@@ -1862,7 +1862,7 @@ for b = 1:WB.nB
       if TFCE
 
         % Current XYZ indices
-        currXYZ = XYZ(1:3, index);
+        currXYZ = XYZ(1:3, chunk);
 	  
         % T test already converted to Z
         if strcmp(WB.stat, 'T')
