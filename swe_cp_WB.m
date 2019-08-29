@@ -320,6 +320,9 @@ end
 
 %-preprocessing for the modified SwE
 if isfield(SwE.type,'modified')
+  if dof_type == 1
+    error('degrees of freedom type still not implemented for the modified SwE and the WB')
+  end
   iVis      = SwE.Vis.iVis;
   iGr       = SwE.Gr.iGr;
   uGr       = unique(iGr); 
