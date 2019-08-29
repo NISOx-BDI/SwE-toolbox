@@ -337,6 +337,9 @@ end
 
 %-preprocessing for the modified SwE
 if isfield(SwE.type,'modified')
+  if dof_type == 1
+    error('degrees of freedom type still not implemented for the modified SwE and the WB')
+  end
   iVis      = SwE.Vis.iVis;
   iGr       = SwE.Gr.iGr;
   uGr       = unique(iGr); 
@@ -535,9 +538,9 @@ if isfield(SwE.type,'classic')
     end
   end
   %-compute the effective dof from each homogeneous group (here, subject)
-%   if dof_type == 1
-%     edof_Gr = edof_Subj;
-%   end
+  if dof_type == 1
+    edof_Gr = edof_Subj;
+  end
   weightR = pinv(swe_duplication_matrix(nSizeCon)) * kron(conWB,conWB) * swe_duplication_matrix(nBeta) * weight; % used to compute the R SwE R' 
 end
 
@@ -858,6 +861,9 @@ if ~isMat
           %variance are = 0, so set them to 0
           Cov_vis(isnan(Cov_vis))=0;
           %need to check if the eigenvalues of Cov_vis matrices are >=0
+          if dof_type == 1
+            tmpSum = zeros(1,CrS);
+          end    
           for g = 1:nGr
             for iVox = 1:CrS
               tmp = zeros(nVis_g(g));
@@ -869,22 +875,68 @@ if ~isMat
                 tmp = V * D * V';
                 Cov_vis(iGr_Cov_vis_g==g,iVox) = tmp(tril(ones(nVis_g(g)))==1); %Bug corrected (BG - 19/09/13)
               end
+              if dof_type == 1
+                Cov_beta_g_tmp = weightR(:, iGr_Cov_vis_g==g) * Cov_vis(iGr_Cov_vis_g==g,:);
+                if nSizeCon == 1
+                  tmpSum = tmpSum + Cov_beta_g_tmp.^2/edof_Gr(g);
+                else
+                  for iVox = 1:CrS
+                    cCovBc_g_vox = zeros(nSizeCon);
+                    cCovBc_g_vox(tril(ones(nSizeCon))==1) = Cov_beta_g_tmp(:, iVox);
+                    cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
+                    tmpSum(iVox) = tmpSum(iVox) + (trace(cCovBc_g_vox^2) + (trace(cCovBc_g_vox))^2)/edof_Gr(g);
+                  end
+                end
+              end
             end
           end
         end
         cCovBc = weightR * Cov_vis;
+        clear Cov_beta_g_tmp
       else % else for "if isfield(SwE.type,'modified')"
         cCovBc = 0;
+        if dof_type == 1
+          tmpSum = zeros(1,CrS);
+        end    
         for i = 1:nSubj
           Cov_beta_i_tmp = weightR(:,Ind_Cov_vis_classic==i) *...
               (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
           cCovBc = cCovBc + Cov_beta_i_tmp;
+          if dof_type == 1
+            if nSizeCon == 1 
+              tmpSum = tmpSum + Cov_beta_i_tmp.^2/edof_Gr(i);
+            else
+              for iVox = 1:CrS
+                cCovBc_g_vox = zeros(nSizeCon);
+                cCovBc_g_vox(tril(ones(nSizeCon))==1) = Cov_beta_i_tmp(:,iVox);
+                cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
+                tmpSum(iVox) = tmpSum(iVox) + (trace(cCovBc_g_vox^2) + (trace(cCovBc_g_vox))^2)/edof_Gr(i);
+              end
+            end
+          end
         end
         % These variables are left empty for classic SwE.
         Cov_vis = [];
         dofMat = [];
+        clear Cov_beta_i_tmp
       end
-        
+
+      % if dof_type == 1, compute the edf now
+      if dof_type == 1
+        if nSizeCon == 1
+          edf = cCovBc.^2 ./ tmpSum;
+        else
+          edf = zeros(1,CrS);
+          for iVox = 1:CrS
+            cCovBc_vox = zeros(nSizeCon);
+            cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
+            cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
+            edf(iVox)=(trace(cCovBc_vox^2) + (trace(cCovBc_vox))^2) / tmpSum(iVox);
+          end
+        end
+      end
+      clear tmpSum
+
       % compute the score
       if (SwE.WB.stat == 'T')
         
@@ -892,7 +944,11 @@ if ~isMat
         
         % hypothesis test, using clusterwise threshold if available.
         if (SwE.WB.clusterWise == 1)
-          hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+          if dof_type == 1
+            hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf, activatedVoxels, activatedVoxelsNeg);
+          else
+            hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+          end
           p = hyptest.positive.p;
           negp = hyptest.negative.p;
           edf = hyptest.positive.edf;
@@ -900,7 +956,11 @@ if ~isMat
           activatedVoxelsNeg = hyptest.negative.activatedVoxels;
           clear CovcCovBc cCovBc
         else
-          hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+          if dof_type == 1
+            hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf);
+          else
+            hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+          end
           p = hyptest.positive.p;
           negp = hyptest.negative.p;
           edf = hyptest.positive.edf;
@@ -923,12 +983,20 @@ if ~isMat
         
         % hypothesis test, using clusterwise threshold if available.
         if (SwE.WB.clusterWise == 1)
-          hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels);
+          if dof_type == 1
+            hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf, activatedVoxels);
+          else
+            hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels);
+          end
           p = hyptest.positive.p;
           edf = hyptest.positive.edf;
           activatedVoxels = hyptest.positive.activatedVoxels;
         else
-          hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+          if dof_type == 1
+            hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf);
+          else
+            hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+          end
           p = hyptest.positive.p;
           edf = hyptest.positive.edf;
         end
@@ -1183,6 +1251,9 @@ else % ".mat" format
     %-Estimation of the data variance-covariance components (modified SwE)
     %-SwE estimation (classic version)
     %--------------------------------------------------------------
+    if dof_type == 1
+      tmpSum = zeros(1,CrS);
+    end
     if isfield(SwE.type,'modified')
       Cov_vis=zeros(nCov_vis,CrS);
       for i = Ind_Cov_vis_diag
@@ -1226,28 +1297,74 @@ else % ".mat" format
               Cov_vis(iGr_Cov_vis_g==g,iVox) = tmp(tril(ones(nVis_g(g)))==1); %Bug corrected (BG - 19/09/13)
             end
           end
+          if dof_type == 1
+            Cov_beta_g_tmp = weightR(:, iGr_Cov_vis_g==g) * Cov_vis(iGr_Cov_vis_g==g,:);
+            if nSizeCon == 1
+              tmpSum = tmpSum + Cov_beta_g_tmp.^2/edof_Gr(g);
+            else
+              for iVox = 1:CrS
+                cCovBc_g_vox = zeros(nSizeCon);
+                cCovBc_g_vox(tril(ones(nSizeCon))==1) = Cov_beta_g_tmp(:, iVox);
+                cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
+                tmpSum(iVox) = tmpSum(iVox) + (trace(cCovBc_g_vox^2) + (trace(cCovBc_g_vox))^2)/edof_Gr(g);
+              end
+            end
+          end
         end
       end
       cCovBc = weightR * Cov_vis;
-    else
+      clear Cov_beta_g_tmp
+    else % classic
       cCovBc = 0;
       for i = 1:nSubj
         Cov_beta_i_tmp = weightR(:,Ind_Cov_vis_classic==i) *...
 	    (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
         cCovBc = cCovBc + Cov_beta_i_tmp;
+        if dof_type == 1
+          if nSizeCon == 1 
+            tmpSum = tmpSum + Cov_beta_i_tmp.^2/edof_Gr(i);
+          else
+            for iVox = 1:CrS
+              cCovBc_g_vox = zeros(nSizeCon);
+              cCovBc_g_vox(tril(ones(nSizeCon))==1) = Cov_beta_i_tmp(:,iVox);
+              cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
+              tmpSum(iVox) = tmpSum(iVox) + (trace(cCovBc_g_vox^2) + (trace(cCovBc_g_vox))^2)/edof_Gr(i);
+            end
+          end
+        end
       end
       % These variables are left empty for classic SwE.
       Cov_vis = [];
       dofMat = [];
+      clear Cov_beta_i_tmp
     end
-    
+
+    % if dof_type == 1, compute the edf now
+    if dof_type == 1
+      if nSizeCon == 1
+        edf = cCovBc.^2 ./ tmpSum;
+      else
+        edf = zeros(1,CrS);
+        for iVox = 1:CrS
+          cCovBc_vox = zeros(nSizeCon);
+          cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
+          cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
+          edf(iVox)=(trace(cCovBc_vox^2) + (trace(cCovBc_vox))^2) / tmpSum(iVox);
+        end
+      end
+    end
+    clear tmpSum
     % compute the score
     if (SwE.WB.stat == 'T')
       
       score = (conWB * beta) ./ sqrt(cCovBc);
       
       if (SwE.WB.clusterWise == 1)
-        hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+        if dof_type == 1
+          hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf, activatedVoxels, activatedVoxelsNeg);
+        else
+          hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
+        end
         p = hyptest.positive.p; 
         negp = hyptest.negative.p;
         edf = hyptest.positive.edf;
@@ -1255,7 +1372,11 @@ else % ".mat" format
         activatedVoxelsNeg = hyptest.negative.activatedVoxels;
         clear CovcCovBc cCovBc
       else
-        hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+        if dof_type == 1
+          hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf);
+        else
+          hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+        end
         p = hyptest.positive.p;
         edf = hyptest.positive.edf;
         clear CovcCovBc cCovBc
@@ -1280,12 +1401,20 @@ else % ".mat" format
       score = score / rankCon;
       % Perform hypothesis test for activated regions.
       if (SwE.WB.clusterWise == 1)
-        hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels);
+        if dof_type == 1
+          hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf, activatedVoxels);
+        else
+          hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels);
+        end
         p = hyptest.positive.p;
         edf = hyptest.positive.edf;
         activatedVoxels = hyptest.positive.activatedVoxels;
       else
-        hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+        if dof_type == 1
+          hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf);
+        else
+          hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+        end
         p = hyptest.positive.p;
         edf = hyptest.positive.edf;
       end
@@ -1600,6 +1729,9 @@ for b = 1:WB.nB
       %-Estimation of the data variance-covariance components (modified SwE)
       %-SwE estimation (classic version)
       %--------------------------------------------------------------
+      if dof_type == 1
+        tmpSum = zeros(1,blksz);
+      end
       if isfield(SwE.type,'modified')
         Cov_vis=zeros(nCov_vis,sizeChunk);
         for i = Ind_Cov_vis_diag
@@ -1630,20 +1762,61 @@ for b = 1:WB.nB
               Cov_vis(iGr_Cov_vis_g==g,iVox) = tmp(tril(ones(nVis_g(g)))==1); %Bug corrected (BG - 19/09/13)
             end
           end
+          if dof_type == 1
+            Cov_beta_g_tmp = weightR(:, iGr_Cov_vis_g==g) * Cov_vis(iGr_Cov_vis_g==g,:);
+            if nSizeCon == 1
+              tmpSum = tmpSum + Cov_beta_g_tmp.^2/edof_Gr(g);
+            else
+              for iVox = 1:blksz
+                cCovBc_g_vox = zeros(nSizeCon);
+                cCovBc_g_vox(tril(ones(nSizeCon))==1) = Cov_beta_g_tmp(:, iVox);
+                cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
+                tmpSum(iVox) = tmpSum(iVox) + (trace(cCovBc_g_vox^2) + (trace(cCovBc_g_vox))^2)/edof_Gr(g);
+              end
+            end
+          end
         end
         cCovBc = weightR * Cov_vis;
-      else
+      else % classic
         cCovBc = 0;
         for i = 1:nSubj
           Cov_beta_i_tmp = weightR(:,Ind_Cov_vis_classic==i) *...
 	      (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
           cCovBc = cCovBc + Cov_beta_i_tmp;
+          if dof_type == 1
+            if nSizeCon == 1 
+              tmpSum = tmpSum + Cov_beta_i_tmp.^2/edof_Gr(i);
+            else
+              for iVox = 1:blksz
+                cCovBc_g_vox = zeros(nSizeCon);
+                cCovBc_g_vox(tril(ones(nSizeCon))==1) = Cov_beta_i_tmp(:,iVox);
+                cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
+                tmpSum(iVox) = tmpSum(iVox) + (trace(cCovBc_g_vox^2) + (trace(cCovBc_g_vox))^2)/edof_Gr(i);
+              end
+            end
+          end
         end
         % These variables are left empty for classic SwE.
         Cov_vis = [];
         dofMat = [];
+        clear Cov_beta_i_tmp
       end
-      
+
+      % if dof_type == 1, compute the edf now
+      if dof_type == 1
+        if nSizeCon == 1
+          edf = cCovBc.^2 ./ tmpSum;
+        else
+          edf = zeros(1,blksz);
+          for iVox = 1:blksz
+            cCovBc_vox = zeros(nSizeCon);
+            cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
+            cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
+            edf(iVox)=(trace(cCovBc_vox^2) + (trace(cCovBc_vox))^2) / tmpSum(iVox);
+          end
+        end
+      end
+      clear tmpSum
       % compute the score
       if (SwE.WB.stat == 'T')
 	
@@ -1664,8 +1837,12 @@ for b = 1:WB.nB
         score = score / rankCon;
         
       end
-      
-      hyptest=swe_hyptest(SwE, score, sizeChunk, cCovBc, Cov_vis, dofMat);
+ 
+      if dof_type == 1
+        hyptest = swe_hyptest(SwE, score, sizeChunk, cCovBc, Cov_vis, edf);
+      else
+        hyptest = swe_hyptest(SwE, score, sizeChunk, cCovBc, Cov_vis, dofMat);
+      end
 
       if (WB.clusterWise == 1)
         activatedVoxels(chunk) = hyptest.positive.activatedVoxels;
@@ -1684,11 +1861,8 @@ for b = 1:WB.nB
       % Calculate TFCE uncorrected p image.
       if TFCE
 
-        % Obtain P values.
-        hyptest=swe_hyptest(SwE, score, sizeChunk, cCovBc, Cov_vis, dofMat);
-        
         % Current XYZ indices
-        currXYZ = XYZ(:, chunk);
+        currXYZ = XYZ(1:3, index);
 	  
         % T test already converted to Z
         if strcmp(WB.stat, 'T')
@@ -1760,6 +1934,9 @@ for b = 1:WB.nB
     %-Estimation of the data variance-covariance components (modified SwE)
     %-SwE estimation (classic version)
     %--------------------------------------------------------------
+    if dof_type == 1
+      tmpSum = zeros(1,S);
+    end
     if isfield(SwE.type,'modified')
       Cov_vis=zeros(nCov_vis,S);
       for i = Ind_Cov_vis_diag
@@ -1790,21 +1967,64 @@ for b = 1:WB.nB
             Cov_vis(iGr_Cov_vis_g==g,iVox) = tmp(tril(ones(nVis_g(g)))==1); %Bug corrected (BG - 19/09/13)
           end
         end
+        if dof_type == 1
+          Cov_beta_g_tmp = weightR(:, iGr_Cov_vis_g==g) * Cov_vis(iGr_Cov_vis_g==g,:);
+          if nSizeCon == 1
+            tmpSum = tmpSum + Cov_beta_g_tmp.^2/edof_Gr(g);
+          else
+            for iVox = 1:S
+              cCovBc_g_vox = zeros(nSizeCon);
+              cCovBc_g_vox(tril(ones(nSizeCon))==1) = Cov_beta_g_tmp(:, iVox);
+              cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
+              tmpSum(iVox) = tmpSum(iVox) + (trace(cCovBc_g_vox^2) + (trace(cCovBc_g_vox))^2)/edof_Gr(g);
+            end
+          end
+        end
       end
       cCovBc = weightR * Cov_vis;
+      clear Cov_beta_g_tmp
     else
       cCovBc = 0;
       for i = 1:nSubj
         Cov_beta_i_tmp = weightR(:,Ind_Cov_vis_classic==i) *...
           (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
         cCovBc = cCovBc + Cov_beta_i_tmp;
+        if dof_type == 1
+          if nSizeCon == 1 
+            tmpSum = tmpSum + Cov_beta_i_tmp.^2/edof_Gr(i);
+          else
+            for iVox = 1:S
+              cCovBc_g_vox = zeros(nSizeCon);
+              cCovBc_g_vox(tril(ones(nSizeCon))==1) = Cov_beta_i_tmp(:,iVox);
+              cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
+              tmpSum(iVox) = tmpSum(iVox) + (trace(cCovBc_g_vox^2) + (trace(cCovBc_g_vox))^2)/edof_Gr(i);
+            end
+          end
+        end
       end
       
       % These variables are left empty for classic SwE.
       Cov_vis = [];
       dofMat = [];
+      clear Cov_beta_i_tmp
     end
-    
+ 
+    % if dof_type == 1, compute the edf now
+    if dof_type == 1
+      if nSizeCon == 1
+        edf = cCovBc.^2 ./ tmpSum;
+      else
+        edf = zeros(1,S);
+        for iVox = 1:S
+          cCovBc_vox = zeros(nSizeCon);
+          cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
+          cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
+          edf(iVox)=(trace(cCovBc_vox^2) + (trace(cCovBc_vox))^2) / tmpSum(iVox);
+        end
+      end
+    end
+    clear tmpSum
+
     % compute the score
     if (SwE.WB.stat == 'T')
 
@@ -1825,7 +2045,11 @@ for b = 1:WB.nB
       score = score / rankCon;     
     end
     
-    hyptest=swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);      
+    if dof_type == 1
+      hyptest = swe_hyptest(SwE, score, S, cCovBc, Cov_vis, edf);      
+    else
+      hyptest = swe_hyptest(SwE, score, S, cCovBc, Cov_vis, dofMat);      
+    end
 
     if (WB.clusterWise == 1)
       activatedVoxels = hyptest.positive.activatedVoxels;
@@ -2363,7 +2587,8 @@ if isfield(SwE.type,'modified')
   end
   
 else
-  dof_type = SwE.type.classic.dof_cl;        
+  dof_type = SwE.type.classic.dof_cl;
+  nGr = SwE.Subj.nSubj;        
 end
 
 % Convert P values.
@@ -2374,8 +2599,8 @@ switch dof_type
     edf = SwE.xX.erdf_niave;
     
   case 1
-    error('degrees of freedom type still not implemented for the WB')
-  
+    % for dof_type = 1, saved in dofMat. Should be changed later
+    edf = dofMat;
   case 2
     CovcCovBc = 0;
     for g = 1:nGr
