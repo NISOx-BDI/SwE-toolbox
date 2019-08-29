@@ -730,7 +730,7 @@ if ~isMat
   for i = 1:numel(xM.VM)
     if ~(isfield(SwE,'xVol') && isfield(SwE.xVol,'G'))
         %-Assume it fits entirely in memory
-        C = spm_bsplinc(xM.VM(i), [0 0 0 0 0 0]');
+        coeff = spm_bsplinc(xM.VM(i), [0 0 0 0 0 0]');
         v = true(DIM);
         [x1,x2] = ndgrid(1:DIM(1),1:DIM(2));
         for x3 = 1:DIM(3)
@@ -738,10 +738,10 @@ if ~isMat
             y1 = M2(1,1)*x1+M2(1,2)*x2+(M2(1,3)*x3+M2(1,4));
             y2 = M2(2,1)*x1+M2(2,2)*x2+(M2(2,3)*x3+M2(2,4));
             y3 = M2(3,1)*x1+M2(3,2)*x2+(M2(3,3)*x3+M2(3,4));
-            v(:,:,x3) = spm_bsplins(C, y1,y2,y3, [0 0 0 0 0 0]') > 0;
+            v(:,:,x3) = spm_bsplins(coeff, y1,y2,y3, [0 0 0 0 0 0]') > 0;
         end
         mask = mask & v;
-        clear C v x1 x2 x3 M2 y1 y2 y3
+        clear coeff v x1 x2 x3 M2 y1 y2 y3
     else
         if spm_mesh_detect(xM.VM(i))
             v = xM.VM(i).private.cdata() > 0;
