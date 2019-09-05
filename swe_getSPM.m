@@ -1292,7 +1292,7 @@ if isfield(SwE.type, 'modified')
     xSwE.min_nVis_g = SwE.Vis.min_nVis_g;
 end
 
-if SwE.dof.dof_type == 0
+if dof_type == 0
   xSwE.edf = xCon(Ic).edf;
 else
   xSwE.Vedf = cat(1,xCon(Ic).Vedf);
