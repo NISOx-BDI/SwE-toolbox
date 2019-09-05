@@ -109,6 +109,9 @@ if ~isMat
           metadata{2} = fullfile(spm_file(SwE.xY.VY(1).fname,'path'),metadata{2});
       end
       SwE.xVol.G = metadata{2};
+      if (SwE.WB.clusterWise == 1)
+          G = export(gifti(SwE.xVol.G),'patch');
+      end
   else
       file_ext = spm_file_ext;
       metadata = {};
@@ -1118,7 +1121,7 @@ if ~isMat
     if isMeshData
       T = false(SwE.xVol.DIM');
       T(LocActivatedVoxels(1,:)) = true;
-      clusterAssignment = spm_mesh_clusters(SwE.xVol.G, T)';
+      clusterAssignment = spm_mesh_clusters(G, T)';
       clusterAssignment = clusterAssignment(LocActivatedVoxels(1,:));
     else
       clusterAssignment = spm_clusters(LocActivatedVoxels);
@@ -1137,7 +1140,7 @@ if ~isMat
       if isMeshData
         T = false(SwE.xVol.DIM');
         T(LocActivatedVoxelsNeg(1,:)) = true;
-        clusterAssignmentNeg = spm_mesh_clusters(SwE.xVol.G, T)';
+        clusterAssignmentNeg = spm_mesh_clusters(G, T)';
         clusterAssignmentNeg = clusterAssignmentNeg(LocActivatedVoxelsNeg(1,:));
       else
         clusterAssignmentNeg = spm_clusters(LocActivatedVoxelsNeg);
@@ -2074,7 +2077,7 @@ for b = 1:WB.nB
       if isMeshData
         T = false(SwE.xVol.DIM');
         T(LocActivatedVoxels(1,:)) = true;
-        clusterAssignment = spm_mesh_clusters(SwE.xVol.G, T)';
+        clusterAssignment = spm_mesh_clusters(G, T)';
         clusterAssignment = clusterAssignment(LocActivatedVoxels(1,:));
       else
         clusterAssignment = spm_clusters(LocActivatedVoxels);
@@ -2098,7 +2101,7 @@ for b = 1:WB.nB
         if isMeshData
           T = false(SwE.xVol.DIM');
           T(LocActivatedVoxelsNeg(1,:)) = true;
-          clusterAssignmentNeg = spm_mesh_clusters(SwE.xVol.G, T)';
+          clusterAssignmentNeg = spm_mesh_clusters(G, T)';
           clusterAssignmentNeg = clusterAssignmentNeg(LocActivatedVoxelsNeg(1,:));
         else
           clusterAssignmentNeg = spm_clusters(LocActivatedVoxelsNeg);
