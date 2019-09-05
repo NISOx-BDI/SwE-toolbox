@@ -146,7 +146,6 @@ if exist(fullfile(SwE.swd,sprintf('swe_vox_mask%s',file_ext)),'file') == 2
     return
   else
     warning('Overwriting old results\n\t (pwd = %s) ',SwE.swd); %#ok<WNTAG>
-    try SwE = rmfield(SwE,'xVol'); end %#ok<TRYNC>
   end
 
 end
