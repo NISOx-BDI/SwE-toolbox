@@ -1119,7 +1119,7 @@ if ~isMat
   if (SwE.WB.clusterWise == 1)
     LocActivatedVoxels = XYZ(:,activatedVoxels);
     if isMeshData
-      T = false(SwE.xVol.DIM');
+      T = false(DIM);
       T(LocActivatedVoxels(1,:)) = true;
       clusterAssignment = spm_mesh_clusters(G, T)';
       clusterAssignment = clusterAssignment(LocActivatedVoxels(1,:));
@@ -1138,7 +1138,7 @@ if ~isMat
     if (SwE.WB.stat == 'T')
       LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);
       if isMeshData
-        T = false(SwE.xVol.DIM');
+        T = false(DIM);
         T(LocActivatedVoxelsNeg(1,:)) = true;
         clusterAssignmentNeg = spm_mesh_clusters(G, T)';
         clusterAssignmentNeg = clusterAssignmentNeg(LocActivatedVoxelsNeg(1,:));
