@@ -2700,7 +2700,7 @@ if (SwE.WB.stat == 'T')
     end
     
 else
-    conScore = spm_invXcdf(negp, 1);
+    conScore = swe_invNcdf(0.5 * p).^2;
 end
     
 % Save results
