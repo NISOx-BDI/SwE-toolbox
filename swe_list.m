@@ -709,7 +709,7 @@ case 'table'                                                        %-Table
                     XYZ_clus = XYZ(:, currentClus);
                     
                     % Read in all TFCE FWE P values in this cluser
-                    tfp = 10.^-spm_get_data(xSwE.VspmTFCEFWEP,XYZ_clus);
+                    tfp = 10.^-spm_data_read(xSwE.VspmTFCEFWEP, 'xyz', XYZ_clus);
                     
                     % Record the minimum TFCE FWE P value in said cluster.
                     Pk  = min(tfp);

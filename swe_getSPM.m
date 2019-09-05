@@ -963,7 +963,7 @@ if ~isMat
                   end
                   thresDesc = ['p<=' num2str(pu) ' (unc.)'];
                   % select the WB unc. p-values within the mask
-                  unc_ps = 10.^-spm_get_data(xCon(Ic).VspmUncP,XYZ);
+                  unc_ps = 10.^-spm_data_read(xCon(Ic).VspmUncP, 'xyz', XYZ);
 
                   % Here, a parametric score threshold u would differ from voxel to voxel
                   % Thus, setting it to NaN
@@ -1054,7 +1054,7 @@ if ~isMat
                   end
                   thresDesc = ['p<=' num2str(pu) ' (unc.)'];
                   % select the WB unc. p-values within the mask
-                  unc_ps = 10.^-spm_get_data(xCon(Ic).VspmUncP,XYZ);
+                  unc_ps = 10.^-spm_data_read(xCon(Ic).VspmUncP, 'xyz', XYZ);
   
                   % Here, a parametric score threshold u would differ from voxel to voxel
                   % Thus, setting it to NaN

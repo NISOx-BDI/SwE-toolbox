@@ -228,7 +228,7 @@ XYZstr = sprintf(' at [%g, %g, %g]',xyz);
 
 %-Parameter estimates:   beta = xX.pKX*xX.K*y;
 %----------------------------------------------------------------------
-beta  = spm_get_data(SwE.Vbeta, XYZ);
+beta  = spm_data_read(SwE.Vbeta, 'xyz', XYZ);
 
 %-Compute residuals
 %--------------------------------------------------------------------------
@@ -265,11 +265,11 @@ for j = 1:size(Co,1)
                 weight = weight + weight';
             end
             weight = weight(tril(ones(size(Co,2)))==1);
-            Bcov = Bcov + weight * spm_get_data(SwE.Vcov_beta(it),XYZ);
+            Bcov = Bcov + weight * spm_data_read(SwE.Vcov_beta(it), 'xyz', XYZ);
         end
     end
 end
-CI    = spm_invTcdf(1-0.025,spm_get_data(SwE.xCon(Ic).Vedf, XYZ));
+CI    = spm_invTcdf(1-0.025,spm_data_read(SwE.xCon(Ic).Vedf, 'xyz', XYZ));
 
 spm('Pointer','Arrow');
 
