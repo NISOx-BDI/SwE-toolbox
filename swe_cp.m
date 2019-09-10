@@ -116,7 +116,7 @@ end
 
 %-Delete files from previous analyses
 %--------------------------------------------------------------------------
-if exist(fullfile(SwE.swd,'swe_vox_mask.nii'),'file') == 2
+if exist(fullfile(SwE.swd,sprintf('swe_vox_mask%s',file_ext)),'file') == 2
  
     str = {'Current directory contains SwE estimation files:',...
         'pwd = ',SwE.swd,...
