@@ -518,7 +518,8 @@ elseif Mask == 2
     if isMat
       Im = cellstr(spm_select([1 Inf],'mat','Select mask image(s)'));
     else
-      Im = cellstr(spm_select([1 Inf],'image','Select mask image(s)'));
+      [Im, sts] = spm_select([1 Inf],{'image','mesh'},'Select mask image(s)');
+      if ~sts, Im = []; else Im = cellstr(Im); end
     end
   end
 
@@ -680,7 +681,7 @@ for i = Ic
     Z = min(Z,equivalentScore);
     clear equivalentScore
   else
-    Z = min(Z,spm_get_data(xCon(i).Vspm,XYZ));
+    Z = min(Z, spm_data_read(xCon(i).Vspm, 'xyz', XYZ));
   end
       
 end
@@ -702,7 +703,7 @@ for i = 1:numel(Im)
         Mask = equivalentScore;
         clear equivalentScore
       else
-        Mask = spm_get_data(xCon(Im(i)).Vspm,XYZ);
+        Mask = spm_data_read(xCon(Im(i)).Vspm, 'xyz', XYZ);
       end
       switch xCon(Im(i)).STAT
         case 'T'
@@ -719,8 +720,8 @@ for i = 1:numel(Im)
       if isMat
         Mask = importdata(Im{i});
       else
-        v = spm_vol(Im{i});
-        Mask = spm_get_data(v,v.mat\SwE.xVol.M*[XYZ; ones(1,size(XYZ,2))]);
+        v = spm_data_hdr_read(Im{i});
+        Mask = spm_data_read(v, 'xyz', v.mat\SwE.xVol.M*[XYZ; ones(1,size(XYZ,2))]);
       end
       Q = Mask ~= 0 & ~isnan(Mask);
       if Ex, Q = ~Q; end
@@ -744,6 +745,10 @@ if ~isMat
   u   = -Inf;        % height threshold
   k   = 0;           % extent threshold {voxels}
   clustWise = 'None';% Type of clusterwise inference to be performed
+
+  if  spm_mesh_detect(xCon(Ic(1)).Vspm)
+    G = export(gifti(SwE.xVol.G),'patch');
+  end
 
   %-Height threshold - classical inference
   %--------------------------------------------------------------------------
@@ -910,7 +915,7 @@ if ~isMat
                   end
                   thresDesc = ['p<=' num2str(pu) ' (' thresDesc ')'];
                   
-                  FWE_ps = 10.^-spm_get_data(xCon(Ic).VspmFWEP,XYZ);
+                  FWE_ps = 10.^-spm_data_read(xCon(Ic).VspmFWEP,'xyz', XYZ);
                   
                   % When thresholding on WB FWER p-values, we should include those = to pu
                   % Here, we are using a - tol < b instead of a <= b due to numerical errors
@@ -939,7 +944,7 @@ if ~isMat
                   thresDesc = ['p<=' num2str(pu) ' (' thresDesc ')'];
                   
                   % select the WB FDR p-values within the mask
-                  FDR_ps = 10.^-spm_get_data(xCon(Ic).VspmFDRP,XYZ);
+                  FDR_ps = 10.^-spm_data_read(xCon(Ic).VspmFDRP, 'xyz', XYZ);
 
                   % Here, a parametric score threshold u would differ from voxel to voxel
                   % Thus, setting it to NaN
@@ -958,7 +963,7 @@ if ~isMat
                   end
                   thresDesc = ['p<=' num2str(pu) ' (unc.)'];
                   % select the WB unc. p-values within the mask
-                  unc_ps = 10.^-spm_get_data(xCon(Ic).VspmUncP,XYZ);
+                  unc_ps = 10.^-spm_data_read(xCon(Ic).VspmUncP, 'xyz', XYZ);
 
                   % Here, a parametric score threshold u would differ from voxel to voxel
                   % Thus, setting it to NaN
@@ -1049,7 +1054,7 @@ if ~isMat
                   end
                   thresDesc = ['p<=' num2str(pu) ' (unc.)'];
                   % select the WB unc. p-values within the mask
-                  unc_ps = 10.^-spm_get_data(xCon(Ic).VspmUncP,XYZ);
+                  unc_ps = 10.^-spm_data_read(xCon(Ic).VspmUncP, 'xyz', XYZ);
   
                   % Here, a parametric score threshold u would differ from voxel to voxel
                   % Thus, setting it to NaN
@@ -1081,7 +1086,7 @@ if ~isMat
           % In older version of the toolbox, the max TFCE scores were not saved.
           % Thus, to avoid retro-compatibility issues, we cannot threshold using 
           % the (1-pt)th percentile of the max distribution, but only using the FWER p-values
-          tfp = 10.^-spm_get_data(xCon(Ic).VspmTFCEFWEP,XYZ);
+          tfp = 10.^-spm_data_read(xCon(Ic).VspmTFCEFWEP, 'xyz', XYZ);
           
           up  = NaN;
           Pp  = NaN;
@@ -1105,9 +1110,18 @@ if ~isMat
   if ~isMat
     XYZ    = XYZ(:,Q);
   end
+	if isMat
+		strDataType = 'data elements';
+	else
+		if spm_mesh_detect(xCon(Ic(1)).Vspm)
+			strDataType = 'vertices'
+		else 
+			strDataType = 'voxels'; 
+		end
+	end
   if isempty(Q)
-      fprintf('\n');                                                      %-#
-      warning('SwE:NoVoxels','No voxels survive thresholding');
+      fprintf('\n');
+      warning('SwE:NoVoxels','No %s survive thresholding', strDataType);
   end
   
   % If we are doing clusterwise ask for threshold.
@@ -1130,7 +1144,14 @@ if ~isMat
 
               %-Calculate extent threshold filtering
               %----------------------------------------------------------------------
-              A     = spm_clusters(XYZ);
+              if  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
+                A = spm_clusters(XYZ);
+              else
+                T = false(SwE.xVol.DIM');
+                T(XYZ(1,:)) = true;
+                A = spm_mesh_clusters(G,T)';
+                A = A(XYZ(1,:));
+              end
               Q     = [];
               for i = 1:max(A)
                   j = find(A == i);
@@ -1151,7 +1172,14 @@ if ~isMat
               %-Calculate extent threshold filtering
               %----------------------------------------------------------------------
               % recompute the clusters as they may have been reduced due to post-hoc masking
-              A = spm_clusters(XYZ);
+              if  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
+                A = spm_clusters(XYZ);
+              else
+                T = false(SwE.xVol.DIM');
+                T(XYZ(1,:)) = true;
+                A = spm_mesh_clusters(G,T)';
+                A = A(XYZ(1,:));
+            	end
               clusIndices = unique(A);
               
               % recompute the p-values as they might have increased due to post-hoc masking
@@ -1191,7 +1219,7 @@ if ~isMat
           XYZ   = XYZ(:,Q);
           if isempty(Q)
               fprintf('\n');                                                  %-#
-              warning('SwE:NoVoxels','No voxels survive cluster extent threshoding');
+              warning('SwE:NoVoxels','No %s survive cluster extent threshoding', strDataType);
           end
           
       else
@@ -1264,7 +1292,7 @@ if isfield(SwE.type, 'modified')
     xSwE.min_nVis_g = SwE.Vis.min_nVis_g;
 end
 
-if SwE.dof.dof_type == 0
+if dof_type == 0
   xSwE.edf = xCon(Ic).edf;
 else
   xSwE.Vedf = cat(1,xCon(Ic).Vedf);
@@ -1301,8 +1329,8 @@ if isfield(SwE, 'WB')
     end
     
     % Uncorrected P values.
-    Ps_vol = spm_vol(xSwE.VspmUncP);
-    Ps = spm_read_vols(Ps_vol);
+    Ps_vol = spm_data_hdr_read(xSwE.VspmUncP);
+    Ps = spm_data_read(Ps_vol);
     Ps = 10.^(-Ps(~isnan(Ps)));
     xSwE.Ps = Ps;
     
@@ -1350,6 +1378,13 @@ try
     xSwE.units = SwE.xVol.units;
 catch
     try, xSwE.units = varargin{1}.units; end
+end
+
+%-Topology for surface-based inference
+%--------------------------------------------------------------------------
+if spm_mesh_detect(xCon(Ic(1)).Vspm)
+  xSwE.G     = G;
+  xSwE.XYZmm = xSwE.G.vertices(xSwE.XYZ(1,:),:)';
 end
 
 %-p-values for topological and voxel-wise FDR

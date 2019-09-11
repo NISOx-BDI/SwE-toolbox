@@ -9,6 +9,7 @@ function vol=swe_create_vol(fname, DIM, M, varargin)
 %   - M:        4x4 homogeneous transformation, from V.mat
 %   - descrip:  Description to enter into image header
 %   - meshData: Boolean stating whether we output gifti or not.
+%   - metadata: metadata from GIfTI file (SPM set metadata = {} for NIfTI)
 % =========================================================================
 % Version Info:  $Format:%ci$ $Format:%h$
     
@@ -24,13 +25,20 @@ function vol=swe_create_vol(fname, DIM, M, varargin)
         meshData = false;
     end
 
+    if nargin > 5
+        metadata = varargin{3};
+    else
+        metadata = {};
+    end
+
     vol = struct(...
       'fname',    fname,...
       'dim',      DIM',...
       'dt',       [spm_type('float32') spm_platform('bigend')],...
       'mat',      M,...
       'pinfo',    [1 0 0]',...
-      'descrip',  descrip);
+      'descrip',  descrip,...
+      metadata{:});
 
     if meshData
         vol = spm_data_hdr_write(vol);

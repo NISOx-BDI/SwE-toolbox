@@ -3,11 +3,11 @@ function [SwE] = swe_contrasts(SwE,Ic)
 % =========================================================================
 % Fills in SwE.xCon and writes the following images for a parametric 
 % analysis:
-%   - swe_vox_{T|F}stat_c{c#}.{nii|mat}: T/F tatistic image
-%   - swe_vox_{zT|xF}stat_c{c#}.{nii|mat}: Z/Chi square equivalent 
+%   - swe_vox_{T|F}stat_c{c#}.{nii|gii|mat}: T/F tatistic image
+%   - swe_vox_{zT|xF}stat_c{c#}.{nii|gii|mat}: Z/Chi square equivalent 
 %                                          statistic image
-%   - swe_vox_{T|F}stat_lp_c{c#}.{nii|mat}: -log10 P image.
-%   - swe_vox_edf_c{c#}.{nii|mat}: error degrees of freedom image.
+%   - swe_vox_{T|F}stat_lp_c{c#}.{nii|gii|mat}: -log10 P image.
+%   - swe_vox_edf_c{c#}.{nii|gii|mat}: error degrees of freedom image.
 % =========================================================================
 % FORMAT [SwE] = SwE_contrasts(SwE,Ic)
 % -------------------------------------------------------------------------
@@ -66,8 +66,20 @@ if ~isMat
     isMeshData = spm_mesh_detect(SwE.xY.VY);
     if isMeshData
         file_ext = '.gii';
+        g        = SwE.xY.VY(1).private;
+        metadata = g.private.metadata;
+        name     = {metadata.name};
+        if any(ismember(name,'SurfaceID'))
+            metadata = metadata(ismember(name,'SurfaceID'));
+            metadata = {metadata.name, metadata.value};
+        elseif isfield(g,'faces') && ~isempty(g.faces)
+            metadata = {'SurfaceID', SwE.xY.VY(1).fname};
+        else
+            metadata = {};
+        end
     else
         file_ext = spm_file_ext;
+        metadata = {};
     end
 end
 
@@ -121,14 +133,14 @@ for i = 1:length(Ic)
           S = size(beta,2);
         end
         
+        %-Compute contrast
+        %------------------------------------------------------
+        fprintf('\t%-32s: %30s',sprintf('contrast image %2d',ic),...
+            '...computing');                                %-#
+        str   = 'contrast computation';
+        swe_progress_bar('Init',100,str,'');
         % if the Co is a vector, then create Co * Beta (Vcon)
         if nSizeCon==1
-            %-Compute contrast
-            %------------------------------------------------------
-            fprintf('\t%-32s: %30s',sprintf('contrast image %2d',ic),...
-                '...computing');                                %-#
-            str   = 'contrast computation';
-            swe_progress_bar('Init',100,str,'');
             if ~isMat
               V      = Vbeta(ind);
             end
@@ -137,7 +149,7 @@ for i = 1:length(Ic)
               if isMat
                	cBeta = cBeta + Co(ind(j)) * beta(ind(j),:);               
               else
-                cBeta = cBeta + Co(ind(j)) * spm_get_data(V(j),XYZ);
+                cBeta = cBeta + Co(ind(j)) * spm_data_read(V(j),'xyz',XYZ);
               end
                 swe_progress_bar('Set',100*(j/numel(ind)));
             end
@@ -157,26 +169,27 @@ for i = 1:length(Ic)
                 'dt',     [spm_type('float32') spm_platform('bigend')],...
                 'mat',    SwE.xVol.M,...
                 'pinfo',  [1,0,0]',...
-                'descrip',sprintf('SwE contrast - %d: %s',ic,xCon(ic).name));
+                'descrip',sprintf('SwE contrast - %d: %s',ic,xCon(ic).name),...
+                metadata{:});
+              
+              xCon(ic).Vcon = spm_data_hdr_write(xCon(ic).Vcon);
               
               %-Write image
               %------------------------------------------------------
               tmp = NaN(SwE.xVol.DIM');
               tmp(Q) = cBeta;
-              xCon(ic).Vcon = spm_write_vol(xCon(ic).Vcon,tmp);
+              xCon(ic).Vcon = spm_data_write(xCon(ic).Vcon, tmp);
               
               clear tmp
+            end
+            if ~isMat
               fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
-                '...written %s',spm_file(xCon(ic).Vcon.fname,'filename')))%-#
+                '...written %s', xCon(ic).Vcon.fname))
+            else
+              fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+                '...written %s', xCon(ic).Vcon))         
             end
         else
-            %-Compute contrast
-            %------------------------------------------------------
-            fprintf('\t%-32s: %30s',sprintf('contrast image %2d',ic),...
-                '...computing');                                %-#
-            str   = 'contrast computation';
-            swe_progress_bar('Init',100,str,'');
-
             if ~isMat
               V      = Vbeta(ind);
             end
@@ -185,11 +198,18 @@ for i = 1:length(Ic)
               if isMat
                	cBeta = cBeta + Co(ind(j),:)' * beta(ind(j),:);               
               else
-                cBeta = cBeta + Co(ind(j),:)' * spm_get_data(V(j),XYZ);
+                cBeta = cBeta + Co(ind(j),:)' * spm_data_read(V(j),'xyz',XYZ);
               end
               swe_progress_bar('Set',100*(j/numel(ind)));
             end
             swe_progress_bar('Clear')
+            if ~isMat
+              fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+                '...computed'))
+            else
+              fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
+                '...computed'))         
+            end
         end     
         
         % clear beta for memory
@@ -200,7 +220,13 @@ for i = 1:length(Ic)
         %======================================================================
         
         %-compute the contrasted beta covariances and edof for the contrast
-        fprintf('\t%-32s: %30s',sprintf('spm{%c} image %2d',xCon(ic).STAT,ic),...
+        switch(xCon(ic).STAT)
+          case 'T'
+            eSTAT = 'Z';
+          case 'F'
+            eSTAT = 'X';
+        end
+        fprintf('\t%-32s: %30s',sprintf('spm{%c} image %2d',eSTAT,ic),...
             '...computing');                                %-#
         str   = 'contrasted beta covariance computation';
         swe_progress_bar('Init',100,str,'');        
@@ -236,7 +262,7 @@ for i = 1:length(Ic)
                     if isMat
                       cCovBc = cCovBc + weight * cov_beta(it,:);                     
                     else
-                      cCovBc = cCovBc + weight * spm_get_data(Vcov_beta(it),XYZ);
+                      cCovBc = cCovBc + weight * spm_data_read(Vcov_beta(it),'xyz',XYZ);
                     end
                     if dof_type == 1
                       for g = 1:SwE.Gr.nGr
@@ -245,7 +271,7 @@ for i = 1:length(Ic)
                             reshape(cov_beta_g(g,it,:), 1, S);
                         else
                           cCovBc_g(:,:,g) = cCovBc_g(:,:,g) + weight *...
-                            spm_get_data(Vcov_beta_g((g-1)*nCov_beta+it),XYZ);
+                            spm_data_read(Vcov_beta_g((g-1)*nCov_beta+it),'xyz',XYZ);
                         end
                         swe_progress_bar('Set',100*((it2-1+g/SwE.Gr.nGr)/length(ind)/(length(ind)+1)*2));
                       end
@@ -264,7 +290,6 @@ for i = 1:length(Ic)
         switch(xCon(ic).STAT)
             case 'T'                                 %-Compute spm{t} image
                 %----------------------------------------------------------
-                eSTAT = 'Z';
                 score = cBeta ./ sqrt(cCovBc);
                 swe_progress_bar('Set',100*(0.1));
                 switch dof_type 
@@ -314,7 +339,7 @@ for i = 1:length(Ic)
                             if isMat
                             	CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},1);
                             else
-                              CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},1);
+                              CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},1);
                             end
                             swe_progress_bar('Set',100*(0.1) + g*80/SwE.Gr.nGr);
                         end
@@ -343,7 +368,7 @@ for i = 1:length(Ic)
                           if isMat
                             CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},2);
                           else
-                            CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},2);
+                            CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},2);
                           end
                           swe_progress_bar('Set',100*(0.1) + g*80/SwE.Gr.nGr);
                         end
@@ -366,7 +391,6 @@ for i = 1:length(Ic)
                 
             case 'F'                                 %-Compute spm{F} image
                 %---------------------------------------------------------
-                eSTAT = 'X';
                 if nSizeCon==1
                     score = abs(cBeta ./ sqrt(cCovBc));
                     indNotNan = ~isnan(score);
@@ -407,7 +431,7 @@ for i = 1:length(Ic)
                                 if isMat
                                   CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},1);
                                 else
-                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},1);
+                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},1);
                                 end
                                 swe_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));
                             end
@@ -433,7 +457,7 @@ for i = 1:length(Ic)
                                 if isMat
                                   CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},2);         
                                 else
-                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},2);         
+                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},2);         
                                 end
                                 swe_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));    
                             end  
@@ -467,7 +491,7 @@ for i = 1:length(Ic)
                              if isMat
                                CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},1);
                              else
-                               CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},1);
+                               CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},1);
                              end
                         end
                         clear cov_vis
@@ -488,7 +512,7 @@ for i = 1:length(Ic)
                         if isMat
                           CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},2);
                         else
-                          CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_get_data(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),XYZ),SwE.dof.dofMat{g},2);
+                          CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},2);
                         end
                       end
                       clear cov_vis
@@ -583,15 +607,20 @@ for i = 1:length(Ic)
           xCon(ic).Vspm = sprintf('swe_vox_%c%cstat_c%02d%s',lower(eSTAT),xCon(ic).STAT,ic, file_ext);
           save(xCon(ic).Vspm, 'equivalentScore');
         else
-          xCon(ic).Vspm = swe_create_vol(sprintf('swe_vox_%c%cstat_c%02d%s',...
-                                                 lower(eSTAT),xCon(ic).STAT,ic,file_ext),...
-                                 SwE.xVol.DIM, SwE.xVol.M,...
-                                 sprintf('spm{%c} - contrast %d: %s',...
-                                         eSTAT,ic,xCon(ic).name));
+          xCon(ic).Vspm = struct(...
+            'fname',  sprintf('swe_vox_%c%cstat_c%02d%s',lower(eSTAT),xCon(ic).STAT,ic,file_ext),...
+            'dim',    SwE.xVol.DIM',...
+            'dt',     [spm_type('float32'), spm_platform('bigend')],...
+            'mat',    SwE.xVol.M,...
+            'pinfo',  [1,0,0]',...
+            'descrip',sprintf('spm{%c} - contrast %d: %s',eSTAT,ic,xCon(ic).name),...
+            metadata{:});
+          
+          xCon(ic).Vspm = spm_data_hdr_write(xCon(ic).Vspm);
           
           tmp           = zeros(SwE.xVol.DIM');
           tmp(Q)        = equivalentScore;
-          xCon(ic).Vspm = spm_write_vol(xCon(ic).Vspm,tmp);
+          xCon(ic).Vspm = spm_data_write(xCon(ic).Vspm,tmp);
         end
         clear tmp equivalentScore
         if isMat
@@ -601,22 +630,28 @@ for i = 1:length(Ic)
           fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
             '...written %s',spm_str_manip(xCon(ic).Vspm.fname,'t')));
         end
-        %-# 
-        fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...writing');      %-#
+        
+        fprintf('\t%-32s: %30s',sprintf('spm{%c} image %2d',xCon(ic).STAT,ic),...
+        '...writing');  
 
         if isMat
           xCon(ic).Vspm2 = sprintf('swe_vox_%cstat_c%02d%s',xCon(ic).STAT,ic,file_ext);
           save(xCon(ic).Vspm2, 'score');
         else
-          xCon(ic).Vspm2 = swe_create_vol(sprintf('swe_vox_%cstat_c%02d%s',...
-                                                    xCon(ic).STAT,ic,file_ext),...
-                                  SwE.xVol.DIM, SwE.xVol.M,...
-                                  sprintf('spm{%c} - contrast %d: %s',...
-                                          xCon(ic).STAT,ic,xCon(ic).name));
-         
+          xCon(ic).Vspm2 = struct(...
+            'fname',  sprintf('swe_vox_%cstat_c%02d%s',xCon(ic).STAT,ic,file_ext),...
+            'dim',    SwE.xVol.DIM',...
+            'dt',     [spm_type('float32'), spm_platform('bigend')],...
+            'mat',    SwE.xVol.M,...
+            'pinfo',  [1,0,0]',...
+            'descrip',sprintf('spm{%c} - contrast %d: %s',xCon(ic).STAT,ic,xCon(ic).name),...
+            metadata{:});
+
+          xCon(ic).Vspm2 = spm_data_hdr_write(xCon(ic).Vspm2);
+
           tmp           = zeros(SwE.xVol.DIM');
           tmp(Q)        = score;
-          xCon(ic).Vspm2 = spm_write_vol(xCon(ic).Vspm2,tmp);
+          xCon(ic).Vspm2 = spm_data_write(xCon(ic).Vspm2,tmp);
         end
         clear tmp score
         if isMat
@@ -628,18 +663,26 @@ for i = 1:length(Ic)
         end
         
         % save raw uncorrected p-values (new on 05/11/2017)
+        fprintf('\t%-32s: %30s',sprintf('-log10(uncP) image %2d',ic),...
+        '...writing');  
         if isMat
           xCon(ic).VspmUncP = sprintf('swe_vox_%cstat_lp_c%02d%s',xCon(ic).STAT,ic,file_ext);
           save(xCon(ic).VspmUncP, 'luncP');
         else
-          xCon(ic).VspmUncP = swe_create_vol(sprintf('swe_vox_%cstat_lp_c%02d%s',xCon(ic).STAT,ic,file_ext),...
-                                             SwE.xVol.DIM, SwE.xVol.M,...
-                                             sprintf('spm{%s} - contrast %d: %s',...
-                                                     'UncP',ic,xCon(ic).name));
-          
+          xCon(ic).VspmUncP = struct(...
+            'fname',  sprintf('swe_vox_%cstat_lp_c%02d%s',xCon(ic).STAT,ic,file_ext),...
+            'dim',    SwE.xVol.DIM',...
+            'dt',     [spm_type('float32'), spm_platform('bigend')],...
+            'mat',    SwE.xVol.M,...
+            'pinfo',  [1,0,0]',...
+            'descrip',sprintf('spm{%c} - contrast %d: %s','luncP',ic,xCon(ic).name),...
+            metadata{:});
+
+          xCon(ic).VspmUncP = spm_data_hdr_write(xCon(ic).VspmUncP);
+
           tmp           = zeros(SwE.xVol.DIM');
           tmp(Q)        = luncP;
-          xCon(ic).VspmUncP = spm_write_vol(xCon(ic).VspmUncP,tmp);
+          xCon(ic).VspmUncP = spm_data_write(xCon(ic).VspmUncP,tmp);
         end
         clear tmp uncP luncP
         if isMat
@@ -649,18 +692,29 @@ for i = 1:length(Ic)
           fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),sprintf(...
             '...written %s',spm_str_manip(xCon(ic).VspmUncP.fname,'t')));
         end
-        
+ 
+        fprintf('\t%-32s: %30s',sprintf('edf image %2d',ic),...
+        '...writing');
+
         if dof_type
           if isMat
             xCon(ic).Vedf = sprintf('swe_vox_edf_c%02d%s',ic,file_ext);
             save(xCon(ic).Vedf, 'edf');
           else
-            xCon(ic).Vedf = swe_create_vol(sprintf('swe_vox_edf_c%02d%s',ic,file_ext),...
-                                           SwE.xVol.DIM, SwE.xVol.M,...
-                                           sprintf('SwE effective degrees of freedom - %d: %s',ic,xCon(ic).name));
+            xCon(ic).Vedf = struct(...
+              'fname',  sprintf('swe_vox_edf_c%02d%s',ic,file_ext),...
+              'dim',    SwE.xVol.DIM',...
+              'dt',     [spm_type('float32'), spm_platform('bigend')],...
+              'mat',    SwE.xVol.M,...
+              'pinfo',  [1,0,0]',...
+              'descrip',sprintf('SwE effective degrees of freedom - %d: %s',ic,xCon(ic).name),...
+              metadata{:});
+
+            xCon(ic).Vedf = spm_data_hdr_write(xCon(ic).Vedf);
+
             tmp = NaN(SwE.xVol.DIM');
             tmp(Q) = edf;
-            xCon(ic).Vedf = spm_write_vol(xCon(ic).Vedf,tmp);
+            xCon(ic).Vedf = spm_data_write(xCon(ic).Vedf,tmp);
           end
           clear tmp edf
           if isMat

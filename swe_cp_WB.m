@@ -91,19 +91,39 @@ isMat          = strcmpi(file_ext,'.mat');
 isOctave = exist('OCTAVE_VERSION','builtin');
 
 if ~isMat
-    isMeshData = spm_mesh_detect(SwE.xY.VY);
-    if isMeshData
-        file_ext = '.gii';
-    else
-        file_ext = spm_file_ext;
-    end
+  isMeshData = spm_mesh_detect(SwE.xY.VY);
+  if isMeshData
+      file_ext = '.gii';
+      g        = SwE.xY.VY(1).private;
+      metadata = g.private.metadata;
+      name     = {metadata.name};
+      if any(ismember(name,'SurfaceID'))
+          metadata = metadata(ismember(name,'SurfaceID'));
+          metadata = {metadata.name, metadata.value};
+      elseif isfield(g,'faces') && ~isempty(g.faces)
+          metadata = {'SurfaceID', SwE.xY.VY(1).fname};
+      else
+          error('SurfaceID not found in GIfTI''s metadata.');
+      end
+      if isempty(spm_file(metadata{2},'path'))
+          metadata{2} = fullfile(spm_file(SwE.xY.VY(1).fname,'path'),metadata{2});
+      end
+      SwE.xVol.G = metadata{2};
+      if (SwE.WB.clusterWise == 1)
+          G = export(gifti(SwE.xVol.G),'patch');
+      end
+  else
+      file_ext = spm_file_ext;
+      metadata = {};
+  end
 else
-    isMeshData = false;
+  isMeshData = false;
 end
 
 %-Check whether we are doing a TFCE analysis
 %--------------------------------------------------------------------------
-TFCE = isfield(SwE.WB, 'TFCE');
+% deactivate for now TFCE if we analyse surface data
+TFCE = isfield(SwE.WB, 'TFCE') && ~isMeshData;
 if TFCE
     H = SwE.WB.TFCE.H;
     E = SwE.WB.TFCE.E;
@@ -129,7 +149,6 @@ if exist(fullfile(SwE.swd,sprintf('swe_vox_mask%s',file_ext)),'file') == 2
     return
   else
     warning('Overwriting old results\n\t (pwd = %s) ',SwE.swd); %#ok<WNTAG>
-    try SwE = rmfield(SwE,'xVol'); end %#ok<TRYNC>
   end
 
 end
@@ -560,33 +579,26 @@ if ~isMat
   end
   
   M        = VY(1).mat;
-  DIM      = VY(1).dim(1:3)';
+  DIM      = VY(1).dim;
   VOX      = sqrt(diag(M(1:3, 1:3)'*M(1:3, 1:3)))';
-  xdim     = DIM(1); ydim = DIM(2); zdim = DIM(3);
-  %vFWHM    = SwE.vFWHM; to be added later (for the variance smoothing)
-  % YNaNrep  = spm_type(VY(1).dt(1),'nanrep');
+
   YNaNrep = VY(1).dt(2);
     
   fprintf('%-40s: %30s','Output images','...initialising');           %-#
   
   %-Initialise new mask name: current mask & conditions on voxels
   %----------------------------------------------------------------------
-  VM    = struct('fname',  sprintf('swe_vox_mask%s', file_ext),...
-    'dim',    DIM',...
-    'dt',     [spm_type('uint8') spm_platform('bigend')],...
-    'mat',    M,...
-    'pinfo',  [1 0 0]',...
-    'descrip','swe_cp_WB:resultant analysis mask');
-  VM    = spm_create_vol(VM);
+  VM    = swe_data_hdr_write(sprintf('swe_vox_mask%s', file_ext), DIM, M,...
+                              'swe_cp:resultant analysis mask', metadata, 'uint8');
   
   %-Initialise beta image files
   %----------------------------------------------------------------------
 
   for i = 1:nBeta
-    Vbeta(i) = swe_create_vol(sprintf('swe_vox_beta_b%02d%s',i,file_ext),...
+    Vbeta(i) = swe_data_hdr_write(sprintf('swe_vox_beta_b%02d%s',i,file_ext),...
                               DIM, M,...
                               sprintf('swe_cp:beta (%02d) - %s',i,xX.name{i}),...
-                              isMeshData);
+                              metadata);
   end
   
   %-Initialise original parametric score image, T or F
@@ -597,44 +609,44 @@ if ~isMat
     eSTAT='x';
   end
   
-  Vscore = swe_create_vol(sprintf('swe_vox_%cstat_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-			  sprintf('Original parametric %c statistic data.', WB.stat));
+  Vscore = swe_data_hdr_write(sprintf('swe_vox_%cstat_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+			  sprintf('Original parametric %c statistic data.', WB.stat), metadata);
   
   %-Initialise parametric TFCE score image, if TFCE has been selected.
   %---------------------------------------------------------------------- 
   if TFCE
-    Vscore_tfce = swe_create_vol(sprintf('swe_tfce_c%02d%s', 1, file_ext), DIM, M,...
-				 'Original parametric TFCE statistic data.'); 
+    Vscore_tfce = swe_data_hdr_write(sprintf('swe_tfce_c%02d%s', 1, file_ext), DIM, M,...
+				 'Original parametric TFCE statistic data.', metadata); 
     if WB.stat=='T'
-      Vscore_tfce_neg = swe_create_vol(sprintf('swe_tfce_c%02d%s', 2, file_ext), DIM, M,...
-				       'Original parametric TFCE statistic data for a negative contrast.'); 
+      Vscore_tfce_neg = swe_data_hdr_write(sprintf('swe_tfce_c%02d%s', 2, file_ext), DIM, M,...
+				       'Original parametric TFCE statistic data for a negative contrast.', metadata); 
     end
   end
   
   %-Initialise original parametric edf image
   %----------------------------------------------------------------------
   
-  Vedf = swe_create_vol(sprintf('swe_vox_edf_c%02d%s', 1, file_ext), DIM, M,...
-			sprintf('Original parametric %c edf data.', WB.stat));
+  Vedf = swe_data_hdr_write(sprintf('swe_vox_edf_c%02d%s', 1, file_ext), DIM, M,...
+			sprintf('Original parametric %c edf data.', WB.stat), metadata);
           
   %-Initialise parametric P-Value image
   %----------------------------------------------------------------------
   
-  VlP = swe_create_vol(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-		       'Original parametric -log10(P) value data (positive).');
+  VlP = swe_data_hdr_write(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+		       'Original parametric -log10(P) value data (positive).', metadata);
   
   if WB.stat=='T'
-    VlP_Neg = swe_create_vol(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-			     'Original parametric -log10(P) value data (negative).');
+    VlP_Neg = swe_data_hdr_write(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+			     'Original parametric -log10(P) value data (negative).', metadata);
   end
   
   %-Initialise converted parametric score image
   %----------------------------------------------------------------------
-  VcScore = swe_create_vol(sprintf('swe_vox_%c%cstat_c%02d%s', eSTAT, WB.stat, 1, file_ext), DIM, M,...
-			   sprintf('Parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat));    
+  VcScore = swe_data_hdr_write(sprintf('swe_vox_%c%cstat_c%02d%s', eSTAT, WB.stat, 1, file_ext), DIM, M,...
+			   sprintf('Parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat), metadata);    
   if WB.stat=='T'
-        VcScore_neg = swe_create_vol(sprintf('swe_vox_%c%cstat_c%02d%s', eSTAT, WB.stat, 2, file_ext), DIM, M,...
-			   sprintf('Parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat));
+        VcScore_neg = swe_data_hdr_write(sprintf('swe_vox_%c%cstat_c%02d%s', eSTAT, WB.stat, 2, file_ext), DIM, M,...
+			   sprintf('Parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat), metadata);
   end
   
   %-Initialise residual images for the resampling
@@ -642,72 +654,70 @@ if ~isMat
   
   for i = 1:nScan
     descrip = sprintf('adjusted restricted residuals (%04d)', i);
-    VResWB(i) = swe_create_vol(sprintf('swe_vox_resid_y%04d%s', i, file_ext), DIM, M, descrip);
+    VResWB(i) = swe_data_hdr_write(sprintf('swe_vox_resid_y%04d%s', i, file_ext), DIM, M, descrip, metadata);
   end
-  
-  fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-#
-  
+    
   %-Initialise fitted data images for the resampling
   %----------------------------------------------------------------------
   
   for i = 1:nScan
     descrip = sprintf('restricted fitted data  (%04d)', i);
-    VYWB(i) = swe_create_vol(sprintf('swe_vox_fit_y%04d%s',i,file_ext), DIM, M, descrip);
+    VYWB(i) = swe_data_hdr_write(sprintf('swe_vox_fit_y%04d%s',i,file_ext), DIM, M, descrip, metadata);
   end
   
   %-Initialise result images
   %----------------------------------------------------------------------
-  VlP_wb_pos = swe_create_vol(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                              'Non-parametric voxelwise -log10(P) value data (positive).');
+  VlP_wb_pos = swe_data_hdr_write(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+                              'Non-parametric voxelwise -log10(P) value data (positive).', metadata);
 
-  VlP_wb_FWE_pos = swe_create_vol(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                                  'Non-parametric voxelwise FWE -log10(P) value data (positive).');
+  VlP_wb_FWE_pos = swe_data_hdr_write(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+                                  'Non-parametric voxelwise FWE -log10(P) value data (positive).', metadata);
   
-  VlP_wb_FDR_pos = swe_create_vol(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-                                  'Non-parametric voxelwise FDR -log10(P) value data (positive).');
+  VlP_wb_FDR_pos = swe_data_hdr_write(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+                                  'Non-parametric voxelwise FDR -log10(P) value data (positive).', metadata);
 
   if WB.stat=='T'
-    VlP_wb_neg = swe_create_vol(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-				'Non-parametric voxelwise -log10(P) value data (negative).');
+    VlP_wb_neg = swe_data_hdr_write(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+				'Non-parametric voxelwise -log10(P) value data (negative).', metadata);
     
-    VlP_wb_FWE_neg = swe_create_vol(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-				    'Non-parametric voxelwise FWE -log10(P) value data (negative).');
+    VlP_wb_FWE_neg = swe_data_hdr_write(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+				    'Non-parametric voxelwise FWE -log10(P) value data (negative).', metadata);
     
-    VlP_wb_FDR_neg = swe_create_vol(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-				    'Non-parametric voxelwise FDR -log10(P) value data (negative).');
+    VlP_wb_FDR_neg = swe_data_hdr_write(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+				    'Non-parametric voxelwise FDR -log10(P) value data (negative).', metadata);
 
   end
   
   %-Initialise parametric TFCE results images, if TFCE has been selected.
   %---------------------------------------------------------------------- 
   if TFCE
-    VlP_tfce_pos = swe_create_vol(sprintf('swe_tfce_lp-WB_c%02d%s', 1, file_ext), DIM, M,...
-				  'Non-parametric TFCE -log10(P) value data (positive).'); 
-    VlP_tfce_FWE_pos = swe_create_vol(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 1, file_ext), DIM, M,...
-				      'Non-parametric TFCE FWE -log10(P) value data (positive).'); 
+    VlP_tfce_pos = swe_data_hdr_write(sprintf('swe_tfce_lp-WB_c%02d%s', 1, file_ext), DIM, M,...
+				  'Non-parametric TFCE -log10(P) value data (positive).', metadata); 
+    VlP_tfce_FWE_pos = swe_data_hdr_write(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 1, file_ext), DIM, M,...
+				      'Non-parametric TFCE FWE -log10(P) value data (positive).', metadata); 
     if WB.stat=='T'
-      VlP_tfce_neg = swe_create_vol(sprintf('swe_tfce_lp-WB_c%02d%s', 2, file_ext), DIM, M,...
-				    'Non-parametric TFCE -log10(P) value data (negative).'); 
-      VlP_tfce_FWE_neg = swe_create_vol(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 2, file_ext), DIM, M,...
-					'Non-parametric TFCE FWE -log10(P) value data (negative).');
+      VlP_tfce_neg = swe_data_hdr_write(sprintf('swe_tfce_lp-WB_c%02d%s', 2, file_ext), DIM, M,...
+				    'Non-parametric TFCE -log10(P) value data (negative).', metadata); 
+      VlP_tfce_FWE_neg = swe_data_hdr_write(sprintf('swe_tfce_lpFWE-WB_c%02d%s', 2, file_ext), DIM, M,...
+					'Non-parametric TFCE FWE -log10(P) value data (negative).', metadata);
     end
   end
   
   % Converted score for WB.
-  VcScore_wb_pos = swe_create_vol(sprintf('swe_vox_%c%cstat-WB_c%02d%s', eSTAT, WB.stat, 1, file_ext), DIM, M,...
-                                  sprintf('Non-parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat));
+  VcScore_wb_pos = swe_data_hdr_write(sprintf('swe_vox_%c%cstat-WB_c%02d%s', eSTAT, WB.stat, 1, file_ext), DIM, M,...
+                                  sprintf('Non-parametric %c statistic data derived from %c-Statistic data.', eSTAT, WB.stat), metadata);
   
   if WB.clusterWise == 1
       
     % We also need cluster p value maps here.
-    VlP_wb_clusterFWE_pos = swe_create_vol(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+    VlP_wb_clusterFWE_pos = swe_data_hdr_write(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
                                            sprintf('Non-parametric clusterwise FWE -log10(P) value data (positive, CFT %g).',...
-                                                   SwE.WB.clusterInfo.primaryThreshold));
+                                                   SwE.WB.clusterInfo.primaryThreshold), metadata);
     
     if WB.stat=='T'
-      VlP_wb_clusterFWE_neg = swe_create_vol(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+      VlP_wb_clusterFWE_neg = swe_data_hdr_write(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
                                              sprintf('Non-parametric clusterwise FWE -log10(P) value data (negative, CFT %g).',...
-                                                     SwE.WB.clusterInfo.primaryThreshold));
+                                                     SwE.WB.clusterInfo.primaryThreshold), metadata);
     end
   end
   
@@ -716,29 +726,40 @@ if ~isMat
   % - F I T   M O D E L   &   W R I T E   P A R A M E T E R    I M A G E S
   %==========================================================================
   
-  %-MAXMEM is the maximum amount of data processed at a time (bytes)
-  %--------------------------------------------------------------------------
-  MAXMEM = spm_get_defaults('stats.maxmem');
-  mmv    = MAXMEM/8/nScan;
-  blksz  = min(xdim*ydim,ceil(mmv));                             %-block size
-  nbch   = ceil(xdim*ydim/blksz);                                %-# blocks
-  nbz    = max(1,min(zdim,floor(mmv/(xdim*ydim)))); nbz = 1;     %-# planes forced to 1 so far
-  blksz  = blksz * nbz;
-  
-  %-Initialise variables used in the loop
+  %-Get explicit mask(s)
   %==========================================================================
-  [xords, yords] = ndgrid(1:xdim, 1:ydim);
-  xords = xords(:)'; yords = yords(:)';           % plane X,Y coordinates
-  S     = 0;                                      % Volume (voxels)
-  
-  %-Initialise XYZ matrix of in-mask voxel co-ordinates (real space)
-  %--------------------------------------------------------------------------
-  XYZ   = zeros(3,xdim*ydim*zdim);
-  
-  %-Cycle over bunches blocks within planes to avoid memory problems
+  mask = true(DIM);
+  for i = 1:numel(xM.VM)
+    if ~(isfield(SwE,'xVol') && isfield(SwE.xVol,'G'))
+        %-Assume it fits entirely in memory
+        coeff = spm_bsplinc(xM.VM(i), [0 0 0 0 0 0]');
+        v = true(DIM);
+        [x1,x2] = ndgrid(1:DIM(1),1:DIM(2));
+        for x3 = 1:DIM(3)
+            M2  = inv(M\xM.VM(i).mat);
+            y1 = M2(1,1)*x1+M2(1,2)*x2+(M2(1,3)*x3+M2(1,4));
+            y2 = M2(2,1)*x1+M2(2,2)*x2+(M2(2,3)*x3+M2(2,4));
+            y3 = M2(3,1)*x1+M2(3,2)*x2+(M2(3,3)*x3+M2(3,4));
+            v(:,:,x3) = spm_bsplins(coeff, y1,y2,y3, [0 0 0 0 0 0]') > 0;
+        end
+        mask = mask & v;
+        clear coeff v x1 x2 x3 M2 y1 y2 y3
+    else
+        if spm_mesh_detect(xM.VM(i))
+            v = xM.VM(i).private.cdata() > 0;
+        else
+            v = spm_mesh_project(gifti(SwE.xVol.G), xM.VM(i)) > 0;
+        end
+        mask = mask & v(:);
+        clear v
+    end
+  end
+
+  %-Split data into chunks
   %==========================================================================
-  str   = 'parameter estimation';
-  swe_progress_bar('Init',100,str,'');
+  chunksize = floor(spm_get_defaults('stats.maxmem') / 8 / nScan);
+  nbchunks  = ceil(prod(DIM) / chunksize);
+  chunks    = min(cumsum([1 repmat(chunksize,1,nbchunks)]),prod(DIM)+1);
   
   % activated voxels for cluster-wise inference
   if (WB.clusterWise == 1)
@@ -754,164 +775,107 @@ if ~isMat
     minScore = nan(1, WB.nB + 1);
   end
   
-  for z = 1:nbz:zdim                       %-loop over planes (2D or 3D data)
-    
-    % current plane-specific parameters
-    %----------------------------------------------------------------------
-    CrPl         = z:min(z+nbz-1,zdim);       %-plane list
-    zords        = CrPl(:)*ones(1,xdim*ydim); %-plane Z coordinates
-    CrScore      = [];                        %-scores
-    CrYWB        = [];                        %-fitted data under H0
-    CrResWB      = [];                        %-residuals
-    CrP          = [];                        %-parametric p-values
-    CrBl         = [];                        %-parameter estimates
-    if (WB.stat == 'T')
-      CrPNeg       = [];                      %-negative parametric p-values
+  %-Cycle over bunches blocks within planes to avoid memory problems
+  %==========================================================================
+  swe_progress_bar('Init',nbchunks,'Parameter estimation','Chunks');
+
+  for iChunk=1:nbchunks
+    chunk = chunks(iChunk):chunks(iChunk+1)-1;
+
+    %-Report progress
+    %======================================================================
+    if iChunk > 1, fprintf(repmat(sprintf('\b'),1,72)); end                  %-# 
+    fprintf('%-40s: %30s', sprintf('Original statistics: Chunk %3d/%-3d',iChunk,nbchunks),...
+                              '...processing');
+      
+    %-Get the data in mask, compute threshold & implicit masks
+    %------------------------------------------------------------------
+    Y = zeros(nScan, numel(chunk));
+    cmask = mask(chunk);
+    for iScan=1:nScan
+      if ~any(cmask), break, end                 %-Break if empty mask
+      
+      Y(iScan, cmask) = spm_data_read(VY(iScan), chunk(cmask));%-Read chunk of data
+      
+      cmask(cmask) = Y(iScan, cmask) > xM.TH(iScan);      %-Threshold (& NaN) mask
+      if xM.I && ~YNaNrep && xM.TH(iScan) < 0        %-Use implicit mask
+          cmask(cmask) = abs(Y(iScan, cmask)) > eps;
+      end
     end
-    CrConScore   = [];                        %-converted score values. 
-                                              % i.e. Z/X from T/F
-    Q            = [];                        %-in mask indices for this plane
-    Credf        = [];                        %-edf
-    
-    for bch = 1:nbch                     %-loop over blocks
+    cmask(cmask) = any(diff(Y(:,cmask),1));  
       
-      %-Print progress information in command window
-      %------------------------------------------------------------------
-      if numel(CrPl) == 1
-        str = sprintf('Plane %3d/%-3d, block %3d/%-3d',...
-		      z,zdim,bch,nbch);
-      else
-        str = sprintf('Planes %3d-%-3d/%-3d',z,CrPl(end),zdim);
-      end
-      if z == 1 && bch == 1
-        str2 = '';
-      else
-        str2 = repmat(sprintf('\b'),1,72);
-      end
-      fprintf('%s%-40s: %30s',str2,str,' ');
+    %-Mask out voxels where data is constant in at least one separable
+    % matrix design either in a visit category or within-subject (BG - 27/05/2016)
+    %------------------------------------------------------------------
+    [cmask, Y, CrS] = swe_mask_seperable(SwE, cmask, Y, iGr_dof);
       
+    %==================================================================
+    %-Proceed with General Linear Model (if there are voxels)
+    %==================================================================
+    if CrS
       
-      %-construct list of voxels in this block
-      %------------------------------------------------------------------
-      I     = (1:blksz) + (bch - 1)*blksz;       %-voxel indices
-      I     = I(I <= numel(CrPl)*xdim*ydim);     %-truncate
-      xyz   = [repmat(xords,1,numel(CrPl)); ...
-        repmat(yords,1,numel(CrPl)); ...
-        reshape(zords',1,[])];
-      xyz   = xyz(:,I);                          %-voxel coordinates
-      nVox  = size(xyz,2);                       %-number of voxels
+      %-General linear model: Ordinary least squares estimation
+      %--------------------------------------------------------------        
+      beta  = pX*Y;                     %-Parameter estimates
       
-      %-Get data & construct analysis mask
-      %=================================================================
-      fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...read & mask data')
-      Cm    = true(1,nVox);                      %-current mask
-      
-      %-Compute explicit mask
-      % (note that these may not have same orientations)
-      %------------------------------------------------------------------
-      for i = 1:length(xM.VM)
-        
-        %-Coordinates in mask image
-        %--------------------------------------------------------------
-        j = xM.VM(i).mat\M*[xyz;ones(1,nVox)];
-        
-        %-Load mask image within current mask & update mask
-        %--------------------------------------------------------------
+      % restricted fitted data
+      [resWB, YWB] = swe_fit(SwE, Y, tmpR2, corrWB, beta, SwE.WB.SS);
 
-        Cm(Cm) = spm_get_data(xM.VM(i),j(:,Cm),false) > 0;
-
+      if WB.RSwE == 1
+        res = swe_fit(SwE, Y, tmpR2, corr, beta, SwE.SS);
+      else 
+        res = swe_fit(SwE, Y, xX.X, corr, beta, SwE.SS);
       end
-      
-      %-Get the data in mask, compute threshold & implicit masks
-      %------------------------------------------------------------------
-      Y     = zeros(nScan,nVox);
-      for i = 1:nScan
-        
-        %-Load data in mask
-        %--------------------------------------------------------------
-        if ~any(Cm), break, end                %-Break if empty mask
-        Y(i,Cm)  = spm_get_data(VY(i),xyz(:,Cm),false);
-        
-        Cm(Cm)   = Y(i,Cm) > xM.TH(i);         %-Threshold (& NaN) mask
-        if xM.I && ~YNaNrep && xM.TH(i) < 0    %-Use implicit mask
-          Cm(Cm) = abs(Y(i,Cm)) > eps;
+
+      clear Y                           %-Clear to save memory
+      %-Estimation of the data variance-covariance components (modified SwE)
+      %-SwE estimation (classic version)
+      %--------------------------------------------------------------
+      if isfield(SwE.type,'modified')
+        Cov_vis=zeros(nCov_vis,CrS);
+        for i = Ind_Cov_vis_diag
+          Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2, 1);
         end
-      end
-      
-      %-Mask out voxels where data is constant in at least one separable
-      % matrix design either in a visit category or within-subject (BG - 27/05/2016)
-      %------------------------------------------------------------------
-      [Cm, Y, CrS] = swe_mask_seperable(SwE, Cm, Y, iGr_dof);
-      
-      %==================================================================
-      %-Proceed with General Linear Model (if there are voxels)
-      %==================================================================
-      if CrS
         
-        %-General linear model: Ordinary least squares estimation
-        %--------------------------------------------------------------
-        fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...estimation');%-#
-        
-        beta  = pX*Y;                     %-Parameter estimates
-        
-        % restricted fitted data
-        [resWB, YWB]=swe_fit(SwE, Y, tmpR2, corrWB, beta, SwE.WB.SS);
-
-        if WB.RSwE == 1
-	  res=swe_fit(SwE, Y, tmpR2, corr, beta, SwE.SS);
-        else 
-	  res=swe_fit(SwE, Y, xX.X, corr, beta, SwE.SS);
+        % Check if some voxels have variance < eps and mask them
+        tmp = ~any(Cov_vis(Ind_Cov_vis_diag,:) < eps); % modified by BG on 29/08/16
+        if any(~tmp)
+          beta    = beta(:,tmp);
+          resWB   = resWB(:,tmp);
+          res     = res(:,tmp);
+          YWB      = YWB(:,tmp);
+          cmask(cmask)  = tmp;
+          CrS     = sum(cmask);
+          Cov_vis = Cov_vis(:,tmp);
         end
-
-        clear Y                           %-Clear to save memory
-        %-Estimation of the data variance-covariance components (modified SwE)
-        %-SwE estimation (classic version)
-        %--------------------------------------------------------------
-        if dof_type == 1
-          tmpSum = zeros(1,CrS);
-        end
-        if isfield(SwE.type,'modified')
-          Cov_vis=zeros(nCov_vis,CrS);
-          for i = Ind_Cov_vis_diag
-            Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2, 1);
-          end
-          
-          % Check if some voxels have variance < eps and mask them
-          tmp = ~any(Cov_vis(Ind_Cov_vis_diag,:) < eps); % modified by BG on 29/08/16
-          if any(~tmp)
-            beta    = beta(:,tmp);
-            resWB   = resWB(:,tmp);
-            res     = res(:,tmp);
-            YWB      = YWB(:,tmp);
-            Cm(Cm)  = tmp;
-            CrS     = sum(Cm);
-            Cov_vis = Cov_vis(:,tmp);
-          end
-          if CrS % Check if there is at least one voxel left
-            for i = Ind_Cov_vis_off_diag
-              if any(Flagk(i,:))
-                Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
-		    sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
-			 Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
-			 sum(res(Flagk(i,:),:).^2, 1)./...
-			 sum(res(Flagkk(i,:),:).^2, 1));
-              end
+        if CrS % Check if there is at least one voxel left
+          % compute the visit covariance matrices
+          for i = Ind_Cov_vis_off_diag
+            if any(Flagk(i,:))
+              Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
+                sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
+                Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
+                sum(res(Flagk(i,:),:).^2, 1)./...
+                sum(res(Flagkk(i,:),:).^2, 1));
             end
-            %NaN may be produced in cov. estimation when one correspondant
-            %variance are = 0, so set them to 0
-            Cov_vis(isnan(Cov_vis))=0;
-            %need to check if the eigenvalues of Cov_vis matrices are >=0
-            for g = 1:nGr
-              for iVox = 1:CrS
-                tmp = zeros(nVis_g(g));
-                tmp(tril(ones(nVis_g(g)))==1) = Cov_vis(iGr_Cov_vis_g==g,iVox);
-                tmp = tmp + tmp' - diag(diag(tmp));
-                [V D] = eig(tmp);
-                if any (diag(D)<0) %Bug corrected (BG - 19/09/13)
-                  D(D<0) = 0;
-                  tmp = V * D * V';
-                  Cov_vis(iGr_Cov_vis_g==g,iVox) = tmp(tril(ones(nVis_g(g)))==1); %Bug corrected (BG - 19/09/13)
-                end
+          end
+          %NaN may be produced in cov. estimation when one correspondant
+          %variance are = 0, so set them to 0
+          Cov_vis(isnan(Cov_vis))=0;
+          %need to check if the eigenvalues of Cov_vis matrices are >=0
+          if dof_type == 1
+            tmpSum = zeros(1,CrS);
+          end    
+          for g = 1:nGr
+            for iVox = 1:CrS
+              tmp = zeros(nVis_g(g));
+              tmp(tril(ones(nVis_g(g)))==1) = Cov_vis(iGr_Cov_vis_g==g,iVox);
+              tmp = tmp + tmp' - diag(diag(tmp));
+              [V D] = eig(tmp);
+              if any (diag(D)<0) %Bug corrected (BG - 19/09/13)
+                D(D<0) = 0;
+                tmp = V * D * V';
+                Cov_vis(iGr_Cov_vis_g==g,iVox) = tmp(tril(ones(nVis_g(g)))==1); %Bug corrected (BG - 19/09/13)
               end
               if dof_type == 1
                 Cov_beta_g_tmp = weightR(:, iGr_Cov_vis_g==g) * Cov_vis(iGr_Cov_vis_g==g,:);
@@ -928,223 +892,211 @@ if ~isMat
               end
             end
           end
-          cCovBc = weightR * Cov_vis;
-          clear Cov_beta_g_tmp
-        else % classic
-          cCovBc = 0;
-          for i = 1:nSubj
-            Cov_beta_i_tmp = weightR(:,Ind_Cov_vis_classic==i) *...
-		                          (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
-            cCovBc = cCovBc + Cov_beta_i_tmp;
-            if dof_type == 1
-              if nSizeCon == 1 
-                tmpSum = tmpSum + Cov_beta_i_tmp.^2/edof_Gr(i);
-              else
-                for iVox = 1:CrS
-                  cCovBc_g_vox = zeros(nSizeCon);
-                  cCovBc_g_vox(tril(ones(nSizeCon))==1) = Cov_beta_i_tmp(:,iVox);
-                  cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
-                  tmpSum(iVox) = tmpSum(iVox) + (trace(cCovBc_g_vox^2) + (trace(cCovBc_g_vox))^2)/edof_Gr(i);
-                end
+        end
+        cCovBc = weightR * Cov_vis;
+        clear Cov_beta_g_tmp
+      else % else for "if isfield(SwE.type,'modified')"
+        cCovBc = 0;
+        if dof_type == 1
+          tmpSum = zeros(1,CrS);
+        end    
+        for i = 1:nSubj
+          Cov_beta_i_tmp = weightR(:,Ind_Cov_vis_classic==i) *...
+              (res(Indexk(Ind_Cov_vis_classic==i),:) .* res(Indexkk(Ind_Cov_vis_classic==i),:));
+          cCovBc = cCovBc + Cov_beta_i_tmp;
+          if dof_type == 1
+            if nSizeCon == 1 
+              tmpSum = tmpSum + Cov_beta_i_tmp.^2/edof_Gr(i);
+            else
+              for iVox = 1:CrS
+                cCovBc_g_vox = zeros(nSizeCon);
+                cCovBc_g_vox(tril(ones(nSizeCon))==1) = Cov_beta_i_tmp(:,iVox);
+                cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
+                tmpSum(iVox) = tmpSum(iVox) + (trace(cCovBc_g_vox^2) + (trace(cCovBc_g_vox))^2)/edof_Gr(i);
               end
             end
           end
-          % These variables are left empty for classic SwE.
-          Cov_vis = [];
-          dofMat = [];
-          clear Cov_beta_i_tmp
         end
+        % These variables are left empty for classic SwE.
+        Cov_vis = [];
+        dofMat = [];
+        clear Cov_beta_i_tmp
+      end
 
-        % if dof_type == 1, compute the edf now
-        if dof_type == 1
-          if nSizeCon == 1
-            edf = cCovBc.^2 ./ tmpSum;
-          else
-            edf = zeros(1,CrS);
-            for iVox = 1:CrS
-              cCovBc_vox = zeros(nSizeCon);
-              cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
-              cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
-              edf(iVox)=(trace(cCovBc_vox^2) + (trace(cCovBc_vox))^2) / tmpSum(iVox);
-            end
-          end
-        end
-        clear tmpSum
-        
-        % compute the score
-        if (SwE.WB.stat == 'T')
-          
-          score = (conWB * beta) ./ sqrt(cCovBc);
-          
-          % hypothesis test, using clusterwise threshold if available.
-          if (SwE.WB.clusterWise == 1)
-            if dof_type == 1
-              hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf, activatedVoxels, activatedVoxelsNeg);
-            else
-              hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
-            end
-            p = hyptest.positive.p;
-            negp = hyptest.negative.p;
-            edf = hyptest.positive.edf;
-            activatedVoxels = hyptest.positive.activatedVoxels;
-            activatedVoxelsNeg = hyptest.negative.activatedVoxels;
-            clear CovcCovBc cCovBc
-          else
-            if dof_type == 1
-              hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf);
-            else
-              hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
-            end
-            p = hyptest.positive.p;
-            negp = hyptest.negative.p;
-            edf = hyptest.positive.edf;
-          end
-
-          minScore(1) = min(minScore(1), min(hyptest.positive.conScore));
-
-          
+      % if dof_type == 1, compute the edf now
+      if dof_type == 1
+        if nSizeCon == 1
+          edf = cCovBc.^2 ./ tmpSum;
         else
-          % need to loop at every voxel
-          cBeta = conWB * beta;
-          score = zeros(1, CrS);
+          edf = zeros(1,CrS);
           for iVox = 1:CrS
             cCovBc_vox = zeros(nSizeCon);
             cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
             cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
-            score(iVox) = cBeta(:,iVox)' / cCovBc_vox * cBeta(:,iVox);
+            edf(iVox)=(trace(cCovBc_vox^2) + (trace(cCovBc_vox))^2) / tmpSum(iVox);
           end
-          score = score / rankCon;
-          
-          % hypothesis test, using clusterwise threshold if available.
-          if (SwE.WB.clusterWise == 1)
-            if dof_type == 1
-              hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf, activatedVoxels);
-            else
-              hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels);
-            end
-            p = hyptest.positive.p;
-            edf = hyptest.positive.edf;
-            activatedVoxels = hyptest.positive.activatedVoxels;
+        end
+      end
+      clear tmpSum
+
+      % compute the score
+      if (SwE.WB.stat == 'T')
+        
+        score = (conWB * beta) ./ sqrt(cCovBc);
+        
+        % hypothesis test, using clusterwise threshold if available.
+        if (SwE.WB.clusterWise == 1)
+          if dof_type == 1
+            hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf, activatedVoxels, activatedVoxelsNeg);
           else
-            if dof_type == 1
-              hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf);
-            else
-              hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
-            end
-            p = hyptest.positive.p;
-            edf = hyptest.positive.edf;
+            hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels, activatedVoxelsNeg);
           end
+          p = hyptest.positive.p;
+          negp = hyptest.negative.p;
+          edf = hyptest.positive.edf;
+          activatedVoxels = hyptest.positive.activatedVoxels;
+          activatedVoxelsNeg = hyptest.negative.activatedVoxels;
+          clear CovcCovBc cCovBc
+        else
+          if dof_type == 1
+            hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf);
+          else
+            hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+          end
+          p = hyptest.positive.p;
+          negp = hyptest.negative.p;
+          edf = hyptest.positive.edf;
         end
-        
-        maxScore(1) = max(maxScore(1), max(hyptest.positive.conScore));
 
-        %-Save betas etc. for current plane as we go along
-        %----------------------------------------------------------
-        CrYWB             = [CrYWB,    YWB]; %#ok<AGROW>
-        CrResWB           = [CrResWB,  resWB]; %#ok<AGROW>
-        CrScore           = [CrScore,  score]; %#ok<AGROW>
-        CrP               = [CrP,      -log10(hyptest.positive.p)]; %#ok<AGROW>
-        Credf             = [Credf,    hyptest.positive.edf]; %#ok<AGROW> 
-        CrBl              = [CrBl,    beta]; %#ok<AGROW>
-        if (SwE.WB.stat == 'T')
-	        CrConScore      = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
-	        CrPNeg          = [CrPNeg,   -log10(hyptest.negative.p)]; %#ok<AGROW>
-        end
-        if(SwE.WB.stat == 'F')
-	        CrConScore    = [CrConScore, hyptest.positive.conScore]; %#ok<AGROW>
-        end
-        
-      end % (CrS)
-      
-      %-Append new inmask voxel locations and volumes
-      %------------------------------------------------------------------
-      XYZ(:,S + (1:CrS)) = xyz(:,Cm);     %-InMask XYZ voxel coords
-      Q                  = [Q I(Cm)];     %#ok<AGROW> %-InMask XYZ voxel indices
-      S                  = S + CrS;       %-Volume analysed (voxels)
-      
-    end % (bch)
-    
+        minScore(1) = min(minScore(1), min(hyptest.positive.conScore));
 
-    %-Plane complete, write plane to image files (unless 1st pass)
+        
+      else
+        % need to loop at every voxel
+        cBeta = conWB * beta;
+        score = zeros(1, CrS);
+        for iVox = 1:CrS
+          cCovBc_vox = zeros(nSizeCon);
+          cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
+          cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
+          score(iVox) = cBeta(:,iVox)' / cCovBc_vox * cBeta(:,iVox);
+        end
+        score = score / rankCon;
+        
+        % hypothesis test, using clusterwise threshold if available.
+        if (SwE.WB.clusterWise == 1)
+          if dof_type == 1
+            hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf, activatedVoxels);
+          else
+            hyptest = swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat, activatedVoxels);
+          end
+          p = hyptest.positive.p;
+          edf = hyptest.positive.edf;
+          activatedVoxels = hyptest.positive.activatedVoxels;
+        else
+          if dof_type == 1
+            hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, edf);
+          else
+            hyptest=swe_hyptest(SwE, score, CrS, cCovBc, Cov_vis, dofMat);
+          end
+          p = hyptest.positive.p;
+          edf = hyptest.positive.edf;
+        end
+      end
+      
+      maxScore(1) = max(maxScore(1), max(hyptest.positive.conScore));
+      
+    end % (CrS)
+
+    %-Write output files
     %======================================================================
-    
-    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...saving plane'); %-#
-    
-    jj = NaN(xdim,ydim,numel(CrPl));
-    
-    %-Write Mask image
-    %------------------------------------------------------------------
-    if ~isempty(Q), jj(Q) = 1; end
+    c = NaN(numel(chunk),1);
 
-    VM    = spm_write_plane(VM, ~isnan(jj), CrPl);    
-
-    %-Write beta images
-    %------------------------------------------------------------------
-    for i = 1:nBeta
-        if ~isempty(Q), jj(Q) = CrBl(i,:); end
-        Vbeta(i) = spm_write_plane(Vbeta(i), jj, CrPl);
+      %-Write mask file
+    %----------------------------------------------------------------------
+    mask(chunk)  = cmask;
+    VM           = spm_data_write(VM, cmask', chunk);
+    
+    %-Write beta files
+    %----------------------------------------------------------------------
+    for iBeta = 1:nBeta
+      c(cmask) = beta(iBeta,:);
+      Vbeta(iBeta) = spm_data_write(Vbeta(iBeta), c, chunk); 
     end
-    
+
     %-Write WB fitted data images
     %------------------------------------------------------------------
-    for i = 1:nScan
-      if ~isempty(Q), jj(Q) = CrYWB(i,:); end
-      VYWB(i) = spm_write_plane(VYWB(i), jj, CrPl);
+    for iScan = 1:nScan
+      c(cmask) = YWB(iScan,:);
+      VYWB(iScan) = spm_data_write(VYWB(iScan), c, chunk);
     end
     
     %-Write WB residuals
     %------------------------------------------------------------------
-    for i = 1:nScan
-      if ~isempty(Q), jj(Q) = CrResWB(i,:); end
-      VResWB(i) = spm_write_plane(VResWB(i), jj, CrPl);
+    for iScan = 1:nScan
+      c(cmask) = resWB(iScan,:);
+      VResWB(iScan) = spm_data_write(VResWB(iScan), c, chunk);
     end
-    
+
     %-Write parametric score image of the original data
     %------------------------------------------------------------------
-    if ~isempty(Q), jj(Q) = CrScore; end
-    Vscore = spm_write_plane(Vscore, jj, CrPl);
+    c(cmask) = score;
+    Vscore = spm_data_write(Vscore,  c, chunk);
     
     %-Write parametric edf image of the original data
     %------------------------------------------------------------------
-    if ~isempty(Q), jj(Q) = Credf; end
-    Vedf = spm_write_plane(Vedf, jj, CrPl);
+    c(cmask) = hyptest.positive.edf;
+    Vedf = spm_data_write(Vedf,  c, chunk);
     
     %-Write parametric p-value image
     %------------------------------------------------------------------
-    if ~isempty(Q), jj(Q) = CrP; end
-    VlP = spm_write_plane(VlP, jj, CrPl);
+    c(cmask) = -log10(hyptest.positive.p);
+    VlP = spm_data_write(VlP,  c, chunk);
     
     if WB.stat=='T'
-      if ~isempty(Q), jj(Q) = CrPNeg; end
-      VlP_Neg = spm_write_plane(VlP_Neg, jj, CrPl);
+      c(cmask) = -log10(hyptest.negative.p);
+      VlP_Neg = spm_data_write(VlP_Neg,  c, chunk);
     end
     
     %-Write converted parametric score image of the original data
     %------------------------------------------------------------------
-    if ~isempty(Q), jj(Q) = CrConScore; end
-    VcScore = spm_write_plane(VcScore, jj, CrPl);
+    c(cmask) = hyptest.positive.conScore;
+    VcScore = spm_data_write(VcScore,  c, chunk);
+
     if WB.stat == 'T'
-        VcScore_neg = spm_write_plane(VcScore_neg, -jj, CrPl);
+        VcScore_neg = spm_data_write(VcScore_neg,  -c, chunk);
     end
-    
+
     %-Report progress
-    %----------------------------------------------------------------------
-    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');
-    swe_progress_bar('Set',100*(bch + nbch*(z - 1))/(nbch*zdim));
-    
-  end % (for z = 1:zdim)
+    %======================================================================
+    swe_progress_bar('Set',iChunk);
+  end % iChunk=1:nbchunks  
+
+  %==========================================================================
+  % - P O S T   E S T I M A T I O N   C L E A N U P
+  %==========================================================================
   
+  S = nnz(mask);
+  if S == 0
+    error('Please check your data: There are no inmask voxels.');
+  end
+    
+  %-Compute coordinates of voxels within mask
+  %--------------------------------------------------------------------------
+  [x,y,z]        = ind2sub(DIM,find(mask));
+  XYZ            = [x y z]';
+    
   if TFCE
     % Create parametric TFCE statistic images.
     if strcmp(WB.stat, 'T')
       
       % Read in T statistics to get negative and positive TFCE scores.
-      par_tfce = swe_tfce_transform(spm_read_vols(VcScore), H, E, C, dh);
-      par_tfce_neg = swe_tfce_transform(-spm_read_vols(VcScore), H, E, C, dh);
+      par_tfce = swe_tfce_transform(spm_data_read(VcScore), H, E, C, dh);
+      par_tfce_neg = swe_tfce_transform(-spm_data_read(VcScore), H, E, C, dh);
     else
       
       % Convert F statistics to Z scores.
-      scorevol=-swe_invNcdf(10.^(-spm_read_vols(VlP)));
+      scorevol=-swe_invNcdf(10.^(-spm_data_read(VlP)));
       scorevol(isnan(scorevol))=0;
           
       % Convert to TFCE.
@@ -1154,25 +1106,26 @@ if ~isMat
     end
     
     % Save parametric TFCE statistic images.
-    spm_write_vol(Vscore_tfce, par_tfce);
+    spm_data_write(Vscore_tfce, par_tfce);
     if strcmp(WB.stat, 'T')
-      spm_write_vol(Vscore_tfce_neg, par_tfce_neg);
+      spm_data_write(Vscore_tfce_neg, par_tfce_neg);
     end
   end
   
-  
-  fprintf('\n');                                                          %-#
-  swe_progress_bar('Clear')
-
-  clear beta res Cov_vis CrBl CrScore CrYWB CrResWB Q jj%-Clear to save memory
-  
-  XYZ   = XYZ(:,1:S); % remove all the data not used
+  clear beta res Cov_vis c %-Clear to save memory
   
   % compute the max cluster size if needed (so many ways this can be
   % done... Not sure this solution is the best)
   if (SwE.WB.clusterWise == 1)
     LocActivatedVoxels = XYZ(:,activatedVoxels);
-    clusterAssignment = spm_clusters(LocActivatedVoxels);
+    if isMeshData
+      T = false(DIM);
+      T(LocActivatedVoxels(1,:)) = true;
+      clusterAssignment = spm_mesh_clusters(G, T)';
+      clusterAssignment = clusterAssignment(LocActivatedVoxels(1,:));
+    else
+      clusterAssignment = spm_clusters(LocActivatedVoxels);
+    end
     nCluster     = max(clusterAssignment);
     clusterSize = histc(clusterAssignment,1:nCluster);
     
@@ -1184,7 +1137,14 @@ if ~isMat
     end
     if (SwE.WB.stat == 'T')
       LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);
-      clusterAssignmentNeg = spm_clusters(LocActivatedVoxelsNeg);
+      if isMeshData
+        T = false(DIM);
+        T(LocActivatedVoxelsNeg(1,:)) = true;
+        clusterAssignmentNeg = spm_mesh_clusters(G, T)';
+        clusterAssignmentNeg = clusterAssignmentNeg(LocActivatedVoxelsNeg(1,:));
+      else
+        clusterAssignmentNeg = spm_clusters(LocActivatedVoxelsNeg);
+      end
       nClusterNeg     = max(clusterAssignmentNeg);
       clusterSizeNeg = histc(clusterAssignmentNeg,1:nClusterNeg);
       if isempty(clusterSizeNeg)
@@ -1195,6 +1155,9 @@ if ~isMat
       end
     end
   end
+
+  swe_progress_bar('Clear')
+
 else % ".mat" format
   % check how the data image treat 0 (as NaN or not)
   YNaNrep = 0;
@@ -1229,7 +1192,7 @@ else % ".mat" format
   
   %-Get data & construct analysis mask
   %=================================================================
-  fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...read & mask data')
+  fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...read & mask data')
   
   %-Get the data in mask, compute threshold & implicit masks
   %------------------------------------------------------------------
@@ -1244,27 +1207,27 @@ else % ".mat" format
   nVox = size(Y, 2);
   
   %-Produce the mask
-  Cm = true(1, nVox);
+  cmask = true(1, nVox);
   %-Use the explicit mask if specified
   if length(SwE.xM.VM) == 1
-    Cm(:) = importdata(SwE.xM.VM{1}) > 0;
+    cmask(:) = importdata(SwE.xM.VM{1}) > 0;
   end
   %-check if some data need to be masked
   for i = 1:nScan
-    if ~any(Cm), break, end                %-Break if empty mask
-    Cm(Cm)   = Y(i,Cm) > xM.TH(i);         %-Threshold (& NaN) mask
+    if ~any(cmask), break, end                %-Break if empty mask
+    cmask(cmask)   = Y(i,cmask) > xM.TH(i);         %-Threshold (& NaN) mask
     if xM.I && ~YNaNrep && xM.TH(i) < 0    %-Use implicit mask
-      Cm(Cm) = abs(Y(i,Cm)) > eps;
+      cmask(cmask) = abs(Y(i,cmask)) > eps;
     end
   end
   %-Mask out voxels where data is constant in at least one separable
   % matrix design either in a visit category or within-subject (BG - 27/05/2016)
   %------------------------------------------------------------------
-  [Cm,Y,CrS] = swe_mask_seperable(SwE, Cm, Y, iGr_dof);
+  [cmask,Y,CrS] = swe_mask_seperable(SwE, cmask, Y, iGr_dof);
   
   if WB.clusterWise == 1
     if isfield(SwE.WB.clusterInfo, 'Vxyz')
-      XYZ   = XYZ(:,Cm);
+      XYZ   = XYZ(:,cmask);
     end
   end
   %==================================================================
@@ -1274,7 +1237,7 @@ else % ".mat" format
     
     %-General linear model: Ordinary least squares estimation
     %--------------------------------------------------------------
-    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...estimation');%-#
+    fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...estimation');%-#
     
     beta  = pX*Y;                     %-Parameter estimates
     
@@ -1306,8 +1269,8 @@ else % ".mat" format
         resWB   = resWB(:,tmp);
         res     = res(:,tmp);
         YWB     = YWB(:,tmp);
-        Cm(Cm)  = tmp;
-        CrS     = sum(Cm);
+        cmask(cmask)  = tmp;
+        CrS     = sum(cmask);
         Cov_vis = Cov_vis(:,tmp);
       end
       if CrS % Check if there is at least one voxel left
@@ -1474,55 +1437,54 @@ else % ".mat" format
   Vscore      = sprintf('swe_vox_%cstat_c%02d%s', WB.stat, 1, file_ext);
   Vedf        = sprintf('swe_vox_edf_c%02d%s', 1, file_ext);
 
-  mask = Cm;       
+  mask = cmask;       
   save(sprintf('swe_vox_mask%s',  file_ext), 'mask');
   clear mask
   
-  edf(:,Cm) = edf;
+  edf(:,cmask) = edf;
   save(Vedf, 'edf');
   clear Vedf
   
   tmp = score;
   score = nan(1, nVox);
   if (SwE.WB.stat == 'T')
-    VT(:,Cm) = tmp;
+    VT(:,cmask) = tmp;
     save(Vscore, 'VT');
     score = tmp;
     clear tmp VT
   else
-    VF(:,Cm) = tmp;
+    VF(:,cmask) = tmp;
     save(Vscore, 'VF');
     score = tmp;
     clear tmp VF
   end
   
   VlP = nan(1, nVox);
-  VlP(:,Cm) = -log10(hyptest.positive.p);
+  VlP(:,cmask) = -log10(hyptest.positive.p);
   save(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 1, file_ext), 'VlP');
   clear VlP
   
   if (SwE.WB.stat == 'T')
     
     VlP_neg = nan(1, nVox);
-    VlP_neg(:,Cm) =  -log10(hyptest.negative.p);
+    VlP_neg(:,cmask) =  -log10(hyptest.negative.p);
     save(sprintf('swe_vox_%cstat_lp_c%02d%s', WB.stat, 2, file_ext), 'VlP_neg');
     clear VlP_neg
     
     z_map = nan(1, nVox);
-    VZ(:,Cm) =  hyptest.positive.conScore;
+    VZ(:,cmask) =  hyptest.positive.conScore;
     save(sprintf('swe_vox_z%cstat_c%02d%s', WB.stat, 1, file_ext), 'VZ');
     clear VZ
     
   else
       
     x_map = nan(1, nVox);
-    VX(:,Cm) =  hyptest.positive.conScore;
+    VX(:,cmask) =  hyptest.positive.conScore;
     save(sprintf('swe_vox_x%cstat_c%02d%s', WB.stat, 1, file_ext), 'VX');
     clear VX
     
   end
   
-  fprintf('\n');                                                        %-#
   swe_progress_bar('Clear')
 
   clear res Cov_vis jj%-Clear to save memory
@@ -1535,7 +1497,7 @@ else % ".mat" format
       clusterAssignment = spm_clusters(LocActivatedVoxels);
     else %surface data      
       LocActivatedVoxels = false(nVox,1);
-      LocActivatedVoxels(Cm) = activatedVoxels;
+      LocActivatedVoxels(cmask) = activatedVoxels;
       clusterAssignment = spm_mesh_clusters(faces,LocActivatedVoxels);
       clusterAssignment = clusterAssignment(LocActivatedVoxels)';
       if isnan(clusterAssignment)
@@ -1557,7 +1519,7 @@ else % ".mat" format
         clusterAssignmentNeg = spm_clusters(LocActivatedVoxelsNeg);
       else %surface data
         LocActivatedVoxelsNeg = false(nVox,1);
-        LocActivatedVoxelsNeg(Cm) = activatedVoxelsNeg;
+        LocActivatedVoxelsNeg(cmask) = activatedVoxelsNeg;
         clusterAssignmentNeg = spm_mesh_clusters(faces,LocActivatedVoxelsNeg);
         clusterAssignmentNeg = clusterAssignmentNeg(LocActivatedVoxelsNeg)';
         if isnan(clusterAssignmentNeg)
@@ -1582,7 +1544,6 @@ if S == 0, spm('alert!','No inmask voxels - empty analysis!'); return; end
 
 %-Save remaining results files and analysis parameters
 %==========================================================================
-fprintf('%-40s: %30s','Saving results','...writing');
 
 %-place fields in SwE
 %--------------------------------------------------------------------------
@@ -1597,7 +1558,7 @@ if ~isMat
 end
 SwE.xVol.M     = M;                 %-voxels -> mm
 SwE.xVol.iM    = inv(M);            %-mm -> voxels
-SwE.xVol.DIM   = DIM;               %-image dimensions
+SwE.xVol.DIM   = DIM';               %-image dimensions
 SwE.xVol.S     = S;
 SwE.xVol.units = {'mm' 'mm' 'mm'};
 
@@ -1665,6 +1626,8 @@ else
   save('SwE','SwE');
 end
 
+fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done');             %-#
+
 %==========================================================================
 %- Produce bootstraps and maximum stats 
 %==========================================================================
@@ -1690,10 +1653,10 @@ if isMat
   originalScore = hyptest.positive.conScore;
   clear score;
 else
-  originalScore = spm_get_data(VcScore, XYZ);
+  originalScore = spm_data_read(VcScore, 'xyz', XYZ);
   % # blocks
-  blksz  = ceil(mmv);                             %-block size
-  nbch   = ceil(S/ blksz);          
+  nbchunks = ceil(S / chunksize);
+  chunks = min(cumsum([1 repmat(chunksize, 1, nbchunks)]), S+1);  
 end
 % variables for results
 uncP = ones(1, S); % one because of the original score
@@ -1701,8 +1664,6 @@ uncP = ones(1, S); % one because of the original score
 str   = sprintf('Parameter estimation\nBootstraping');
 
 swe_progress_bar('Init',100,str,'');
-
-fprintf('\n')
 
 % If we are doing a TFCE analysis we need to record uncorrected P-values
 % for TFCE and maxima for FWE.
@@ -1746,28 +1707,17 @@ for b = 1:WB.nB
       
     end
     
-    for bch = 1:nbch                     %-loop over blocks
-      blksz  = ceil(mmv);                             %-block size
-      if bch ~= nbch
-        index = (1+(bch-1)*blksz) : (bch * blksz);
-        count = (bch-1)*blksz;
-      else
-        index = (1+(bch-1)*blksz) : size(XYZ,2);
-        blksz = length(index);
-      end
+    for iChunk=1:nbchunks
+      chunk = chunks(iChunk):chunks(iChunk+1)-1;
+      sizeChunk = length(chunk);
       %-Print progress information in command window
       %------------------------------------------------------------------
-      str = sprintf('Bootstrap # %i  Block %i/%i', b, bch, nbch);
+      if iChunk > 1, fprintf(repmat(sprintf('\b'),1,72)); end                  %-# 
+      fprintf('%-40s: %30s', sprintf('Bootstrap # %i: Chunk %3d/%-3d', b, iChunk, nbchunks),...
+																	'...processing');
       
-      if  bch == 1
-        str2 = '';
-      else
-        str2 = repmat(sprintf('\b'),1,43);
-      end
-      fprintf('%s%-40s: %1s',str2,str,' ');
-      
-      Y_b = spm_get_data(VYWB, XYZ(:,index),false) + ...
-        spm_get_data(VResWB, XYZ(:,index),false) .* repmat(resamplingMatrix(:,b),1,blksz);
+      Y_b = spm_data_read(VYWB, 'xyz', XYZ(:,chunk)) + ...
+      spm_data_read(VResWB, 'xyz', XYZ(:,chunk)) .* repmat(resamplingMatrix(:,b),1,sizeChunk);
       
       beta  = pX * Y_b;                     %-Parameter estimates
       if WB.RSwE == 0
@@ -1782,20 +1732,20 @@ for b = 1:WB.nB
       %-SwE estimation (classic version)
       %--------------------------------------------------------------
       if dof_type == 1
-        tmpSum = zeros(1,blksz);
+        tmpSum = zeros(1,sizeChunk);
       end
       if isfield(SwE.type,'modified')
-        Cov_vis=zeros(nCov_vis,blksz);
+        Cov_vis=zeros(nCov_vis,sizeChunk);
         for i = Ind_Cov_vis_diag
           Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2);
         end
         for i = Ind_Cov_vis_off_diag
           if any(Flagk(i,:))
             Cov_vis(i,:)= sum(res(Flagk(i,:),:).*res(Flagkk(i,:),:), 1).*...
-		sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
-		     Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
-		     sum(res(Flagk(i,:),:).^2, 1)./...
-		     sum(res(Flagkk(i,:),:).^2, 1));
+		              sqrt(Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,1)),:).*...
+		              Cov_vis(Ind_Cov_vis_diag(Ind_corr_diag(i,2)),:)./...
+		              sum(res(Flagk(i,:),:).^2, 1)./...
+		              sum(res(Flagkk(i,:),:).^2, 1));
           end
         end
         %NaN may be produced in cov. estimation when one correspondant
@@ -1803,7 +1753,7 @@ for b = 1:WB.nB
         Cov_vis(isnan(Cov_vis))=0;
         %need to check if the eigenvalues of Cov_vis matrices are >=0
         for g = 1:SwE.Gr.nGr
-          for iVox = 1:blksz
+          for iVox = 1:sizeChunk
             tmp = zeros(nVis_g(g));
             tmp(tril(ones(nVis_g(g)))==1) = Cov_vis(iGr_Cov_vis_g==g,iVox);
             tmp = tmp + tmp' - diag(diag(tmp));
@@ -1819,7 +1769,7 @@ for b = 1:WB.nB
             if nSizeCon == 1
               tmpSum = tmpSum + Cov_beta_g_tmp.^2/edof_Gr(g);
             else
-              for iVox = 1:blksz
+              for iVox = 1:sizeChunk
                 cCovBc_g_vox = zeros(nSizeCon);
                 cCovBc_g_vox(tril(ones(nSizeCon))==1) = Cov_beta_g_tmp(:, iVox);
                 cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
@@ -1839,7 +1789,7 @@ for b = 1:WB.nB
             if nSizeCon == 1 
               tmpSum = tmpSum + Cov_beta_i_tmp.^2/edof_Gr(i);
             else
-              for iVox = 1:blksz
+              for iVox = 1:sizeChunk
                 cCovBc_g_vox = zeros(nSizeCon);
                 cCovBc_g_vox(tril(ones(nSizeCon))==1) = Cov_beta_i_tmp(:,iVox);
                 cCovBc_g_vox = cCovBc_g_vox + cCovBc_g_vox' - diag(diag(cCovBc_g_vox));
@@ -1859,8 +1809,8 @@ for b = 1:WB.nB
         if nSizeCon == 1
           edf = cCovBc.^2 ./ tmpSum;
         else
-          edf = zeros(1,blksz);
-          for iVox = 1:blksz
+          edf = zeros(1,sizeChunk);
+          for iVox = 1:sizeChunk
             cCovBc_vox = zeros(nSizeCon);
             cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
             cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
@@ -1879,8 +1829,8 @@ for b = 1:WB.nB
 	
         cBeta = conWB * beta;
         clear beta
-        score = zeros(1, blksz);
-        for iVox = 1:blksz
+        score = zeros(1, sizeChunk);
+        for iVox = 1:sizeChunk
           cCovBc_vox = zeros(nSizeCon);
           cCovBc_vox(tril(ones(nSizeCon))==1) = cCovBc(:,iVox);
           cCovBc_vox = cCovBc_vox + cCovBc_vox' - diag(diag(cCovBc_vox));
@@ -1891,34 +1841,34 @@ for b = 1:WB.nB
       end
  
       if dof_type == 1
-        hyptest = swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, edf);
+        hyptest = swe_hyptest(SwE, score, sizeChunk, cCovBc, Cov_vis, edf);
       else
-        hyptest = swe_hyptest(SwE, score, blksz, cCovBc, Cov_vis, dofMat);
+        hyptest = swe_hyptest(SwE, score, sizeChunk, cCovBc, Cov_vis, dofMat);
       end
 
       if (WB.clusterWise == 1)
-        activatedVoxels(index) = hyptest.positive.activatedVoxels;
+        activatedVoxels(chunk) = hyptest.positive.activatedVoxels;
         if (WB.stat == 'T')
-          activatedVoxelsNeg(index) = hyptest.negative.activatedVoxels;
+          activatedVoxelsNeg(chunk) = hyptest.negative.activatedVoxels;
         end
         clear cCovBc
       end
 
-      uncP(index) = uncP(index) + (hyptest.positive.conScore > originalScore(index) - tol);
+      uncP(chunk) = uncP(chunk) + (hyptest.positive.conScore > originalScore(chunk) - tol);
       maxScore(b+1) = max(maxScore(b+1), max(hyptest.positive.conScore));
       if (SwE.WB.stat == 'T')
         minScore(b+1) = min(minScore(b+1), min(hyptest.positive.conScore));
       end
       
       % Calculate TFCE uncorrected p image.
-      if TFCE    
+      if TFCE
 
         % Current XYZ indices
-        currXYZ = XYZ(1:3, index);
+        currXYZ = XYZ(1:3, chunk);
 	  
         % T test already converted to Z
         if strcmp(WB.stat, 'T')
-          scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = hyptest.positive.conScore;
+          scorevol(sub2ind(DIM',currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = hyptest.positive.conScore;
         % F test needs to be converted to Z
         else
           % Get score volume from p values
@@ -1926,25 +1876,25 @@ for b = 1:WB.nB
           % remove NaNs
           sv(isnan(sv))=0;
           % Save as scorevol
-          scorevol(sub2ind(DIM,currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = sv;
+          scorevol(sub2ind(DIM',currXYZ(1,:),currXYZ(2,:),currXYZ(3,:))) = sv;
         end
 	
       end
       
-    end % (bch)
+    end % (iChunk)
     
     if TFCE
 
       if SwE.WB.stat == 'T'        
 	
-	% Bootstrapped tfce vol.
-	tfce = swe_tfce_transform(scorevol,H,E,C,dh);
-	tfce_neg = swe_tfce_transform(-scorevol,H,E,C,dh);    
+        % Bootstrapped tfce vol.
+        tfce = swe_tfce_transform(scorevol,H,E,C,dh);
+        tfce_neg = swe_tfce_transform(-scorevol,H,E,C,dh);    
         
       else
 	
-	% Bootstrapped tfce vol.
-	tfce = swe_tfce_transform(scorevol,H,E,C,dh);
+        % Bootstrapped tfce vol.
+        tfce = swe_tfce_transform(scorevol,H,E,C,dh);
 	
       end
       
@@ -1964,7 +1914,7 @@ for b = 1:WB.nB
         
     end
     
-  else
+  else %isMat
     
     %-Print progress information in command window
     %------------------------------------------------------------------
@@ -2122,12 +2072,19 @@ for b = 1:WB.nB
   % compute the max cluster size if needed (so many ways this can be
   % done... Not sure this solution is the best)
   if (WB.clusterWise == 1)
-    if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')      
+    if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')
       LocActivatedVoxels = XYZ(:,activatedVoxels);
-      clusterAssignment = spm_clusters(LocActivatedVoxels);
+      if isMeshData
+        T = false(SwE.xVol.DIM');
+        T(LocActivatedVoxels(1,:)) = true;
+        clusterAssignment = spm_mesh_clusters(G, T)';
+        clusterAssignment = clusterAssignment(LocActivatedVoxels(1,:));
+      else
+        clusterAssignment = spm_clusters(LocActivatedVoxels);
+      end     
     else %surface data
       LocActivatedVoxels = false(nVox,1);
-      LocActivatedVoxels(Cm) = activatedVoxels;
+      LocActivatedVoxels(cmask) = activatedVoxels;
       clusterAssignment = spm_mesh_clusters(faces,LocActivatedVoxels);
       clusterAssignment = clusterAssignment(LocActivatedVoxels)';
     end
@@ -2141,10 +2098,17 @@ for b = 1:WB.nB
     if (WB.stat == 'T')
       if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz') 
         LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);
-        clusterAssignmentNeg = spm_clusters(LocActivatedVoxelsNeg);
+        if isMeshData
+          T = false(SwE.xVol.DIM');
+          T(LocActivatedVoxelsNeg(1,:)) = true;
+          clusterAssignmentNeg = spm_mesh_clusters(G, T)';
+          clusterAssignmentNeg = clusterAssignmentNeg(LocActivatedVoxelsNeg(1,:));
+        else
+          clusterAssignmentNeg = spm_clusters(LocActivatedVoxelsNeg);
+        end  
       else %surface data
         LocActivatedVoxelsNeg = false(nVox,1);
-        LocActivatedVoxelsNeg(Cm) = activatedVoxelsNeg;
+        LocActivatedVoxelsNeg(cmask) = activatedVoxelsNeg;
         clusterAssignmentNeg = spm_mesh_clusters(faces,LocActivatedVoxelsNeg);
         clusterAssignmentNeg = clusterAssignmentNeg(LocActivatedVoxelsNeg)';
         if isnan(clusterAssignmentNeg)
@@ -2160,7 +2124,7 @@ for b = 1:WB.nB
       end
     end
   end
-  toc
+  fprintf('%s%30s\n', repmat(sprintf('\b'),1,30), sprintf('..done in %0.4f seconds', toc));
   swe_progress_bar('Set',100 * b / WB.nB);
 end
 
@@ -2168,6 +2132,7 @@ swe_progress_bar('Clear');
 
 %-Save analysis original max min in SwE structure
 %--------------------------------------------------------------------------
+fprintf('%-40s: %30s','Saving results','...writing');
 SwE.WB.maxScore = maxScore;
 if (WB.clusterWise == 1)
     SwE.WB.clusterInfo.maxClusterSize = maxClusterSize;
@@ -2191,7 +2156,7 @@ end
 if isMat
   uncP = uncP / (WB.nB + 1);
   uncP_pos = nan(1, nVox);
-  uncP_pos(:,Cm) = uncP;
+  uncP_pos(:,cmask) = uncP;
   VlP_wb_pos = -log10(uncP);
   save(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 1, file_ext), 'VlP_wb_pos');
   clear VlP_wb_pos
@@ -2229,7 +2194,7 @@ if isMat
   end
   FWERP = FWERP / (WB.nB + 1);
   fwerP_pos = nan(1, nVox);
-  fwerP_pos(:,Cm) = FWERP;
+  fwerP_pos(:,cmask) = FWERP;
   VlP_wb_FWE_pos = -log10(fwerP_pos);
   save(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s',WB.stat,1,file_ext), 'VlP_wb_FWE_pos');
   clear VlP_wb_FWE_pos fwerP_pos FWERP
@@ -2247,7 +2212,7 @@ if isMat
     end
     FWERPNeg = FWERPNeg / (WB.nB + 1);
     fwerP_neg = nan(1, nVox);
-    fwerP_neg(:,Cm) = FWERPNeg;
+    fwerP_neg(:,cmask) = FWERPNeg;
     VlP_wb_FWE_neg = -log10(fwerP_neg);
     save(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s',WB.stat,2,file_ext), 'VlP_wb_FWE_neg');
     clear VlP_wb_FWE_neg fwerP_neg
@@ -2262,7 +2227,7 @@ if isMat
     fdrP = spm_P_FDR(uncP,[],'P',[],sort(uncP)');
   end
   fdrP_pos = nan(1, nVox);
-  fdrP_pos(:,Cm) = fdrP;
+  fdrP_pos(:,cmask) = fdrP;
   VlP_wb_FDR_pos = -log10(fdrP_pos);
   save(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s',WB.stat,1,file_ext), 'VlP_wb_FDR_pos');
   clear VlP_wb_FDR_pos fdrP_pos fdrP
@@ -2274,7 +2239,7 @@ if isMat
       fdrP = spm_P_FDR(1 + 1/(WB.nB + 1) - uncP,[],'P',[],sort(1 + 1/(WB.nB + 1) - uncP)');
     end
     fdrP_neg = nan(1, nVox);
-    fdrP_neg(:,Cm) = fdrP;
+    fdrP_neg(:,cmask) = fdrP;
     VlP_wb_FDR_neg = -log10(fdrP_neg);
     save(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s',WB.stat,2,file_ext), 'VlP_wb_FDR_neg');
     clear VlP_wb_FDR_neg fdrP_neg fdrP
@@ -2295,7 +2260,7 @@ if isMat
     
     clusterFwerP_pos_perElement = nan(1, nVox);
     if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')      
-      tmp = find(Cm);
+      tmp = find(cmask);
       tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
       for iC = 1:SwE.WB.clusterInfo.nCluster
         tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = clusterFwerP_pos_perCluster(iC);
@@ -2323,7 +2288,7 @@ if isMat
       
       clusterFwerP_neg_perElement = nan(1, nVox);
       if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')
-        tmp = find(Cm);
+        tmp = find(cmask);
         tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
         for iC = 1:SwE.WB.clusterInfo.nClusterNeg
           tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = clusterFwerP_neg_perCluster(iC);
@@ -2350,13 +2315,13 @@ else
   uncP = uncP / (WB.nB + 1);
   tmp = nan(SwE.xVol.DIM');
   tmp(Q) = -log10(uncP);
-  spm_write_vol(VlP_wb_pos, tmp);
+  spm_data_write(VlP_wb_pos, tmp);
   
   % If it's F, write out an X map.
   stat = nan(SwE.xVol.DIM');
   if WB.stat == 'F'
     stat(Q) = spm_invXcdf(1 - uncP,1);
-    spm_write_vol(VcScore_wb_pos, stat);
+    spm_data_write(VcScore_wb_pos, stat);
   end
   
   % If it's T, write out a Z map.
@@ -2364,11 +2329,11 @@ else
       
     % Positive map.
     stat(Q) = swe_invNcdf(1 - uncP);
-    spm_write_vol(VcScore_wb_pos, stat);
+    spm_data_write(VcScore_wb_pos, stat);
 
     % T is two tailed so we need a negative map as well.
     tmp(Q) = -log10(1 + 1/(WB.nB + 1) - uncP);
-    spm_write_vol(VlP_wb_neg, tmp);
+    spm_data_write(VlP_wb_neg, tmp);
   end
   
   %
@@ -2386,7 +2351,7 @@ else
   end
   FWERP = FWERP / (WB.nB + 1);
   tmp(Q) = -log10(FWERP);
-  spm_write_vol(VlP_wb_FWE_pos, tmp);
+  spm_data_write(VlP_wb_FWE_pos, tmp);
   
   % FWE correction for TFCE images.
   if TFCE
@@ -2402,7 +2367,7 @@ else
     tfcefwevol = tfcefwevol / (WB.nB + 1);
       
     % Write out volume.
-    spm_write_vol(VlP_tfce_FWE_pos, -log10(tfcefwevol));
+    spm_data_write(VlP_tfce_FWE_pos, -log10(tfcefwevol));
       
     % Same again for negative contrast, if we are using a T statistic.
     if WB.stat == 'T'
@@ -2418,7 +2383,7 @@ else
       tfcefwevol_neg = tfcefwevol_neg / (WB.nB + 1);
 
       % Write out volume.
-      spm_write_vol(VlP_tfce_FWE_neg, -log10(tfcefwevol_neg));
+      spm_data_write(VlP_tfce_FWE_neg, -log10(tfcefwevol_neg));
     end
   end
   
@@ -2434,7 +2399,7 @@ else
     end
     FWERPNeg = FWERPNeg / (WB.nB + 1);
     tmp(Q) = -log10(FWERPNeg);
-    spm_write_vol(VlP_wb_FWE_neg, tmp);
+    spm_data_write(VlP_wb_FWE_neg, tmp);
   end
   
   %
@@ -2445,7 +2410,7 @@ else
   catch
     tmp(Q) = -log10(spm_P_FDR(uncP,[],'P',[],sort(uncP)'));
   end
-  spm_write_vol(VlP_wb_FDR_pos, tmp);
+  spm_data_write(VlP_wb_FDR_pos, tmp);
   
   if WB.stat =='T'
     try
@@ -2453,7 +2418,7 @@ else
     catch
       tmp(Q) = -log10(spm_P_FDR(1 + 1/(WB.nB + 1) - uncP,[],'P',[],sort(1 + 1/(WB.nB + 1) - uncP)'));
     end
-    spm_write_vol(VlP_wb_FDR_neg, tmp);
+    spm_data_write(VlP_wb_FDR_neg, tmp);
   end
   
   if WB.clusterWise == 1
@@ -2478,7 +2443,7 @@ else
       tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = tmp2(iC);
     end
     tmp(Q) = tmp3;
-    spm_write_vol(VlP_wb_clusterFWE_pos, tmp);
+    spm_data_write(VlP_wb_clusterFWE_pos, tmp);
     if WB.stat =='T'
       Q = cumprod([1,SwE.xVol.DIM(1:2)']) * SwE.WB.clusterInfo.LocActivatedVoxelsNeg - ...
 	  sum(cumprod(SwE.xVol.DIM(1:2)'));
@@ -2498,16 +2463,16 @@ else
         tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = tmp2(iC);
       end
       tmp(Q) = tmp3;
-      spm_write_vol(VlP_wb_clusterFWE_neg, tmp);
+      spm_data_write(VlP_wb_clusterFWE_neg, tmp);
     end
   end
   
   if TFCE
     tfce_luncP = -log10((tfce_uncP+1)./(WB.nB+1));
-    spm_write_vol(VlP_tfce_pos, tfce_luncP);
+    spm_data_write(VlP_tfce_pos, tfce_luncP);
     if WB.stat == 'T'
       tfce_luncP_neg = -log10((tfce_uncP_neg+1)./(WB.nB+1));
-      spm_write_vol(VlP_tfce_neg, tfce_luncP_neg);
+      spm_data_write(VlP_tfce_neg, tfce_luncP_neg);
     end
   end
   
@@ -2549,7 +2514,7 @@ end
 
 %-Mask out voxels where data is constant in at least one separable
 % matrix design either in a visit category or within-subject (BG - 27/05/2016)
-function [Cm,Y,CrS]=swe_mask_seperable(SwE, Cm, Y, iGr_dof)
+function [cmask,Y,CrS]=swe_mask_seperable(SwE, cmask, Y, iGr_dof)
     
 % Setup
 nGr_dof = length(unique(iGr_dof));
@@ -2568,36 +2533,36 @@ for g = 1:nGr_dof
   % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)
   if sum(iGr_dof'==g) > 1
     % mask constant data within separable matrix design g (added by BG on 29/08/16)
-    Cm(Cm) = any(abs(diff(Y(iGr_dof'==g,Cm),1)) > eps, 1);
+    cmask(cmask) = any(abs(diff(Y(iGr_dof'==g,cmask),1)) > eps, 1);
     if isfield(SwE.type,'modified') % added by BG on 29/08/16
       % then look data for each "homogeneous" group check if the data is contant over subject for each visit category
       for g2 = 1:nGr
-	for k = 1:nVis_g(g2)
-	  if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
-	    Cm(Cm) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,Cm),1)) > eps, 1);
-	    for kk = k:nVis_g(g2)
-	      if k ~= kk
-		% extract the list of subject with both visit k and kk
-		subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
-		% look if some difference are observed within subject
-		if ~isempty(subjList)
-		  diffVis = Cm(Cm) == 0;
-		  for i = 1:length(subjList)
-		    diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), Cm) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), Cm)) > eps);
-		  end
-		  Cm(Cm) = diffVis;
-		end
-	      end
-	    end
-	  end
-	end
+        for k = 1:nVis_g(g2)
+          if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
+            cmask(cmask) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,cmask),1)) > eps, 1);
+            for kk = k:nVis_g(g2)
+              if k ~= kk
+                % extract the list of subject with both visit k and kk
+                subjList = intersect(iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)), iSubj(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(kk)));
+                % look if some difference are observed within subject
+                if ~isempty(subjList)
+                  diffVis = cmask(cmask) == 0;
+                  for i = 1:length(subjList)
+                    diffVis = diffVis | (abs(Y(iSubj == subjList(i) & iVis == uVis_g{g2}(k), cmask) - Y(iSubj == subjList(i) & iVis == uVis_g{g2}(kk), cmask)) > eps);
+                  end
+                  cmask(cmask) = diffVis;
+                end
+              end
+            end
+          end
+        end
       end
     end
   end
 end
       
-Y      = Y(:,Cm);                          %-Data within mask
-CrS    = sum(Cm);                          %-# current voxels
+Y      = Y(:,cmask);                          %-Data within mask
+CrS    = sum(cmask);                          %-# current voxels
 
 end
 
@@ -2735,7 +2700,7 @@ if (SwE.WB.stat == 'T')
     end
     
 else
-    conScore = spm_invXcdf(negp, 1);
+    conScore = swe_invNcdf(0.5 * p).^2;
 end
     
 % Save results

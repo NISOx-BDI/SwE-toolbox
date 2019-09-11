@@ -228,13 +228,13 @@ case 'table'                                                        %-Table
     % For WB analyses we have already calculated the information for the
     % table and footer. We just need to read it in.
     if xSwE.WB
-        VspmUncP = spm_read_vols(xSwE.VspmUncP);
-        VspmFDRP = spm_read_vols(xSwE.VspmFDRP);
-        VspmFWEP = spm_read_vols(xSwE.VspmFWEP);
+        VspmUncP = spm_data_read(xSwE.VspmUncP);
+        VspmFDRP = spm_data_read(xSwE.VspmFDRP);
+        VspmFWEP = spm_data_read(xSwE.VspmFWEP);
         % If the user didn't originally select clusterwise inference,
         % clusterwise FWEP values will not have been calculated.
         if isfield(xSwE, 'VspmFWEP_clus')
-            VspmFWEP_clus = spm_read_vols(xSwE.VspmFWEP_clus);
+            VspmFWEP_clus = spm_data_read(xSwE.VspmFWEP_clus);
         else
             VspmFWEP_clus = [];
         end
@@ -252,7 +252,13 @@ case 'table'                                                        %-Table
     units{1}  = [units{1} ' '];
     units{2}  = [units{2} ' '];
     
-    DIM       = DIM > 1;              % non-empty dimensions
+    if ~spm_mesh_detect(xSwE.Vspm)
+        DIM   = DIM > 1;                  % non-empty dimensions
+        strDataType = 'voxels';
+    else
+        DIM   = true(1,3);
+        strDataType = 'vertices';
+    end
     D         = sum(DIM);             % highest dimension
     VOX       = VOX(DIM);             % scaling
     
@@ -381,23 +387,23 @@ case 'table'                                                        %-Table
         td = regexp(xSwE.thresDesc,'p\D+?(?<u>[\.\d]+) \((?<thresDesc>\S+)\)','names');
         if xSwE.infType == 0 % voxel-wise
             if strcmp(td.thresDesc, 'FWE')
-              TabDat.ftr{1,1} = ['Threshold: Height ' displaySTAT ' > %0.2f, p <= %0.3f (FWE); Extent k >= %0.0f voxels.'];
+              TabDat.ftr{1,1} = ['Threshold: Height ' displaySTAT ' > %0.2f, p <= %0.3f (FWE); Extent k >= %0.0f ' strDataType '.'];
               TabDat.ftr{1,2} = [u, str2num(td.u), k];
             elseif strcmp(td.thresDesc, 'FDR')
-              TabDat.ftr{1,1} = ['Threshold: p <= %0.3f (FDR); Extent k >= %0.0f voxels.'];
+              TabDat.ftr{1,1} = ['Threshold: p <= %0.3f (FDR); Extent k >= %0.0f ' strDataType '.'];
               TabDat.ftr{1,2} = [str2num(td.u), k];
             elseif strcmp(td.thresDesc, 'unc.')
-              TabDat.ftr{1,1} = ['Threshold: p <= %0.3f (unc.); Extent k >= %0.0f voxels.'];
+              TabDat.ftr{1,1} = ['Threshold: p <= %0.3f (unc.); Extent k >= %0.0f ' strDataType '.'];
               TabDat.ftr{1,2} = [str2num(td.u), k];
             else
               error('Unknown inference type detected')
             end
         elseif xSwE.infType == 1 % cluster-wise
             if strcmp(xSwE.clustWise, 'FWE')
-              TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); Extent k > %0.0f voxels, p <= %0.3f (FWE).'];
+              TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); Extent k > %0.0f ' strDataType ', p <= %0.3f (FWE).'];
               TabDat.ftr{1,2} = [u, str2num(td.u), k, xSwE.fwep_c];
             elseif strcmp(xSwE.clustWise, 'Uncorr')
-              TabDat.ftr{1,1} = ['Threshold: p <= %0.3f (unc.); Extent k >= %0.0f voxels.'];
+              TabDat.ftr{1,1} = ['Threshold: p <= %0.3f (unc.); Extent k >= %0.0f ' strDataType '.'];
               TabDat.ftr{1,2} = [str2num(td.u), k];
             else
               error('Unknown inference type detected')
@@ -433,7 +439,7 @@ case 'table'                                                        %-Table
      else
         % Record height thresholds.
         TabDat.ftr{1,1} = ...
-        ['Threshold: Height ' eSTAT ' = %0.2f, p = %0.3f; Extent k = %0.0f voxels.'];
+        ['Threshold: Height ' eSTAT ' = %0.2f, p = %0.3f; Extent k = %0.0f ' strDataType '.'];
         TabDat.ftr{1,2} = [u,Pz,k];         
         % Record FDR p value.
         TabDat.ftr{2,1} = ...
@@ -547,14 +553,22 @@ case 'table'                                                        %-Table
      TabDat.ftr{(5+exlns),2} = [xSwE.df_Con xSwE.nPredict];
      
      % Record volume.
-     TabDat.ftr{(6+exlns),1} = ...
-         ['Volume: %0.0f ' units{:} ' = %0.0f voxels'];
-     TabDat.ftr{(6+exlns),2} = [S*prod(VOX),S];
-     
+     if spm_mesh_detect(xSwE.Vspm)
+        TabDat.ftr{(6+exlns),1} = ...
+            ['Surface: %0.0f ' strDataType ''];
+        TabDat.ftr{(6+exlns),2} = [S];
+     else
+        TabDat.ftr{(6+exlns),1} = ...
+            ['Volume: %0.0f ' units{:} ' = %0.0f ' strDataType ''];
+        TabDat.ftr{(6+exlns),2} = [S*prod(VOX),S];
+     end
+
      % Record voxel sizes.
-     TabDat.ftr{(7+exlns),1} = ...
-         ['Voxel size: ' voxfmt units{:}];
-     TabDat.ftr{(7+exlns),2} = VOX;
+        if ~spm_mesh_detect(xSwE.Vspm)
+        TabDat.ftr{(7+exlns),1} = ...
+            ['Voxel size: ' voxfmt units{:}];
+        TabDat.ftr{(7+exlns),2} = VOX;
+     end
      
      if isfield(xSwE, 'TFCEanaly') && xSwE.TFCEanaly
          TabDat.ftr{(8+exlns),1} = 'TFCE: E=%0.1f, H=%0.1f';
@@ -575,9 +589,13 @@ case 'table'                                                        %-Table
     %----------------------------------------------------------------------
     minz           = abs(min(min(Z)));
     Z              = 1 + minz + Z;
-    [N Z XYZ A L]  = spm_max(Z,XYZ);
+    if ~spm_mesh_detect(xSwE.Vspm)
+        [N Z XYZ A L]  = spm_max(Z,XYZ);
+    else
+        [N Z XYZ A L]  = spm_mesh_max(Z,XYZ,xSwE.G);
+    end
     Z              = Z - minz - 1;
-    
+
     %-Convert cluster sizes from voxels (N) to resels (K)
     %----------------------------------------------------------------------
     c              = max(A);                           %-Number of clusters
@@ -585,8 +603,12 @@ case 'table'                                                        %-Table
     
     %-Convert maxima locations from voxels to mm
     %----------------------------------------------------------------------
-    XYZmm = M(1:3,:)*[XYZ; ones(1,size(XYZ,2))];
-    
+    if spm_mesh_detect(xSwE.Vspm)
+        XYZmm = xSwE.G.vertices(XYZ(1,:),:)';
+    else
+        XYZmm = M(1:3,:)*[XYZ; ones(1,size(XYZ,2))];
+    end
+
     %-Set-level p values {c} - do not display if reporting a single cluster
     %----------------------------------------------------------------------
 %     if STAT ~= 'P'
@@ -687,7 +709,7 @@ case 'table'                                                        %-Table
                     XYZ_clus = XYZ(:, currentClus);
                     
                     % Read in all TFCE FWE P values in this cluser
-                    tfp = 10.^-spm_get_data(xSwE.VspmTFCEFWEP,XYZ_clus);
+                    tfp = 10.^-spm_data_read(xSwE.VspmTFCEFWEP, 'xyz', XYZ_clus);
                     
                     % Record the minimum TFCE FWE P value in said cluster.
                     Pk  = min(tfp);
@@ -1022,6 +1044,12 @@ case 'table'                                                        %-Table
         if nargin < 2, error('Not enough input arguments.'); end
         if nargin < 3, hReg = []; else hReg = varargin{3};   end
         xSwE = varargin{2};
+        
+        if isfield(xSwE,'G')
+            warning('"current cluster" option not implemented for meshes.');
+            varargout = { evalin('base','TabDat') };
+            return;
+        end
 
         %-Get number of maxima per cluster to be reported
         %------------------------------------------------------------------
