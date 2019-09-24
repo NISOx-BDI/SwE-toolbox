@@ -12,7 +12,7 @@ function swe_thresholdImage(threshold, minimumClusterSize)
 
   inputImageName = spm_select(1, 'image');
   [pth, bnm, ext] = spm_fileparts(inputImageName);
-  VI = spm_data_hdr_read(inputImageName);
+  VI = swe_data_hdr_read(inputImageName);
   [Z, XYZ] = swe_data_read(VI);
   XYZ = inv(VI.mat) * [XYZ; ones(1,VI.dim(1)*VI.dim(2)*VI.dim(3))];
   XYZ = round(XYZ(1:3,:));

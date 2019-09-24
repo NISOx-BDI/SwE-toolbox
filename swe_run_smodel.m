@@ -311,7 +311,7 @@ isMat = strcmpi(file_ext,'.mat');
 if isMat
     VY = {};
 else
-    VY = spm_data_hdr_read(char(P));
+    VY = swe_data_hdr_read(char(P));
 end
 %-Check compatibility of images
 %--------------------------------------------------------------------------
@@ -632,7 +632,7 @@ end
 if strcmpi(file_ext,'.mat')
     type = 16; % assume that there is a nan representation
 else
-    type = getfield(spm_data_hdr_read(P{1,1}),'dt')*[1,0]';
+    type = getfield(swe_data_hdr_read(P{1,1}),'dt')*[1,0]';
 end
 if ~spm_type(type,'nanrep')
     M_I = job.masking.im;  % Implicit mask ?
@@ -658,7 +658,7 @@ else
             error('The explicit mask is not in ".mat" format as expected.')
         end
     else
-        VM = spm_data_hdr_read(char(job.masking.em));
+        VM = swe_data_hdr_read(char(job.masking.em));
     end
     xsM.Explicit_masking = 'Yes';
 end
