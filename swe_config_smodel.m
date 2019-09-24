@@ -33,6 +33,74 @@ scans.ufilter = '.*(gii|img|nii|nii.gz|mat)';
 scans.num     = [1 Inf];
 
 % ---------------------------------------------------------------------
+% brainStructureLabel Label
+% ---------------------------------------------------------------------
+brainStructureLabel         = cfg_entry;
+brainStructureLabel.tag     = 'brainStructureLabel';
+brainStructureLabel.name    = 'Label';
+brainStructureLabel.help    = {''
+	'Label of the surface brain structure used in the CIfTI file.'
+	''};
+brainStructureLabel.strtype = 's';
+brainStructureLabel.num     = [1 Inf];
+
+% ---------------------------------------------------------------------
+% geomFile Surface geometry file
+% ---------------------------------------------------------------------
+geomFile         = cfg_files;
+geomFile.tag     = 'geomFile';
+geomFile.name    = 'Surface geometry file';
+geomFile.help    = {''
+     'Surface geometry file associated with this surface brain structure'
+    ''};
+geomFile.filter  = 'any';
+geomFile.ufilter = '.*(gii)';
+geomFile.num     = [1 1];
+
+% ---------------------------------------------------------------------
+% areaFile Surface area file
+% ---------------------------------------------------------------------
+areaFile         = cfg_files;
+areaFile.tag     = 'areaFile';
+areaFile.name    = 'Surface area file';
+areaFile.help    = {''
+  'Surface file containing the area of each vertex of this surface brain structure'
+  'This file is optional.'};
+areaFile.filter  = 'any';
+areaFile.ufilter = '.*(gii)';
+areaFile.num     = [0 1];
+areaFile.val     = {{}};
+
+% ---------------------------------------------------------------------
+% ciftiGeomFile
+% ---------------------------------------------------------------------
+ciftiGeomFile         = cfg_branch;
+ciftiGeomFile.tag     = 'ciftiGeomFile';
+ciftiGeomFile.name    = 'Surface brain structure';
+ciftiGeomFile.val     = {brainStructureLabel geomFile areaFile};
+ciftiGeomFile.help    = {''
+  'Add a new surface brain structure for CIfTI inputs.'
+  'For each surface brain structure, a geometry file must be specified alonside its label in the CIfTI file (the function swe_read_cifti_info can be used on one the input to extract the label of the surface brain structure).'
+  'The specifictation of the file containing the area of each vertex is optional'};
+
+% ---------------------------------------------------------------------
+% ciftiGeomFiles CovariSurface geometry files for CIfTI inputsates
+% ---------------------------------------------------------------------
+ciftiGeomFiles         = cfg_repeat;
+ciftiGeomFiles.tag     = 'ciftiGeomFiles';
+ciftiGeomFiles.name    = 'Surface geometry files for CIfTI inputs';
+ciftiGeomFiles.help    = {''
+  'This option must be used for CIfTI inputs. It is not needed for other types of inputs'
+  'It allows for the specification of the geometry files of each surface brain structure in the CIfTI inputs.'
+  'For each surface brain structure, a geometry file must provided alongside the label of this brain structure used in the CIfTI files.'
+  'In addition, for each surface brain structure, a surface metric file containing the surface area of each vertex may be added.'
+  'Note that the function swe_read_cifti_info can be used on one of the CIfTI input files to notably extract the surface brain structure labels.'
+                        };
+ciftiGeomFiles.values  = {ciftiGeomFile};
+ciftiGeomFiles.num     = [0 Inf];
+
+
+% ---------------------------------------------------------------------
 % groups Groups
 % ---------------------------------------------------------------------
 groups         = cfg_entry;
@@ -976,7 +1044,7 @@ WB.val    = {WB_no};
 smodel        = cfg_exbranch;
 smodel.tag    = 'smodel';
 smodel.name   = 'Specify Model';
-smodel.val    = {dir scans type subjects generic generic2 masking WB globalc globalm};
+smodel.val    = {dir scans ciftiGeomFiles type subjects generic generic2 masking WB globalc globalm};
 smodel.help   = {' '
                  'Module of the SwE toolbox allowing the specification of the data and design.'};
 smodel.prog   = @swe_run_smodel;
