@@ -285,6 +285,11 @@ switch lower(Action), case 'setup'                         %-Set up results
     M         = SwE.xVol.M;
     DIM       = SwE.xVol.DIM;
 
+    if isCifti
+      DIM(3) = Inf;
+      strDataType = "voxels/vertices";
+    end
+
     %-Space units
     %----------------------------------------------------------------------
     try
@@ -326,7 +331,7 @@ switch lower(Action), case 'setup'                         %-Set up results
                 error('Unknown data type.');
         end
     end
-    if ~isMat
+    if ~isMat && ~isCifti
         if spm_mesh_detect(xSwE.Vspm)
             DIM(3) = Inf; % force 3D coordinates
             strDataType = 'vertices';
