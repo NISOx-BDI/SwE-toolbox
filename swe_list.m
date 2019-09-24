@@ -564,7 +564,11 @@ case 'table'                                                        %-Table
      TabDat.ftr{(5+exlns),2} = [xSwE.df_Con xSwE.nPredict];
      
      % Record volume.
-     if spm_mesh_detect(xSwE.Vspm)
+     if isCifti
+        TabDat.ftr{(6+exlns),1} = ...
+        ['Surface(s): %0.0f vertices; Volume: %0.0f voxels'];
+        TabDat.ftr{(6+exlns),2} = [xSwE.S_surf, xSwE.S_vol];
+     elseif spm_mesh_detect(xSwE.Vspm)
         TabDat.ftr{(6+exlns),1} = ...
             ['Surface: %0.0f ' strDataType ''];
         TabDat.ftr{(6+exlns),2} = [S];
@@ -575,7 +579,11 @@ case 'table'                                                        %-Table
      end
 
      % Record voxel sizes.
-        if ~spm_mesh_detect(xSwE.Vspm)
+     if isCifti && numel(xSwE.cifti.volume) > 0
+      TabDat.ftr{(7+exlns),1} = ...
+      ['Voxel size: %1.1f %1.1f %1.1f mm mm mm'];
+      TabDat.ftr{(7+exlns),2} = sqrt(diag(xSwE.cifti.volume.M(1:3,1:3)'*xSwE.cifti.volume.M(1:3,1:3)))';        
+     elseif ~spm_mesh_detect(xSwE.Vspm) 
         TabDat.ftr{(7+exlns),1} = ...
             ['Voxel size: ' voxfmt units{:}];
         TabDat.ftr{(7+exlns),2} = VOX;
