@@ -92,6 +92,7 @@ if isCifti
 	metadata = {'ciftiTemplate', SwE.xY.P{1}};  
 end
 
+if ~isMat && ~isCifti
     isMeshData = spm_mesh_detect(SwE.xY.VY);
     if isMeshData
         file_ext = '.gii';
@@ -114,8 +115,6 @@ end
         file_ext = spm_file_ext;
         metadata = {};
     end
-else
-    isMeshData = false;
 end
 
 %-Delete files from previous analyses
