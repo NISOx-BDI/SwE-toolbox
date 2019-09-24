@@ -26,8 +26,15 @@ function V = swe_data_hdr_write(fname, DIM, M, descrip, metadata, varargin)
     'pinfo',    [1 0 0]',...
     'descrip',  descrip,...
     metadata{:});
-
-  V = spm_data_hdr_write(V);
+  
+  if isfield(V, 'ciftiTemplate')
+    copyfile(V.ciftiTemplate, fname);
+    V = swe_data_hdr_read(fname);
+    V.private.dat.fname = fname;
+    V.private.dat(:) = NaN;
+  else
+    V = spm_data_hdr_write(V);
+  end
       
 end
   
