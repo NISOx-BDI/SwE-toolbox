@@ -600,7 +600,9 @@ case 'table'                                                        %-Table
     %----------------------------------------------------------------------
     minz           = abs(min(min(Z)));
     Z              = 1 + minz + Z;
-    if ~spm_mesh_detect(xSwE.Vspm)
+    if isCifti
+        [N, Z, XYZ, A, L, XYZmm, brainStructureShortLabels]  = swe_cifti_max(Z,XYZ(1,:),xSwE.cifti);
+    elseif ~spm_mesh_detect(xSwE.Vspm)
         [N Z XYZ A L]  = spm_max(Z,XYZ);
     else
         [N Z XYZ A L]  = spm_mesh_max(Z,XYZ,xSwE.G);
@@ -614,7 +616,9 @@ case 'table'                                                        %-Table
     
     %-Convert maxima locations from voxels to mm
     %----------------------------------------------------------------------
-    if spm_mesh_detect(xSwE.Vspm)
+    if isCifti
+      % nothing as it was done in swe_cifti_max above
+    elseif spm_mesh_detect(xSwE.Vspm)
         XYZmm = xSwE.G.vertices(XYZ(1,:),:)';
     else
         XYZmm = M(1:3,:)*[XYZ; ones(1,size(XYZ,2))];
