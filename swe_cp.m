@@ -88,7 +88,10 @@ isMat    = strcmpi(file_ext,'.mat');
 isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dtscalar.nii');
 isOctave = exist('OCTAVE_VERSION','builtin');
 
-if ~isMat
+if isCifti
+	metadata = {'ciftiTemplate', SwE.xY.P{1}};  
+end
+
     isMeshData = spm_mesh_detect(SwE.xY.VY);
     if isMeshData
         file_ext = '.gii';
