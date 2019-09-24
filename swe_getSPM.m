@@ -1374,7 +1374,26 @@ if ~isMat
 end
  %             'R',        SwE.xVol.R,...
 %             'FWHM',     SwE.xVol.FWHM,...
-          
+
+xSwE.isCifti = isCifti;
+if isCifti
+  xSwE.cifti = SwE.cifti;
+  tmp = 0;
+  if numel(SwE.cifti.surfaces) > 0
+    for i = 1:numel(SwE.cifti.surfaces)
+      indInSurface = SwE.cifti.surfaces{i}.off + (1:numel(SwE.cifti.surfaces{i}.iV));
+      isSurviving = ismember(indInSurface, SwE.xVol.XYZ(1,:));
+      tmp = tmp + sum(isSurviving);
+    end
+  end
+  xSwE.S_surf = tmp;
+  if numel(SwE.cifti.volume) > 0
+    isSurviving = ismember(SwE.cifti.volume.indices, SwE.xVol.XYZ(1,:));
+    xSwE.S_vol = sum(isSurviving);
+  else
+    xSwE.S_vol = 0;
+  end
+end
           
 %-RESELS per voxel (density) if it exists
 %--------------------------------------------------------------------------
