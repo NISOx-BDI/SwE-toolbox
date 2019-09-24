@@ -681,7 +681,7 @@ for i = Ic
     Z = min(Z,equivalentScore);
     clear equivalentScore
   else
-    Z = min(Z, spm_data_read(xCon(i).Vspm, 'xyz', XYZ));
+    Z = min(Z, swe_data_read(xCon(i).Vspm, 'xyz', XYZ));
   end
       
 end
@@ -721,7 +721,7 @@ for i = 1:numel(Im)
         Mask = importdata(Im{i});
       else
         v = spm_data_hdr_read(Im{i});
-        Mask = spm_data_read(v, 'xyz', v.mat\SwE.xVol.M*[XYZ; ones(1,size(XYZ,2))]);
+        Mask = swe_data_read(v, 'xyz', v.mat\SwE.xVol.M*[XYZ; ones(1,size(XYZ,2))]);
       end
       Q = Mask ~= 0 & ~isnan(Mask);
       if Ex, Q = ~Q; end
@@ -915,7 +915,7 @@ if ~isMat
                   end
                   thresDesc = ['p<=' num2str(pu) ' (' thresDesc ')'];
                   
-                  FWE_ps = 10.^-spm_data_read(xCon(Ic).VspmFWEP,'xyz', XYZ);
+                  FWE_ps = 10.^-swe_data_read(xCon(Ic).VspmFWEP,'xyz', XYZ);
                   
                   % When thresholding on WB FWER p-values, we should include those = to pu
                   % Here, we are using a - tol < b instead of a <= b due to numerical errors
@@ -944,7 +944,7 @@ if ~isMat
                   thresDesc = ['p<=' num2str(pu) ' (' thresDesc ')'];
                   
                   % select the WB FDR p-values within the mask
-                  FDR_ps = 10.^-spm_data_read(xCon(Ic).VspmFDRP, 'xyz', XYZ);
+                  FDR_ps = 10.^-swe_data_read(xCon(Ic).VspmFDRP, 'xyz', XYZ);
 
                   % Here, a parametric score threshold u would differ from voxel to voxel
                   % Thus, setting it to NaN
@@ -963,7 +963,7 @@ if ~isMat
                   end
                   thresDesc = ['p<=' num2str(pu) ' (unc.)'];
                   % select the WB unc. p-values within the mask
-                  unc_ps = 10.^-spm_data_read(xCon(Ic).VspmUncP, 'xyz', XYZ);
+                  unc_ps = 10.^-swe_data_read(xCon(Ic).VspmUncP, 'xyz', XYZ);
 
                   % Here, a parametric score threshold u would differ from voxel to voxel
                   % Thus, setting it to NaN
@@ -1054,7 +1054,7 @@ if ~isMat
                   end
                   thresDesc = ['p<=' num2str(pu) ' (unc.)'];
                   % select the WB unc. p-values within the mask
-                  unc_ps = 10.^-spm_data_read(xCon(Ic).VspmUncP, 'xyz', XYZ);
+                  unc_ps = 10.^-swe_data_read(xCon(Ic).VspmUncP, 'xyz', XYZ);
   
                   % Here, a parametric score threshold u would differ from voxel to voxel
                   % Thus, setting it to NaN
@@ -1086,7 +1086,7 @@ if ~isMat
           % In older version of the toolbox, the max TFCE scores were not saved.
           % Thus, to avoid retro-compatibility issues, we cannot threshold using 
           % the (1-pt)th percentile of the max distribution, but only using the FWER p-values
-          tfp = 10.^-spm_data_read(xCon(Ic).VspmTFCEFWEP, 'xyz', XYZ);
+          tfp = 10.^-swe_data_read(xCon(Ic).VspmTFCEFWEP, 'xyz', XYZ);
           
           up  = NaN;
           Pp  = NaN;
@@ -1330,7 +1330,7 @@ if isfield(SwE, 'WB')
     
     % Uncorrected P values.
     Ps_vol = spm_data_hdr_read(xSwE.VspmUncP);
-    Ps = spm_data_read(Ps_vol);
+    Ps = swe_data_read(Ps_vol);
     Ps = 10.^(-Ps(~isnan(Ps)));
     xSwE.Ps = Ps;
     

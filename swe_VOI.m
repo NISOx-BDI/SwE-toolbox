@@ -168,7 +168,7 @@ switch SPACE
             'descrip', 'SVC mask');
         D2.dat     = false(D2.dim);
         for i=1:numel(D)
-            D2.dat = D2.dat | spm_data_read(D(i));
+            D2.dat = D2.dat | swe_data_read(D(i));
         end
         D2.dat     = uint8(D2.dat);
         D  = D2;

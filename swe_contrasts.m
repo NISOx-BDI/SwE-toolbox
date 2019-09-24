@@ -149,7 +149,7 @@ for i = 1:length(Ic)
               if isMat
                	cBeta = cBeta + Co(ind(j)) * beta(ind(j),:);               
               else
-                cBeta = cBeta + Co(ind(j)) * spm_data_read(V(j),'xyz',XYZ);
+                cBeta = cBeta + Co(ind(j)) * swe_data_read(V(j),'xyz',XYZ);
               end
                 swe_progress_bar('Set',100*(j/numel(ind)));
             end
@@ -191,7 +191,7 @@ for i = 1:length(Ic)
               if isMat
                	cBeta = cBeta + Co(ind(j),:)' * beta(ind(j),:);               
               else
-                cBeta = cBeta + Co(ind(j),:)' * spm_data_read(V(j),'xyz',XYZ);
+                cBeta = cBeta + Co(ind(j),:)' * swe_data_read(V(j),'xyz',XYZ);
               end
               swe_progress_bar('Set',100*(j/numel(ind)));
             end
@@ -255,7 +255,7 @@ for i = 1:length(Ic)
                     if isMat
                       cCovBc = cCovBc + weight * cov_beta(it,:);                     
                     else
-                      cCovBc = cCovBc + weight * spm_data_read(Vcov_beta(it),'xyz',XYZ);
+                      cCovBc = cCovBc + weight * swe_data_read(Vcov_beta(it),'xyz',XYZ);
                     end
                     if dof_type == 1
                       for g = 1:SwE.Gr.nGr
@@ -264,7 +264,7 @@ for i = 1:length(Ic)
                             reshape(cov_beta_g(g,it,:), 1, S);
                         else
                           cCovBc_g(:,:,g) = cCovBc_g(:,:,g) + weight *...
-                            spm_data_read(Vcov_beta_g((g-1)*nCov_beta+it),'xyz',XYZ);
+                            swe_data_read(Vcov_beta_g((g-1)*nCov_beta+it),'xyz',XYZ);
                         end
                         swe_progress_bar('Set',100*((it2-1+g/SwE.Gr.nGr)/length(ind)/(length(ind)+1)*2));
                       end
@@ -332,7 +332,7 @@ for i = 1:length(Ic)
                             if isMat
                             	CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},1);
                             else
-                              CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},1);
+                              CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(swe_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},1);
                             end
                             swe_progress_bar('Set',100*(0.1) + g*80/SwE.Gr.nGr);
                         end
@@ -361,7 +361,7 @@ for i = 1:length(Ic)
                           if isMat
                             CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},2);
                           else
-                            CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},2);
+                            CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(swe_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},2);
                           end
                           swe_progress_bar('Set',100*(0.1) + g*80/SwE.Gr.nGr);
                         end
@@ -424,7 +424,7 @@ for i = 1:length(Ic)
                                 if isMat
                                   CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},1);
                                 else
-                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},1);
+                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(swe_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},1);
                                 end
                                 swe_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));
                             end
@@ -450,7 +450,7 @@ for i = 1:length(Ic)
                                 if isMat
                                   CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},2);         
                                 else
-                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},2);         
+                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(swe_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},2);         
                                 end
                                 swe_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));    
                             end  
@@ -484,7 +484,7 @@ for i = 1:length(Ic)
                              if isMat
                                CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},1);
                              else
-                               CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},1);
+                               CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(swe_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},1);
                              end
                         end
                         clear cov_vis
@@ -505,7 +505,7 @@ for i = 1:length(Ic)
                         if isMat
                           CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},2);
                         else
-                          CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},2);
+                          CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(swe_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},2);
                         end
                       end
                       clear cov_vis

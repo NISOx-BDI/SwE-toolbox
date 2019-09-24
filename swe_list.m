@@ -228,13 +228,13 @@ case 'table'                                                        %-Table
     % For WB analyses we have already calculated the information for the
     % table and footer. We just need to read it in.
     if xSwE.WB
-        VspmUncP = spm_data_read(xSwE.VspmUncP);
-        VspmFDRP = spm_data_read(xSwE.VspmFDRP);
-        VspmFWEP = spm_data_read(xSwE.VspmFWEP);
+        VspmUncP = swe_data_read(xSwE.VspmUncP);
+        VspmFDRP = swe_data_read(xSwE.VspmFDRP);
+        VspmFWEP = swe_data_read(xSwE.VspmFWEP);
         % If the user didn't originally select clusterwise inference,
         % clusterwise FWEP values will not have been calculated.
         if isfield(xSwE, 'VspmFWEP_clus')
-            VspmFWEP_clus = spm_data_read(xSwE.VspmFWEP_clus);
+            VspmFWEP_clus = swe_data_read(xSwE.VspmFWEP_clus);
         else
             VspmFWEP_clus = [];
         end
@@ -416,7 +416,7 @@ case 'table'                                                        %-Table
         end
         % We need the P uncorrected P values to be in the correct form to
         % use spm_uc_FDR.
-        Ts = spm_data_read(xSwE.VspmUncP);
+        Ts = swe_data_read(xSwE.VspmUncP);
         Ts(isnan(Ts)) = [];
         Ts = 10.^-Ts;
         Ts = sort(Ts(:));
@@ -501,7 +501,7 @@ case 'table'                                                        %-Table
      
      % Retrieve edf data
      if isfield(xSwE, 'Vedf')
-        edf = spm_data_read(xSwE.Vedf);
+        edf = swe_data_read(xSwE.Vedf);
      else
         edf = xSwE.edf;
      end
@@ -709,7 +709,7 @@ case 'table'                                                        %-Table
                     XYZ_clus = XYZ(:, currentClus);
                     
                     % Read in all TFCE FWE P values in this cluser
-                    tfp = 10.^-spm_data_read(xSwE.VspmTFCEFWEP, 'xyz', XYZ_clus);
+                    tfp = 10.^-swe_data_read(xSwE.VspmTFCEFWEP, 'xyz', XYZ_clus);
                     
                     % Record the minimum TFCE FWE P value in said cluster.
                     Pk  = min(tfp);

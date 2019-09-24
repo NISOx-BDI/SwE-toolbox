@@ -62,7 +62,7 @@ function [p,F,f1,f2] = swe_Box_test()
     A2      = (k-1)*k*(k+1)*(k+2)/(6*df^2*(k^2+k-4));
     f2      = (f1+2)/(A2-A1^2);
     coeff   = df * (1-A1-f1/f2)/f1;
-    cov_vis = spm_data_read(SwE.Vcov_vis,'xyz',SwE.xVol.XYZ);
+    cov_vis = swe_data_read(SwE.Vcov_vis,'xyz',SwE.xVol.XYZ);
     p       = zeros(1,size(cov_vis,2));
     F       = zeros(1,size(cov_vis,2));
 

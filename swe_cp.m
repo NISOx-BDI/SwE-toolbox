@@ -631,7 +631,7 @@ if ~isMat
       for iScan=1:nScan
         if ~any(cmask), break, end                 %-Break if empty mask
         
-        Y(iScan, cmask) = spm_data_read(VY(iScan), chunk(cmask));%-Read chunk of data
+        Y(iScan, cmask) = swe_data_read(VY(iScan), chunk(cmask));%-Read chunk of data
         
         cmask(cmask) = Y(iScan, cmask) > xM.TH(iScan);      %-Threshold (& NaN) mask
         if xM.I && ~YNaNrep && xM.TH(iScan) < 0        %-Use implicit mask

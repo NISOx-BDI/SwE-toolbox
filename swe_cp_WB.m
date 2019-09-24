@@ -795,7 +795,7 @@ if ~isMat
     for iScan=1:nScan
       if ~any(cmask), break, end                 %-Break if empty mask
       
-      Y(iScan, cmask) = spm_data_read(VY(iScan), chunk(cmask));%-Read chunk of data
+      Y(iScan, cmask) = swe_data_read(VY(iScan), chunk(cmask));%-Read chunk of data
       
       cmask(cmask) = Y(iScan, cmask) > xM.TH(iScan);      %-Threshold (& NaN) mask
       if xM.I && ~YNaNrep && xM.TH(iScan) < 0        %-Use implicit mask
@@ -1091,12 +1091,12 @@ if ~isMat
     if strcmp(WB.stat, 'T')
       
       % Read in T statistics to get negative and positive TFCE scores.
-      par_tfce = swe_tfce_transform(spm_data_read(VcScore), H, E, C, dh);
-      par_tfce_neg = swe_tfce_transform(-spm_data_read(VcScore), H, E, C, dh);
+      par_tfce = swe_tfce_transform(swe_data_read(VcScore), H, E, C, dh);
+      par_tfce_neg = swe_tfce_transform(-swe_data_read(VcScore), H, E, C, dh);
     else
       
       % Convert F statistics to Z scores.
-      scorevol=-swe_invNcdf(10.^(-spm_data_read(VlP)));
+      scorevol=-swe_invNcdf(10.^(-swe_data_read(VlP)));
       scorevol(isnan(scorevol))=0;
           
       % Convert to TFCE.
@@ -1653,7 +1653,7 @@ if isMat
   originalScore = hyptest.positive.conScore;
   clear score;
 else
-  originalScore = spm_data_read(VcScore, 'xyz', XYZ);
+  originalScore = swe_data_read(VcScore, 'xyz', XYZ);
   % # blocks
   nbchunks = ceil(S / chunksize);
   chunks = min(cumsum([1 repmat(chunksize, 1, nbchunks)]), S+1);  
@@ -1716,8 +1716,8 @@ for b = 1:WB.nB
       fprintf('%-40s: %30s', sprintf('Bootstrap # %i: Chunk %3d/%-3d', b, iChunk, nbchunks),...
 																	'...processing');
       
-      Y_b = spm_data_read(VYWB, 'xyz', XYZ(:,chunk)) + ...
-      spm_data_read(VResWB, 'xyz', XYZ(:,chunk)) .* repmat(resamplingMatrix(:,b),1,sizeChunk);
+      Y_b = swe_data_read(VYWB, 'xyz', XYZ(:,chunk)) + ...
+      swe_data_read(VResWB, 'xyz', XYZ(:,chunk)) .* repmat(resamplingMatrix(:,b),1,sizeChunk);
       
       beta  = pX * Y_b;                     %-Parameter estimates
       if WB.RSwE == 0
