@@ -319,6 +319,42 @@ end
 %--------------------------------------------------------------------------
 spm_check_orientations(VY);
 
+if isCifti
+  SwE.cifti = struct;
+  [SwE.cifti.surfaces, SwE.cifti.volume] = swe_read_cifti_info(P{1});
+  if numel(SwE.cifti.surfaces) > 0
+    if ~isfield(job, 'ciftiGeomFile')
+      nSurfaceBrainStructures = 0;
+    else
+      nSurfaceBrainStructures = numel(job.ciftiGeomFile);
+    end
+    if nSurfaceBrainStructures ~= numel(SwE.cifti.surfaces)
+      error('The number of surface brain structures specified does not correspond to the number of surface brain structures in the CIfTI files. Please revise your specification.');
+    end
+    for i = 1:nSurfaceBrainStructures
+      for ii = i:nSurfaceBrainStructures
+        if i ~= ii && strcmpi(job.ciftiGeomFile(i).brainStructureLabel, job.ciftiGeomFile(ii).brainStructureLabel)
+          error('At least two surface brain structures have been specified with the same label. Please revise your specification.')
+        end
+      end
+    end
+    for i = 1:numel(SwE.cifti.surfaces)
+      for ii = 1:nSurfaceBrainStructures
+        if strcmpi(job.ciftiGeomFile(ii).brainStructureLabel, SwE.cifti.surfaces{i}.brainStructure)
+          SwE.cifti.surfaces{i}.geomFile = char(job.ciftiGeomFile(ii).geomFile);
+          if isfield(job.ciftiGeomFile(ii), 'areaFile') && ~strcmpi(job.ciftiGeomFile(ii).areaFile, '') 
+            SwE.cifti.surfaces{i}.areaFile = char(job.ciftiGeomFile(ii).areaFile);
+          end
+          break;
+        end
+        if (ii == nSurfaceBrainStructures)
+          error('At least one of the surface brain structure label in the CIfTI files cannot be found in those specified by the user. Please revise your specification.');    
+        end
+      end
+    end
+  end
+end
+
 fprintf('%30s\n','...done')  
 
 
