@@ -287,6 +287,14 @@ case 'table'                                                        %-Table
     
     % If we are doing a clusterwise/voxelwise analysis the header is the
     % normal SPM header.
+    if isCifti
+      additionalField = {'brain structure','label','label'};
+      nColTable = 12;
+    else
+      additionalField = {};
+      nColTable = 11;
+    end
+    
     if ~isfield(xSwE, 'TFCEanaly') || ~xSwE.TFCEanaly
         TabDat.hdr = {...
             'set',      'p',            '\itp';...
@@ -299,7 +307,8 @@ case 'table'                                                        %-Table
             'peak',     'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
             'peak',      STATe,         sprintf('\\it%c',STATe);...
             'peak',     'p(unc)',       '\itp\rm_{uncorr}';...
-            ' ',         'x,y,z {mm}',   [units{:}]}';
+            ' ',         'x,y,z {mm}',   [units{:}];...
+            additionalField{:} }';
     % Otherwise we need a TFCE section in the table instead of a cluster
     % level section.
     else
@@ -314,12 +323,13 @@ case 'table'                                                        %-Table
             'peak',     'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
             'peak',      STATe,         sprintf('\\it%c',STATe);...
             'peak',     'p(unc)',       '\itp\rm_{uncorr}';...
-            ' ',         'x,y,z {mm}',   [units{:}]}';        
+            ' ',         'x,y,z {mm}',   [units{:}];...
+            additionalField{:} }';        
     end
         
     %-Coordinate Precisions
     %----------------------------------------------------------------------
-    if isempty(xSwE.XYZmm) % empty results
+    if isempty(xSwE.XYZmm) || isCifti % empty results or cifti
         xyzfmt = '%3.0f %3.0f %3.0f';
         voxfmt = '%1.1f %1.1f %1.1f';
     elseif ~any(strcmp(units{3},{'mm',''})) % 2D data
@@ -347,7 +357,7 @@ case 'table'                                                        %-Table
     TabDat.fmt = {'%-0.3f','%g',...                            %-Set
         '%0.3f', '%0.3f','%0.0f', '%0.3f',...                  %-Cluster
         '%0.3f', '%0.3f', '%6.2f', '%0.3f',...                 %-Peak
-        xyzfmt};                                               %-XYZ
+        xyzfmt, '%s'};                                         %-XYZ
     
     %-Table filtering note
     %----------------------------------------------------------------------
@@ -581,7 +591,7 @@ case 'table'                                                        %-Table
     % (sorted on Z values and grouped by regions)
     %----------------------------------------------------------------------
     if isempty(Z)
-        TabDat.dat = cell(0,11);
+        TabDat.dat = cell(0,nColTable);
         varargout  = {TabDat};
         return
     end
