@@ -171,7 +171,7 @@ for i = 1:length(Ic)
               %------------------------------------------------------
               tmp = NaN(SwE.xVol.DIM');
               tmp(Q) = cBeta;
-              xCon(ic).Vcon = spm_data_write(xCon(ic).Vcon, tmp);
+              xCon(ic).Vcon = swe_data_write(xCon(ic).Vcon, tmp);
               
               clear tmp
             end
