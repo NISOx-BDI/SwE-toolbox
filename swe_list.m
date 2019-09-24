@@ -739,6 +739,9 @@ case 'table'                                                        %-Table
         else
         [TabDat.dat{TabLin,3:11}] = deal(Pk,Qc,N(i),Pn,Pu,Qu,U,Pz,XYZmm(:,i));
         end
+        if isCifti
+          [TabDat.dat{TabLin, 12}] = char(brainStructureShortLabels(i));
+        end
         TabLin = TabLin + 1;
         
         %-Print Num secondary maxima (> Dis mm apart)
