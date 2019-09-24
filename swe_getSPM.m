@@ -1183,6 +1183,7 @@ if ~isMat
               clusIndices = unique(A);
               
               % recompute the p-values as they might have increased due to post-hoc masking
+              % TODO: must be changed for WB
               if Ic == 1
                 for i = 1:length(clusIndices)
                   ind = ( A==clusIndices(i) );
