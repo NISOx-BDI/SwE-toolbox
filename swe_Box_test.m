@@ -114,8 +114,8 @@ function [p,F,f1,f2] = swe_Box_test()
     Q             = cumprod([1,SwE.xVol.DIM(1:2)'])*SwE.xVol.XYZ - ...
         sum(cumprod(SwE.xVol.DIM(1:2)'));
     tmp(Q)        = F;
-    spm_data_write(CS_test_F,tmp);
+    swe_data_write(CS_test_F,tmp);
     tmp(Q)        = p;
-    spm_data_write(CS_test_p,tmp);
+    swe_data_write(CS_test_p,tmp);
 
 end

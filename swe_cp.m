@@ -751,7 +751,7 @@ if ~isMat
                         for i=1:nCov_beta
                             it = it + 1;
                             c(cmask) = Cov_beta_g(i,:);
-                            Vcov_beta_g(it) = spm_data_write(Vcov_beta_g(it), c, chunk);
+                            Vcov_beta_g(it) = swe_data_write(Vcov_beta_g(it), c, chunk);
                         end
                         Cov_beta = Cov_beta + Cov_beta_g;
                     end
@@ -770,7 +770,7 @@ if ~isMat
                   for ii=1:nCov_beta
                     it = it + 1;
                     c(cmask) = Cov_beta_i_tmp(ii,:);
-                    Vcov_beta_g(it) = spm_data_write(Vcov_beta_g(it), c, chunk);
+                    Vcov_beta_g(it) = swe_data_write(Vcov_beta_g(it), c, chunk);
                   end
                 end
             end
@@ -784,13 +784,13 @@ if ~isMat
       %-Write mask file
       %----------------------------------------------------------------------
       mask(chunk)  = cmask;
-      VM           = spm_data_write(VM, cmask', chunk);
+      VM           = swe_data_write(VM, cmask', chunk);
       
       %-Write beta files
       %----------------------------------------------------------------------
       for iBeta=1:nBeta
         c(cmask) = beta(iBeta,:);
-        Vbeta(iBeta) = spm_data_write(Vbeta(iBeta), c, chunk); 
+        Vbeta(iBeta) = swe_data_write(Vbeta(iBeta), c, chunk); 
       end
 
       %-Write CovVis files if needed
@@ -798,7 +798,7 @@ if ~isMat
       if isfield(SwE.type,'modified') 
         for iCov_vis=1:nCov_vis
           c(cmask) = Cov_vis(iCov_vis,:);
-          Vcov_vis(iCov_vis) = spm_data_write(Vcov_vis(iCov_vis), c, chunk);
+          Vcov_vis(iCov_vis) = swe_data_write(Vcov_vis(iCov_vis), c, chunk);
         end
       end
 
@@ -806,7 +806,7 @@ if ~isMat
       %----------------------------------------------------------------------
       for iCov_beta=1:nCov_beta
         c(cmask) = Cov_beta(iCov_beta,:);
-        Vcov_beta(iCov_beta) = spm_data_write(Vcov_beta(iCov_beta), c, chunk);
+        Vcov_beta(iCov_beta) = swe_data_write(Vcov_beta(iCov_beta), c, chunk);
       end
       
       %-Report progress

@@ -607,7 +607,7 @@ for i = 1:length(Ic)
 
           tmp           = zeros(SwE.xVol.DIM');
           tmp(Q)        = equivalentScore;
-          xCon(ic).Vspm = spm_data_write(xCon(ic).Vspm,tmp);
+          xCon(ic).Vspm = swe_data_write(xCon(ic).Vspm,tmp);
         end
         clear tmp equivalentScore
         if isMat
@@ -641,7 +641,7 @@ for i = 1:length(Ic)
 
           tmp           = zeros(SwE.xVol.DIM');
           tmp(Q)        = score;
-          xCon(ic).Vspm2 = spm_data_write(xCon(ic).Vspm2,tmp);
+          xCon(ic).Vspm2 = swe_data_write(xCon(ic).Vspm2,tmp);
         end
         clear tmp score
         if isMat
@@ -675,7 +675,7 @@ for i = 1:length(Ic)
 
           tmp           = zeros(SwE.xVol.DIM');
           tmp(Q)        = luncP;
-          xCon(ic).VspmUncP = spm_data_write(xCon(ic).VspmUncP,tmp);
+          xCon(ic).VspmUncP = swe_data_write(xCon(ic).VspmUncP,tmp);
         end
         clear tmp uncP luncP
         if isMat
@@ -710,7 +710,7 @@ for i = 1:length(Ic)
 
             tmp = NaN(SwE.xVol.DIM');
             tmp(Q) = edf;
-            xCon(ic).Vedf = spm_data_write(xCon(ic).Vedf,tmp);
+            xCon(ic).Vedf = swe_data_write(xCon(ic).Vedf,tmp);
           end
           clear tmp edf
           if isMat

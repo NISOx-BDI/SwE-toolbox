@@ -1015,56 +1015,56 @@ if ~isMat
       %-Write mask file
     %----------------------------------------------------------------------
     mask(chunk)  = cmask;
-    VM           = spm_data_write(VM, cmask', chunk);
+    VM           = swe_data_write(VM, cmask', chunk);
     
     %-Write beta files
     %----------------------------------------------------------------------
     for iBeta = 1:nBeta
       c(cmask) = beta(iBeta,:);
-      Vbeta(iBeta) = spm_data_write(Vbeta(iBeta), c, chunk); 
+      Vbeta(iBeta) = swe_data_write(Vbeta(iBeta), c, chunk); 
     end
 
     %-Write WB fitted data images
     %------------------------------------------------------------------
     for iScan = 1:nScan
       c(cmask) = YWB(iScan,:);
-      VYWB(iScan) = spm_data_write(VYWB(iScan), c, chunk);
+      VYWB(iScan) = swe_data_write(VYWB(iScan), c, chunk);
     end
     
     %-Write WB residuals
     %------------------------------------------------------------------
     for iScan = 1:nScan
       c(cmask) = resWB(iScan,:);
-      VResWB(iScan) = spm_data_write(VResWB(iScan), c, chunk);
+      VResWB(iScan) = swe_data_write(VResWB(iScan), c, chunk);
     end
 
     %-Write parametric score image of the original data
     %------------------------------------------------------------------
     c(cmask) = score;
-    Vscore = spm_data_write(Vscore,  c, chunk);
+    Vscore = swe_data_write(Vscore,  c, chunk);
     
     %-Write parametric edf image of the original data
     %------------------------------------------------------------------
     c(cmask) = hyptest.positive.edf;
-    Vedf = spm_data_write(Vedf,  c, chunk);
+    Vedf = swe_data_write(Vedf,  c, chunk);
     
     %-Write parametric p-value image
     %------------------------------------------------------------------
     c(cmask) = -log10(hyptest.positive.p);
-    VlP = spm_data_write(VlP,  c, chunk);
+    VlP = swe_data_write(VlP,  c, chunk);
     
     if WB.stat=='T'
       c(cmask) = -log10(hyptest.negative.p);
-      VlP_Neg = spm_data_write(VlP_Neg,  c, chunk);
+      VlP_Neg = swe_data_write(VlP_Neg,  c, chunk);
     end
     
     %-Write converted parametric score image of the original data
     %------------------------------------------------------------------
     c(cmask) = hyptest.positive.conScore;
-    VcScore = spm_data_write(VcScore,  c, chunk);
+    VcScore = swe_data_write(VcScore,  c, chunk);
 
     if WB.stat == 'T'
-        VcScore_neg = spm_data_write(VcScore_neg,  -c, chunk);
+        VcScore_neg = swe_data_write(VcScore_neg,  -c, chunk);
     end
 
     %-Report progress
@@ -1106,9 +1106,9 @@ if ~isMat
     end
     
     % Save parametric TFCE statistic images.
-    spm_data_write(Vscore_tfce, par_tfce);
+    swe_data_write(Vscore_tfce, par_tfce);
     if strcmp(WB.stat, 'T')
-      spm_data_write(Vscore_tfce_neg, par_tfce_neg);
+      swe_data_write(Vscore_tfce_neg, par_tfce_neg);
     end
   end
   
@@ -2315,13 +2315,13 @@ else
   uncP = uncP / (WB.nB + 1);
   tmp = nan(SwE.xVol.DIM');
   tmp(Q) = -log10(uncP);
-  spm_data_write(VlP_wb_pos, tmp);
+  swe_data_write(VlP_wb_pos, tmp);
   
   % If it's F, write out an X map.
   stat = nan(SwE.xVol.DIM');
   if WB.stat == 'F'
     stat(Q) = spm_invXcdf(1 - uncP,1);
-    spm_data_write(VcScore_wb_pos, stat);
+    swe_data_write(VcScore_wb_pos, stat);
   end
   
   % If it's T, write out a Z map.
@@ -2329,11 +2329,11 @@ else
       
     % Positive map.
     stat(Q) = swe_invNcdf(1 - uncP);
-    spm_data_write(VcScore_wb_pos, stat);
+    swe_data_write(VcScore_wb_pos, stat);
 
     % T is two tailed so we need a negative map as well.
     tmp(Q) = -log10(1 + 1/(WB.nB + 1) - uncP);
-    spm_data_write(VlP_wb_neg, tmp);
+    swe_data_write(VlP_wb_neg, tmp);
   end
   
   %
@@ -2351,7 +2351,7 @@ else
   end
   FWERP = FWERP / (WB.nB + 1);
   tmp(Q) = -log10(FWERP);
-  spm_data_write(VlP_wb_FWE_pos, tmp);
+  swe_data_write(VlP_wb_FWE_pos, tmp);
   
   % FWE correction for TFCE images.
   if TFCE
@@ -2367,7 +2367,7 @@ else
     tfcefwevol = tfcefwevol / (WB.nB + 1);
       
     % Write out volume.
-    spm_data_write(VlP_tfce_FWE_pos, -log10(tfcefwevol));
+    swe_data_write(VlP_tfce_FWE_pos, -log10(tfcefwevol));
       
     % Same again for negative contrast, if we are using a T statistic.
     if WB.stat == 'T'
@@ -2383,7 +2383,7 @@ else
       tfcefwevol_neg = tfcefwevol_neg / (WB.nB + 1);
 
       % Write out volume.
-      spm_data_write(VlP_tfce_FWE_neg, -log10(tfcefwevol_neg));
+      swe_data_write(VlP_tfce_FWE_neg, -log10(tfcefwevol_neg));
     end
   end
   
@@ -2399,7 +2399,7 @@ else
     end
     FWERPNeg = FWERPNeg / (WB.nB + 1);
     tmp(Q) = -log10(FWERPNeg);
-    spm_data_write(VlP_wb_FWE_neg, tmp);
+    swe_data_write(VlP_wb_FWE_neg, tmp);
   end
   
   %
@@ -2410,7 +2410,7 @@ else
   catch
     tmp(Q) = -log10(spm_P_FDR(uncP,[],'P',[],sort(uncP)'));
   end
-  spm_data_write(VlP_wb_FDR_pos, tmp);
+  swe_data_write(VlP_wb_FDR_pos, tmp);
   
   if WB.stat =='T'
     try
@@ -2418,7 +2418,7 @@ else
     catch
       tmp(Q) = -log10(spm_P_FDR(1 + 1/(WB.nB + 1) - uncP,[],'P',[],sort(1 + 1/(WB.nB + 1) - uncP)'));
     end
-    spm_data_write(VlP_wb_FDR_neg, tmp);
+    swe_data_write(VlP_wb_FDR_neg, tmp);
   end
   
   if WB.clusterWise == 1
@@ -2443,7 +2443,7 @@ else
       tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = tmp2(iC);
     end
     tmp(Q) = tmp3;
-    spm_data_write(VlP_wb_clusterFWE_pos, tmp);
+    swe_data_write(VlP_wb_clusterFWE_pos, tmp);
     if WB.stat =='T'
       Q = cumprod([1,SwE.xVol.DIM(1:2)']) * SwE.WB.clusterInfo.LocActivatedVoxelsNeg - ...
 	  sum(cumprod(SwE.xVol.DIM(1:2)'));
@@ -2463,16 +2463,16 @@ else
         tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = tmp2(iC);
       end
       tmp(Q) = tmp3;
-      spm_data_write(VlP_wb_clusterFWE_neg, tmp);
+      swe_data_write(VlP_wb_clusterFWE_neg, tmp);
     end
   end
   
   if TFCE
     tfce_luncP = -log10((tfce_uncP+1)./(WB.nB+1));
-    spm_data_write(VlP_tfce_pos, tfce_luncP);
+    swe_data_write(VlP_tfce_pos, tfce_luncP);
     if WB.stat == 'T'
       tfce_luncP_neg = -log10((tfce_uncP_neg+1)./(WB.nB+1));
-      spm_data_write(VlP_tfce_neg, tfce_luncP_neg);
+      swe_data_write(VlP_tfce_neg, tfce_luncP_neg);
     end
   end
   

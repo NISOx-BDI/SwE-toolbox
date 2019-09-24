@@ -59,6 +59,6 @@ function swe_thresholdImage(threshold, minimumClusterSize)
   Q = cumprod([1,VI.dim(1:2)])*XYZ - ...
     sum(cumprod(VI.dim(1:2)));
   tmp(Q) = Z;
-  spm_data_write(VI, tmp);
+  swe_data_write(VI, tmp);
 
 
