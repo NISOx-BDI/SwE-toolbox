@@ -436,10 +436,10 @@ switch iGXcalc,
         fprintf('%-40s: %30s','Calculating globals',' ')                %-#
         if spm_mesh_detect(VY)
             for i = 1:nScan
-                    str = sprintf('%3d/%-3d',i,nScan);
-                    fprintf('%s%30s',repmat(sprintf('\b'),1,30),str)            %-#
-                    dat = spm_data_read(VY(i));
-                    g(i) = mean(dat(~isnan(dat)));
+                str = sprintf('%3d/%-3d',i,nScan);
+                fprintf('%s%30s',repmat(sprintf('\b'),1,30),str)            %-#
+                dat = swe_data_read(VY(i));
+                g(i) = mean(dat(~isnan(dat)));
             end
         else
             for i = 1:nScan
@@ -877,7 +877,7 @@ if ~spm('CmdLine')
     if strcmpi(file_ext,'.mat')
         fname = cellstr(repmat('  ', nScan, 1));
     else
-    	fname = cat(1,{SwE.xY.VY.fname}');
+      fname = cat(1,{SwE.xY.VY.fname}');
     end
     swe_DesRep('DesMtx',SwE.xX,fname,SwE.xsDes)
     fprintf('%30s\n','...done')                                         %-#
