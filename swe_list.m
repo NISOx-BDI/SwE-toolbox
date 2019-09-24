@@ -203,6 +203,7 @@ case 'table'                                                        %-Table
     
     %-Extract data from xSwE
     %----------------------------------------------------------------------
+    isCifti   = xSwE.isCifti;
     S         = xSwE.S;
     VOX       = xSwE.VOX;
     DIM       = xSwE.DIM;
