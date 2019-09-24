@@ -704,7 +704,7 @@ for i = 1:numel(Im)
         Mask = equivalentScore;
         clear equivalentScore
       else
-        Mask = spm_data_read(xCon(Im(i)).Vspm, 'xyz', XYZ);
+        Mask = swe_data_read(xCon(Im(i)).Vspm, 'xyz', XYZ);
       end
       switch xCon(Im(i)).STAT
         case 'T'
