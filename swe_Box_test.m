@@ -97,7 +97,7 @@ function [p,F,f1,f2] = swe_Box_test()
         'descrip',sprintf('CS_test F-scores'),...
         metadata{:});
     
-    CS_test_F = spm_data_hdr_write(CS_test_F);
+    CS_test_F = swe_data_hdr_write(CS_test_F);
     
     CS_test_p = struct(...
         'fname',  sprintf('swe_vox_Fstat-Box_lp%s', spm_file_ext),...
@@ -108,7 +108,7 @@ function [p,F,f1,f2] = swe_Box_test()
         'descrip',sprintf('CS_test p-values'),...
         metadata{:});
 
-    CS_test_p = spm_data_hdr_write(CS_test_p);
+    CS_test_p = swe_data_hdr_write(CS_test_p);
 
     tmp           = zeros(SwE.xVol.DIM');
     Q             = cumprod([1,SwE.xVol.DIM(1:2)'])*SwE.xVol.XYZ - ...
