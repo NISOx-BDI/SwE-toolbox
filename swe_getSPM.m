@@ -1144,8 +1144,10 @@ if ~isMat
               end
 
               %-Calculate extent threshold filtering
-              %----------------------------------------------------------------------
-              if  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
+							%----------------------------------------------------------------------
+              if isCifti
+                A = swe_cifti_clusters(SwE.cifti, XYZ(1,:));              
+              elseif  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
                 A = spm_clusters(XYZ);
               else
                 T = false(SwE.xVol.DIM');
@@ -1173,7 +1175,9 @@ if ~isMat
               %-Calculate extent threshold filtering
               %----------------------------------------------------------------------
               % recompute the clusters as they may have been reduced due to post-hoc masking
-              if  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
+              if isCifti
+                A = swe_cifti_clusters(SwE.cifti, XYZ(1,:));              
+              elseif  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
                 A = spm_clusters(XYZ);
               else
                 T = false(SwE.xVol.DIM');
