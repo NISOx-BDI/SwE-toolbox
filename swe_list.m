@@ -834,6 +834,15 @@ case 'table'                                                        %-Table
     else           TabDat = varargin{2}; end
     if nargin < 3, hReg = []; else hReg = varargin{3}; end
     
+    isCifti = (size(TabDat.hdr,2) == 12);
+    if isCifti
+      scalingFactor = 0.9;
+      nColTable = 12;
+    else
+      scalingFactor = 1;
+      nColTable = 11;
+    end
+
     %-Get current location (to highlight selected voxel in table)
     %----------------------------------------------------------------------
     xyzmm = swe_results_ui('GetCoords');
@@ -877,26 +886,30 @@ case 'table'                                                        %-Table
     set(gca,'DefaultTextFontName',PF.helvetica,'DefaultTextFontSize',FS(8))
 
     Hs = []; Hc = []; Hp = [];
-    h  = text(0.01,y, [TabDat.hdr{1,1} '-level'],'FontSize',FS(9));
-    h  = line([0,0.11],[1,1]*(y-dy/4),'LineWidth',0.5,'Color','r');
-    h  = text(0.02,y-9*dy/8,    TabDat.hdr{3,1});              Hs = [Hs,h];
-    h  = text(0.08,y-9*dy/8,    TabDat.hdr{3,2});              Hs = [Hs,h];
+    h  = text(0.01*scalingFactor,y, [TabDat.hdr{1,1} '-level'],'FontSize',FS(9));
+    h  = line([0,0.11]*scalingFactor,[1,1]*(y-dy/4),'LineWidth',0.5,'Color','r');
+    h  = text(0.02*scalingFactor,y-9*dy/8,    TabDat.hdr{3,1});              Hs = [Hs,h];
+    h  = text(0.08*scalingFactor,y-9*dy/8,    TabDat.hdr{3,2});              Hs = [Hs,h];
     
-    text(0.22,y, [TabDat.hdr{1,3} '-level'],'FontSize',FS(9));
-    line([0.14,0.44],[1,1]*(y-dy/4),'LineWidth',0.5,'Color','r');
-    h  = text(0.15,y-9*dy/8,    TabDat.hdr{3,3});              Hc = [Hc,h];
-    h  = text(0.24,y-9*dy/8,    TabDat.hdr{3,4});              Hc = [Hc,h];
-    h  = text(0.34,y-9*dy/8,    TabDat.hdr{3,5});              Hc = [Hc,h];
-    h  = text(0.39,y-9*dy/8,    TabDat.hdr{3,6});              Hc = [Hc,h];
+    text(0.22*scalingFactor,y, [TabDat.hdr{1,3} '-level'],'FontSize',FS(9));
+    line([0.14,0.44]*scalingFactor,[1,1]*(y-dy/4),'LineWidth',0.5,'Color','r');
+    h  = text(0.15*scalingFactor,y-9*dy/8,    TabDat.hdr{3,3});              Hc = [Hc,h];
+    h  = text(0.24*scalingFactor,y-9*dy/8,    TabDat.hdr{3,4});              Hc = [Hc,h];
+    h  = text(0.34*scalingFactor,y-9*dy/8,    TabDat.hdr{3,5});              Hc = [Hc,h];
+    h  = text(0.39*scalingFactor,y-9*dy/8,    TabDat.hdr{3,6});              Hc = [Hc,h];
     
-    text(0.59,y, [TabDat.hdr{1,7} '-level'],'FontSize',FS(9));
-    line([0.48,0.80],[1,1]*(y-dy/4),'LineWidth',0.5,'Color','r');
-    h  = text(0.49,y-9*dy/8,    TabDat.hdr{3,7});              Hp = [Hp,h];
-    h  = text(0.58,y-9*dy/8,    TabDat.hdr{3,8});              Hp = [Hp,h];
-    h  = text(0.67,y-9*dy/8,    TabDat.hdr{3,9});              Hp = [Hp,h];
-    h  = text(0.75,y-9*dy/8,    TabDat.hdr{3,10});             Hp = [Hp,h];
+    text(0.59*scalingFactor,y, [TabDat.hdr{1,7} '-level'],'FontSize',FS(9));
+    line([0.48,0.80]*scalingFactor,[1,1]*(y-dy/4),'LineWidth',0.5,'Color','r');
+    h  = text(0.49*scalingFactor,y-9*dy/8,    TabDat.hdr{3,7});              Hp = [Hp,h];
+    h  = text(0.58*scalingFactor,y-9*dy/8,    TabDat.hdr{3,8});              Hp = [Hp,h];
+    h  = text(0.67*scalingFactor,y-9*dy/8,    TabDat.hdr{3,9});              Hp = [Hp,h];
+    h  = text(0.74*scalingFactor,y-9*dy/8,    TabDat.hdr{3,10});             Hp = [Hp,h];
     
-    text(0.85,y - dy/2,TabDat.hdr{3,11},'Fontsize',FS(8));
+    text(0.845*scalingFactor,y - dy/2,TabDat.hdr{3,11},'Fontsize',FS(8));
+    
+    if isCifti
+      text(0.88,y - dy/2,TabDat.hdr{1,12},'Fontsize',FS(8));
+    end
 
     %-Move to next vertical position marker
     %----------------------------------------------------------------------
@@ -944,8 +957,9 @@ case 'table'                                                        %-Table
     %----------------------------------------------------------------------
     tCol = [ 0.01      0.08 ...                                %-Set
              0.15      0.24      0.33      0.39 ...            %-Cluster
-             0.49      0.58      0.65      0.74      0.83 ...  %-Peak
-             0.92];                                            %-XYZ
+             0.49      0.58      0.65      0.74 ...  %-Peak
+             0.84 ...                                          %-XYZ
+             0.93/scalingFactor ] * scalingFactor;                                            %-Brain structure labels
     
     %-Pagination variables
     %----------------------------------------------------------------------
@@ -992,24 +1006,29 @@ case 'table'                                                        %-Table
         %------------------------------------------------------------------
         if  ~isempty(TabDat.dat{i,5}), fw = 'Bold'; else fw = 'Normal'; end
         
-        for k=3:11
+        for k=3:nColTable
+          if k ~= 11
             h     = text(tCol(k),y,sprintf(TabDat.fmt{k},TabDat.dat{i,k}),...
                         'FontWeight',fw,...
                         'UserData',TabDat.dat{i,k},...
                         'ButtonDownFcn','get(gcbo,''UserData'')');
             hPage = [hPage, h];
+          end
         end
         
         % Specifically changed so it properly finds hMIPax
         %------------------------------------------------------------------
         tXYZmm = TabDat.dat{i,11};
+        BDFcn  = [...
+            'spm_mip_ui(''SetCoords'',get(gcbo,''UserData''),',...
+            'findobj(''tag'',''hMIPax''));'];
+        BDFcn = 'spm_XYZreg(''SetCoords'',get(gcbo,''UserData''),hReg,1);';
         h      = text(tCol(11),y,sprintf(TabDat.fmt{11},tXYZmm),...
             'FontWeight',fw,...
             'Tag','ListXYZ',...
-            'ButtonDownFcn',[...
-            'hMIPax = findobj(''tag'',''hMIPax'');',...
-            'spm_mip_ui(''SetCoords'',get(gcbo,''UserData''),hMIPax);'],...
-            'Interruptible','off','BusyAction','Cancel',...
+            'ButtonDownFcn',BDFcn,...
+            'Interruptible','off',...
+            'BusyAction','Cancel',...
             'UserData',tXYZmm);
 
         HlistXYZ = [HlistXYZ, h];
