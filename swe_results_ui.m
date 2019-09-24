@@ -404,42 +404,110 @@ switch lower(Action), case 'setup'                         %-Set up results
     
     %-Setup Maximum intensity projection (MIP) & register
     %----------------------------------------------------------------------
-    hMIPax = axes('Parent',Fgraph,'Position',[0.05 0.60 0.55 0.36],'Visible','off'); 
+    % create a graphic window for each brain structure
+    if isCifti
+      it = 1;
+      nBrainStructure = numel(SwE.cifti.surfaces) + numel(SwE.cifti.volume);
+      gridSize = ceil(sqrt(nBrainStructure));
+      sizeFont = round(14 / gridSize);
+      hMIPax = cell(nBrainStructure,1);
+      hMax = cell(nBrainStructure,1);
+      str = cell(nBrainStructure,1);
+      offset_y = -0.36/gridSize;
+      if numel(SwE.cifti.surfaces) > 0
+        for i = 1:numel(SwE.cifti.surfaces)
+          
+          if mod(it, gridSize) == 1
+            offset_y = offset_y + 0.36/gridSize;
+            offset_x = 0;
+          else
+            offset_x = offset_x + 0.55/gridSize;
+          end
+          hMIPax{it} = axes('Parent', Fgraph, 'Position', [0.05 + offset_x, 0.60 + offset_y, 0.55/gridSize, 0.36/gridSize], 'Visible','off');
 
-    if spm_mesh_detect(xSwE.Vspm)
-        hMax = spm_mesh_render('Disp',SwE.xVol.G,'Parent',hMIPax);
-        tmp = zeros(1,prod(xSwE.DIM));
-        tmp(xSwE.XYZ(1,:)) = xSwE.Z;
-        hMax = spm_mesh_render('Overlay',hMax,tmp);
-        hMax = spm_mesh_render('Register',hMax,hReg);
-    elseif isequal(units(2:3),{'' ''})
-        set(hMIPax, 'Position',[0.05 0.65 0.55 0.25]);
-        [allS,allXYZmm] = spm_read_vols(xSwE.Vspm);
-        plot(hMIPax,allXYZmm(1,:),allS,'Color',[0.6 0.6 0.6]);
-        set(hMIPax,'NextPlot','add');
-        MIP = NaN(1,xSwE.DIM(1));
-        MIP(xSwE.XYZ(1,:)) = xSwE.Z;
-        XYZmm = xSwE.M(1,:)*[1:xSwE.DIM(1);zeros(2,xSwE.DIM(1));ones(1,xSwE.DIM(1))];
-        plot(hMIPax,XYZmm,MIP,'b-+','LineWidth',2);
-        plot(hMIPax,[XYZmm(1) XYZmm(end)],[xSwE.u xSwE.u],'r');
-        clim = get(hMIPax,'YLim');
-        axis(hMIPax,[sort([XYZmm(1) XYZmm(end)]) 0 clim(2)]);
+          hMax{it} = spm_mesh_render('Disp', SwE.cifti.surfaces{i}.geomFile, 'Parent', hMIPax{it});
+          tmp = zeros(1,SwE.cifti.surfaces{i}.nV);
+          indInSurface = SwE.cifti.surfaces{i}.off + (1:numel(SwE.cifti.surfaces{i}.iV));
+          [isSurviving, indInCifti] = ismember(indInSurface, xSwE.XYZ(1,:));
+          indInCifti = indInCifti(isSurviving);
+          indSurvivingInSurface = SwE.cifti.surfaces{i}.iV(isSurviving);
+          tmp(indSurvivingInSurface) = xSwE.Z(indInCifti);
+          hMax{it} = spm_mesh_render('Overlay', hMax{it}, tmp);
+          hMax{it} = spm_mesh_render('Register', hMax{it}, hReg);
+          str{it} = sprintf('S%i: %s', it, SwE.cifti.surfaces{i}.brainStructure);
+          text(0,0,0, char(str{i}),...
+          'Interpreter','none',...
+              'FontSize',FS(sizeFont),'Fontweight','Bold',...
+              'Parent',hMIPax{it},'Units', 'normalized');
+          it = it + 1;
+        end
+      end
+      if numel(SwE.cifti.volume) > 0
+        
+        if mod(it, gridSize) == 1
+          offset_y = offset_y + 0.36/gridSize;
+          offset_x = 0;
+        else
+          offset_x = offset_x + 0.55/gridSize;
+        end
+        
+        hMIPax{it} = axes('Parent', Fgraph, 'Position', [0.05 + offset_x, 0.60 + offset_y, 0.55/gridSize, 0.36/gridSize], 'Visible','off');
+        [isSurviving, indInCifti] = ismember(SwE.cifti.volume.indices, xSwE.XYZ(1,:));
+        indInCifti = indInCifti(isSurviving);
+        inMask_vol_XYZ = SwE.cifti.volume.XYZ(:, isSurviving);
+        inMask_vol_XYZmm = SwE.cifti.volume.M(1:3,:) * [inMask_vol_XYZ; ones(1, size(inMask_vol_XYZ,2))];
+        hMIPax{it} = spm_mip_ui(xSwE.Z(indInCifti), inMask_vol_XYZmm, SwE.cifti.volume.M, SwE.cifti.volume.DIM', hMIPax{it}, {'mm' 'mm' 'mm'});
+        spm_XYZreg('XReg',hReg,hMIPax{it},'spm_mip_ui');
+        str{it} = 'V: VOLUME';
+        text(240,260,char(str{it}),...
+        'Interpreter','none',...
+        'FontSize',FS(sizeFont),'Fontweight','Bold',...
+        'Parent',hMIPax{it});
+      end
     else
-        hMIPax = spm_mip_ui(xSwE.Z,xSwE.XYZmm,M,DIM,hMIPax,units);
-        spm_XYZreg('XReg',hReg,hMIPax,'spm_mip_ui');
-    end
+      hMIPax = axes('Parent',Fgraph,'Position',[0.05 0.60 0.55 0.36],'Visible','off'); 
+      nBrainStructure = 1
+      if xSwE.STAT == 'P'
+          str = xSwE.STATstr;
+      else
+          str = ['SwE\{',xSwE.STATstr,'\}'];
+      end
+      if spm_mesh_detect(xSwE.Vspm)
+          hMax = spm_mesh_render('Disp',SwE.xVol.G,'Parent',hMIPax);
+          tmp = zeros(1,prod(xSwE.DIM));
+          tmp(xSwE.XYZ(1,:)) = xSwE.Z;
+          hMax = spm_mesh_render('Overlay',hMax,tmp);
+          hMax = spm_mesh_render('Register',hMax,hReg);
+          text(0,0,0,str,...
+              'Interpreter','TeX',...
+              'FontSize',FS(14),'Fontweight','Bold',...
+              'Parent',hMIPax, 'Units', 'normalized')
+      elseif isequal(units(2:3),{'' ''})
+          set(hMIPax, 'Position',[0.05 0.65 0.55 0.25]);
+          [allS,allXYZmm] = spm_read_vols(xSwE.Vspm);
+          plot(hMIPax,allXYZmm(1,:),allS,'Color',[0.6 0.6 0.6]);
+          set(hMIPax,'NextPlot','add');
+          MIP = NaN(1,xSwE.DIM(1));
+          MIP(xSwE.XYZ(1,:)) = xSwE.Z;
+          XYZmm = xSwE.M(1,:)*[1:xSwE.DIM(1);zeros(2,xSwE.DIM(1));ones(1,xSwE.DIM(1))];
+          plot(hMIPax,XYZmm,MIP,'b-+','LineWidth',2);
+          plot(hMIPax,[XYZmm(1) XYZmm(end)],[xSwE.u xSwE.u],'r');
+          clim = get(hMIPax,'YLim');
+          axis(hMIPax,[sort([XYZmm(1) XYZmm(end)]) 0 clim(2)]);
+          text(240,260,str,...
+              'Interpreter','TeX',...
+              'FontSize',FS(14),'Fontweight','Bold',...
+              'Parent',hMIPax)
+        else
+          hMIPax = spm_mip_ui(xSwE.Z,xSwE.XYZmm,M,DIM,hMIPax,units);
+          spm_XYZreg('XReg',hReg,hMIPax,'spm_mip_ui');
+          text(240,260,str,...
+              'Interpreter','TeX',...
+              'FontSize',FS(14),'Fontweight','Bold',...
+              'Parent',hMIPax)
+      end
 
-    if xSwE.STAT == 'P'
-        str = xSwE.STATstr;
-    else
-        str = ['SwE\{',xSwE.STATstr,'\}'];
     end
-    text(240,260,str,...
-        'Interpreter','TeX',...
-        'FontSize',FS(14),'Fontweight','Bold',...
-        'Parent',hMIPax)
- 
- 
     %-Print comparison title
     %----------------------------------------------------------------------
     hTitAx = axes('Parent',Fgraph,...
