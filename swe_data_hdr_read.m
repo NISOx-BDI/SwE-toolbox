@@ -16,7 +16,7 @@ function V = swe_data_hdr_read(P)
     [V(1:numel(P),1)] = deal(default_hdr_struct);
     for i=1:numel(P)
       V(i).fname    = P{i};
-      V(i).private  = cifti(P{i}, false);
+      V(i).private  = swe_cifti(P{i}, false);
       V(i).dim      = size(squeeze(V(i).private.dat));
     end
   else 

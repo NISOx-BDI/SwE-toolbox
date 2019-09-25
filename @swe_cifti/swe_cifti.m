@@ -1,5 +1,5 @@
-function h = cifti(varargin)
-  % Create a cifti object
+function h = swe_cifti(varargin)
+  % Create a swe_cifti object
   % This is a modified verion of nifti.m able tuned for cifti files
   % =========================================================================
   % Bryan Guillaume
@@ -15,15 +15,15 @@ function h = cifti(varargin)
   case 0
       hdr = empty_hdr;
       h   = struct('hdr',hdr,'dat',[],'extras',struct);
-      h   = class(h,'cifti');
+      h   = class(h,'swe_cifti');
 
   case {1, 2}
-      if isa(varargin{1},'cifti')
+      if isa(varargin{1},'swe_cifti')
           h = varargin{1};
           
       elseif ischar(varargin{1})
           if size(varargin{1},1)>1
-              h = cifti(cellstr(varargin{1}));
+              h = swe_cifti(cellstr(varargin{1}));
               return;
           end
           fname  = deblank(varargin{1});
@@ -72,17 +72,17 @@ function h = cifti(varargin)
 
           dat   = file_array(vol.iname,dim,[dt,vol.be],offs,slope,inter);
           h     = struct('hdr',vol.hdr,'dat',dat,'extras',extras);
-          h     = class(h,'cifti');
+          h     = class(h,'swe_cifti');
 
       elseif isstruct(varargin{1})
-          h     = class(varargin{1},'cifti');
+          h     = class(varargin{1},'swe_cifti');
 
       elseif iscell(varargin{1})
           fnames = varargin{1};
           h(numel(fnames)) = struct('hdr',[],'dat',[],'extras',struct);
-          h     = class(h,'cifti');
+          h     = class(h,'swe_cifti');
           for i=1:numel(fnames)
-              h(i) = cifti(fnames{i});
+              h(i) = swe_cifti(fnames{i});
           end
 
       else

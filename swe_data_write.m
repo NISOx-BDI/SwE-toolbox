@@ -20,7 +20,7 @@ function V = swe_data_write(V, Y, varargin)
     error('Unkwown data type.');
   end
 
-  if strcmpi(cl, 'cifti')
+  if strcmpi(cl, 'swe_cifti')
     if isempty(varargin)
       V.private.dat = subsasgn(V.private.dat, substruct('()',{':'}), Y);
     else

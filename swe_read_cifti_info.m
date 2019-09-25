@@ -13,7 +13,7 @@ function [surfaces, volume, volumes] = swe_read_cifti_info(filename)
   % Version Info:  $Format:%ci$ $Format:%h$
 	
 	% fetch the cifti information
-	ciftiObject  = cifti(filename);
+	ciftiObject  = swe_cifti(filename);
   xml = char(ciftiObject.hdr.ext.edata(:)');
   tree = xmltree(xml);
   root_uid = root(tree);

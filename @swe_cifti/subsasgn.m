@@ -16,11 +16,11 @@ case {'.'}
     objs = struct(obj);
     for i=1:length(varargin)
         val     = varargin{i};
-        obji    = cifti(objs(i));
+        obji    = swe_cifti(objs(i));
         obji    = fun(obji,subs,val);
         objs(i) = struct(obji);
     end
-    obj = cifti(objs);
+    obj = swe_cifti(objs);
 
 case {'()'}
     objs = struct(obj);
@@ -33,7 +33,7 @@ case {'()'}
         %end;
         for i=1:numel(t)
             val  = varargin{1};
-            obji = cifti(t(i));
+            obji = swe_cifti(t(i));
             obji = subsasgn(obji,subs(2:end),val);
             t(i) = struct(obji);
         end
@@ -43,7 +43,7 @@ case {'()'}
             error('Illegal right hand side in assignment. Too many elements.');
         end
         val = varargin{1};
-        if isa(val,'cifti')
+        if isa(val,'swe_cifti')
             objs = subsasgn(objs,subs,struct(val));
         elseif isempty(val)
             objs = subsasgn(objs,subs,[]);
@@ -51,7 +51,7 @@ case {'()'}
             error('Assignment between unlike types is not allowed.');
         end
     end
-    obj = cifti(objs);
+    obj = swe_cifti(objs);
 
 otherwise
     error('Cell contents reference from a non-cell array object.');
@@ -82,7 +82,7 @@ case {'.'}
         if ~isfield(obj.hdr,'magic'), error('Not a NIFTI-1 header.'); end
 
         if length(subs)>1 % && ~strcmpi(subs(1).subs,{'raw','dat'}),
-            val0 = subsref(cifti(obj),subs(1));
+            val0 = subsref(swe_cifti(obj),subs(1));
             val1 = subsasgn(val0,subs(2:end),val);
         else
             val1 = val;
@@ -333,7 +333,7 @@ case {'.'}
 
         objs(ii) = obj;
     end
-    obj = cifti(objs);
+    obj = swe_cifti(objs);
 
 otherwise
     error('This should not happen.');

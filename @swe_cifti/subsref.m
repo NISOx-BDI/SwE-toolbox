@@ -51,7 +51,7 @@ case {'.'}
     c = {};
     opts = struct(opt);
     for ii=1:numel(opts)
-        opt = cifti(opts(ii));
+        opt = swe_cifti(opts(ii));
         %if ~isstruct(opt)
         %    error('Attempt to reference field of non-structure array.');
         %end;
@@ -230,12 +230,12 @@ case {'()'}
     if length(subs)>1
         c = {};
         for i=1:numel(t)
-            ti = cifti(t(i));
+            ti = swe_cifti(t(i));
             ti = rec(ti,subs(2:end));
             c  = {c{:}, ti{:}};
         end
     else
-        c    = {cifti(t)};
+        c    = {swe_cifti(t)};
     end
 
 otherwise
