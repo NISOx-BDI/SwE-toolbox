@@ -790,9 +790,9 @@ if ~isMat
                   thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
                   switch STAT
                       case 'T'
-                         u = spm_uc_FDR(u,Inf,'Z',n,VspmSv,0); 
+                         u = swe_uc_FDR(u,Inf,'Z',n,VspmSv,0); 
                       case 'F'
-                         u = spm_uc_FDR(u,[1 1],'X',n,VspmSv,0); 
+                         u = swe_uc_FDR(u,[1 1],'X',n,VspmSv,0); 
                   end
 
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE

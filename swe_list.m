@@ -433,7 +433,7 @@ case 'table'                                                        %-Table
         Ts = sort(Ts(:));
             
         % Obtain the FDR p 0.05 value.
-        FDRp_05 = spm_uc_FDR(0.05,Inf,'P',n,Ts);
+        FDRp_05 = swe_uc_FDR(0.05,Inf,'P',n,Ts);
         clear Ts
         
         % Record FWE/FDR/clus FWE p values. (No clus FWE for voxelwise and
@@ -455,7 +455,7 @@ case 'table'                                                        %-Table
         % Record FDR p value.
         TabDat.ftr{2,1} = ...
              'vox P(5%% FDR): %0.3f';
-        TabDat.ftr{2,2} = spm_uc_FDR(0.05,Inf,'P',n,sort(xSwE.Ps)');
+        TabDat.ftr{2,2} = swe_uc_FDR(0.05,Inf,'P',n,sort(xSwE.Ps)');
         
      end
      
