@@ -14,7 +14,7 @@ function V = swe_data_hdr_read(P)
   isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dtscalar.nii');
   if isCifti
     [V(1:numel(P2),1)] = deal(default_hdr_struct);
-    for i=1:numel(P)
+    for i=1:numel(P2)
       V(i).fname    = P2{i};
       V(i).private  = swe_cifti(P2{i}, false);
       V(i).dim      = size(squeeze(V(i).private.dat));
