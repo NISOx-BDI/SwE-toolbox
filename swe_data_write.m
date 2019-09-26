@@ -31,6 +31,6 @@ function V = swe_data_write(V, Y, varargin)
       end
     end
   else
-    V = spm_data_write(V, Y, varargin);
+    V = spm_data_write(V, Y, varargin{:});
   end
 end
