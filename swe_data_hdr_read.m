@@ -11,7 +11,7 @@ function V = swe_data_hdr_read(P)
   % Version Info:  $Format:%ci$ $Format:%h$
   P2 = cellstr(P);
   file_ext = swe_get_file_extension(P2{1});
-  isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dtscalar.nii');
+  isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dscalar.nii');
   if isCifti
     [V(1:numel(P2),1)] = deal(default_hdr_struct);
     for i=1:numel(P2)
