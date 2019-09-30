@@ -29,11 +29,18 @@ function fileExtension = swe_get_file_extension(filename, varargin)
   end
   
   indexDots = find(filename == '.');
-
-  if lastDot
-    fileExtension = filename(indexDots(end):end);
+  nDots = numel(indexDots);
+  
+  if nDots == 0
+    error('No extension found!');
   else
-    fileExtension = filename(indexDots(1):end);
+    fileExtension = filename(indexDots(end):end);
   end
 
+  if nDots > 1 && ~lastDot && strcmpi(fileExtension, '.nii')
+    tmp = filename(indexDots(end-1):end);
+    if strcmpi(tmp, '.dtseries.nii') || strcmpi(tmp, '.dscalar.nii')
+      fileExtension = tmp;
+    end
+  end
 end
