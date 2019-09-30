@@ -30,7 +30,7 @@ function Y = swe_data_read(V,varargin)
     if isempty(varargin)
       Y = zeros(prod(V(1).dim), numel(V)); % to be coherent with spm_read_vols and gifti format
       for i=1:numel(V)
-        Y(:,i) = V(i).private.dat(:);
+        Y(:,i) = V(i).private.dat(1,1,1,1,V(i).n(1),:);
       end
     else
       indices = varargin;
