@@ -22,10 +22,11 @@ function Y = swe_data_read(V,varargin)
   % Bryan Guillaume
   % Version Info:  $Format:%ci$ $Format:%h$
 
+  if ~isstruct(V)
+  	V = swe_data_hdr_read(V);
+  end
+    
   if isa(V(1).private, 'swe_cifti')
-    if ~isstruct(V)
-      V = swe_data_hdr_read(V);
-    end
     Y = zeros(numel(V), prod(V(1).dim));
     if isempty(varargin)
       for i=1:numel(V)
