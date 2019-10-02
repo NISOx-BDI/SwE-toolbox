@@ -77,13 +77,15 @@ function [surfaces, volume, volumes] = swe_read_cifti_info(filename)
               volume.XYZ = [volume.XYZ iV];
           end
         end
-        if ~isempty(volume)
+        if ~isempty(volumes)
           uid_volume = find(tree, 'CIFTI/Matrix/MatrixIndicesMap/Volume');
           map.Volume.attributes = getAttributes(tree, uid_volume);
           volume.DIM = str2num(map.Volume.attributes.VolumeDimensions);
           volume.M = str2num(map.Volume.TransformationMatrixVoxelIndicesIJKtoXYZ);
           volume.M = reshape(volume.M, [4 4])' * [eye(4,3) [-1 -1 -1 1]'];
           % assumes MeterExponent is -3
+        else
+          volume = struct([]);
         end
         otherwise
           error('Data have to be dense scalars or series.');
