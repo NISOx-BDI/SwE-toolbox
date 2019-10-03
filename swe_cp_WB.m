@@ -580,7 +580,6 @@ if ~isMat
   
   M        = VY(1).mat;
   DIM      = VY(1).dim;
-  VOX      = sqrt(diag(M(1:3, 1:3)'*M(1:3, 1:3)))';
 
   YNaNrep = VY(1).dt(2);
     
