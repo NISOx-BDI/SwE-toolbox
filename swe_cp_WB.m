@@ -86,8 +86,9 @@ end
 
 %-Check if we have data in a.mat format and set some variables accordingly
 %--------------------------------------------------------------------------
-[~,~,file_ext] = fileparts(SwE.xY.P{1});
-isMat          = strcmpi(file_ext,'.mat');
+file_ext = swe_get_file_extension(SwE.xY.P{1});
+isMat    = strcmpi(file_ext,'.mat');
+isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dscalar.nii');
 isOctave = exist('OCTAVE_VERSION','builtin');
 
 if ~isMat
