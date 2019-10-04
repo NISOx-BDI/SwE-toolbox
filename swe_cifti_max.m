@@ -54,8 +54,14 @@ function [N, Z, M, A, XYZ, Mmm, brainStructureShortLabels, brainStructureLongLab
         else
           Z = [Z, Z_tmp'];
         end
-        M = [M, M_tmp];
+        % need to convert the surface coordinates into CIfTI coordinates
+        isMax = ismember(ciftiInformation.surfaces{i}.iV, M_tmp(1,:));
+        M = [M, [indInSurface(isMax); ones(2,sum(isMax))]];
         A = [A; A_tmp + maxA];
+        for ii = 1:max(A_tmp)
+          isInCluster = ismember(ciftiInformation.surfaces{i}.iV, XYZ_tmp{ii}(1,:));
+          XYZ_tmp{ii} = [indInSurface(isInCluster); ones(2,sum(isInCluster))];
+        end
         XYZ = [XYZ, XYZ_tmp];
         Mmm = [Mmm, G.vertices(M_tmp(1,:),:)'];
         tmpCell = cell(size(A_tmp));
@@ -80,13 +86,20 @@ function [N, Z, M, A, XYZ, Mmm, brainStructureShortLabels, brainStructureLongLab
       else
         Z = [Z, Z_tmp];
       end
-      M = [M, M_tmp];
+			% need to convert the volume coordinates into CIfTI coordinates
+      isMax = ismember(ciftiInformation.volume.XYZ', M_tmp', 'rows')'; 
+      M = [M, [ciftiInformation.volume.indices(isMax); ones(2,sum(isMax))]];
       A = [A; A_tmp + maxA];
+      % need to convert the volume coordinates into CIfTI coordinates
+      for i = 1:max(A_tmp)
+        isInCluster = ismember(ciftiInformation.volume.XYZ', XYZ_tmp{i}', 'rows')';
+        XYZ_tmp{i} = [ciftiInformation.volume.indices(isInCluster); ones(2,sum(isInCluster))];
+      end
       XYZ = [XYZ, XYZ_tmp];
       Mmm = [ Mmm, ciftiInformation.volume.M(1:3,:) * [M_tmp; ones(1,size(M_tmp,2))] ];
       tmpCell = cell(size(A_tmp));
       [tmpCell{:}] = deal('VOLUME');
-			brainStructureLongLabels = [brainStructureLongLabels; tmpCell];
+      brainStructureLongLabels = [brainStructureLongLabels; tmpCell];
       [tmpCell{:}] = deal('V');
 			brainStructureShortLabels = [brainStructureShortLabels; tmpCell];
     end
