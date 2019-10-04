@@ -1,4 +1,4 @@
-function A = swe_cifti_clusters(ciftiInformation, indSurvivingInCifti)
+function [A, clusterSizesInSurfaces, clusterSizesInVolume] = swe_cifti_clusters(ciftiInformation, indSurvivingInCifti)
   % Compute the clusters for CIfTI data
   % FORMAT A = swe_cifti_clusters(ciftiInformation, indSurvivingInCifti)
   % ciftiInformation      	- cifti information
@@ -8,6 +8,7 @@ function A = swe_cifti_clusters(ciftiInformation, indSurvivingInCifti)
   % Bryan Guillaume
   % Version Info:  $Format:%ci$ $Format:%h$
   A = zeros(1, numel(indSurvivingInCifti));
+  clusterSizesInSurfaces = [];
   if numel(ciftiInformation.surfaces) > 0
     for i = 1:numel(ciftiInformation.surfaces)
       % work out the position of the surviving vertices for this surface
@@ -19,7 +20,19 @@ function A = swe_cifti_clusters(ciftiInformation, indSurvivingInCifti)
       T(indSurvivingInSurface) = true;
       G = export(gifti(ciftiInformation.surfaces{i}.geomFile), 'patch');
       tmp = spm_mesh_clusters(G,T)';
-      A(indInA) = tmp(indSurvivingInSurface) + max(A);
+      tmp = tmp(indSurvivingInSurface);
+      A(indInA) = tmp + max(A);
+      nClusters = max(tmp);
+      if isfield(ciftiInformation.surfaces{i}, 'areaFile')
+        area = swe_data_read(ciftiInformation.surfaces{i}.areaFile, indSurvivingInSurface);
+        clusterSizesInThisSurface = zeros(1, nClusters);
+        for iCluster = 1:nClusters
+          clusterSizesInThisSurface(iCluster) = sum(area(tmp == iCluster));
+        end
+        clusterSizesInSurfaces = [clusterSizesInSurfaces, clusterSizesInThisSurface];
+      else
+        clusterSizesInSurfaces = [clusterSizesInSurfaces, histc(tmp,1:nClusters)];
+      end
     end
   end
   % deal with volumetric data
@@ -28,6 +41,11 @@ function A = swe_cifti_clusters(ciftiInformation, indSurvivingInCifti)
     [isSurviving, indInA] = ismember(ciftiInformation.volume.indices, indSurvivingInCifti);
     indInA = indInA(isSurviving);
     inMask_vol_XYZ = ciftiInformation.volume.XYZ(:, isSurviving);
-    A(indInA) = spm_clusters(inMask_vol_XYZ) + max(A);
+    tmp = spm_clusters(inMask_vol_XYZ);
+    A(indInA) = tmp + max(A);
+    nClusters = max(tmp);
+    clusterSizesInVolume = histc(tmp,1:nClusters);
+  else
+    clusterSizesInVolume = [];
   end
 end
