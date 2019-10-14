@@ -944,7 +944,7 @@ if ~isMat
 
                   % Here, a parametric score threshold u would differ from voxel to voxel
                   % Thus, setting it to NaN
-                  u = NaN
+                  u = NaN;
                   
                   % inclusive thresholding for WB
                   Q = find(FDR_ps - tol < pu);
