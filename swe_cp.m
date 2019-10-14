@@ -583,7 +583,11 @@ if ~isMat
     %==========================================================================
     mask = true(DIM);
     for i = 1:numel(xM.VM)
-      if ~(isfield(SwE,'xVol') && isfield(SwE.xVol,'G'))
+      if isCifti
+        v = swe_data_read(xM.VM(i)) > 0;
+        mask = mask & v(:);
+        clear v
+      elseif ~(isfield(SwE,'xVol') && isfield(SwE.xVol,'G'))
           %-Assume it fits entirely in memory
           C = spm_bsplinc(xM.VM(i), [0 0 0 0 0 0]');
           v = true(DIM);
