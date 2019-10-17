@@ -478,7 +478,7 @@ case 'table'                                                        %-Table
          for i = 1:length(xSwE.max_nVis_g)
              nVisitsString = [nVisitsString '[%0.0f %0.0f]'];
              if i ~= length(xSwE.max_nVis_g)
-                 nSubjString = [nSubjString ', '];
+                nVisitsString = [nVisitsString ', '];
              end
              nVisitsNumbers = [nVisitsNumbers xSwE.min_nVis_g(i) xSwE.max_nVis_g(i)];
          end
