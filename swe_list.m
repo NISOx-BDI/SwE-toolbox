@@ -239,6 +239,16 @@ case 'table'                                                        %-Table
         else
             VspmFWEP_clus = [];
         end
+        if isfield(xSwE, 'VspmFWEP_clusnorm')
+            VspmFWEP_clusnorm = swe_data_read(xSwE.VspmFWEP_clusnorm);
+        else
+            VspmFWEP_clusnorm = [];
+        end
+        if isfield(xSwE, 'VspmFWEP_clusnorm2')
+            VspmFWEP_clusnorm2 = swe_data_read(xSwE.VspmFWEP_clusnorm2);
+        else
+            VspmFWEP_clusnorm2 = [];
+        end
     end
     
 %     if STAT~='P'
