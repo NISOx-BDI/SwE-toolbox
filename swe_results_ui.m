@@ -1334,10 +1334,17 @@ if ~isempty(xSwE.thresDesc)
         td.thresDesc = 'none';
     end
     if strcmp(td.thresDesc,'unc.'), td.thresDesc = 'none'; end
+    if strcmp(td.thresDesc,'none') && isfield(xSwE,'clustWise') && strcmp(xSwE.clustWise, 'FWE')
+        td.thresDesc ='FWE';
+        if isfield(xSwE, 'fwep_c'), xSwE2.fwep_c = xSwE.fwep_c; end
+    end
     xSwE2.thresDesc = td.thresDesc;
     xSwE2.u     = str2double(td.u);
     xSwE2.k     = xSwE.k;
     xSwE2.infType = xSwE.infType;
+    if isfield(xSwE, 'clusterSizeType')
+      xSwE2.clusterSizeType = xSwE.clusterSizeType;
+    end
 end
 hReg = spm_XYZreg('FindReg',spm_figure('GetWin','Interactive'));
 xyz  = spm_XYZreg('GetCoords',hReg);
