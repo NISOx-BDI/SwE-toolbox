@@ -1758,6 +1758,15 @@ if TFCE
   
 end
 
+if WB.clusterWise == 1 && isCifti
+  clusterSizesInSurfacesUnderH0 = [];
+  clusterSizesInVolumeUnderH0 = [];
+  if (WB.stat == 'T')
+    clusterSizesInSurfacesNegUnderH0 = [];
+    clusterSizesInVolumeNegUnderH0 = [];
+  end
+end
+
 for b = 1:WB.nB
   tic
   str   = sprintf('Parameter estimation\nBootstrap # %i', b);
@@ -2149,8 +2158,8 @@ for b = 1:WB.nB
       if isCifti
         [clusterAssignment, clusterSizesInSurfacesTmp, clusterSizesInVolumeTmp] =...
           swe_cifti_clusters(SwE.cifti, LocActivatedVoxels(1,:));
-          clusterSizesInSurfaces = [clusterSizesInSurfaces, clusterSizesInSurfacesTmp];
-          clusterSizesInVolume = [clusterSizesInVolume, clusterSizesInVolumeTmp];
+          clusterSizesInSurfacesUnderH0 = [clusterSizesInSurfacesUnderH0, clusterSizesInSurfacesTmp];
+          clusterSizesInVolumeUnderH0 = [clusterSizesInVolumeUnderH0, clusterSizesInVolumeTmp];
           if isempty(clusterSizesInSurfacesTmp)
             maxClusterSizeInSurfaces(b+1) = 0;
           else
@@ -2187,9 +2196,9 @@ for b = 1:WB.nB
         LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);
         if isCifti
           [clusterAssignmentNeg, clusterSizesInSurfacesNegTmp, clusterSizesInVolumeNegTmp] =...
-            swe_cifti_clusters(SwE.cifti, LocActivatedVoxels(1,:));
-            clusterSizesInSurfacesNeg = [clusterSizesInSurfacesNeg, clusterSizesInSurfacesNegTmp];
-            clusterSizesInVolumeNeg = [clusterSizesInVolumeNeg, clusterSizesInVolumeNegTmp];
+            swe_cifti_clusters(SwE.cifti, LocActivatedVoxelsNeg(1,:));
+            clusterSizesInSurfacesNegUnderH0 = [clusterSizesInSurfacesNegUnderH0, clusterSizesInSurfacesNegTmp];
+            clusterSizesInVolumeNegUnderH0 = [clusterSizesInVolumeNegUnderH0, clusterSizesInVolumeNegTmp];
             if isempty(clusterSizesInSurfacesNegTmp)
               maxClusterSizeInSurfacesNeg(b+1) = 0;
             else
