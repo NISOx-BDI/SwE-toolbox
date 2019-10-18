@@ -1041,8 +1041,10 @@ if ~isMat
                   
                   % We should display the cluster forming threshold that
                   % was used.
-                  spm_input(['threshold {p value}'],...
-                      '+1','b',['(pre-set: P=' num2str(pu) ')'],[0],0)
+                  if ~isfield(xSwE, 'fwep_c')
+                    spm_input(['threshold {p value}'],...
+                        '+1','b',['(pre-set: P=' num2str(pu) ')'],[0],0)
+                  end
                   
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
                   % This should be performed on the uncorrected WB p-values
