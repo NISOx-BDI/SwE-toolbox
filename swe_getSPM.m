@@ -1116,14 +1116,16 @@ if ~isMat
   if ~isMat
     XYZ    = XYZ(:,Q);
   end
-	if isMat
-		strDataType = 'data elements';
-	else
-		if spm_mesh_detect(xCon(Ic(1)).Vspm)
-			strDataType = 'vertices'
-		else 
+  if isMat
+    strDataType = 'data elements';
+  else
+    if isCifti
+      strDataType = 'voxels/vertices';
+    elseif spm_mesh_detect(xCon(Ic(1)).Vspm)
+			strDataType = 'vertices';
+    else 
 			strDataType = 'voxels'; 
-		end
+    end
 	end
   if isempty(Q)
       fprintf('\n');
