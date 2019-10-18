@@ -555,7 +555,15 @@ switch lower(Action), case 'setup'                         %-Set up results
             text(0,12,sprintf('Height threshold %c > %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
         end
         if strcmp(xSwE.clustWise, 'FWE') 
-            text(0,00,sprintf('Wild Bootstrap extent threshold k > %0.0f %s {p<=%0.3f (FWE)}', xSwE.k, strDataType, xSwE.fwep_c), 'Parent', hResAx)
+            if ~isfield(xSwE, 'clusterSizeType') || strcmp(xSwE.clusterSizeType, 'classic')
+                text(0,00,sprintf('Wild Bootstrap extent threshold k > %0.0f %s {p<=%0.3f (FWE)}', xSwE.k, strDataType, xSwE.fwep_c), 'Parent', hResAx)
+            elseif strcmp(xSwE.clusterSizeType, 'Box-Cox norm.')
+                text(0,00,sprintf('Wild Bootstrap Box-Cox norm. ext. thresh. BC1(k) > %0.3f {p<=%0.3f (FWE)}', xSwE.k, xSwE.fwep_c), 'Parent', hResAx)
+            elseif strcmp(xSwE.clusterSizeType, 'Box-Cox norm. 2')
+                text(0,00,sprintf('Wild Bootstrap Box-Cox norm. ext. thresh. BC2(k) > %0.3f {p<=%0.3f (FWE)}', xSwE.k, xSwE.fwep_c), 'Parent', hResAx)
+            else
+                error('Unknown cluster extent type!');
+            end
         else
             text(0,00,sprintf('Extent threshold k >= %0.0f %s', xSwE.k, strDataType), 'Parent', hResAx)
         end
