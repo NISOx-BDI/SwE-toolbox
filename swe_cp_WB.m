@@ -3011,3 +3011,8 @@ else
 end
 
 end
+
+% this function computes the 2 * (Q3(X) - Q2(X))
+function value = swe_hiqr(X)
+  value = 2 * diff( quantile(X, [.5 .75]) );
+end
