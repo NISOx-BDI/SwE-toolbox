@@ -2679,7 +2679,7 @@ SwE.ver = swe('ver');
 
 if ~isMat
   % Remove residual and Y images now we are done with them:
-  files = {'^swe_vox_resid_y.{4}\..{3}$','^swe_vox_fit_y.{4}\..{3}$'};
+  files = {'^swe_vox_resid_y\d{2,4}(\.dtseries)?(\.dscalar)?\..{3}$','^swe_vox_fit_y\d{2,4}(\.dtseries)?(\.dscalar)?\..{3}$'};
   for i = 1:numel(files)
     j = cellstr(spm_select('FPList',SwE.swd,files{i}));
     for k = 1:numel(j)
