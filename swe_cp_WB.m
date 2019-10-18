@@ -185,7 +185,7 @@ for i = 1:length(files)
 end
 
 % Tolerance for comparing real numbers
-tol = 1e-4;	
+tol = 1e-8;	
 
 %==========================================================================
 % - A N A L Y S I S   P R E L I M I N A R I E S
