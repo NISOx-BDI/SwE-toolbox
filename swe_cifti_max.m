@@ -1,11 +1,14 @@
-function [N, Z, M, A, XYZ, Mmm, brainStructureShortLabels, brainStructureLongLabels] = swe_cifti_max(X, indSurvivingInCifti, ciftiInformation)
+function [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm, brainStructureShortLabels, brainStructureLongLabels] = swe_cifti_max(X, indSurvivingInCifti, ciftiInformation, boxcoxInfo)
   % Sizes, local maxima and locations of excursion sets on a cifti file
-  % FORMAT [N, Z, M, A, XYZ, Mmm] = spm_mesh_max(X, indSurvivingInCifti, ciftiInformation)
+  % FORMAT [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm] = spm_mesh_max(X, indSurvivingInCifti, ciftiInformation, boxcoxInfo)
   % X                     		- an [nx1] array of stat values
   % indSurvivingInCifti   		- an [nx1] array of locations {in cifti indices}
   % ciftiInformation      		- cifti information
   %
-  % N                     		- a [px1] size of connected components {in vertices}
+  % N                     		- a [px1] size of connected components {in voxels/vertices}
+  % N_area                		- a [px1] size of cluster area {in mm^2} (empty for volume)
+  % N_boxcox1               	- a [px1] size of normalised cluster size based on a boxcox transformation normalised by the mean and the std 
+  % N_boxcox2               	- a [px1] size of normalised cluster size based on a boxcox transformation normalised by the median and twice (Q3-Q2)
   % Z                     		- stat values of maxima
   % M                     		- location of maxima {in vertices or voxels}
   % A                     		- region number
@@ -14,7 +17,8 @@ function [N, Z, M, A, XYZ, Mmm, brainStructureShortLabels, brainStructureLongLab
   % brainStructureShortLabels - short brain structure labels of each maxima
   % brainStructureLongLabels  - long brain structure labels of each maxima
   %__________________________________________________________________________
-  N = []; Z = []; M = []; A = []; XYZ = []; Mmm = []; 
+  N = []; N_area = []; N_boxcox1 = []; N_boxcox2 = [];
+  Z = []; M = []; A = []; XYZ = []; Mmm = []; 
   brainStructureShortLabels = []; brainStructureLongLabels = [];
   
   if numel(X) ~= numel(indSurvivingInCifti)
@@ -70,6 +74,24 @@ function [N, Z, M, A, XYZ, Mmm, brainStructureShortLabels, brainStructureLongLab
         [tmpCell{:}] = deal(sprintf('S%i', i));
         brainStructureShortLabels = [brainStructureShortLabels; tmpCell];
         maxA = max(A);
+        if isfield(ciftiInformation.surfaces{i}, 'areaFile')
+          N_area_tmp = zeros(max(A_tmp),1);
+          for ii = 1:max(A_tmp)
+            N_area_tmp(ii) = sum(swe_data_read(ciftiInformation.surfaces{i}.areaFile, XYZ_tmp{ii}(1,:)));
+          end
+          N_area = [N_area; N_area_tmp];
+          if ~isempty(boxcoxInfo)
+            tmp = boxcox(boxcoxInfo.surfaces.lambda, N_area_tmp);
+          end
+        else
+          if ~isempty(boxcoxInfo)
+            tmp = boxcox(boxcoxInfo.surfaces.lambda, N_tmp);
+          end
+        end
+        if ~isempty(boxcoxInfo)
+          N_boxcox1 = [N_boxcox1; (tmp - boxcoxInfo.surfaces.mean) ./ boxcoxInfo.surfaces.std];
+          N_boxcox2 = [N_boxcox2; (tmp - boxcoxInfo.surfaces.median) ./ boxcoxInfo.surfaces.hiqr];
+        end
       end
     end
   end
@@ -101,7 +123,12 @@ function [N, Z, M, A, XYZ, Mmm, brainStructureShortLabels, brainStructureLongLab
       [tmpCell{:}] = deal('VOLUME');
       brainStructureLongLabels = [brainStructureLongLabels; tmpCell];
       [tmpCell{:}] = deal('V');
-			brainStructureShortLabels = [brainStructureShortLabels; tmpCell];
+      brainStructureShortLabels = [brainStructureShortLabels; tmpCell];
+      if ~isempty(boxcoxInfo)
+        tmp = boxcox(boxcoxInfo.volume.lambda, N_tmp);
+        N_boxcox1 = [N_boxcox1; (tmp - boxcoxInfo.volume.mean) ./ boxcoxInfo.volume.std];
+        N_boxcox2 = [N_boxcox2; (tmp - boxcoxInfo.volume.median) ./ boxcoxInfo.volume.hiqr];
+      end
     end
   end
 end
