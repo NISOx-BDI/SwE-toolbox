@@ -1183,7 +1183,7 @@ if ~isMat
               %----------------------------------------------------------------------
               % recompute the clusters as they may have been reduced due to post-hoc masking
               if isCifti
-                A = swe_cifti_clusters(SwE.cifti, XYZ(1,:));              
+                [A, clusterSizesInSurfaces, clusterSizesInVolume] = swe_cifti_clusters(SwE.cifti, XYZ(1,:));              
               elseif  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
                 A = spm_clusters(XYZ);
               else
@@ -1197,17 +1197,61 @@ if ~isMat
               % recompute the p-values as they might have increased due to post-hoc masking
               % TODO: must be changed for WB
               if Ic == 1
-                for i = 1:length(clusIndices)
-                  ind = ( A==clusIndices(i) );
-                  ps_fwe(ind) = sum( SwE.WB.clusterInfo.maxClusterSize >= sum(ind) ) / (SwE.WB.nB + 1);
+                if isCifti && strcmpi(clusterSizeType, 'Box-Cox norm.')
+                  clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
+                  clusterSizesInVolume = boxcox(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_lambda, clusterSizesInVolume')';
+                  clusterSizes = [(clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_mean) ...
+                                  ./ SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_std, ...
+                                  (clusterSizesInVolume - SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_mean) ...
+                                  ./ SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_std];
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSize_norm;
+                elseif isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. 2')
+                  clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
+                  clusterSizesInVolume = boxcox(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_lambda, clusterSizesInVolume')';
+                  clusterSizes = [(clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_median) ...
+                                  ./ SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_hiqr, ...
+                                  (clusterSizesInVolume - SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_median) ...
+                                  ./ SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_hiqr];
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSize_norm2;
+                else
+                  clusterSizes = NaN(1, numel(clusIndices));
+                  for i = 1:numel(clusIndices)
+                    clusterSizes(i) = sum( A==clusIndices(i) );
+                  end
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSize;
                 end
               elseif Ic == 2
-                for i = 1:length(clusIndices)
-                  ind = ( A==clusIndices(i) );
-                  ps_fwe(ind) = sum( SwE.WB.clusterInfo.maxClusterSizeNeg >= sum(ind) ) / (SwE.WB.nB + 1);
+                if isCifti && strcmpi(clusterSizeType, 'Box-Cox norm.')
+                  clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
+                  clusterSizesInVolume = boxcox(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_lambda, clusterSizesInVolume')';
+                  clusterSizes = [(clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_mean) ...
+                                  ./ SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_std, ...
+                                  (clusterSizesInVolume - SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_mean) ...
+                                  ./ SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_std];
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSizeNeg_norm;
+                elseif isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. 2')
+                  clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
+                  clusterSizesInVolume = boxcox(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_lambda, clusterSizesInVolume')';
+                  clusterSizes = [(clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_median) ...
+                                  ./ SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_hiqr, ...
+                                  (clusterSizesInVolume - SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_median) ...
+                                  ./ SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_hiqr];
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSizeNeg_norm2;
+                else
+                  clusterSizes = NaN(1, numel(clusIndices));
+                  for i = 1:numel(clusIndices)
+                    clusterSizes(i) = sum( A==clusIndices(i) );
+                  end
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSizeNeg;
                 end
               else
-                  error("unknown contrast");
+                error("unknown contrast");
+              end
+              
+              ps_fwe = nan(1,numel(A));
+              for i = 1:length(clusIndices)
+                ind = ( A==clusIndices(i) );
+                ps_fwe(ind) = sum( maxClusterSize > clusterSizes(i) - 1e-8) / (SwE.WB.nB + 1);
               end
 
               % select only the voxels surviving the FWER threshold 
@@ -1215,13 +1259,8 @@ if ~isMat
               Q = find(ps_fwe - tol < fwep_c);
               
               % The exclusive threshold k should be the (1-fwep_c)th percentile of the max cluster size distribution
-              if Ic == 1
-                maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSize);
-              elseif Ic == 2
-                maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSizeNeg);
-              else
-                error("Unknown contrast");
-              end
+              maxClusterSize = sort(maxClusterSize);
+
               k = maxClusterSize( ceil( (1-fwep_c) * (SwE.WB.nB+1) ) );
 
           end
