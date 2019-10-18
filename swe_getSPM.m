@@ -1195,7 +1195,6 @@ if ~isMat
               clusIndices = unique(A);
               
               % recompute the p-values as they might have increased due to post-hoc masking
-              % TODO: must be changed for WB
               if Ic == 1
                 if isCifti && strcmpi(clusterSizeType, 'Box-Cox norm.')
                   clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
