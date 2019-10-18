@@ -72,6 +72,10 @@ function [SwE] = swe_contrasts_WB(SwE)
     if isfield(SwE,'WB')
         if SwE.WB.clusterWise
             DxCon.VspmFWEP_clus = swe_data_hdr_read(sprintf('swe_clustere_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 1, file_ext));
+        if isCifti
+            DxCon.VspmFWEP_clusnorm = swe_data_hdr_read(sprintf('swe_clusternorm_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 1, file_ext));
+            DxCon.VspmFWEP_clusnorm2 = swe_data_hdr_read(sprintf('swe_clusternorm2_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 1, file_ext));
+        end
         end
         if isfield(SwE.WB, 'TFCE')
             DxCon.VspmTFCE = swe_data_hdr_read(sprintf('swe_tfce_c%.2d%s', 1, file_ext));
@@ -101,6 +105,10 @@ function [SwE] = swe_contrasts_WB(SwE)
         if isfield(SwE,'WB')
             if SwE.WB.clusterWise
                 DxCon.VspmFWEP_clus = swe_data_hdr_read(sprintf('swe_clustere_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 2, file_ext));
+                if isCifti
+                    DxCon.VspmFWEP_clusnorm = swe_data_hdr_read(sprintf('swe_clusternorm_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 2, file_ext));
+                    DxCon.VspmFWEP_clusnorm2 = swe_data_hdr_read(sprintf('swe_clusternorm2_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 2, file_ext));
+                end
             end
             if isfield(SwE.WB, 'TFCE')
                 DxCon.VspmTFCE = swe_data_hdr_read(sprintf('swe_tfce_c%.2d%s', 2, file_ext));
