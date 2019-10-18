@@ -1364,6 +1364,36 @@ if isfield(SwE, 'WB')
     xSwE.VspmFWEP = cat(1,xCon(Ic).VspmFWEP);
     if SwE.WB.clusterWise
         xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
+        if isCifti
+          xSwE.VspmFWEP_clusnorm = cat(1,xCon(Ic).VspmFWEP_clusnorm);
+          xSwE.VspmFWEP_clusnorm2 = cat(1,xCon(Ic).VspmFWEP_clusnorm2);
+          if strcmp(clustWise, 'FWE')
+            xSwE.clusterSizeType = clusterSizeType;
+          end
+          if Ic == 1
+            xSwE.boxcoxInfo.surfaces.lambda = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda;
+            xSwE.boxcoxInfo.surfaces.mean = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_mean;
+            xSwE.boxcoxInfo.surfaces.std = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_std;
+            xSwE.boxcoxInfo.surfaces.median = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_median;
+            xSwE.boxcoxInfo.surfaces.hiqr = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_hiqr;
+            xSwE.boxcoxInfo.volume.lambda = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_lambda;
+            xSwE.boxcoxInfo.volume.mean = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_mean;
+            xSwE.boxcoxInfo.volume.std = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_std;
+            xSwE.boxcoxInfo.volume.median = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_median;
+            xSwE.boxcoxInfo.volume.hiqr = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_hiqr;
+          elseif Ic == 2
+            xSwE.boxcoxInfo.surfaces.lambda = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_lambda;
+            xSwE.boxcoxInfo.surfaces.mean = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_mean;
+            xSwE.boxcoxInfo.surfaces.std = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_std;
+            xSwE.boxcoxInfo.surfaces.median = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_median;
+            xSwE.boxcoxInfo.surfaces.hiqr = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_hiqr;
+            xSwE.boxcoxInfo.volume.lambda = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_lambda;
+            xSwE.boxcoxInfo.volume.mean = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_mean;
+            xSwE.boxcoxInfo.volume.std = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_std;
+            xSwE.boxcoxInfo.volume.median = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_median;
+            xSwE.boxcoxInfo.volume.hiqr = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_hiqr;            
+          end
+        end
     end
     if isfield(SwE.WB, 'TFCE')
         xSwE.VspmTFCE = cat(1,xCon(Ic).VspmTFCE);
