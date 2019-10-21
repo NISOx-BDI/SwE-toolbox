@@ -58,6 +58,26 @@ function [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm, brainStructureShor
         else
           Z = [Z, Z_tmp'];
         end
+        % if there is area info, compute the areas and do the boxcox on the
+        % areas. Otherwise, do the boxcox on the number of vertices
+        if isfield(ciftiInformation.surfaces{i}, 'areaFile')
+          N_area_tmp = zeros(numel(N_tmp),1);
+          for ii = 1:max(A_tmp)
+            N_area_tmp(A_tmp == ii) = sum(swe_data_read(ciftiInformation.surfaces{i}.areaFile, XYZ_tmp{ii}(1,:)));
+          end
+          N_area = [N_area; N_area_tmp];
+          if ~isempty(boxcoxInfo)
+            tmp = boxcox(boxcoxInfo.surfaces.lambda, N_area_tmp);
+          end
+        else
+          if ~isempty(boxcoxInfo)
+            tmp = boxcox(boxcoxInfo.surfaces.lambda, N_tmp);
+          end
+        end
+        if ~isempty(boxcoxInfo)
+          N_boxcox1 = [N_boxcox1; (tmp - boxcoxInfo.surfaces.mean) ./ boxcoxInfo.surfaces.std];
+          N_boxcox2 = [N_boxcox2; (tmp - boxcoxInfo.surfaces.median) ./ boxcoxInfo.surfaces.hiqr];
+        end
         % need to convert the surface coordinates into CIfTI coordinates
         isMax = ismember(ciftiInformation.surfaces{i}.iV, M_tmp(1,:));
         M = [M, [indInSurface(isMax); ones(2,sum(isMax))]];
@@ -74,24 +94,6 @@ function [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm, brainStructureShor
         [tmpCell{:}] = deal(sprintf('S%i', i));
         brainStructureShortLabels = [brainStructureShortLabels; tmpCell];
         maxA = max(A);
-        if isfield(ciftiInformation.surfaces{i}, 'areaFile')
-          N_area_tmp = zeros(max(A_tmp),1);
-          for ii = 1:max(A_tmp)
-            N_area_tmp(ii) = sum(swe_data_read(ciftiInformation.surfaces{i}.areaFile, XYZ_tmp{ii}(1,:)));
-          end
-          N_area = [N_area; N_area_tmp];
-          if ~isempty(boxcoxInfo)
-            tmp = boxcox(boxcoxInfo.surfaces.lambda, N_area_tmp);
-          end
-        else
-          if ~isempty(boxcoxInfo)
-            tmp = boxcox(boxcoxInfo.surfaces.lambda, N_tmp);
-          end
-        end
-        if ~isempty(boxcoxInfo)
-          N_boxcox1 = [N_boxcox1; (tmp - boxcoxInfo.surfaces.mean) ./ boxcoxInfo.surfaces.std];
-          N_boxcox2 = [N_boxcox2; (tmp - boxcoxInfo.surfaces.median) ./ boxcoxInfo.surfaces.hiqr];
-        end
       end
     end
   end
