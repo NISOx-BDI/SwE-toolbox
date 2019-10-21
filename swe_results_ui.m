@@ -434,7 +434,14 @@ switch lower(Action), case 'setup'                         %-Set up results
           tmp(indSurvivingInSurface) = xSwE.Z(indInCifti);
           hMax{it} = spm_mesh_render('Overlay', hMax{it}, tmp);
           hMax{it} = spm_mesh_render('Register', hMax{it}, hReg);
-          str{it} = sprintf('S%i: %s', it, SwE.cifti.surfaces{i}.brainStructure);
+          % if we can detect left or right, indicate it
+          if contains(SwE.cifti.surfaces{i}.brainStructure, 'left', 'IgnoreCase', true)
+            str{it} = sprintf('SL: %s', SwE.cifti.surfaces{i}.brainStructure);
+          elseif contains(SwE.cifti.surfaces{i}.brainStructure, 'right', 'IgnoreCase', true)
+            str{it} = sprintf('SR: %s', SwE.cifti.surfaces{i}.brainStructure);
+          else
+            str{it} = sprintf('S%i: %s', it, SwE.cifti.surfaces{i}.brainStructure);
+          end
           text(0,0,0, char(str{i}),...
           'Interpreter','none',...
               'FontSize',FS(sizeFont),'Fontweight','Bold',...

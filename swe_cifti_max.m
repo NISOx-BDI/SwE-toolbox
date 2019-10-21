@@ -91,7 +91,14 @@ function [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm, brainStructureShor
         tmpCell = cell(size(A_tmp));
         [tmpCell{:}] = deal(ciftiInformation.surfaces{i}.brainStructure);
         brainStructureLongLabels = [brainStructureLongLabels; tmpCell];
-        [tmpCell{:}] = deal(sprintf('S%i', i));
+        % if we can detect left or right, indicate it
+        if contains(ciftiInformation.surfaces{i}.brainStructure, 'left', 'IgnoreCase', true)
+          [tmpCell{:}] = deal(sprintf('SL', i));
+        elseif contains(ciftiInformation.surfaces{i}.brainStructure, 'right', 'IgnoreCase', true)
+          [tmpCell{:}] = deal(sprintf('SR', i));
+        else
+          [tmpCell{:}] = deal(sprintf('S%i', i));
+        end
         brainStructureShortLabels = [brainStructureShortLabels; tmpCell];
         maxA = max(A);
       end
