@@ -1041,7 +1041,9 @@ if ~isMat
                   
                   % We should display the cluster forming threshold that
                   % was used.
-                  if ~isfield(xSwE, 'fwep_c')
+                  try
+                    xSwE.fwep_c;
+                  catch
                     spm_input(['threshold {p value}'],...
                         '+1','b',['(pre-set: P=' num2str(pu) ')'],[0],0)
                   end
