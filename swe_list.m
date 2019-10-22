@@ -313,8 +313,8 @@ case 'table'                                                        %-Table
             % 'cluster',  'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
             'cluster',  'equivk',       '\itk\rm_E';...
             'cluster',  'equivkArea',       '\it{area}';...
-            'cluster',  'equivkBC1',       '\itk\rm_{BC1}';...
-            'cluster',  'equivkBC2',       '\itk\rm_{BC2}';...
+            'cluster',  'equivkZ1',       '\itk\rm_{Z1}';...
+            'cluster',  'equivkZ2',       '\itk\rm_{Z2}';...
             % 'cluster',  'p(unc)',       '\itp\rm_{uncorr}';...
             'peak',     'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
             'peak',     'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
@@ -425,11 +425,11 @@ case 'table'                                                        %-Table
             end
         elseif xSwE.infType == 1 % cluster-wise
             if strcmp(xSwE.clustWise, 'FWE')
-              if isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm.')
-                TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); BC1(Ext. k) > %0.3f, p <= %0.3f (FWE).'];
+              if isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z1}')
+                TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); k_{Z1} > %0.3f, p <= %0.3f (FWE).'];
                 TabDat.ftr{1,2} = [u, str2num(td.u), k, xSwE.fwep_c];
-              elseif isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. 2')
-                TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); BC2(Ext. k) > %0.3f, p <= %0.3f (FWE).'];
+              elseif isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z2}')
+                TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); k_{Z2} > %0.3f, p <= %0.3f (FWE).'];
                 TabDat.ftr{1,2} = [u, str2num(td.u), k, xSwE.fwep_c];
               else
                 TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); Extent k > %0.0f ' strDataType ', p <= %0.3f (FWE).'];
@@ -751,9 +751,9 @@ case 'table'                                                        %-Table
                 warning(ws);
                 
                 if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') % only for FWER clusterwise WB
-                    if isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm.')
+                    if isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z1}')
                         Pk  = 10.^-VspmFWEP_clusnorm(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                    elseif isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. 2')
+                    elseif isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z2}')
                         Pk  = 10.^-VspmFWEP_clusnorm2(XYZ(1,i),XYZ(2,i),XYZ(3,i));
                     else
                         Pk  = 10.^-VspmFWEP_clus(XYZ(1,i),XYZ(2,i),XYZ(3,i));
