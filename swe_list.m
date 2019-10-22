@@ -985,7 +985,7 @@ case 'table'                                                        %-Table
     line([0 1],[0 0],'LineWidth',1,'Color','r')
     if ~isempty(TabDat.ftr)
         set(gca,'DefaultTextFontName',PF.helvetica,...
-            'DefaultTextInterpreter','None','DefaultTextFontSize',FS(8))
+            'DefaultTextInterpreter','Tex','DefaultTextFontSize',FS(8))
         
         fx = repmat([0 0.645],ceil(size(TabDat.ftr,1)/2),1);
         fy = repmat((1:ceil(size(TabDat.ftr,1)/2))',1,2);
