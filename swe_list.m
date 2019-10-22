@@ -602,13 +602,17 @@ case 'table'                                                        %-Table
 
      % Record voxel sizes.
      if isCifti && numel(xSwE.cifti.volume) > 0
-      TabDat.ftr{(7+exlns),1} = ...
-      ['Voxel size: %1.1f %1.1f %1.1f mm mm mm'];
-      TabDat.ftr{(7+exlns),2} = sqrt(diag(xSwE.cifti.volume.M(1:3,1:3)'*xSwE.cifti.volume.M(1:3,1:3)))';        
+        TabDat.ftr{(7+exlns),1} = ...
+            ['Voxel size: %1.1f %1.1f %1.1f mm mm mm'];
+        TabDat.ftr{(7+exlns),2} = sqrt(diag(xSwE.cifti.volume.M(1:3,1:3)'*xSwE.cifti.volume.M(1:3,1:3)))';
+     elseif isCifti && numel(xSwE.cifti.volume) == 0
+        exlns = exlns - 1;
      elseif ~spm_mesh_detect(xSwE.Vspm) 
         TabDat.ftr{(7+exlns),1} = ...
             ['Voxel size: ' voxfmt units{:}];
         TabDat.ftr{(7+exlns),2} = VOX;
+     else
+        exlns = exlns - 1;
      end
      
      if isfield(xSwE, 'TFCEanaly') && xSwE.TFCEanaly
