@@ -41,6 +41,8 @@ function [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm, brainStructureShor
     isXColumnVector = false;
   end
 
+  scalingFactorNorm2 = 2 * swe_invNcdf(0.75);
+
   maxA = 0;
   if numel(ciftiInformation.surfaces) > 0
     for i = 1:numel(ciftiInformation.surfaces)
@@ -76,7 +78,7 @@ function [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm, brainStructureShor
         end
         if ~isempty(boxcoxInfo)
           N_boxcox1 = [N_boxcox1; (tmp - boxcoxInfo.surfaces.mean) ./ boxcoxInfo.surfaces.std];
-          N_boxcox2 = [N_boxcox2; (tmp - boxcoxInfo.surfaces.median) ./ boxcoxInfo.surfaces.hiqr];
+          N_boxcox2 = [N_boxcox2; scalingFactorNorm2 * (tmp - boxcoxInfo.surfaces.median) ./ boxcoxInfo.surfaces.hiqr];
         end
         % need to convert the surface coordinates into CIfTI coordinates
         isMax = ismember(ciftiInformation.surfaces{i}.iV, M_tmp(1,:));
@@ -136,7 +138,7 @@ function [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm, brainStructureShor
       if ~isempty(boxcoxInfo)
         tmp = boxcox(boxcoxInfo.volume.lambda, N_tmp);
         N_boxcox1 = [N_boxcox1; (tmp - boxcoxInfo.volume.mean) ./ boxcoxInfo.volume.std];
-        N_boxcox2 = [N_boxcox2; (tmp - boxcoxInfo.volume.median) ./ boxcoxInfo.volume.hiqr];
+        N_boxcox2 = [N_boxcox2; scalingFactorNorm2 * (tmp - boxcoxInfo.volume.median) ./ boxcoxInfo.volume.hiqr];
       end
     end
   end
