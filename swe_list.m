@@ -485,11 +485,23 @@ case 'table'                                                        %-Table
         TabDat.ftr{(3+exlns),1} = 'k_{Z1} = (k_{\\lambda}-mean(k_{\\lambda}^{H0}))/std(k_{\\lambda}^{H0}), k_{Z2}=0.6745(k_{\\lambda}-Q2(k_{\\lambda}^{H0}))/(Q3(k_{\\lambda}^{H0})-Q2(k_{\\lambda}^{H0}))';
         % TabDat.ftr{(3+exlns),1} = 'Null cluster sizes in surfaces: \\lambda_S=%0.2f , \\lambda_V =%0.2f';
         % TabDat.ftr{(3+exlns),1} = 'Box-Cox(Surf): \lambda=%0.2f, mean=%0.2f, std=%0.2f, median=%0.2f, 2(Q3-Q2)=%0.2f';
-        tmpSurf = xSwE.boxcoxInfo.surfaces;
-        tmpVol = xSwE.boxcoxInfo.volume;
         TabDat.ftr{(3+exlns),2} = [];
-        TabDat.ftr{(4+exlns),1} = 'Box-Cox parameters for cluster sizes under H0: \\lambda(Surfaces)=%0.2f, \\lambda(Volume)=%0.2f';
-        TabDat.ftr{(4+exlns),2} = [tmpSurf.lambda, tmpVol.lambda];
+        if isfield(xSwE.boxcoxInfo, 'surfaces') && isfield(xSwE.boxcoxInfo, 'volume')
+            tmpSurf = xSwE.boxcoxInfo.surfaces;
+            tmpVol = xSwE.boxcoxInfo.volume;
+            TabDat.ftr{(4+exlns),1} = 'Box-Cox parameters for cluster sizes under H0: \\lambda(Surfaces)=%0.2f, \\lambda(Volume)=%0.2f';
+            TabDat.ftr{(4+exlns),2} = [tmpSurf.lambda, tmpVol.lambda];
+        elseif isfield(xSwE.boxcoxInfo, 'surfaces')
+            tmpSurf = xSwE.boxcoxInfo.surfaces;
+            TabDat.ftr{(4+exlns),1} = 'Box-Cox parameters for cluster sizes under H0: \\lambda(Surfaces)=%0.2f';
+            TabDat.ftr{(4+exlns),2} = [tmpSurf.lambda];
+        elseif isfield(xSwE.boxcoxInfo, 'volume')
+            tmpVol = xSwE.boxcoxInfo.volume;
+            TabDat.ftr{(4+exlns),1} = 'Box-Cox parameters for cluster sizes under H0: \\lambda(Volume)=%0.2f';
+            TabDat.ftr{(4+exlns),2} = [tmpVol.lambda];
+        else
+            error('Unknown Box-Cox Info!')
+        end
         exlns = exlns + 2;   
      end
 
