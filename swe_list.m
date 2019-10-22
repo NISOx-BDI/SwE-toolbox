@@ -482,12 +482,14 @@ case 'table'                                                        %-Table
      end
      
      if isCifti && xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') && isfield(xSwE, 'boxcoxInfo')
-        TabDat.ftr{(3+exlns),1} = 'Box-Cox(Surf): L=%0.2f, mean=%0.2f, std=%0.2f, median=%0.2f, 2(Q3-Q2)=%0.2f';
-        tmp = xSwE.boxcoxInfo.surfaces;
-        TabDat.ftr{(3+exlns),2} = [tmp.lambda, tmp.mean, tmp.std, tmp.median, tmp.hiqr];
-        TabDat.ftr{(4+exlns),1} = 'Box-Cox(Vol): L=%0.2f, mean=%0.2f, std=%0.2f, median=%0.2f, 2(Q3-Q2)=%0.2f';
-        tmp = xSwE.boxcoxInfo.volume;
-        TabDat.ftr{(4+exlns),2} = [tmp.lambda, tmp.mean, tmp.std, tmp.median, tmp.hiqr];
+        TabDat.ftr{(3+exlns),1} = 'k_{Z1} = (k_{\\lambda}-mean(k_{\\lambda}^{H0}))/std(k_{\\lambda}^{H0}), k_{Z2}=0.6745(k_{\\lambda}-Q2(k_{\\lambda}^{H0}))/(Q3(k_{\\lambda}^{H0})-Q2(k_{\\lambda}^{H0}))';
+        % TabDat.ftr{(3+exlns),1} = 'Null cluster sizes in surfaces: \\lambda_S=%0.2f , \\lambda_V =%0.2f';
+        % TabDat.ftr{(3+exlns),1} = 'Box-Cox(Surf): \lambda=%0.2f, mean=%0.2f, std=%0.2f, median=%0.2f, 2(Q3-Q2)=%0.2f';
+        tmpSurf = xSwE.boxcoxInfo.surfaces;
+        tmpVol = xSwE.boxcoxInfo.volume;
+        TabDat.ftr{(3+exlns),2} = [];
+        TabDat.ftr{(4+exlns),1} = 'Box-Cox parameters for cluster sizes under H0: \\lambda(Surfaces)=%0.2f, \\lambda(Volume)=%0.2f';
+        TabDat.ftr{(4+exlns),2} = [tmpSurf.lambda, tmpVol.lambda];
         exlns = exlns + 2;   
      end
 
