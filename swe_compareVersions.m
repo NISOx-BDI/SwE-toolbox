@@ -15,6 +15,13 @@ function result = swe_compareVersions(ver1, ver2, comparisonOperator)
   ver1 = strsplit(ver1, '.');
   ver2 = strsplit(ver2, '.');
   
+  if numel(ver1) > 3
+    ver1 = ver1(1:3);
+  end
+ 
+  if numel(ver2) > 3
+    ver2 = ver2(1:3);
+  end
   % Work out base for comparison.
   base = max(cellfun(@(a) str2num(a), {ver1{:} ver2{:}})) + 1;
   
