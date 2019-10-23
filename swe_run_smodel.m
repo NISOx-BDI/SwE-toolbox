@@ -805,10 +805,15 @@ if isfield(job.WB, 'WB_yes')
           if isMat
               error('TFCE is not currently available for ''.mat'' input.')
           end
-          % Error if '.mat' input.
+          % Error if '.gii' input.
           if spm_mesh_detect(VY)
               error('TFCE is not currently available for surface data input.')
           end
+
+        % Error if CIfTI input.
+        if isCifti
+            error('TFCE is not currently available for CIfTI data input.')
+        end
           
   end
   
