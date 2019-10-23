@@ -13,13 +13,13 @@ function swe_smodel
     % Initiate a job 
     if isempty(spm_figure('FindWin','Graphics'))
         % SPM not running
-        spm_jobman('initcfg')
+        swe_jobman('initcfg')
     end
     
     % Launch the batch system with the SwE tab
     swe_batch
     % Add the specification module to it
-    spm_jobman('interactive','','swe.smodel');
+    swe_jobman('interactive','','swe.smodel');
 
     return
     

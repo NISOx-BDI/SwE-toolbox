@@ -182,7 +182,7 @@ spm('Pointer','Watch')
  
 %-Get raw data, whiten and filter 
 %--------------------------------------------------------------------------
-y        = spm_data_read(SwE.xY.VY,'xyz',xSwE.XYZ(:,Q));
+y        = swe_data_read(SwE.xY.VY,'xyz',xSwE.XYZ(:,Q));
 %y        = spm_filter(SwE.xX.K,SwE.xX.W*y);
  
  
@@ -195,7 +195,7 @@ if xY.Ic ~= 0
  
     %-Parameter estimates: beta = xX.pKX*xX.K*y
     %----------------------------------------------------------------------
-    beta  = spm_data_read(SwE.Vbeta,'xyz',xSwE.XYZ(:,Q));
+    beta  = swe_data_read(SwE.Vbeta,'xyz',xSwE.XYZ(:,Q));
  
     %-subtract Y0 = XO*beta,  Y = Yc + Y0 + e
     %----------------------------------------------------------------------

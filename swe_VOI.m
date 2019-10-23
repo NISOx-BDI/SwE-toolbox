@@ -154,7 +154,7 @@ switch SPACE
     else
         VM = xY.spec;
     end
-    D      = spm_data_hdr_read(VM);
+    D      = swe_data_hdr_read(VM);
     if numel(D) > 1
         fprintf('Computing union of all masks.\n');
         spm_check_orientations(D);
@@ -168,7 +168,7 @@ switch SPACE
             'descrip', 'SVC mask');
         D2.dat     = false(D2.dim);
         for i=1:numel(D)
-            D2.dat = D2.dat | spm_data_read(D(i));
+            D2.dat = D2.dat | swe_data_read(D(i));
         end
         D2.dat     = uint8(D2.dat);
         D  = D2;

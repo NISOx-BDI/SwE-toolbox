@@ -256,16 +256,12 @@ catch
 end
 
 % check format of data
-[~,~,file_ext] = fileparts(SwE.xY.P{1});
-isMat          = strcmpi(file_ext,'.mat');
+file_ext = swe_get_file_extension(SwE.xY.P{1});
+isMat    = strcmpi(file_ext,'.mat');
+isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dscalar.nii');
 
-if ~isMat
+if ~isMat && ~isCifti
   isMeshData = spm_mesh_detect(SwE.xY.VY);
-  if isMeshData
-      file_ext = '.gii';
-  else
-      file_ext = spm_file_ext;
-  end
 end
 
 xX   = SwE.xX;                      %-Design definition structure
@@ -681,7 +677,7 @@ for i = Ic
     Z = min(Z,equivalentScore);
     clear equivalentScore
   else
-    Z = min(Z, spm_data_read(xCon(i).Vspm, 'xyz', XYZ));
+    Z = min(Z, swe_data_read(xCon(i).Vspm, 'xyz', XYZ));
   end
       
 end
@@ -703,7 +699,7 @@ for i = 1:numel(Im)
         Mask = equivalentScore;
         clear equivalentScore
       else
-        Mask = spm_data_read(xCon(Im(i)).Vspm, 'xyz', XYZ);
+        Mask = swe_data_read(xCon(Im(i)).Vspm, 'xyz', XYZ);
       end
       switch xCon(Im(i)).STAT
         case 'T'
@@ -720,8 +716,8 @@ for i = 1:numel(Im)
       if isMat
         Mask = importdata(Im{i});
       else
-        v = spm_data_hdr_read(Im{i});
-        Mask = spm_data_read(v, 'xyz', v.mat\SwE.xVol.M*[XYZ; ones(1,size(XYZ,2))]);
+        v = swe_data_hdr_read(Im{i});
+        Mask = swe_data_read(v, 'xyz', v.mat\SwE.xVol.M*[XYZ; ones(1,size(XYZ,2))]);
       end
       Q = Mask ~= 0 & ~isnan(Mask);
       if Ex, Q = ~Q; end
@@ -794,9 +790,9 @@ if ~isMat
                   thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
                   switch STAT
                       case 'T'
-                         u = spm_uc_FDR(u,Inf,'Z',n,VspmSv,0); 
+                         u = swe_uc_FDR(u,Inf,'Z',n,VspmSv,0); 
                       case 'F'
-                         u = spm_uc_FDR(u,[1 1],'X',n,VspmSv,0); 
+                         u = swe_uc_FDR(u,[1 1],'X',n,VspmSv,0); 
                   end
 
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
@@ -915,7 +911,7 @@ if ~isMat
                   end
                   thresDesc = ['p<=' num2str(pu) ' (' thresDesc ')'];
                   
-                  FWE_ps = 10.^-spm_data_read(xCon(Ic).VspmFWEP,'xyz', XYZ);
+                  FWE_ps = 10.^-swe_data_read(xCon(Ic).VspmFWEP,'xyz', XYZ);
                   
                   % When thresholding on WB FWER p-values, we should include those = to pu
                   % Here, we are using a - tol < b instead of a <= b due to numerical errors
@@ -944,11 +940,11 @@ if ~isMat
                   thresDesc = ['p<=' num2str(pu) ' (' thresDesc ')'];
                   
                   % select the WB FDR p-values within the mask
-                  FDR_ps = 10.^-spm_data_read(xCon(Ic).VspmFDRP, 'xyz', XYZ);
+                  FDR_ps = 10.^-swe_data_read(xCon(Ic).VspmFDRP, 'xyz', XYZ);
 
                   % Here, a parametric score threshold u would differ from voxel to voxel
                   % Thus, setting it to NaN
-                  u = NaN
+                  u = NaN;
                   
                   % inclusive thresholding for WB
                   Q = find(FDR_ps - tol < pu);
@@ -963,7 +959,7 @@ if ~isMat
                   end
                   thresDesc = ['p<=' num2str(pu) ' (unc.)'];
                   % select the WB unc. p-values within the mask
-                  unc_ps = 10.^-spm_data_read(xCon(Ic).VspmUncP, 'xyz', XYZ);
+                  unc_ps = 10.^-swe_data_read(xCon(Ic).VspmUncP, 'xyz', XYZ);
 
                   % Here, a parametric score threshold u would differ from voxel to voxel
                   % Thus, setting it to NaN
@@ -1009,7 +1005,15 @@ if ~isMat
               case 'FWE' % Family-wise false positive rate
                   % This is performed on the FWE P value map
                   %--------------------------------------------------------
-                  
+                  % if CIfTI, ask which type of cluster statistics 
+                  if isCifti
+                    try
+                      clusterSizeType = xSwE.clusterSizeType;
+                    catch
+                      str = 'classic k_E|Box-Cox norm. k_{Z1}|Box-Cox norm. k_{Z2}';
+                      clusterSizeType = spm_input('cluster size statistic','+1','b',str,[],1);
+                    end
+                  end
                   % Record what type of clusterwise inference we are doing.
                   clustWise = 'FWE';
                   
@@ -1037,8 +1041,12 @@ if ~isMat
                   
                   % We should display the cluster forming threshold that
                   % was used.
-                  spm_input(['threshold {p value}'],...
-                      '+1','b',['(pre-set: P=' num2str(pu) ')'],[0],0)
+                  try
+                    xSwE.fwep_c;
+                  catch
+                    spm_input(['threshold {p value}'],...
+                        '+1','b',['(pre-set: P=' num2str(pu) ')'],[0],0)
+                  end
                   
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
                   % This should be performed on the uncorrected WB p-values
@@ -1054,7 +1062,7 @@ if ~isMat
                   end
                   thresDesc = ['p<=' num2str(pu) ' (unc.)'];
                   % select the WB unc. p-values within the mask
-                  unc_ps = 10.^-spm_data_read(xCon(Ic).VspmUncP, 'xyz', XYZ);
+                  unc_ps = 10.^-swe_data_read(xCon(Ic).VspmUncP, 'xyz', XYZ);
   
                   % Here, a parametric score threshold u would differ from voxel to voxel
                   % Thus, setting it to NaN
@@ -1086,7 +1094,7 @@ if ~isMat
           % In older version of the toolbox, the max TFCE scores were not saved.
           % Thus, to avoid retro-compatibility issues, we cannot threshold using 
           % the (1-pt)th percentile of the max distribution, but only using the FWER p-values
-          tfp = 10.^-spm_data_read(xCon(Ic).VspmTFCEFWEP, 'xyz', XYZ);
+          tfp = 10.^-swe_data_read(xCon(Ic).VspmTFCEFWEP, 'xyz', XYZ);
           
           up  = NaN;
           Pp  = NaN;
@@ -1110,14 +1118,16 @@ if ~isMat
   if ~isMat
     XYZ    = XYZ(:,Q);
   end
-	if isMat
-		strDataType = 'data elements';
-	else
-		if spm_mesh_detect(xCon(Ic(1)).Vspm)
-			strDataType = 'vertices'
-		else 
+  if isMat
+    strDataType = 'data elements';
+  else
+    if isCifti
+      strDataType = 'voxels/vertices';
+    elseif spm_mesh_detect(xCon(Ic(1)).Vspm)
+			strDataType = 'vertices';
+    else 
 			strDataType = 'voxels'; 
-		end
+    end
 	end
   if isempty(Q)
       fprintf('\n');
@@ -1143,8 +1153,10 @@ if ~isMat
               end
 
               %-Calculate extent threshold filtering
-              %----------------------------------------------------------------------
-              if  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
+							%----------------------------------------------------------------------
+              if isCifti
+                A = swe_cifti_clusters(SwE.cifti, XYZ(1,:));              
+              elseif  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
                 A = spm_clusters(XYZ);
               else
                 T = false(SwE.xVol.DIM');
@@ -1172,7 +1184,9 @@ if ~isMat
               %-Calculate extent threshold filtering
               %----------------------------------------------------------------------
               % recompute the clusters as they may have been reduced due to post-hoc masking
-              if  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
+              if isCifti
+                [A, clusterSizesInSurfaces, clusterSizesInVolume] = swe_cifti_clusters(SwE.cifti, XYZ(1,:));              
+              elseif  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
                 A = spm_clusters(XYZ);
               else
                 T = false(SwE.xVol.DIM');
@@ -1184,17 +1198,99 @@ if ~isMat
               
               % recompute the p-values as they might have increased due to post-hoc masking
               if Ic == 1
-                for i = 1:length(clusIndices)
-                  ind = ( A==clusIndices(i) );
-                  ps_fwe(ind) = sum( SwE.WB.clusterInfo.maxClusterSize >= sum(ind) ) / (SwE.WB.nB + 1);
+                if isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z1}')
+                  if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0) > 0
+                    clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
+                    clusterSizesInSurfaces = (clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_mean) ...
+                                  ./ SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_std;
+                  else
+                    clusterSizesInSurfaces = [];
+                  end
+                  if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0) > 0
+                    clusterSizesInVolume = boxcox(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_lambda, clusterSizesInVolume')';
+                    clusterSizesInVolume = (clusterSizesInVolume - SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_mean) ...
+                                  ./ SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_std;
+                  else
+                    clusterSizesInVolume = [];
+                  end
+                  clusterSizes = [clusterSizesInSurfaces, clusterSizesInVolume];
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSize_norm;
+                elseif isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z2}')
+                  scalingFactorNorm2 = 2 * swe_invNcdf(0.75);
+                  if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0) > 0
+                    clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
+                    clusterSizesInSurfaces = (clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_median) ...
+                                  ./ SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_hiqr;
+                  else
+                    clusterSizesInSurfaces = [];
+                  end
+                  if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0) > 0
+                    clusterSizesInVolume = boxcox(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_lambda, clusterSizesInVolume')';
+                    clusterSizesInVolume = (clusterSizesInVolume - SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_median) ...
+                                  ./ SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_hiqr;
+                  else
+                    clusterSizesInVolume = [];
+                  end
+                  clusterSizes = scalingFactorNorm2 * [clusterSizesInSurfaces, clusterSizesInVolume];
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSize_norm2;
+                else
+                  clusterSizes = NaN(1, numel(clusIndices));
+                  for i = 1:numel(clusIndices)
+                    clusterSizes(i) = sum( A==clusIndices(i) );
+                  end
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSize;
                 end
               elseif Ic == 2
-                for i = 1:length(clusIndices)
-                  ind = ( A==clusIndices(i) );
-                  ps_fwe(ind) = sum( SwE.WB.clusterInfo.maxClusterSizeNeg >= sum(ind) ) / (SwE.WB.nB + 1);
+                if isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z1}')
+                  if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0) > 0
+                    clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
+                    clusterSizesInSurfaces = (clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_mean) ...
+                                    ./ SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_std;
+                  else
+                    clusterSizesInSurfaces = [];
+                  end
+                  if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0) > 0
+                    clusterSizesInVolume = boxcox(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_lambda, clusterSizesInVolume')';
+                    clusterSizesInVolume = (clusterSizesInVolume - SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_mean) ...
+                                    ./ SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_std;
+                  else
+                    clusterSizesInVolume = [];
+                  end
+                  clusterSizes = [clusterSizesInSurfaces, clusterSizesInVolume];
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSizeNeg_norm;
+                elseif isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z2}')
+                  scalingFactorNorm2 = 2 * swe_invNcdf(0.75);
+                  if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0) > 0
+                    clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
+                    clusterSizesInSurfaces = (clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_median) ...
+                                    ./ SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_hiqr;
+                  else
+                    clusterSizesInSurfaces = [];
+                  end
+                  if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0) > 0
+                    clusterSizesInVolume = boxcox(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_lambda, clusterSizesInVolume')';
+                    clusterSizesInVolume = (clusterSizesInVolume - SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_median) ...
+                                    ./ SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_hiqr;
+                  else
+                    clusterSizesInVolume = [];
+                  end
+                  clusterSizes = scalingFactorNorm2 * [clusterSizesInSurfaces, clusterSizesInVolume];
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSizeNeg_norm2;
+                else
+                  clusterSizes = NaN(1, numel(clusIndices));
+                  for i = 1:numel(clusIndices)
+                    clusterSizes(i) = sum( A==clusIndices(i) );
+                  end
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSizeNeg;
                 end
               else
-                  error("unknown contrast");
+                error("unknown contrast");
+              end
+              
+              ps_fwe = nan(1,numel(A));
+              for i = 1:length(clusIndices)
+                ind = ( A==clusIndices(i) );
+                ps_fwe(ind) = sum( maxClusterSize > clusterSizes(i) - 1e-8) / (SwE.WB.nB + 1);
               end
 
               % select only the voxels surviving the FWER threshold 
@@ -1202,13 +1298,8 @@ if ~isMat
               Q = find(ps_fwe - tol < fwep_c);
               
               % The exclusive threshold k should be the (1-fwep_c)th percentile of the max cluster size distribution
-              if Ic == 1
-                maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSize);
-              elseif Ic == 2
-                maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSizeNeg);
-              else
-                error("Unknown contrast");
-              end
+              maxClusterSize = sort(maxClusterSize);
+
               k = maxClusterSize( ceil( (1-fwep_c) * (SwE.WB.nB+1) ) );
 
           end
@@ -1312,6 +1403,44 @@ if isfield(SwE, 'WB')
     xSwE.VspmFWEP = cat(1,xCon(Ic).VspmFWEP);
     if SwE.WB.clusterWise
         xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
+        if isCifti
+          xSwE.VspmFWEP_clusnorm = cat(1,xCon(Ic).VspmFWEP_clusnorm);
+          xSwE.VspmFWEP_clusnorm2 = cat(1,xCon(Ic).VspmFWEP_clusnorm2);
+          if strcmp(clustWise, 'FWE')
+            xSwE.clusterSizeType = clusterSizeType;
+          end
+          if Ic == 1
+            if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0) > 0
+              xSwE.boxcoxInfo.surfaces.lambda = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda;
+              xSwE.boxcoxInfo.surfaces.mean = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_mean;
+              xSwE.boxcoxInfo.surfaces.std = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_std;
+              xSwE.boxcoxInfo.surfaces.median = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_median;
+              xSwE.boxcoxInfo.surfaces.hiqr = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_hiqr;
+            end
+            if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0) > 0
+              xSwE.boxcoxInfo.volume.lambda = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_lambda;
+              xSwE.boxcoxInfo.volume.mean = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_mean;
+              xSwE.boxcoxInfo.volume.std = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_std;
+              xSwE.boxcoxInfo.volume.median = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_median;
+              xSwE.boxcoxInfo.volume.hiqr = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_hiqr;
+            end
+          elseif Ic == 2
+            if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0) > 0
+              xSwE.boxcoxInfo.surfaces.lambda = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_lambda;
+              xSwE.boxcoxInfo.surfaces.mean = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_mean;
+              xSwE.boxcoxInfo.surfaces.std = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_std;
+              xSwE.boxcoxInfo.surfaces.median = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_median;
+              xSwE.boxcoxInfo.surfaces.hiqr = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_hiqr;
+            end
+            if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0) > 0
+              xSwE.boxcoxInfo.volume.lambda = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_lambda;
+              xSwE.boxcoxInfo.volume.mean = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_mean;
+              xSwE.boxcoxInfo.volume.std = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_std;
+              xSwE.boxcoxInfo.volume.median = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_median;
+              xSwE.boxcoxInfo.volume.hiqr = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_hiqr;
+            end
+          end
+        end
     end
     if isfield(SwE.WB, 'TFCE')
         xSwE.VspmTFCE = cat(1,xCon(Ic).VspmTFCE);
@@ -1329,8 +1458,8 @@ if isfield(SwE, 'WB')
     end
     
     % Uncorrected P values.
-    Ps_vol = spm_data_hdr_read(xSwE.VspmUncP);
-    Ps = spm_data_read(Ps_vol);
+    Ps_vol = xSwE.VspmUncP;
+    Ps = swe_data_read(Ps_vol);
     Ps = 10.^(-Ps(~isnan(Ps)));
     xSwE.Ps = Ps;
     
@@ -1369,7 +1498,26 @@ if ~isMat
 end
  %             'R',        SwE.xVol.R,...
 %             'FWHM',     SwE.xVol.FWHM,...
-          
+
+xSwE.isCifti = isCifti;
+if isCifti
+  xSwE.cifti = SwE.cifti;
+  tmp = 0;
+  if numel(SwE.cifti.surfaces) > 0
+    for i = 1:numel(SwE.cifti.surfaces)
+      indInSurface = SwE.cifti.surfaces{i}.off + (1:numel(SwE.cifti.surfaces{i}.iV));
+      isSurviving = ismember(indInSurface, SwE.xVol.XYZ(1,:));
+      tmp = tmp + sum(isSurviving);
+    end
+  end
+  xSwE.S_surf = tmp;
+  if numel(SwE.cifti.volume) > 0
+    isSurviving = ismember(SwE.cifti.volume.indices, SwE.xVol.XYZ(1,:));
+    xSwE.S_vol = sum(isSurviving);
+  else
+    xSwE.S_vol = 0;
+  end
+end
           
 %-RESELS per voxel (density) if it exists
 %--------------------------------------------------------------------------

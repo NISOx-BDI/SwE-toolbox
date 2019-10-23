@@ -151,10 +151,10 @@ function mapsEqual = verifyMapsUnchanged(porwb, inftype, torf, matorimg)
 		if strcmp(filetype, 'nii')
 
 			% Read in the volumes
-			file = spm_data_hdr_read(file);
-			file = spm_data_read(file);
-			gt_file = spm_data_hdr_read(gt_file);
-			gt_file = spm_data_read(gt_file);
+			file = swe_data_hdr_read(file);
+			file = swe_data_read(file);
+			gt_file = swe_data_hdr_read(gt_file);
+			gt_file = swe_data_read(gt_file);
 
 		else
 

@@ -58,11 +58,16 @@ end
 
 %-Check data format
 %--------------------------------------------------------------------------
-[~,~,file_ext] = fileparts(SwE.xY.P{1});
-isMat          = strcmpi(file_ext,'.mat');
+file_ext = swe_get_file_extension(SwE.xY.P{1});
+isMat    = strcmpi(file_ext,'.mat');
+isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dscalar.nii');
 isOctave = exist('OCTAVE_VERSION','builtin');
 
-if ~isMat
+if isCifti
+	metadata = {'ciftiTemplate', SwE.xY.P{1}};  
+end
+
+if ~isMat && ~isCifti
     isMeshData = spm_mesh_detect(SwE.xY.VY);
     if isMeshData
         file_ext = '.gii';
@@ -149,7 +154,7 @@ for i = 1:length(Ic)
               if isMat
                	cBeta = cBeta + Co(ind(j)) * beta(ind(j),:);               
               else
-                cBeta = cBeta + Co(ind(j)) * spm_data_read(V(j),'xyz',XYZ);
+                cBeta = cBeta + Co(ind(j)) * swe_data_read(V(j),'xyz',XYZ);
               end
                 swe_progress_bar('Set',100*(j/numel(ind)));
             end
@@ -163,22 +168,15 @@ for i = 1:length(Ic)
             else
               %-Prepare handle for contrast image
               %------------------------------------------------------
-              xCon(ic).Vcon = struct(...
-                'fname',  sprintf('swe_vox_con_c%02d%s',ic,file_ext),...
-                'dim',    SwE.xVol.DIM',...
-                'dt',     [spm_type('float32') spm_platform('bigend')],...
-                'mat',    SwE.xVol.M,...
-                'pinfo',  [1,0,0]',...
-                'descrip',sprintf('SwE contrast - %d: %s',ic,xCon(ic).name),...
-                metadata{:});
-              
-              xCon(ic).Vcon = spm_data_hdr_write(xCon(ic).Vcon);
-              
+              xCon(ic).Vcon = swe_data_hdr_write(sprintf('swe_vox_con_c%02d%s',ic,file_ext),...
+                                                  SwE.xVol.DIM', SwE.xVol.M,...
+                                                  sprintf('SwE contrast - %d: %s',ic,xCon(ic).name),...
+                                                  metadata);
               %-Write image
               %------------------------------------------------------
               tmp = NaN(SwE.xVol.DIM');
               tmp(Q) = cBeta;
-              xCon(ic).Vcon = spm_data_write(xCon(ic).Vcon, tmp);
+              xCon(ic).Vcon = swe_data_write(xCon(ic).Vcon, tmp);
               
               clear tmp
             end
@@ -198,7 +196,7 @@ for i = 1:length(Ic)
               if isMat
                	cBeta = cBeta + Co(ind(j),:)' * beta(ind(j),:);               
               else
-                cBeta = cBeta + Co(ind(j),:)' * spm_data_read(V(j),'xyz',XYZ);
+                cBeta = cBeta + Co(ind(j),:)' * swe_data_read(V(j),'xyz',XYZ);
               end
               swe_progress_bar('Set',100*(j/numel(ind)));
             end
@@ -262,7 +260,7 @@ for i = 1:length(Ic)
                     if isMat
                       cCovBc = cCovBc + weight * cov_beta(it,:);                     
                     else
-                      cCovBc = cCovBc + weight * spm_data_read(Vcov_beta(it),'xyz',XYZ);
+                      cCovBc = cCovBc + weight * swe_data_read(Vcov_beta(it),'xyz',XYZ);
                     end
                     if dof_type == 1
                       for g = 1:SwE.Gr.nGr
@@ -271,7 +269,7 @@ for i = 1:length(Ic)
                             reshape(cov_beta_g(g,it,:), 1, S);
                         else
                           cCovBc_g(:,:,g) = cCovBc_g(:,:,g) + weight *...
-                            spm_data_read(Vcov_beta_g((g-1)*nCov_beta+it),'xyz',XYZ);
+                            swe_data_read(Vcov_beta_g((g-1)*nCov_beta+it),'xyz',XYZ);
                         end
                         swe_progress_bar('Set',100*((it2-1+g/SwE.Gr.nGr)/length(ind)/(length(ind)+1)*2));
                       end
@@ -339,7 +337,7 @@ for i = 1:length(Ic)
                             if isMat
                             	CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},1);
                             else
-                              CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},1);
+                              CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(swe_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},1);
                             end
                             swe_progress_bar('Set',100*(0.1) + g*80/SwE.Gr.nGr);
                         end
@@ -368,7 +366,7 @@ for i = 1:length(Ic)
                           if isMat
                             CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},2);
                           else
-                            CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},2);
+                            CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(swe_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},2);
                           end
                           swe_progress_bar('Set',100*(0.1) + g*80/SwE.Gr.nGr);
                         end
@@ -431,7 +429,7 @@ for i = 1:length(Ic)
                                 if isMat
                                   CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},1);
                                 else
-                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},1);
+                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(swe_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},1);
                                 end
                                 swe_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));
                             end
@@ -457,7 +455,7 @@ for i = 1:length(Ic)
                                 if isMat
                                   CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},2);         
                                 else
-                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},2);         
+                                  CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(swe_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},2);         
                                 end
                                 swe_progress_bar('Set',100*(g/SwE.Gr.nGr/10+0.1));    
                             end  
@@ -491,7 +489,7 @@ for i = 1:length(Ic)
                              if isMat
                                CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},1);
                              else
-                               CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},1);
+                               CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(swe_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},1);
                              end
                         end
                         clear cov_vis
@@ -512,7 +510,7 @@ for i = 1:length(Ic)
                         if isMat
                           CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(cov_vis(SwE.Vis.iGr_Cov_vis_g==g,:),SwE.dof.dofMat{g},2);
                         else
-                          CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(spm_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},2);
+                          CovcCovBc = CovcCovBc + Wg * swe_vechCovVechV(swe_data_read(Vcov_vis(SwE.Vis.iGr_Cov_vis_g==g),'xyz',XYZ),SwE.dof.dofMat{g},2);
                         end
                       end
                       clear cov_vis
@@ -607,20 +605,14 @@ for i = 1:length(Ic)
           xCon(ic).Vspm = sprintf('swe_vox_%c%cstat_c%02d%s',lower(eSTAT),xCon(ic).STAT,ic, file_ext);
           save(xCon(ic).Vspm, 'equivalentScore');
         else
-          xCon(ic).Vspm = struct(...
-            'fname',  sprintf('swe_vox_%c%cstat_c%02d%s',lower(eSTAT),xCon(ic).STAT,ic,file_ext),...
-            'dim',    SwE.xVol.DIM',...
-            'dt',     [spm_type('float32'), spm_platform('bigend')],...
-            'mat',    SwE.xVol.M,...
-            'pinfo',  [1,0,0]',...
-            'descrip',sprintf('spm{%c} - contrast %d: %s',eSTAT,ic,xCon(ic).name),...
-            metadata{:});
-          
-          xCon(ic).Vspm = spm_data_hdr_write(xCon(ic).Vspm);
-          
+          xCon(ic).Vspm = swe_data_hdr_write(sprintf('swe_vox_%c%cstat_c%02d%s',lower(eSTAT),xCon(ic).STAT,ic,file_ext),...
+                                              SwE.xVol.DIM', SwE.xVol.M,...
+                                              sprintf('spm{%c} - contrast %d: %s',eSTAT,ic,xCon(ic).name),...
+                                              metadata);
+
           tmp           = zeros(SwE.xVol.DIM');
           tmp(Q)        = equivalentScore;
-          xCon(ic).Vspm = spm_data_write(xCon(ic).Vspm,tmp);
+          xCon(ic).Vspm = swe_data_write(xCon(ic).Vspm,tmp);
         end
         clear tmp equivalentScore
         if isMat
@@ -647,11 +639,14 @@ for i = 1:length(Ic)
             'descrip',sprintf('spm{%c} - contrast %d: %s',xCon(ic).STAT,ic,xCon(ic).name),...
             metadata{:});
 
-          xCon(ic).Vspm2 = spm_data_hdr_write(xCon(ic).Vspm2);
+          xCon(ic).Vspm2 = swe_data_hdr_write(sprintf('swe_vox_%cstat_c%02d%s',xCon(ic).STAT,ic,file_ext),...
+                                              SwE.xVol.DIM', SwE.xVol.M,...
+                                              sprintf('spm{%c} - contrast %d: %s',xCon(ic).STAT,ic,xCon(ic).name),...
+                                              metadata);
 
           tmp           = zeros(SwE.xVol.DIM');
           tmp(Q)        = score;
-          xCon(ic).Vspm2 = spm_data_write(xCon(ic).Vspm2,tmp);
+          xCon(ic).Vspm2 = swe_data_write(xCon(ic).Vspm2,tmp);
         end
         clear tmp score
         if isMat
@@ -678,11 +673,14 @@ for i = 1:length(Ic)
             'descrip',sprintf('spm{%c} - contrast %d: %s','luncP',ic,xCon(ic).name),...
             metadata{:});
 
-          xCon(ic).VspmUncP = spm_data_hdr_write(xCon(ic).VspmUncP);
+          xCon(ic).VspmUncP = swe_data_hdr_write(sprintf('swe_vox_%cstat_lp_c%02d%s',xCon(ic).STAT,ic,file_ext),...
+                                                  SwE.xVol.DIM', SwE.xVol.M,...
+                                                  sprintf('spm{%c} - contrast %d: %s','luncP',ic,xCon(ic).name),...
+                                                  metadata);
 
           tmp           = zeros(SwE.xVol.DIM');
           tmp(Q)        = luncP;
-          xCon(ic).VspmUncP = spm_data_write(xCon(ic).VspmUncP,tmp);
+          xCon(ic).VspmUncP = swe_data_write(xCon(ic).VspmUncP,tmp);
         end
         clear tmp uncP luncP
         if isMat
@@ -710,11 +708,14 @@ for i = 1:length(Ic)
               'descrip',sprintf('SwE effective degrees of freedom - %d: %s',ic,xCon(ic).name),...
               metadata{:});
 
-            xCon(ic).Vedf = spm_data_hdr_write(xCon(ic).Vedf);
+            xCon(ic).Vedf = swe_data_hdr_write(sprintf('swe_vox_edf_c%02d%s',ic,file_ext),...
+                                                SwE.xVol.DIM', SwE.xVol.M,...
+                                                sprintf('SwE effective degrees of freedom - %d: %s',ic,xCon(ic).name),...
+                                                metadata);
 
             tmp = NaN(SwE.xVol.DIM');
             tmp(Q) = edf;
-            xCon(ic).Vedf = spm_data_write(xCon(ic).Vedf,tmp);
+            xCon(ic).Vedf = swe_data_write(xCon(ic).Vedf,tmp);
           end
           clear tmp edf
           if isMat

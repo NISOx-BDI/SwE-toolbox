@@ -83,11 +83,16 @@ end
 
 %-Check if we have data in a.mat format and set some variables accordingly
 %--------------------------------------------------------------------------
-[~,~,file_ext] = fileparts(SwE.xY.P{1});
-isMat          = strcmpi(file_ext,'.mat');
-isOctave       = exist('OCTAVE_VERSION','builtin');
+file_ext = swe_get_file_extension(SwE.xY.P{1});
+isMat    = strcmpi(file_ext,'.mat');
+isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dscalar.nii');
+isOctave = exist('OCTAVE_VERSION','builtin');
 
-if ~isMat
+if isCifti
+	metadata = {'ciftiTemplate', SwE.xY.P{1}};  
+end
+
+if ~isMat && ~isCifti
     isMeshData = spm_mesh_detect(SwE.xY.VY);
     if isMeshData
         file_ext = '.gii';
@@ -110,8 +115,6 @@ if ~isMat
         file_ext = spm_file_ext;
         metadata = {};
     end
-else
-    isMeshData = false;
 end
 
 %-Delete files from previous analyses
@@ -129,20 +132,20 @@ if exist(fullfile(SwE.swd,sprintf('swe_vox_mask%s',file_ext)),'file') == 2
     end
 end
  
-files = {'^swe_vox_mask\..{3}$',...
-        '^swe_vox_cov_b\d{2}_b\d{2}\..{3}$',...
-        '^swe_vox_cov_vv\..{3}$',...
-        '^swe_vox_cov\..{3}$',...
-        '^swe_vox_beta_bb\..{3}$',...
-        '^swe_vox_cov_g\d{2}_v\d{2}_v\d{2}\..{3}$',...
-        '^swe_vox_edf_c\d{2}\..{3}$',...
-        '^swe_vox_beta_\w{1}\d{2}\..{3}$',...
-        '^swe_vox_\w{1,2}stat_c\d{2}\..{3}$',...
-        '^swe_vox_\w{1,2}stat_lp\w{0,3}_c\d{2}\..{3}$',...
-        '^swe_clustere_\w{1,2}stat_c\d{2}\..{3}$',...
-        '^swe_clustere_\w{1,2}stat_lp\w{0,3}_c\d{2}\..{3}$',...
-        '^swe_vox_resid_y\d{2,4}\..{3}$',...
-        '^swe_vox_fit_y\d{2,4}\..{3}$'};
+files = {'^swe_vox_mask(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_vox_cov_b\d{2}_b\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_vox_cov_vv(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_vox_cov(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_vox_beta_b(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_vox_cov_g\d{2}_v\d{2}_v\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_vox_edf_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_vox_beta_\w{1}\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_vox_\w{1,2}stat_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_vox_\w{1,2}stat_lp\w{0,3}_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_clustere_\w{1,2}stat_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_clustere_\w{1,2}stat_lp\w{0,3}_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_vox_resid_y\d{2,4}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_vox_fit_y\d{2,4}(\.dtseries)?(\.dscalar)?\..{3}$'};
  
 for i = 1:length(files)
     j = spm_select('List',SwE.swd,files{i});
@@ -580,7 +583,11 @@ if ~isMat
     %==========================================================================
     mask = true(DIM);
     for i = 1:numel(xM.VM)
-      if ~(isfield(SwE,'xVol') && isfield(SwE.xVol,'G'))
+      if isCifti
+        v = swe_data_read(xM.VM(i)) > 0;
+        mask = mask & v(:);
+        clear v
+      elseif ~(isfield(SwE,'xVol') && isfield(SwE.xVol,'G'))
           %-Assume it fits entirely in memory
           C = spm_bsplinc(xM.VM(i), [0 0 0 0 0 0]');
           v = true(DIM);
@@ -631,7 +638,7 @@ if ~isMat
       for iScan=1:nScan
         if ~any(cmask), break, end                 %-Break if empty mask
         
-        Y(iScan, cmask) = spm_data_read(VY(iScan), chunk(cmask));%-Read chunk of data
+        Y(iScan, cmask) = swe_data_read(VY(iScan), chunk(cmask));%-Read chunk of data
         
         cmask(cmask) = Y(iScan, cmask) > xM.TH(iScan);      %-Threshold (& NaN) mask
         if xM.I && ~YNaNrep && xM.TH(iScan) < 0        %-Use implicit mask
@@ -751,7 +758,7 @@ if ~isMat
                         for i=1:nCov_beta
                             it = it + 1;
                             c(cmask) = Cov_beta_g(i,:);
-                            Vcov_beta_g(it) = spm_data_write(Vcov_beta_g(it), c, chunk);
+                            Vcov_beta_g(it) = swe_data_write(Vcov_beta_g(it), c, chunk);
                         end
                         Cov_beta = Cov_beta + Cov_beta_g;
                     end
@@ -770,7 +777,7 @@ if ~isMat
                   for ii=1:nCov_beta
                     it = it + 1;
                     c(cmask) = Cov_beta_i_tmp(ii,:);
-                    Vcov_beta_g(it) = spm_data_write(Vcov_beta_g(it), c, chunk);
+                    Vcov_beta_g(it) = swe_data_write(Vcov_beta_g(it), c, chunk);
                   end
                 end
             end
@@ -784,13 +791,13 @@ if ~isMat
       %-Write mask file
       %----------------------------------------------------------------------
       mask(chunk)  = cmask;
-      VM           = spm_data_write(VM, cmask', chunk);
+      VM           = swe_data_write(VM, cmask', chunk);
       
       %-Write beta files
       %----------------------------------------------------------------------
       for iBeta=1:nBeta
         c(cmask) = beta(iBeta,:);
-        Vbeta(iBeta) = spm_data_write(Vbeta(iBeta), c, chunk); 
+        Vbeta(iBeta) = swe_data_write(Vbeta(iBeta), c, chunk); 
       end
 
       %-Write CovVis files if needed
@@ -798,7 +805,7 @@ if ~isMat
       if isfield(SwE.type,'modified') 
         for iCov_vis=1:nCov_vis
           c(cmask) = Cov_vis(iCov_vis,:);
-          Vcov_vis(iCov_vis) = spm_data_write(Vcov_vis(iCov_vis), c, chunk);
+          Vcov_vis(iCov_vis) = swe_data_write(Vcov_vis(iCov_vis), c, chunk);
         end
       end
 
@@ -806,7 +813,7 @@ if ~isMat
       %----------------------------------------------------------------------
       for iCov_beta=1:nCov_beta
         c(cmask) = Cov_beta(iCov_beta,:);
-        Vcov_beta(iCov_beta) = spm_data_write(Vcov_beta(iCov_beta), c, chunk);
+        Vcov_beta(iCov_beta) = swe_data_write(Vcov_beta(iCov_beta), c, chunk);
       end
       
       %-Report progress

@@ -306,16 +306,54 @@ clear c tI tConst tFnames
 
 fprintf('%-40s: ','Mapping files')    
 P = job.scans;
-[~,~,file_ext] = fileparts(P{1});
-isMat = strcmpi(file_ext,'.mat');
+file_ext = swe_get_file_extension(P{1});
+isMat    = strcmpi(file_ext,'.mat');
+isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dscalar.nii');
+
 if isMat
     VY = {};
 else
-    VY = spm_data_hdr_read(char(P));
+    VY = swe_data_hdr_read(char(P));
 end
 %-Check compatibility of images
 %--------------------------------------------------------------------------
 spm_check_orientations(VY);
+
+if isCifti
+  SwE.cifti = struct;
+  [SwE.cifti.surfaces, SwE.cifti.volume] = swe_read_cifti_info(P{1});
+  if numel(SwE.cifti.surfaces) > 0
+    if ~isfield(job, 'ciftiGeomFile')
+      nSurfaceBrainStructures = 0;
+    else
+      nSurfaceBrainStructures = numel(job.ciftiGeomFile);
+    end
+    if nSurfaceBrainStructures ~= numel(SwE.cifti.surfaces)
+      error('The number of surface brain structures specified does not correspond to the number of surface brain structures in the CIfTI files. Please revise your specification.');
+    end
+    for i = 1:nSurfaceBrainStructures
+      for ii = i:nSurfaceBrainStructures
+        if i ~= ii && strcmpi(job.ciftiGeomFile(i).brainStructureLabel, job.ciftiGeomFile(ii).brainStructureLabel)
+          error('At least two surface brain structures have been specified with the same label. Please revise your specification.')
+        end
+      end
+    end
+    for i = 1:numel(SwE.cifti.surfaces)
+      for ii = 1:nSurfaceBrainStructures
+        if strcmpi(job.ciftiGeomFile(ii).brainStructureLabel, SwE.cifti.surfaces{i}.brainStructure)
+          SwE.cifti.surfaces{i}.geomFile = char(job.ciftiGeomFile(ii).geomFile);
+          if isfield(job.ciftiGeomFile(ii), 'areaFile') && ~strcmpi(job.ciftiGeomFile(ii).areaFile, '') 
+            SwE.cifti.surfaces{i}.areaFile = char(job.ciftiGeomFile(ii).areaFile);
+          end
+          break;
+        end
+        if (ii == nSurfaceBrainStructures)
+          error('At least one of the surface brain structure label in the CIfTI files cannot be found in those specified by the user. Please revise your specification.');    
+        end
+      end
+    end
+  end
+end
 
 fprintf('%30s\n','...done')  
 
@@ -398,10 +436,10 @@ switch iGXcalc,
         fprintf('%-40s: %30s','Calculating globals',' ')                %-#
         if spm_mesh_detect(VY)
             for i = 1:nScan
-                    str = sprintf('%3d/%-3d',i,nScan);
-                    fprintf('%s%30s',repmat(sprintf('\b'),1,30),str)            %-#
-                    dat = spm_data_read(VY(i));
-                    g(i) = mean(dat(~isnan(dat)));
+                str = sprintf('%3d/%-3d',i,nScan);
+                fprintf('%s%30s',repmat(sprintf('\b'),1,30),str)            %-#
+                dat = swe_data_read(VY(i));
+                g(i) = mean(dat(~isnan(dat)));
             end
         else
             for i = 1:nScan
@@ -632,7 +670,7 @@ end
 if strcmpi(file_ext,'.mat')
     type = 16; % assume that there is a nan representation
 else
-    type = getfield(spm_data_hdr_read(P{1,1}),'dt')*[1,0]';
+    type = getfield(swe_data_hdr_read(P{1,1}),'dt')*[1,0]';
 end
 if ~spm_type(type,'nanrep')
     M_I = job.masking.im;  % Implicit mask ?
@@ -658,7 +696,7 @@ else
             error('The explicit mask is not in ".mat" format as expected.')
         end
     else
-        VM = spm_data_hdr_read(char(job.masking.em));
+        VM = swe_data_hdr_read(char(job.masking.em));
     end
     xsM.Explicit_masking = 'Yes';
 end
@@ -767,10 +805,15 @@ if isfield(job.WB, 'WB_yes')
           if isMat
               error('TFCE is not currently available for ''.mat'' input.')
           end
-          % Error if '.mat' input.
+          % Error if '.gii' input.
           if spm_mesh_detect(VY)
               error('TFCE is not currently available for surface data input.')
           end
+
+        % Error if CIfTI input.
+        if isCifti
+            error('TFCE is not currently available for CIfTI data input.')
+        end
           
   end
   
@@ -839,7 +882,7 @@ if ~spm('CmdLine')
     if strcmpi(file_ext,'.mat')
         fname = cellstr(repmat('  ', nScan, 1));
     else
-    	fname = cat(1,{SwE.xY.VY.fname}');
+      fname = cat(1,{SwE.xY.VY.fname}');
     end
     swe_DesRep('DesMtx',SwE.xX,fname,SwE.xsDes)
     fprintf('%30s\n','...done')                                         %-#

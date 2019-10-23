@@ -179,13 +179,13 @@ spm('Pointer','Watch');
 %-Extract filtered and whitened data from files
 %==========================================================================
 try
-    y = spm_data_read(SwE.xY.VY, 'xyz', XYZ);
+    y = swe_data_read(SwE.xY.VY, 'xyz', XYZ);
 catch
     try
         % remap files in SPM.xY.P if SPM.xY.VY is no longer valid
         %------------------------------------------------------------------
-        SwE.xY.VY = spm_data_hdr_read(SwE.xY.P);
-        y = spm_data_read(SwE.xY.VY, 'xyz', XYZ);
+        SwE.xY.VY = swe_data_hdr_read(SwE.xY.P);
+        y = swe_data_read(SwE.xY.VY, 'xyz', XYZ);
         
     catch
         % data has been moved or renamed
@@ -204,15 +204,15 @@ catch
                     spm('Pointer','Arrow');
                     return;
                 end
-                SwE.xY.VY = spm_data_hdr_read(SwE.xY.P);
+                SwE.xY.VY = swe_data_hdr_read(SwE.xY.P);
                 for i = 1:numel(SwE.xY.VY)
                     SwE.xY.VY(i).pinfo(1:2,:) = ...
                         SwE.xY.VY(i).pinfo(1:2,:)*SwE.xGX.gSF(i);
                 end
-                y = spm_data_read(SwE.xY.VY, 'xyz', XYZ);
+                y = swe_data_read(SwE.xY.VY, 'xyz', XYZ);
             case 'Search'
                 SwE.xY.VY = spm_check_filename(SwE.xY.VY);
-                y = spm_data_read(SwE.xY.VY, 'xyz', XYZ);
+                y = swe_data_read(SwE.xY.VY, 'xyz', XYZ);
             otherwise
                 y = [];
         end
@@ -228,7 +228,7 @@ XYZstr = sprintf(' at [%g, %g, %g]',xyz);
 
 %-Parameter estimates:   beta = xX.pKX*xX.K*y;
 %----------------------------------------------------------------------
-beta  = spm_data_read(SwE.Vbeta, 'xyz', XYZ);
+beta  = swe_data_read(SwE.Vbeta, 'xyz', XYZ);
 
 %-Compute residuals
 %--------------------------------------------------------------------------
@@ -265,11 +265,11 @@ for j = 1:size(Co,1)
                 weight = weight + weight';
             end
             weight = weight(tril(ones(size(Co,2)))==1);
-            Bcov = Bcov + weight * spm_data_read(SwE.Vcov_beta(it), 'xyz', XYZ);
+            Bcov = Bcov + weight * swe_data_read(SwE.Vcov_beta(it), 'xyz', XYZ);
         end
     end
 end
-CI    = spm_invTcdf(1-0.025,spm_data_read(SwE.xCon(Ic).Vedf, 'xyz', XYZ));
+CI    = spm_invTcdf(1-0.025,swe_data_read(SwE.xCon(Ic).Vedf, 'xyz', XYZ));
 
 spm('Pointer','Arrow');
 

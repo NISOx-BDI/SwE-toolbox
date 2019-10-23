@@ -62,7 +62,7 @@ function [p,F,f1,f2] = swe_Box_test()
     A2      = (k-1)*k*(k+1)*(k+2)/(6*df^2*(k^2+k-4));
     f2      = (f1+2)/(A2-A1^2);
     coeff   = df * (1-A1-f1/f2)/f1;
-    cov_vis = spm_data_read(SwE.Vcov_vis,'xyz',SwE.xVol.XYZ);
+    cov_vis = swe_data_read(SwE.Vcov_vis,'xyz',SwE.xVol.XYZ);
     p       = zeros(1,size(cov_vis,2));
     F       = zeros(1,size(cov_vis,2));
 
@@ -97,7 +97,7 @@ function [p,F,f1,f2] = swe_Box_test()
         'descrip',sprintf('CS_test F-scores'),...
         metadata{:});
     
-    CS_test_F = spm_data_hdr_write(CS_test_F);
+    CS_test_F = swe_data_hdr_write(CS_test_F);
     
     CS_test_p = struct(...
         'fname',  sprintf('swe_vox_Fstat-Box_lp%s', spm_file_ext),...
@@ -108,14 +108,14 @@ function [p,F,f1,f2] = swe_Box_test()
         'descrip',sprintf('CS_test p-values'),...
         metadata{:});
 
-    CS_test_p = spm_data_hdr_write(CS_test_p);
+    CS_test_p = swe_data_hdr_write(CS_test_p);
 
     tmp           = zeros(SwE.xVol.DIM');
     Q             = cumprod([1,SwE.xVol.DIM(1:2)'])*SwE.xVol.XYZ - ...
         sum(cumprod(SwE.xVol.DIM(1:2)'));
     tmp(Q)        = F;
-    spm_data_write(CS_test_F,tmp);
+    swe_data_write(CS_test_F,tmp);
     tmp(Q)        = p;
-    spm_data_write(CS_test_p,tmp);
+    swe_data_write(CS_test_p,tmp);
 
 end

@@ -26,8 +26,30 @@ function V = swe_data_hdr_write(fname, DIM, M, descrip, metadata, varargin)
     'pinfo',    [1 0 0]',...
     'descrip',  descrip,...
     metadata{:});
-
-  V = spm_data_hdr_write(V);
+  
+  if isfield(V, 'ciftiTemplate')
+    [~, sliceInd] = swe_get_file_extension(V.ciftiTemplate);
+    if isempty(sliceInd)
+      sourceName = V.ciftiTemplate;
+    else
+      sourceName = V.ciftiTemplate(1:( end - numel(sliceInd) ));
+    end
+    % make sure we select only one slice
+    V = swe_data_hdr_read(sprintf('%s,1',sourceName));
+    V.fname = fname;
+    V.descrip = descrip;
+    V.private.dat.fname = fname;
+    V.private.dat = file_array(fname,...
+                                 [1,1,1,1,1,V.dim(1)],...
+                                 V.private.dat.dtype,...
+                                 0,...
+                                 1,...
+                                 0);
+    V.private.dat(:) = NaN;
+    create(V.private);
+  else
+    V = spm_data_hdr_write(V);
+  end
       
 end
   
