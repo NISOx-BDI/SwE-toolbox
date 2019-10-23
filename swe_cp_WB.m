@@ -718,17 +718,30 @@ if ~isMat
   if WB.clusterWise == 1
       
     % We also need cluster p value maps here.
+    V_clustere_pos = swe_data_hdr_write(sprintf('swe_clustere_%cstat_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+                                           sprintf('Cluster extent (positive, CFT %g).',...
+                                                   SwE.WB.clusterInfo.primaryThreshold), metadata);
     VlP_wb_clusterFWE_pos = swe_data_hdr_write(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
                                            sprintf('Non-parametric clusterwise FWE -log10(P) value data (positive, CFT %g).',...
                                                    SwE.WB.clusterInfo.primaryThreshold), metadata);
     
     if WB.stat=='T'
+      V_clustere_neg = swe_data_hdr_write(sprintf('swe_clustere_%cstat_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+                                          sprintf('Cluster extent (negative, CFT %g).',...
+                                                   SwE.WB.clusterInfo.primaryThreshold), metadata);
+
       VlP_wb_clusterFWE_neg = swe_data_hdr_write(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
                                              sprintf('Non-parametric clusterwise FWE -log10(P) value data (negative, CFT %g).',...
                                                      SwE.WB.clusterInfo.primaryThreshold), metadata);
     end
 
     if isCifti
+      V_normCluster_pos = swe_data_hdr_write(sprintf('swe_clusternorm_%cstat_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+              sprintf('Box-Cox normalised cluster size 1 (positive, CFT %g).',...
+              SwE.WB.clusterInfo.primaryThreshold), metadata);
+      V_normCluster_pos2 = swe_data_hdr_write(sprintf('swe_clusternorm2_%cstat_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+              sprintf('Box-Cox normalised cluster size 2 (positive, CFT %g).',...
+              SwE.WB.clusterInfo.primaryThreshold), metadata);
       VlP_wb_normClusterFWE_pos = swe_data_hdr_write(sprintf('swe_clusternorm_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
               sprintf('Non-parametric normalised clusterwise FWE -log10(P) value data (positive, CFT %g).',...
               SwE.WB.clusterInfo.primaryThreshold), metadata);
@@ -737,12 +750,18 @@ if ~isMat
               SwE.WB.clusterInfo.primaryThreshold), metadata);
 
       if WB.stat=='T'
-      VlP_wb_normClusterFWE_neg = swe_data_hdr_write(sprintf('swe_clusternorm_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+        V_normCluster_neg = swe_data_hdr_write(sprintf('swe_clusternorm_%cstat_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+              sprintf('Box-Cox normalised cluster size 1 (negative, CFT %g).',...
+              SwE.WB.clusterInfo.primaryThreshold), metadata);
+        V_normCluster_neg2 = swe_data_hdr_write(sprintf('swe_clusternorm2_%cstat_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+              sprintf('Box-Cox normalised cluster size 2 (negative, CFT %g).',...
+              SwE.WB.clusterInfo.primaryThreshold), metadata);
+        VlP_wb_normClusterFWE_neg = swe_data_hdr_write(sprintf('swe_clusternorm_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
               sprintf('Non-parametric normalised clusterwise FWE -log10(P) value data (negative, CFT %g).',...
-                      SwE.WB.clusterInfo.primaryThreshold), metadata);
-      VlP_wb_normClusterFWE_neg2 = swe_data_hdr_write(sprintf('swe_clusternorm2_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+              SwE.WB.clusterInfo.primaryThreshold), metadata);
+        VlP_wb_normClusterFWE_neg2 = swe_data_hdr_write(sprintf('swe_clusternorm2_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
               sprintf('Non-parametric normalised2 clusterwise FWE -log10(P) value data (negative, CFT %g).',...
-                      SwE.WB.clusterInfo.primaryThreshold), metadata);
+              SwE.WB.clusterInfo.primaryThreshold), metadata);
       end
     end
   end
@@ -2693,11 +2712,15 @@ else
     tmp2 = -log10(clusterFwerP_pos_perCluster);
     
     tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
+    tmp4 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
     for iC = 1:SwE.WB.clusterInfo.nCluster
       tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = tmp2(iC);
+      tmp4(SwE.WB.clusterInfo.clusterAssignment == iC) = SwE.WB.clusterInfo.clusterSize(iC);
     end
     tmp(Q) = tmp3;
     swe_data_write(VlP_wb_clusterFWE_pos, tmp);
+    tmp(Q) = tmp4;
+    swe_data_write(V_clustere_pos, tmp);
 
     if isCifti
       normClusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
@@ -2712,19 +2735,27 @@ else
       end
       tmp2 = -log10(normClusterFwerP_pos_perCluster);   
       tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
+      tmp4 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
       for iC = 1:SwE.WB.clusterInfo.nCluster
         tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = tmp2(iC);
+        tmp4(SwE.WB.clusterInfo.clusterAssignment == iC) = SwE.WB.clusterInfo.clusterSize_norm(iC);
       end
       tmp(Q) = tmp3;
       swe_data_write(VlP_wb_normClusterFWE_pos, tmp);
+      tmp(Q) = tmp4;
+      swe_data_write(V_normCluster_pos, tmp);
 
       tmp2 = -log10(normClusterFwerP_pos_perCluster2);   
       tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
+      tmp4 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
       for iC = 1:SwE.WB.clusterInfo.nCluster
         tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = tmp2(iC);
+        tmp4(SwE.WB.clusterInfo.clusterAssignment == iC) = SwE.WB.clusterInfo.clusterSize_norm2(iC);
       end
       tmp(Q) = tmp3;
       swe_data_write(VlP_wb_normClusterFWE_pos2, tmp);
+      tmp(Q) = tmp4;
+      swe_data_write(V_normCluster_pos2, tmp);
     end
     if WB.stat =='T'
       Q = cumprod([1,SwE.xVol.DIM(1:2)']) * SwE.WB.clusterInfo.LocActivatedVoxelsNeg - ...
@@ -2741,11 +2772,15 @@ else
       tmp2 = -log10(clusterFwerP_neg_perCluster);
       
       tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg, 2));
+      tmp4 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg, 2));
       for iC = 1:SwE.WB.clusterInfo.nClusterNeg
         tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = tmp2(iC);
+        tmp4(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = SwE.WB.clusterInfo.clusterSizeNeg(iC);
       end
       tmp(Q) = tmp3;
       swe_data_write(VlP_wb_clusterFWE_neg, tmp);
+      tmp(Q) = tmp4;
+      swe_data_write(V_clustere_neg, tmp);
       if isCifti
         normClusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
         normClusterFwerP_neg_perCluster2 = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
@@ -2759,19 +2794,27 @@ else
         end
         tmp2 = -log10(normClusterFwerP_neg_perCluster);
         tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
+        tmp4 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
         for iC = 1:SwE.WB.clusterInfo.nClusterNeg
           tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = tmp2(iC);
+          tmp4(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = SwE.WB.clusterInfo.clusterSizeNeg_norm(iC);
         end
         tmp(Q) = tmp3;
         swe_data_write(VlP_wb_normClusterFWE_neg, tmp);
+        tmp(Q) = tmp4;
+        swe_data_write(V_normCluster_neg, tmp);
 
         tmp2 = -log10(normClusterFwerP_neg_perCluster2);
         tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
+        tmp4 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
         for iC = 1:SwE.WB.clusterInfo.nClusterNeg
           tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = tmp2(iC);
+          tmp4(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = SwE.WB.clusterInfo.clusterSizeNeg_norm2(iC);
         end
         tmp(Q) = tmp3;
         swe_data_write(VlP_wb_normClusterFWE_neg2, tmp);
+        tmp(Q) = tmp4;
+        swe_data_write(V_normCluster_neg2, tmp);
       end
     end
   end
