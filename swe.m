@@ -11,7 +11,7 @@ function varargout = swe(varargin)
 % Written by Bryan Guillaume
 % Version Info:  $Format:%ci$ $Format:%h$
 
-versionNo = '2.1.1';
+versionNo = '2.2.0.rc';
 
 try
   Modality = spm_get_defaults('modality');
@@ -59,7 +59,7 @@ switch lower(Action)
         %==================================================================
     case 'asciiwelcome'                          %-ASCII swe banner welcome
         %==================================================================
-        a = generateAscii(['SwE v' versionNo]);
+        a = generateAscii(['SwE v' replace(versionNo,'.rc','')]);
         fprintf('%s \n', a{1}, a{2}, a{3}, a{4});
         fprintf('swe v%s \n', versionNo);
   
