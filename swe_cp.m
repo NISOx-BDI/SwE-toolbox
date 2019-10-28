@@ -703,7 +703,7 @@ if ~isMat
         %-Estimation of the data variance-covariance components (modified SwE) 
         %-SwE estimation (classic version)
         %--------------------------------------------------------------
-        c = NaN(numel(chunk),1);
+        c = zeros(numel(chunk),1);
 
         if isfield(SwE.type,'modified')
             Cov_vis=zeros(nCov_vis,CrS);
@@ -786,7 +786,7 @@ if ~isMat
 
       %-Write output files
       %======================================================================
-      c = NaN(numel(chunk),1);
+      c = zeros(numel(chunk),1);
 
       %-Write mask file
       %----------------------------------------------------------------------
@@ -979,7 +979,7 @@ else % matrix input
             end
         else % else for "if isfield(SwE.type,'modified')"
             if dof_type == 1 %need to save all subject contributions...
-                crCov_beta_i =  NaN(nSubj,nCov_beta,CrS);
+                crCov_beta_i =  zeros(nSubj,nCov_beta,CrS);
             end
             crCov_beta = 0;
             for i = 1:nSubj
@@ -998,7 +998,7 @@ else % matrix input
             switch dof_type 
                 case 1
                     crCov_beta = zeros(nCov_beta,CrS); % initialize SwE for the plane
-                    crCov_beta_i =  NaN(nGr,nCov_beta,CrS);
+                    crCov_beta_i =  zeros(nGr,nCov_beta,CrS);
                     for g = 1:nGr
                         crCov_beta_i(g,:,:) = weight(:,iGr_Cov_vis_g==g) * crCov_vis(iGr_Cov_vis_g==g,:);                
                         Cov_beta = Cov_beta + crCov_beta_i(g,:,:);
@@ -1018,25 +1018,25 @@ else % matrix input
     save(sprintf('swe_vox_mask%s',file_ext), 'mask');
     clear mask
 
-    beta = NaN(nBeta, nVox);
+    beta = zeros(nBeta, nVox);
     beta(:,cmask) = crBeta;
     save(sprintf('swe_vox_beta_b%s',file_ext), 'beta');
     clear beta crBeta
 
     if isfield(SwE.type,'modified')
-        cov_vis = NaN(nCov_vis, nVox);
+        cov_vis = zeros(nCov_vis, nVox);
         cov_vis(:,cmask) = crCov_vis;
         save(sprintf('swe_vox_cov_vv%s',file_ext), 'cov_vis');
         clear cov_vis crCov_vis
     end
 
-    cov_beta = NaN(nCov_beta, nVox);
+    cov_beta = zeros(nCov_beta, nVox);
     cov_beta(:,cmask) = crCov_beta;
     save(sprintf('swe_vox_cov%s',file_ext), 'cov_beta');
     clear cov_beta crCov_beta
     if dof_type == 1
         nGr = nSubj;
-        cov_beta_g = NaN(nGr, nCov_beta, nVox);
+        cov_beta_g = zeros(nGr, nCov_beta, nVox);
         cov_beta_g(:,:,cmask) = crCov_beta_i;
         save(sprintf('swe_vox_cov_g_bb%s',file_ext), 'cov_beta_g');
         clear cov_beta_g crCov_beta_i
