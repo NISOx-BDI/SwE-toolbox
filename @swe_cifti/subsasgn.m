@@ -379,7 +379,7 @@ if isa(val,'file_array')
                 val.offset    = max(sval.offset,352);
                 obj.hdr.magic = ['n+1' char(0)];
             end
-        case {'.dtseries.nii','.dtscalar.nii'}
+        case {'.dtseries.nii','.dscalar.nii'}
             if isfield(obj.hdr,'ext')
               offset = 544 + obj.hdr.ext.esize;
             else
