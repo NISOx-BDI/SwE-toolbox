@@ -47,6 +47,17 @@ function V = swe_data_hdr_write(fname, DIM, M, descrip, metadata, varargin)
                                  1,...
                                  0);
     V.n = [1 1];
+    % modify the xml if the number of point is > 1 
+    xml = char(V.private.hdr.ext.edata(:)');
+    ind = strfind(xml, 'NumberOfSeriesPoints="');
+    if ~isempty(ind)
+      ind  = ind  + numel('NumberOfSeriesPoints="');
+      xml(ind) = '1';
+      while ~strcmp(xml(ind+1), '"')
+        xml(ind+1) = [];
+      end
+    end
+    V.private.hdr.ext.edata = uint8(xml)';
     
     create(V.private)    
     V.private.dat(:) = 0;
