@@ -83,6 +83,15 @@ if sts
             sts = false;
         end
     end
+
+    if isfield(hdr, 'ext')
+      % write the XML file
+      fwrite(fp, [1 0 0 0], 'uint8');
+      len1 = fwrite(fp, hdr.ext.esize, 'int32');
+      len2 = fwrite(fp, hdr.ext.ecode, 'int32');
+      len3 = fwrite(fp, hdr.ext.edata, 'char');
+      len4 = fwrite(fp, zeros(1, hdr.ext.esize - 8 - numel(hdr.ext.edata)), 'uint8');
+    end
     fclose(fp);
 end
 
