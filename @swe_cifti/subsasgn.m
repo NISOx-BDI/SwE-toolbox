@@ -363,7 +363,7 @@ if isa(val,'file_array')
         error(['Unknown datatype (' num2str(double(sval.dtype)) ').']);
     end
 
-    [pth,nam,suf] = fileparts(sval.fname);
+    suf = swe_get_file_extension(sval.fname);
     switch suf
         case {'.img','.IMG'}
             val.offset        = max(sval.offset,0);
@@ -380,6 +380,10 @@ if isa(val,'file_array')
                 val.offset    = max(sval.offset,352);
                 obj.hdr.magic = ['n+1' char(0)];
             end
+        case {'.dtseries.nii','.dtscalar.nii'}
+            hdr = read_hdr_raw(sval.fname);
+            val.offset    = max(sval.offset, 544 + hdr.ext.esize);
+            obj.hdr.magic = ['n+2' char(0) sprintf('\r\n\032\n')];
         otherwise
             error(['Unknown filename extension (' suf ').']);
     end
