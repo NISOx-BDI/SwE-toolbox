@@ -324,7 +324,6 @@ case {'.'}
             end
 
         case {'hdr'}
-            error('hdr is a read-only field.');
             obj.hdr = val1;
 
         otherwise
