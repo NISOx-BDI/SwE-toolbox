@@ -1,4 +1,4 @@
-function V = swe_data_hdr_read(P)
+function V = swe_data_hdr_read(P, varargin)
   % Read data information from file(s)
   % FORMAT V = spm_data_hdr_read(P)
   % P        - a char or cell array of filenames
@@ -12,6 +12,13 @@ function V = swe_data_hdr_read(P)
   P2 = cellstr(P);
   file_ext = swe_get_file_extension(P2{1});
   isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dscalar.nii');
+
+  if nargin > 1
+    readExt = varargin{1};
+  else
+    readExt = false;
+  end
+
   if isCifti
     it = 1;
     for i=1:numel(P2)
@@ -25,7 +32,7 @@ function V = swe_data_hdr_read(P)
         P2{i} = P2{i}(1:(end-numel(sliceInd)));
       end
       
-      ciftiObject = swe_cifti(P2{i}, false);
+      ciftiObject = swe_cifti(P2{i}, readExt);
       
       if isempty(sliceInd)
         sliceInd = 1:ciftiObject.dat.dim(5);
