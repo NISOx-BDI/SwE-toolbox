@@ -34,11 +34,11 @@ function V = swe_data_hdr_write(fname, DIM, M, descrip, metadata, varargin)
     else
       sourceName = V.ciftiTemplate(1:( end - numel(sliceInd) ));
     end
+    
     % make sure we select only one slice
-    copyfile(sourceName, fname);
-    V = swe_data_hdr_read(fname);
+    V = swe_data_hdr_read(sprintf('%s,1', sourceName), true);
+
     V.fname = fname;
-    V.descrip = descrip;
     V.private.dat.fname = fname;
     V.private.dat = file_array(fname,...
                                  [1,1,1,1,1,V.dim(1)],...
@@ -46,7 +46,12 @@ function V = swe_data_hdr_write(fname, DIM, M, descrip, metadata, varargin)
                                  0,...
                                  1,...
                                  0);
-    V.private.dat(:) = NaN;
+    V.n = [1 1];
+    
+    create(V.private)    
+    V.private.dat(:) = 0;
+    V = swe_data_hdr_read(fname, false);
+    V.descrip = descrip;
   else
     V = spm_data_hdr_write(V);
   end
