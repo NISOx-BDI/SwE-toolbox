@@ -324,7 +324,6 @@ case {'.'}
             end
 
         case {'hdr'}
-            error('hdr is a read-only field.');
             obj.hdr = val1;
 
         otherwise
@@ -363,7 +362,7 @@ if isa(val,'file_array')
         error(['Unknown datatype (' num2str(double(sval.dtype)) ').']);
     end
 
-    [pth,nam,suf] = fileparts(sval.fname);
+    suf = swe_get_file_extension(sval.fname);
     switch suf
         case {'.img','.IMG'}
             val.offset        = max(sval.offset,0);
@@ -380,6 +379,15 @@ if isa(val,'file_array')
                 val.offset    = max(sval.offset,352);
                 obj.hdr.magic = ['n+1' char(0)];
             end
+        case {'.dtseries.nii','.dscalar.nii'}
+            if isfield(obj.hdr,'ext')
+              offset = 544 + obj.hdr.ext.esize;
+            else
+              hdr = read_hdr_raw(sval.fname);
+              offset = 544 + hdr.ext.esize;
+            end
+            val.offset    = max(sval.offset, offset);
+            obj.hdr.magic = ['n+2' char(0) sprintf('\r\n\032\n')];
         otherwise
             error(['Unknown filename extension (' suf ').']);
     end

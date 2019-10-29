@@ -174,7 +174,7 @@ for i = 1:length(Ic)
                                                   metadata);
               %-Write image
               %------------------------------------------------------
-              tmp = NaN(SwE.xVol.DIM');
+              tmp = zeros(SwE.xVol.DIM');
               tmp(Q) = cBeta;
               xCon(ic).Vcon = swe_data_write(xCon(ic).Vcon, tmp);
               
@@ -282,9 +282,9 @@ for i = 1:length(Ic)
 
         str   = 'spm computation';
         swe_progress_bar('Init',100,str,'');
-        equivalentScore = nan(1,S);
+        equivalentScore = zeros(1,S);
         % add output of uncorrected p-values
-        uncP            = nan(1,S);
+        uncP            = zeros(1,S);
         switch(xCon(ic).STAT)
             case 'T'                                 %-Compute spm{t} image
                 %----------------------------------------------------------
@@ -474,9 +474,9 @@ for i = 1:length(Ic)
                     % corrected on 12/05/15 by BG
                     score = score.^2;                 
                 else
-                    score   = nan(1,S);
+                    score   = zeros(1,S);
                     if dof_type ~= 0
-                        edf = nan(1,S);
+                        edf = zeros(1,S);
                     end
                     if dof_type == 2
                         CovcCovBc = 0;
@@ -713,7 +713,7 @@ for i = 1:length(Ic)
                                                 sprintf('SwE effective degrees of freedom - %d: %s',ic,xCon(ic).name),...
                                                 metadata);
 
-            tmp = NaN(SwE.xVol.DIM');
+            tmp = zeros(SwE.xVol.DIM');
             tmp(Q) = edf;
             xCon(ic).Vedf = swe_data_write(xCon(ic).Vedf,tmp);
           end

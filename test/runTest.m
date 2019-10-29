@@ -171,9 +171,9 @@ function mapsEqual = verifyMapsUnchanged(porwb, inftype, torf, matorimg)
 
 		end
 
-		% Remove NaN values
-		file = file(~isnan(file));
-		gt_file = gt_file(~isnan(gt_file));
+		% Remove NaN and zero values
+		file = file(~isnan(file) & file ~= 0);
+		gt_file = gt_file(~isnan(gt_file) & gt_file ~= 0);
 		
 		% Check whether the remaining values are equal.
 		%

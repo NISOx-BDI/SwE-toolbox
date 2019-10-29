@@ -34,10 +34,11 @@ function V = swe_data_hdr_write(fname, DIM, M, descrip, metadata, varargin)
     else
       sourceName = V.ciftiTemplate(1:( end - numel(sliceInd) ));
     end
+    
     % make sure we select only one slice
-    V = swe_data_hdr_read(sprintf('%s,1',sourceName));
+    V = swe_data_hdr_read(sprintf('%s,1', sourceName), true);
+
     V.fname = fname;
-    V.descrip = descrip;
     V.private.dat.fname = fname;
     V.private.dat = file_array(fname,...
                                  [1,1,1,1,1,V.dim(1)],...
@@ -45,11 +46,25 @@ function V = swe_data_hdr_write(fname, DIM, M, descrip, metadata, varargin)
                                  0,...
                                  1,...
                                  0);
-    V.private.dat(:) = NaN;
-    create(V.private);
+    V.n = [1 1];
+    % modify the xml if the number of point is > 1 
+    xml = char(V.private.hdr.ext.edata(:)');
+    ind = strfind(xml, 'NumberOfSeriesPoints="');
+    if ~isempty(ind)
+      ind  = ind  + numel('NumberOfSeriesPoints="');
+      xml(ind) = '1';
+      while ~strcmp(xml(ind+1), '"')
+        xml(ind+1) = [];
+      end
+    end
+    V.private.hdr.ext.edata = uint8(xml)';
+    
+    create(V.private)    
+    V.private.dat(:) = 0;
+    V = swe_data_hdr_read(fname, false);
+    V.descrip = descrip;
   else
     V = spm_data_hdr_write(V);
   end
       
 end
-  
