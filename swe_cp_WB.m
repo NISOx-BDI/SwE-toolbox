@@ -2428,24 +2428,26 @@ end
 %==========================================================================
 if isMat
   uncP = uncP / (WB.nB + 1);
-  uncP_pos = zeros(1, nVox);
-  uncP_pos(:,cmask) = uncP;
-  VlP_wb_pos = -log10(uncP);
+  VlP_wb_pos = zeros(1, nVox);
+  VlP_wb_pos(:,cmask) = -log10(uncP);
   save(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 1, file_ext), 'VlP_wb_pos');
   clear VlP_wb_pos
   
   if WB.stat == 'T'
-    uncP_neg = 1 + 1/(WB.nB + 1) - uncP_pos;
-    VlP_wb_neg = -log10(uncP_neg);
+    uncP_neg = 1 + 1/(WB.nB + 1) - uncP;
+    VlP_wb_neg = zeros(1, nVox);
+    VlP_wb_neg(:,cmask) = -log10(uncP_neg);
     save(sprintf('swe_vox_%cstat_lp-WB_c%02d%s', WB.stat, 2, file_ext), 'VlP_wb_neg');
     clear VlP_wb_neg
     
-    VZ_wb = swe_invNcdf(1 - uncP);
+    VZ_wb = zeros(1, nVox);
+    VZ_wb(:,cmask) = swe_invNcdf(1 - uncP);
     save(sprintf('swe_vox_z%cstat-WB_c%02d%s', WB.stat, 1, file_ext), 'VZ_wb');
     clear VZ_wb
     
   else
-      
+    
+    VX_wb = zeros(1, nVox);
     VX_wb = spm_invXcdf(1 - uncP,1);
     save(sprintf('swe_vox_x%cstat-WB_c%02d%s', WB.stat, 1, file_ext), 'VX_wb');
     clear VX_wb
@@ -2466,9 +2468,8 @@ if isMat
     FWERP = FWERP + (maxScore(b+1) > originalScore - tol);
   end
   FWERP = FWERP / (WB.nB + 1);
-  fwerP_pos = zeros(1, nVox);
-  fwerP_pos(:,cmask) = FWERP;
-  VlP_wb_FWE_pos = -log10(fwerP_pos);
+  VlP_wb_FWE_pos = zeros(1, nVox);
+  VlP_wb_FWE_pos(:,cmask) = -log10(FWERP);
   save(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s',WB.stat,1,file_ext), 'VlP_wb_FWE_pos');
   clear VlP_wb_FWE_pos fwerP_pos FWERP
   
@@ -2484,9 +2485,8 @@ if isMat
       FWERPNeg = FWERPNeg + (minScore(b+1) < originalScore + tol);
     end
     FWERPNeg = FWERPNeg / (WB.nB + 1);
-    fwerP_neg = zeros(1, nVox);
-    fwerP_neg(:,cmask) = FWERPNeg;
-    VlP_wb_FWE_neg = -log10(fwerP_neg);
+    VlP_wb_FWE_neg = zeros(1, nVox);
+    VlP_wb_FWE_neg(:,cmask) = -log10(FWERPNeg);
     save(sprintf('swe_vox_%cstat_lpFWE-WB_c%02d%s',WB.stat,2,file_ext), 'VlP_wb_FWE_neg');
     clear VlP_wb_FWE_neg fwerP_neg
   end
@@ -2499,9 +2499,8 @@ if isMat
   catch
     fdrP = spm_P_FDR(uncP,[],'P',[],sort(uncP)');
   end
-  fdrP_pos = zeros(1, nVox);
-  fdrP_pos(:,cmask) = fdrP;
-  VlP_wb_FDR_pos = -log10(fdrP_pos);
+  VlP_wb_FDR_pos = zeros(1, nVox);
+  VlP_wb_FDR_pos(:,cmask) = -log10(fdrP);
   save(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s',WB.stat,1,file_ext), 'VlP_wb_FDR_pos');
   clear VlP_wb_FDR_pos fdrP_pos fdrP
   
@@ -2511,9 +2510,8 @@ if isMat
     catch
       fdrP = spm_P_FDR(1 + 1/(WB.nB + 1) - uncP,[],'P',[],sort(1 + 1/(WB.nB + 1) - uncP)');
     end
-    fdrP_neg = zeros(1, nVox);
-    fdrP_neg(:,cmask) = fdrP;
-    VlP_wb_FDR_neg = -log10(fdrP_neg);
+    VlP_wb_FDR_neg = zeros(1, nVox);
+    VlP_wb_FDR_neg(:,cmask) = -log10(fdrP);
     save(sprintf('swe_vox_%cstat_lpFDR-WB_c%02d%s',WB.stat,2,file_ext), 'VlP_wb_FDR_neg');
     clear VlP_wb_FDR_neg fdrP_neg fdrP
   end
@@ -2531,22 +2529,21 @@ if isMat
       clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster / (WB.nB + 1);
     end
     
-    clusterFwerP_pos_perElement = zeros(1, nVox);
+    VlP_wb_clusterFWE_pos = zeros(1, nVox);
     if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')      
       tmp = find(cmask);
       tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
       for iC = 1:SwE.WB.clusterInfo.nCluster
         tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = clusterFwerP_pos_perCluster(iC);
       end
-      clusterFwerP_pos_perElement(tmp(activatedVoxels)) = tmp3;
+      VlP_wb_clusterFWE_pos(tmp(activatedVoxels)) = -log10(tmp3);
     else
       tmp3 = zeros(1, sum(SwE.WB.clusterInfo.LocActivatedVoxels));
       for iC = 1:SwE.WB.clusterInfo.nCluster
         tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = clusterFwerP_pos_perCluster(iC);
       end
-      clusterFwerP_pos_perElement(SwE.WB.clusterInfo.LocActivatedVoxels) = tmp3;
+      VlP_wb_clusterFWE_pos(SwE.WB.clusterInfo.LocActivatedVoxels) = -log10(tmp3);
     end
-    VlP_wb_clusterFWE_pos  = -log10(clusterFwerP_pos_perElement);
     save(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s',WB.stat,1,file_ext), 'VlP_wb_clusterFWE_pos');
     
     if WB.stat =='T'
@@ -2559,22 +2556,21 @@ if isMat
         clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster / (WB.nB + 1);
       end
       
-      clusterFwerP_neg_perElement = zeros(1, nVox);
+      VlP_wb_clusterFWE_neg = zeros(1, nVox);
       if ~isMat || isfield(SwE.WB.clusterInfo, 'Vxyz')
         tmp = find(cmask);
         tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
         for iC = 1:SwE.WB.clusterInfo.nClusterNeg
           tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = clusterFwerP_neg_perCluster(iC);
         end
-      clusterFwerP_neg_perElement(tmp(activatedVoxelsNeg)) = tmp3;
+      VlP_wb_clusterFWE_neg(tmp(activatedVoxelsNeg)) = -log10(tmp3);
       else
         tmp3 = zeros(1, sum(SwE.WB.clusterInfo.LocActivatedVoxelsNeg));
         for iC = 1:SwE.WB.clusterInfo.nClusterNeg
           tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = clusterFwerP_neg_perCluster(iC);
         end
-        clusterFwerP_neg_perElement(SwE.WB.clusterInfo.LocActivatedVoxelsNeg) = tmp3;
+        VlP_wb_clusterFWE_neg(SwE.WB.clusterInfo.LocActivatedVoxelsNeg) = -log10(tmp3);
       end
-      VlP_wb_clusterFWE_neg  = -log10(clusterFwerP_neg_perElement);
       save(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s',WB.stat,2,file_ext), 'VlP_wb_clusterFWE_neg');
     end
   end
