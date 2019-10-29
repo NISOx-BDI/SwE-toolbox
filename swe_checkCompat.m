@@ -46,7 +46,8 @@ function swe_checkCompat(matVer, tbVer)
     earliestCompatVer('2.1.0') = '2.0.0';
     earliestCompatVer('2.1.1') = '2.0.0';
     earliestCompatVer('2.2.0.rc') = '2.0.0';
- 
+    earliestCompatVer('2.2.0.rc2') = '2.0.0';
+
     % The below line works out the latest compatible version from the
     % earliest compatible versions. This code is now redundant but may be
     % useful in future so has been left in place. Tom Maullin (09/11/2018)
