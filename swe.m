@@ -59,7 +59,9 @@ switch lower(Action)
         %==================================================================
     case 'asciiwelcome'                          %-ASCII swe banner welcome
         %==================================================================
-        a = generateAscii(['SwE v' replace(versionNo,'.rc','')]);
+        tmp = replace(versionNo,'.rc2','');
+        tmp = replace(tmp,'.rc','');
+        a = generateAscii(['SwE v' tmp]);
         fprintf('%s \n', a{1}, a{2}, a{3}, a{4});
         fprintf('swe v%s \n', versionNo);
   
