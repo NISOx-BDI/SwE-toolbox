@@ -11,7 +11,7 @@ function varargout = swe(varargin)
 % Written by Bryan Guillaume
 % Version Info:  $Format:%ci$ $Format:%h$
 
-versionNo = '2.2.0.rc';
+versionNo = '2.2.0.rc2';
 
 try
   Modality = spm_get_defaults('modality');
