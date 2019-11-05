@@ -57,6 +57,21 @@ function V = swe_data_hdr_write(fname, DIM, M, descrip, metadata, varargin)
         xml(ind+1) = [];
       end
     end
+
+    % modify the xml if there is more than one <NamedMap>
+    ind = strfind(xml, '<NamedMap>');
+    if numel(ind > 1)
+      ind2 = strfind(xml,'</NamedMap>');
+      sliceInd = str2num(sliceInd);
+      % remove the <NamedMap>'s after the selected slice unless this is the last
+      if sliceInd ~= numel(ind)
+        xml(ind(sliceInd+1):(ind2(end) + numel('</NamedMap>'))) = [];
+      end
+      % remove the <NamedMap>'s before the selected slice unless this is the first
+      if sliceInd ~= 1
+        xml(ind(1):(ind2(sliceInd-1) + numel('</NamedMap>'))) = [];
+      end
+    end
     V.private.hdr.ext.edata = uint8(xml)';
     
     create(V.private)    
