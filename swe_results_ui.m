@@ -436,9 +436,9 @@ switch lower(Action), case 'setup'                         %-Set up results
           hMax{it} = spm_mesh_render('Register', hMax{it}, hReg);
           % if we can detect left or right, indicate it
           if contains(SwE.cifti.surfaces{i}.brainStructure, 'left', 'IgnoreCase', true)
-            str{it} = sprintf('SL: %s', SwE.cifti.surfaces{i}.brainStructure);
+            str{it} = sprintf('S_L: %s', SwE.cifti.surfaces{i}.brainStructure);
           elseif contains(SwE.cifti.surfaces{i}.brainStructure, 'right', 'IgnoreCase', true)
-            str{it} = sprintf('SR: %s', SwE.cifti.surfaces{i}.brainStructure);
+            str{it} = sprintf('S_R: %s', SwE.cifti.surfaces{i}.brainStructure);
           else
             str{it} = sprintf('S%i: %s', it, SwE.cifti.surfaces{i}.brainStructure);
           end
