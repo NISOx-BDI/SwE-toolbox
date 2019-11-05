@@ -9,6 +9,15 @@ function [A, clusterSizesInSurfaces, clusterSizesInVolume] = swe_cifti_clusters(
   % Version Info:  $Format:%ci$ $Format:%h$
   A = zeros(1, numel(indSurvivingInCifti));
   clusterSizesInSurfaces = [];
+  clusterSizesInVolume = [];
+
+  % for retro-compatibility
+  if isfield(ciftiInformation, 'isClusConstrainedInVolROI')
+    isClusConstrainedInVolROI = ciftiInformation.isClusConstrainedInVolROI;
+  else
+    isClusConstrainedInVolROI = false;
+  end
+
   if numel(ciftiInformation.surfaces) > 0
     for i = 1:numel(ciftiInformation.surfaces)
       % work out the position of the surviving vertices for this surface
@@ -36,7 +45,7 @@ function [A, clusterSizesInSurfaces, clusterSizesInVolume] = swe_cifti_clusters(
     end
   end
   % deal with volumetric data
-  if numel(ciftiInformation.volume) > 0
+  if ~isClusConstrainedInVolROI && numel(ciftiInformation.volume) > 0
     % work out the position of the surviving voxels
     [isSurviving, indInA] = ismember(ciftiInformation.volume.indices, indSurvivingInCifti);
     indInA = indInA(isSurviving);
@@ -45,7 +54,18 @@ function [A, clusterSizesInSurfaces, clusterSizesInVolume] = swe_cifti_clusters(
     A(indInA) = tmp + max(A);
     nClusters = max(tmp);
     clusterSizesInVolume = histc(tmp,1:nClusters);
-  else
-    clusterSizesInVolume = [];
+  end
+  if isClusConstrainedInVolROI && isfield(ciftiInformation, 'volumes') && numel(ciftiInformation.volumes) > 0
+    for i = 1:numel(ciftiInformation.volumes)
+      % work out the position of the surviving voxels
+      indicesVolInCifti = (ciftiInformation.volumes{i}.off + 1):(ciftiInformation.volumes{i}.off + size(ciftiInformation.volumes{i}.iV, 2));
+      [isSurviving, indInA] = ismember(indicesVolInCifti, indSurvivingInCifti);
+      indInA = indInA(isSurviving);
+      inMask_vol_XYZ = ciftiInformation.volumes{i}.iV(:, isSurviving);
+      tmp = spm_clusters(inMask_vol_XYZ);
+      A(indInA) = tmp + max(A);
+      nClusters = max(tmp);
+      clusterSizesInVolume = [clusterSizesInVolume, histc(tmp,1:nClusters)];
+    end
   end
 end
