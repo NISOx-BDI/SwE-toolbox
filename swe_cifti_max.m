@@ -150,39 +150,6 @@ function [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm, brainStructureShor
     end
   end
   if isClusConstrainedInVolROI && isfield(ciftiInformation, 'volumes') && numel(ciftiInformation.volumes) > 0
-    ciftiVolumeLabels = {...
-      'CIFTI_STRUCTURE_ACCUMBENS_LEFT', 'Acc_L';
-      'CIFTI_STRUCTURE_ACCUMBENS_RIGHT', 'Acc_R';
-      'CIFTI_STRUCTURE_ALL_WHITE_MATTER', 'WM';
-      'CIFTI_STRUCTURE_ALL_GREY_MATTER', 'GM';
-      'CIFTI_STRUCTURE_AMYGDALA_LEFT', 'Amg_L';
-      'CIFTI_STRUCTURE_AMYGDALA_RIGHT', 'Amg_R';
-      'CIFTI_STRUCTURE_BRAIN_STEM', 'BrStm';
-      'CIFTI_STRUCTURE_CAUDATE_LEFT', 'Cau_L';
-      'CIFTI_STRUCTURE_CAUDATE_RIGHT','Cau_R';
-      'CIFTI_STRUCTURE_CEREBELLAR_WHITE_MATTER_LEFT', 'Cer_WM_L';
-      'CIFTI_STRUCTURE_CEREBELLAR_WHITE_MATTER_RIGHT', 'Cer_WM_R';
-      'CIFTI_STRUCTURE_CEREBELLUM', 'Cer';
-      'CIFTI_STRUCTURE_CEREBELLUM_LEFT', 'Cer_L';
-      'CIFTI_STRUCTURE_CEREBELLUM_RIGHT', 'Cer_R';
-      'CIFTI_STRUCTURE_CEREBRAL_WHITE_MATTER_LEFT', 'Cbl_WM_L';
-      'CIFTI_STRUCTURE_CEREBRAL_WHITE_MATTER_RIGHT', 'Cbl_WM_R';
-      'CIFTI_STRUCTURE_CORTEX', 'Ctx';
-      'CIFTI_STRUCTURE_CORTEX_LEFT', 'Ctx_L';
-      'CIFTI_STRUCTURE_CORTEX_RIGHT', 'Ctx_R';
-      'CIFTI_STRUCTURE_DIENCEPHALON_VENTRAL_LEFT', 'Dnc_V_L';
-      'CIFTI_STRUCTURE_DIENCEPHALON_VENTRAL_RIGHT', 'Dnc_V_R';
-      'CIFTI_STRUCTURE_HIPPOCAMPUS_LEFT', 'Hip_L';
-      'CIFTI_STRUCTURE_HIPPOCAMPUS_RIGHT', 'Hip_R';
-      'CIFTI_STRUCTURE_OTHER', 'Oth';
-      'CIFTI_STRUCTURE_OTHER_GREY_MATTER', 'Oth_GM';
-      'CIFTI_STRUCTURE_OTHER_WHITE_MATTER', 'Oth_WM';
-      'CIFTI_STRUCTURE_PALLIDUM_LEFT', 'Pal_L';
-      'CIFTI_STRUCTURE_PALLIDUM_RIGHT', 'Pal_R';
-      'CIFTI_STRUCTURE_PUTAMEN_LEFT', 'Put_L';
-      'CIFTI_STRUCTURE_PUTAMEN_RIGHT', 'Put_R';
-      'CIFTI_STRUCTURE_THALAMUS_LEFT', 'Thl_L';
-      'CIFTI_STRUCTURE_THALAMUS_RIGHT', 'Thl_R'};
     for i = 1:numel(ciftiInformation.volumes)
       indicesVolInCifti = (ciftiInformation.volumes{i}.off + 1):(ciftiInformation.volumes{i}.off + size(ciftiInformation.volumes{i}.iV, 2));
       [isSurviving, indInX] = ismember(indicesVolInCifti, indSurvivingInCifti);
@@ -210,11 +177,11 @@ function [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm, brainStructureShor
         tmpCell = cell(size(A_tmp));
         [tmpCell{:}] = deal('VOLUME');
         brainStructureLongLabels = [brainStructureLongLabels; tmpCell];
-        indLabel = find(strcmpi(ciftiVolumeLabels(:,1), ciftiInformation.volumes{i}.brainStructure));
-        if isempty(indLabel)
+        label = swe_cifti_convertVolLabels(ciftiInformation.volumes{i}.brainStructure, true);
+        if isempty(label)
           [tmpCell{:}] = deal('V');
         else
-          [tmpCell{:}] = deal(sprintf('V_%s', char(ciftiVolumeLabels(indLabel,2))));
+          [tmpCell{:}] = deal(sprintf('V_%s', label));
         end
         brainStructureShortLabels = [brainStructureShortLabels; tmpCell];
         if ~isempty(boxcoxInfo)
