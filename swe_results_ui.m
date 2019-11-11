@@ -473,7 +473,7 @@ switch lower(Action), case 'setup'                         %-Set up results
       end
     else
       hMIPax = axes('Parent',Fgraph,'Position',[0.05 0.60 0.55 0.36],'Visible','off'); 
-      nBrainStructure = 1
+      nBrainStructure = 1;
       if xSwE.STAT == 'P'
           str = xSwE.STATstr;
       else
