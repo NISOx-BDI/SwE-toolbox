@@ -416,6 +416,7 @@ switch lower(Action), case 'setup'                         %-Set up results
       offset_y = -0.36/gridSize;
       if numel(SwE.cifti.surfaces) > 0
         hRotate3d = rotate3d(Fgraph);
+        hRotate3d.ButtonDownFilter = @isNotAnSPMMeshRender;
         hRotate3d.Enable = 'on';
         for i = 1:numel(SwE.cifti.surfaces)
           
@@ -488,6 +489,7 @@ switch lower(Action), case 'setup'                         %-Set up results
       end
       if spm_mesh_detect(xSwE.Vspm)
           hRotate3d = rotate3d(Fgraph);
+          hRotate3d.ButtonDownFilter = @isNotAnSPMMeshRender;
           hRotate3d.Enable = 'on';
           setAllowAxesRotate(hRotate3d, hMIPax, true);
           hMax = spm_mesh_render('Disp',SwE.xVol.G,'Parent',hMIPax);
@@ -1486,3 +1488,9 @@ function myslover
     so = paint(so);
     assignin('base','so',so);
     
+function flag = isNotAnSPMMeshRender(obj, event_obj)
+    if strcmpi(obj.Tag, 'SPMMeshRender')
+        flag = false;
+    else
+        flag = true;
+    end
