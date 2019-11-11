@@ -643,11 +643,7 @@ switch lower(Action), case 'setup'                         %-Set up results
  
     for ii = nCon:-1:1
         hTmp = axes('Position',[0.65 (0.80 + dy*(nCon - ii +.1)) 0.25 dy*.9])
-        if exist('hRotate3d', 'var')
-            setAllowAxesRotate(hRotate3d, hTmp, false);
-        end    
         if xCon(xSwE.Ic(ii)).STAT == 'T' && size(xCon(xSwE.Ic(ii)).c,2) == 1
- 
             %-Single vector contrast for SwE{t} - bar
             %--------------------------------------------------------------
             yy = [zeros(1,nPar);repmat(xCon(xSwE.Ic(ii)).c',2,1);zeros(1,nPar)];
@@ -679,6 +675,10 @@ switch lower(Action), case 'setup'                         %-Set up results
             'UserData', struct( 'i',        xSwE.Ic(ii),...
             'h',        htxt,...
             'xCon',     xCon(xSwE.Ic(ii))))
+
+        if exist('hRotate3d', 'var')
+            setAllowAxesRotate(hRotate3d, hTmp, false);
+        end    
     end
  
  
