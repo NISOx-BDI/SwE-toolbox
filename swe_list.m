@@ -947,6 +947,9 @@ case 'table'                                                        %-Table
                  'Units','points',...
                  'Visible','off');
 
+    hRotate3d = rotate3d(Fgraph);
+    setAllowAxesRotate(hRotate3d, hAx, false);
+
     AxPos = get(hAx,'Position'); set(hAx,'YLim',[0,AxPos(4)])
     dy    = FS(9);
     y     = floor(AxPos(4)) - dy;
