@@ -84,7 +84,7 @@ ciftiGeomFile.help    = {''
   'The specifictation of the file containing the area of each vertex is optional. It will be used to display the area of clusters and to compute Box-Cox normalised cluster sizes. If it is not supplied, the Box-Cox normalised cluster sizes will be computed based on the number of vertices instead.'};
 
 % ---------------------------------------------------------------------
-% ciftiGeomFiles CovariSurface geometry files for CIfTI inputsates
+% ciftiGeomFiles Surface geometry files for CIfTI inputs
 % ---------------------------------------------------------------------
 ciftiGeomFiles         = cfg_repeat;
 ciftiGeomFiles.tag     = 'ciftiGeomFiles';
@@ -99,6 +99,30 @@ ciftiGeomFiles.help    = {''
 ciftiGeomFiles.values  = {ciftiGeomFile};
 ciftiGeomFiles.num     = [0 Inf];
 
+% ---------------------------------------------------------------------
+% volRoiConstraint 
+% ---------------------------------------------------------------------
+volRoiConstraint         = cfg_menu;
+volRoiConstraint.tag     = 'volRoiConstraint';
+volRoiConstraint.name    = 'Clusters constrained within the volume ROI boundaries';
+volRoiConstraint.help    = {'If yes, the surviving clusters will be contrained to be within the volume ROI boundaries. Thus, they will not be allowed to spread across several volume ROIs.'
+              ''
+              'If no, the surviving clusters will not be contrained to be within the volume ROI boundaries. Thus, they will be allowed to spread across several volume ROIs.'};
+volRoiConstraint.labels = {
+                          'Yes'
+                          'No'
+                          }';
+volRoiConstraint.values = {1 0};
+volRoiConstraint.val    = {1};
+% ---------------------------------------------------------------------
+% ciftiAdditionalInfo Additional information for CIfTI inputs
+% ---------------------------------------------------------------------
+ciftiAdditionalInfo         = cfg_branch;
+ciftiAdditionalInfo.tag     = 'ciftiAdditionalInfo';
+ciftiAdditionalInfo.name    = 'CIfTI additional information';
+ciftiAdditionalInfo.val     = {ciftiGeomFiles volRoiConstraint};
+ciftiAdditionalInfo.help    = {'This option is used to specify mandatory additional information for CIfTI data. It is ignored for other types of data.'
+                                ''};
 
 % ---------------------------------------------------------------------
 % groups Groups
@@ -1044,7 +1068,7 @@ WB.val    = {WB_no};
 smodel        = cfg_exbranch;
 smodel.tag    = 'smodel';
 smodel.name   = 'Specify Model';
-smodel.val    = {dir scans ciftiGeomFiles type subjects generic generic2 masking WB globalc globalm};
+smodel.val    = {dir scans ciftiAdditionalInfo type subjects generic generic2 masking WB globalc globalm};
 smodel.help   = {' '
                  'Module of the SwE toolbox allowing the specification of the data and design.'};
 smodel.prog   = @swe_run_smodel;

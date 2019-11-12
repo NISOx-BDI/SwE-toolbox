@@ -415,6 +415,11 @@ switch lower(Action), case 'setup'                         %-Set up results
       str = cell(nBrainStructure,1);
       offset_y = -0.36/gridSize;
       if numel(SwE.cifti.surfaces) > 0
+        try
+            hRotate3d = rotate3d(Fgraph);
+            hRotate3d.ButtonDownFilter = @isNotAnSPMMeshRender;
+            hRotate3d.Enable = 'on';
+        end
         for i = 1:numel(SwE.cifti.surfaces)
           
           if mod(it, gridSize) == 1
@@ -424,6 +429,7 @@ switch lower(Action), case 'setup'                         %-Set up results
             offset_x = offset_x + 0.55/gridSize;
           end
           hMIPax{it} = axes('Parent', Fgraph, 'Position', [0.05 + offset_x, 0.60 + offset_y, 0.55/gridSize, 0.36/gridSize], 'Visible','off');
+          try, setAllowAxesRotate(hRotate3d, hMIPax{it}, true); end
 
           hMax{it} = spm_mesh_render('Disp', SwE.cifti.surfaces{i}.geomFile, 'Parent', hMIPax{it});
           tmp = zeros(1,SwE.cifti.surfaces{i}.nV);
@@ -436,9 +442,9 @@ switch lower(Action), case 'setup'                         %-Set up results
           hMax{it} = spm_mesh_render('Register', hMax{it}, hReg);
           % if we can detect left or right, indicate it
           if contains(SwE.cifti.surfaces{i}.brainStructure, 'left', 'IgnoreCase', true)
-            str{it} = sprintf('SL: %s', SwE.cifti.surfaces{i}.brainStructure);
+            str{it} = sprintf('S_L: %s', SwE.cifti.surfaces{i}.brainStructure);
           elseif contains(SwE.cifti.surfaces{i}.brainStructure, 'right', 'IgnoreCase', true)
-            str{it} = sprintf('SR: %s', SwE.cifti.surfaces{i}.brainStructure);
+            str{it} = sprintf('S_R: %s', SwE.cifti.surfaces{i}.brainStructure);
           else
             str{it} = sprintf('S%i: %s', it, SwE.cifti.surfaces{i}.brainStructure);
           end
@@ -470,16 +476,26 @@ switch lower(Action), case 'setup'                         %-Set up results
         'Interpreter','none',...
         'FontSize',FS(sizeFont),'Fontweight','Bold',...
         'Parent',hMIPax{it});
+        
+        if exist('hRotate3d', 'var')
+            setAllowAxesRotate(hRotate3d, hMIPax{it}, false);
+        end
       end
     else
       hMIPax = axes('Parent',Fgraph,'Position',[0.05 0.60 0.55 0.36],'Visible','off'); 
-      nBrainStructure = 1
+      nBrainStructure = 1;
       if xSwE.STAT == 'P'
           str = xSwE.STATstr;
       else
           str = ['SwE\{',xSwE.STATstr,'\}'];
       end
       if spm_mesh_detect(xSwE.Vspm)
+          try
+            hRotate3d = rotate3d(Fgraph);
+            hRotate3d.ButtonDownFilter = @isNotAnSPMMeshRender;
+            hRotate3d.Enable = 'on';
+            setAllowAxesRotate(hRotate3d, hMIPax, true);
+          end
           hMax = spm_mesh_render('Disp',SwE.xVol.G,'Parent',hMIPax);
           tmp = zeros(1,prod(xSwE.DIM));
           tmp(xSwE.XYZ(1,:)) = xSwE.Z;
@@ -520,7 +536,9 @@ switch lower(Action), case 'setup'                         %-Set up results
     hTitAx = axes('Parent',Fgraph,...
         'Position',[0.02 0.95 0.96 0.02],...
         'Visible','off');
- 
+    if exist('hRotate3d', 'var')
+        setAllowAxesRotate(hRotate3d, hTitAx, false);
+    end
     text(0.5,0,xSwE.title,'Parent',hTitAx,...
         'HorizontalAlignment','center',...
         'VerticalAlignment','baseline',...
@@ -536,6 +554,9 @@ switch lower(Action), case 'setup'                         %-Set up results
         'DefaultTextColor',[1,1,1]*.7,...
         'Units','points',...
         'Visible','off');
+    if exist('hRotate3d', 'var')
+        setAllowAxesRotate(hRotate3d, hResAx, false);
+    end
     AxPos = get(hResAx,'Position'); set(hResAx,'YLim',[0,AxPos(4)])
     h     = text(0,24,'SPMresults:','Parent',hResAx,...
         'FontWeight','Bold','FontSize',FS(14));
@@ -603,6 +624,9 @@ switch lower(Action), case 'setup'                         %-Set up results
         'fnames',   {reshape({SwE.xY.VY.fname},size(SwE.xY.VY))},...
         'Xnames',   {SwE.xX.name}))
  
+    if exist('hRotate3d', 'var')
+        setAllowAxesRotate(hRotate3d, hDesMtx, false);
+    end
     %-Plot contrasts
     %----------------------------------------------------------------------
     nPar   = size(SwE.xX.X,2);
@@ -613,15 +637,17 @@ switch lower(Action), case 'setup'                         %-Set up results
         dy     = 0.15/max(nCon,2);
         hConAx = axes('Position',[0.65 (0.80 + dy*.1) 0.25 dy*(nCon-.1)],...
             'Tag','ConGrphAx','Visible','off');
+        if exist('hRotate3d', 'var')
+            setAllowAxesRotate(hRotate3d, hConAx, false);
+        end        
         title('contrast(s)')
         htxt   = get(hConAx,'title');
         set(htxt,'Visible','on','HandleVisibility','on')
     end
  
     for ii = nCon:-1:1
-        axes('Position',[0.65 (0.80 + dy*(nCon - ii +.1)) 0.25 dy*.9])
+        hTmp = axes('Position',[0.65 (0.80 + dy*(nCon - ii +.1)) 0.25 dy*.9])
         if xCon(xSwE.Ic(ii)).STAT == 'T' && size(xCon(xSwE.Ic(ii)).c,2) == 1
- 
             %-Single vector contrast for SwE{t} - bar
             %--------------------------------------------------------------
             yy = [zeros(1,nPar);repmat(xCon(xSwE.Ic(ii)).c',2,1);zeros(1,nPar)];
@@ -653,6 +679,10 @@ switch lower(Action), case 'setup'                         %-Set up results
             'UserData', struct( 'i',        xSwE.Ic(ii),...
             'h',        htxt,...
             'xCon',     xCon(xSwE.Ic(ii))))
+
+        if exist('hRotate3d', 'var')
+            setAllowAxesRotate(hRotate3d, hTmp, false);
+        end    
     end
  
  
@@ -1462,3 +1492,9 @@ function myslover
     so = paint(so);
     assignin('base','so',so);
     
+function flag = isNotAnSPMMeshRender(obj, event_obj)
+    if strcmpi(obj.Tag, 'SPMMeshRender')
+        flag = false;
+    else
+        flag = true;
+    end

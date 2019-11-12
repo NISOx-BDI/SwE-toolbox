@@ -321,29 +321,29 @@ spm_check_orientations(VY);
 
 if isCifti
   SwE.cifti = struct;
-  [SwE.cifti.surfaces, SwE.cifti.volume] = swe_read_cifti_info(P{1});
+  [SwE.cifti.surfaces, SwE.cifti.volume, SwE.cifti.volumes] = swe_read_cifti_info(P{1});
   if numel(SwE.cifti.surfaces) > 0
-    if ~isfield(job, 'ciftiGeomFile')
-      nSurfaceBrainStructures = 0;
+    if isfield(job, 'ciftiAdditionalInfo') && isfield(job.ciftiAdditionalInfo, 'ciftiGeomFile')
+        nSurfaceBrainStructures = numel(job.ciftiAdditionalInfo.ciftiGeomFile);
     else
-      nSurfaceBrainStructures = numel(job.ciftiGeomFile);
+        nSurfaceBrainStructures = 0;
     end
     if nSurfaceBrainStructures ~= numel(SwE.cifti.surfaces)
       error('The number of surface brain structures specified does not correspond to the number of surface brain structures in the CIfTI files. Please revise your specification.');
     end
     for i = 1:nSurfaceBrainStructures
       for ii = i:nSurfaceBrainStructures
-        if i ~= ii && strcmpi(job.ciftiGeomFile(i).brainStructureLabel, job.ciftiGeomFile(ii).brainStructureLabel)
+        if i ~= ii && strcmpi(job.ciftiAdditionalInfo.ciftiGeomFile(i).brainStructureLabel, job.ciftiAdditionalInfo.ciftiGeomFile(ii).brainStructureLabel)
           error('At least two surface brain structures have been specified with the same label. Please revise your specification.')
         end
       end
     end
     for i = 1:numel(SwE.cifti.surfaces)
       for ii = 1:nSurfaceBrainStructures
-        if strcmpi(job.ciftiGeomFile(ii).brainStructureLabel, SwE.cifti.surfaces{i}.brainStructure)
-          SwE.cifti.surfaces{i}.geomFile = char(job.ciftiGeomFile(ii).geomFile);
-          if isfield(job.ciftiGeomFile(ii), 'areaFile') && ~strcmpi(job.ciftiGeomFile(ii).areaFile, '') 
-            SwE.cifti.surfaces{i}.areaFile = char(job.ciftiGeomFile(ii).areaFile);
+        if strcmpi(job.ciftiAdditionalInfo.ciftiGeomFile(ii).brainStructureLabel, SwE.cifti.surfaces{i}.brainStructure)
+          SwE.cifti.surfaces{i}.geomFile = char(job.ciftiAdditionalInfo.ciftiGeomFile(ii).geomFile);
+          if isfield(job.ciftiAdditionalInfo.ciftiGeomFile(ii), 'areaFile') && ~isempty(job.ciftiAdditionalInfo.ciftiGeomFile(ii).areaFile) && ~strcmpi(job.ciftiAdditionalInfo.ciftiGeomFile(ii).areaFile, '') 
+            SwE.cifti.surfaces{i}.areaFile = char(job.ciftiAdditionalInfo.ciftiGeomFile(ii).areaFile);
           end
           break;
         end
@@ -353,6 +353,7 @@ if isCifti
       end
     end
   end
+  SwE.cifti.isClusConstrainedInVolROI = (job.ciftiAdditionalInfo.volRoiConstraint == 1);
 end
 
 fprintf('%30s\n','...done')  
