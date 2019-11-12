@@ -415,9 +415,11 @@ switch lower(Action), case 'setup'                         %-Set up results
       str = cell(nBrainStructure,1);
       offset_y = -0.36/gridSize;
       if numel(SwE.cifti.surfaces) > 0
-        hRotate3d = rotate3d(Fgraph);
-        hRotate3d.ButtonDownFilter = @isNotAnSPMMeshRender;
-        hRotate3d.Enable = 'on';
+        try
+            hRotate3d = rotate3d(Fgraph);
+            hRotate3d.ButtonDownFilter = @isNotAnSPMMeshRender;
+            hRotate3d.Enable = 'on';
+        end
         for i = 1:numel(SwE.cifti.surfaces)
           
           if mod(it, gridSize) == 1
@@ -427,7 +429,7 @@ switch lower(Action), case 'setup'                         %-Set up results
             offset_x = offset_x + 0.55/gridSize;
           end
           hMIPax{it} = axes('Parent', Fgraph, 'Position', [0.05 + offset_x, 0.60 + offset_y, 0.55/gridSize, 0.36/gridSize], 'Visible','off');
-          setAllowAxesRotate(hRotate3d, hMIPax{it}, true);
+          try, setAllowAxesRotate(hRotate3d, hMIPax{it}, true); end
 
           hMax{it} = spm_mesh_render('Disp', SwE.cifti.surfaces{i}.geomFile, 'Parent', hMIPax{it});
           tmp = zeros(1,SwE.cifti.surfaces{i}.nV);
@@ -488,10 +490,12 @@ switch lower(Action), case 'setup'                         %-Set up results
           str = ['SwE\{',xSwE.STATstr,'\}'];
       end
       if spm_mesh_detect(xSwE.Vspm)
-          hRotate3d = rotate3d(Fgraph);
-          hRotate3d.ButtonDownFilter = @isNotAnSPMMeshRender;
-          hRotate3d.Enable = 'on';
-          setAllowAxesRotate(hRotate3d, hMIPax, true);
+          try
+            hRotate3d = rotate3d(Fgraph);
+            hRotate3d.ButtonDownFilter = @isNotAnSPMMeshRender;
+            hRotate3d.Enable = 'on';
+            setAllowAxesRotate(hRotate3d, hMIPax, true);
+          end
           hMax = spm_mesh_render('Disp',SwE.xVol.G,'Parent',hMIPax);
           tmp = zeros(1,prod(xSwE.DIM));
           tmp(xSwE.XYZ(1,:)) = xSwE.Z;
