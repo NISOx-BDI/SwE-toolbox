@@ -25,12 +25,21 @@ function [SwE] = swe_contrasts_WB(SwE)
     isMat          = strcmpi(file_ext,'.mat');
     isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dscalar.nii');
 
+    if isCifti
+        file_data_type = 'dpx';
+    end
+    if isMat
+        file_data_type = 'dat';
+    end
+
     if ~isMat && ~isCifti
         isMeshData = spm_mesh_detect(SwE.xY.VY);
         if isMeshData
             file_ext = '.gii';
+            file_data_type = 'dpx';
         else
             file_ext = spm_file_ext;
+            file_data_type = 'vox';
         end
     end
     
@@ -65,10 +74,10 @@ function [SwE] = swe_contrasts_WB(SwE)
     
     % Add the SwE volumes.
     %----------------------------------------------------------------------
-    DxCon.Vspm = swe_data_hdr_read(sprintf('swe_vox_%c%cstat_c%.2d%s', eSTAT, STAT, 1, file_ext));
-    DxCon.VspmUncP = swe_data_hdr_read(sprintf('swe_vox_%cstat_lp%s_c%.2d%s', STAT, wbstring, 1, file_ext));
-    DxCon.VspmFDRP = swe_data_hdr_read(sprintf('swe_vox_%cstat_lpFDR%s_c%.2d%s', STAT, wbstring, 1, file_ext));
-    DxCon.VspmFWEP = swe_data_hdr_read(sprintf('swe_vox_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 1, file_ext));
+    DxCon.Vspm = swe_data_hdr_read(sprintf('swe_%s_%c%cstat_c%.2d%s', file_data_type, eSTAT, STAT, 1, file_ext));
+    DxCon.VspmUncP = swe_data_hdr_read(sprintf('swe_%s_%cstat_lp%s_c%.2d%s', file_data_type, STAT, wbstring, 1, file_ext));
+    DxCon.VspmFDRP = swe_data_hdr_read(sprintf('swe_%s_%cstat_lpFDR%s_c%.2d%s', file_data_type, STAT, wbstring, 1, file_ext));
+    DxCon.VspmFWEP = swe_data_hdr_read(sprintf('swe_%s_%cstat_lpFWE%s_c%.2d%s', file_data_type, STAT, wbstring, 1, file_ext));
     if isfield(SwE,'WB')
         if SwE.WB.clusterWise
             DxCon.VspmFWEP_clus = swe_data_hdr_read(sprintf('swe_clustere_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 1, file_ext));
@@ -83,7 +92,7 @@ function [SwE] = swe_contrasts_WB(SwE)
             DxCon.VspmTFCEFWEP = swe_data_hdr_read(sprintf('swe_tfce_lpFWE-WB_c%.2d%s', 1, file_ext));
         end
     end
-    DxCon.Vedf = swe_data_hdr_read(sprintf('swe_vox_edf_c%.2d%s', 1, file_ext));
+    DxCon.Vedf = swe_data_hdr_read(sprintf('swe_%s_edf_c%.2d%s', file_data_type, 1, file_ext));
     
     % Add the positive contrast.
     %----------------------------------------------------------------------
@@ -98,10 +107,10 @@ function [SwE] = swe_contrasts_WB(SwE)
         
         DxCon = spm_FcUtil('Set', 'Contrast 2: Deactivation', STAT, 'c', -c', X);
         
-        DxCon.Vspm = swe_data_hdr_read(sprintf('swe_vox_%c%cstat_c%.2d%s', eSTAT, STAT, 2, file_ext));
-        DxCon.VspmUncP = swe_data_hdr_read(sprintf('swe_vox_%cstat_lp%s_c%.2d%s', STAT, wbstring, 2, file_ext));
-        DxCon.VspmFDRP = swe_data_hdr_read(sprintf('swe_vox_%cstat_lpFDR%s_c%.2d%s', STAT, wbstring, 2, file_ext));
-        DxCon.VspmFWEP = swe_data_hdr_read(sprintf('swe_vox_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 2, file_ext));
+        DxCon.Vspm = swe_data_hdr_read(sprintf('swe_%s_%c%cstat_c%.2d%s', file_data_type, eSTAT, STAT, 2, file_ext));
+        DxCon.VspmUncP = swe_data_hdr_read(sprintf('swe_%s_%cstat_lp%s_c%.2d%s', file_data_type, STAT, wbstring, 2, file_ext));
+        DxCon.VspmFDRP = swe_data_hdr_read(sprintf('swe_%s_%cstat_lpFDR%s_c%.2d%s', file_data_type, STAT, wbstring, 2, file_ext));
+        DxCon.VspmFWEP = swe_data_hdr_read(sprintf('swe_%s_%cstat_lpFWE%s_c%.2d%s', file_data_type, STAT, wbstring, 2, file_ext));
         if isfield(SwE,'WB')
             if SwE.WB.clusterWise
                 DxCon.VspmFWEP_clus = swe_data_hdr_read(sprintf('swe_clustere_%cstat_lpFWE%s_c%.2d%s', STAT, wbstring, 2, file_ext));
@@ -116,7 +125,7 @@ function [SwE] = swe_contrasts_WB(SwE)
                 DxCon.VspmTFCEFWEP = swe_data_hdr_read(sprintf('swe_tfce_lpFWE-WB_c%.2d%s', 2, file_ext));
             end
         end
-        DxCon.Vedf = swe_data_hdr_read(sprintf('swe_vox_edf_c%.2d%s', 1, file_ext));
+        DxCon.Vedf = swe_data_hdr_read(sprintf('swe_%s_edf_c%.2d%s', file_data_type, 1, file_ext));
     
         SwE.xCon = [SwE.xCon DxCon]; 
     end

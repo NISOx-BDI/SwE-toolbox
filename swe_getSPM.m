@@ -260,8 +260,21 @@ file_ext = swe_get_file_extension(SwE.xY.P{1});
 isMat    = strcmpi(file_ext,'.mat');
 isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dscalar.nii');
 
+if isCifti
+  file_data_type = 'dpx';
+end
+
+if isMat
+  file_data_type = 'dat';
+end
+
 if ~isMat && ~isCifti
   isMeshData = spm_mesh_detect(SwE.xY.VY);
+  if isMeshData
+    file_data_type = 'dpx';
+  else
+    file_data_type = 'vox';
+  end
 end
 
 xX   = SwE.xX;                      %-Design definition structure
@@ -305,7 +318,7 @@ try
   % check if the Uncorrected p-value image is correctly set to the non-parametric version for WB (for retro-compatibility)
   if isfield(SwE, 'WB') && ~exist('OCTAVE_VERSION','builtin') && ~contains(xCon(1).VspmUncP.fname, '-WB')
     for i = 1:numel(xCon)
-      SwE.xCon(i).VspmUncP = spm_vol(sprintf('swe_vox_%cstat_lp%s_c%.2d%s', SwE.WB.stat, '-WB', i, file_ext));
+      SwE.xCon(i).VspmUncP = spm_vol(sprintf('swe_%s_%cstat_lp%s_c%.2d%s', file_data_type, SwE.WB.stat, '-WB', i, file_ext));
     end
     % save the modified SwE.mat
     if spm_check_version('matlab','7') >=0

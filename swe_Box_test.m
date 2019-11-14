@@ -16,14 +16,25 @@ function [p,F,f1,f2] = swe_Box_test()
     
     %-Check data format
     %--------------------------------------------------------------------------
-    [~,~,file_ext] = fileparts(SwE.xY.P{1});
-    isMat          = strcmpi(file_ext,'.mat');
+    file_ext = swe_get_file_extension(SwE.xY.P{1});
+    isMat    = strcmpi(file_ext,'.mat');
+    isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dscalar.nii');
     isOctave = exist('OCTAVE_VERSION','builtin');
+    
+    if isCifti
+        metadata = {'ciftiTemplate', SwE.xY.P{1}};
+        file_data_type = 'dpx';
+    end
+
+    if isMat
+        file_data_type = 'dat';
+    end
 
     if ~isMat
         isMeshData = spm_mesh_detect(SwE.xY.VY);
         if isMeshData
             file_ext = '.gii';
+            file_data_type = 'dpx'
             g        = SwE.xY.VY(1).private;
             metadata = g.private.metadata;
             name     = {metadata.name};
@@ -36,6 +47,7 @@ function [p,F,f1,f2] = swe_Box_test()
                 metadata = {};
         else
             file_ext = spm_file_ext;
+            file_data_type = 'vox';
             metadata = {};
         end
     end
@@ -87,28 +99,12 @@ function [p,F,f1,f2] = swe_Box_test()
         spm_progress_bar('Set',100*(iVox/size(cov_vis,2)));
     end
     spm_progress_bar('Clear')
-
-    CS_test_F = struct(...
-        'fname',  sprintf('swe_vox_Fstat-Box%s', spm_file_ext),...
-        'dim',    SwE.xVol.DIM',...
-        'dt',     [16, spm_platform('bigend')],...
-        'mat',    SwE.xVol.M,...
-        'pinfo',  [1,0,0]',...
-        'descrip',sprintf('CS_test F-scores'),...
-        metadata{:});
     
-    CS_test_F = swe_data_hdr_write(CS_test_F);
-    
-    CS_test_p = struct(...
-        'fname',  sprintf('swe_vox_Fstat-Box_lp%s', spm_file_ext),...
-        'dim',    SwE.xVol.DIM',...
-        'dt',     [16, spm_platform('bigend')],...
-        'mat',    SwE.xVol.M,...
-        'pinfo',  [1,0,0]',...
-        'descrip',sprintf('CS_test p-values'),...
-        metadata{:});
+    CS_test_F = swe_data_hdr_write(sprintf('swe_%s_Fstat-Box%s', file_data_type, file_ext),...
+                    SwE.xVol.DIM', SwE.xVol.M, sprintf('CS_test F-scores'), metadata);
 
-    CS_test_p = swe_data_hdr_write(CS_test_p);
+    CS_test_p = swe_data_hdr_write(sprintf('swe_%s_Fstat-Box_lp%s', file_data_type, file_ext),...
+                    SwE.xVol.DIM', SwE.xVol.M, sprintf('CS_test p-values'), metadata);
 
     tmp           = zeros(SwE.xVol.DIM');
     Q             = cumprod([1,SwE.xVol.DIM(1:2)'])*SwE.xVol.XYZ - ...
