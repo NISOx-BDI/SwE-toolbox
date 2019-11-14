@@ -13,15 +13,27 @@ function swe_cp(SwE)
 %   - swe_vox_cov_g{g#}_v{v1#}_v{v2#}: The covariance map between betas
 %     {v1#} and {v2#} for group {g#}.
 %
+% For a parametric SwE analysis with GIfTI or CIfTI inputs, this function computes 
+% the following maps:
+%
+%   - swe_dpx_mask: The mask image for the analysis.
+%   - swe_dpx_con_c{c#}: The contrast map for contrast {c#}
+%   - swe_dpx_cov_b{b1#}_b{b2#}: The covariance map between betas {b1#}
+%     and {b2#}.
+%   - swe_dpx_cov_g{g#}_b{b1#}_b{b2#}: The covariance map between betas
+%     {b1#} and {b2#} for group {g#}.
+%   - swe_dpx_cov_g{g#}_v{v1#}_v{v2#}: The covariance map between betas
+%     {v1#} and {v2#} for group {g#}.
+%
 % For a parametric SwE analysis with '.mat' input, this function computes
 % the following analagous maps:
 %
-%   - swe_vox_mask: The mask image for the analysis.
-%   - swe_vox_beta_b: The beta map.
-%   - swe_vox_con_c: The contrast map for each contrast.
-%   - swe_vox_cov_bb: The between-betas covariance map.
-%   - swe_vox_cov_g_bb: The groupwise between-betas covariance maps.
-%   - swe_vox_cov_g_vv: The visitwise between-betas covariance maps.
+%   - swe_dat_mask: The mask image for the analysis.
+%   - swe_dat_beta_b: The beta map.
+%   - swe_dat_con_c: The contrast map for each contrast.
+%   - swe_dat_cov_bb: The between-betas covariance map.
+%   - swe_dat_cov_g_bb: The groupwise between-betas covariance maps.
+%   - swe_dat_cov_g_vv: The visitwise between-betas covariance maps.
 %
 % For non-parametric SwE analyses, the function `swe_cp_WB` is called
 % instead as these maps must be computed differently. See the header of

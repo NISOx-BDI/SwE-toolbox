@@ -3,11 +3,11 @@ function [SwE] = swe_contrasts(SwE,Ic)
 % =========================================================================
 % Fills in SwE.xCon and writes the following images for a parametric 
 % analysis:
-%   - swe_vox_{T|F}stat_c{c#}.{nii|gii|mat}: T/F tatistic image
-%   - swe_vox_{zT|xF}stat_c{c#}.{nii|gii|mat}: Z/Chi square equivalent 
+%   - swe_{vox|dpx|dat}_{T|F}stat_c{c#}.{nii|gii|mat}: T/F tatistic image
+%   - swe_{vox|dpx|dat}_{zT|xF}stat_c{c#}.{nii|gii|mat}: Z/Chi square equivalent 
 %                                          statistic image
-%   - swe_vox_{T|F}stat_lp_c{c#}.{nii|gii|mat}: -log10 P image.
-%   - swe_vox_edf_c{c#}.{nii|gii|mat}: error degrees of freedom image.
+%   - swe_{vox|dpx|dat}_{T|F}stat_lp_c{c#}.{nii|gii|mat}: -log10 P image.
+%   - swe_{vox|dpx|dat}_edf_c{c#}.{nii|gii|mat}: error degrees of freedom image.
 % =========================================================================
 % FORMAT [SwE] = SwE_contrasts(SwE,Ic)
 % -------------------------------------------------------------------------

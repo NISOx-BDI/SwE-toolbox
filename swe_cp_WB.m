@@ -1,32 +1,32 @@
 function swe_cp_WB(SwE)
 % Computes statistic and p-value maps for non-parametric analyses.
 % =========================================================================
-% For a non-parametric SwE analysis with either nifti or '.mat' input, the
+% For a non-parametric SwE analysis with either NIfTI, GIfTI, CIfTI or '.mat' input, the
 % following maps are computed:
 %
-%   - swe_vox_mask: 
+%   - swe_{unit}_mask: 
 %        The mask image for the analysis.
 %
-%   - swe_vox_{T|F}stat_c{c#}: 
+%   - swe_{unit}_{T|F}stat_c{c#}: 
 %        Voxelwise parametric statistic map (T or F) for contrast {c#}.
 %
-%   - swe_vox_{zT|xF}stat_c{c#}: 
+%   - swe_{unit}_{zT|xF}stat_c{c#}: 
 %        Voxelwise parametric equivalent statistic map (Z or Chi Squared) 
 %        for contrast {c#}.
 %
-%   - swe_vox_{zT|xF}stat-WB_c{c#}: 
+%   - swe_{unit}_{zT|xF}stat-WB_c{c#}: 
 %        Voxelwise non-parametric equivalent statistic map (Z or Chi 
 %        Squared) for contrast {c#}.
 %
-%   - swe_vox_{T|F}stat_lp-WB_c{c#}:
+%   - swe_{unit}_{T|F}stat_lp-WB_c{c#}:
 %         Log10 map of the voxelwise uncorrected P values for contrast 
 %         {c#}.
 %
-%   - swe_vox_{T|F}stat_lpFWE-WB_c{c#}:
+%   - swe_{unit}_{T|F}stat_lpFWE-WB_c{c#}:
 %         Log10 map of the voxelwise bootstrap-calculated FWE P values for 
 %         contrast {c#}.
 %
-%   - swe_vox_{T|F}stat_lpFDR-WB_c{c#}:
+%   - swe_{unit}_{T|F}stat_lpFDR-WB_c{c#}:
 %         Log10 map of the voxelwise bootstrap-calculated FDR P values for
 %         contrast {c#}.
 %
@@ -45,6 +45,11 @@ function swe_cp_WB(SwE)
 %         Log10 map of the TFCE bootstrap-calculated FWE P values for
 %         contrast {c#}.
 %
+% The field {unit} used above represents the unit in space in which the statistic is calculated. 
+% It can be the following strings:
+%   - 'vox' for NifTI files,
+%   - 'dpx' for GIfTI and CIfTI files,
+%   - 'dat' for .mat files.
 % Currently (30/08/2018), the only contrasts computed are activation 
 % (contrast #1) and deactivation (contrast #2) for the contrast vector the 
 % user input during the batch entry.

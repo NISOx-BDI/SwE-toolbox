@@ -85,8 +85,8 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % .thresDesc - description of height threshold (string)
 %
 % In addition, the xCon structure is updated. For newly evaluated
-% contrasts, SwE images (swe_vox_{T|F}stat_c{c#}) are written, along 
-% with contrast (swe_vox_beta_c{c#}) images.
+% contrasts, SwE images (swe_{vox|dpx|dat}_{T|F}stat_c{c#}) are written, along 
+% with contrast (swe_{vox|dpx|dat}_beta_c{c#}) images.
 %
 % For a parametric analysis the following is added to the xCon
 % structure:
@@ -109,8 +109,8 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % contrast manager. These contrast images (for appropriate contrasts)
 % are suitable summary images of an effect at this level, and can be
 % used as input at a higher level when effecting a random effects
-% analysis. (Note that the swe_vox_beta_c{c#} and
-% swe_vox_{T|F}stat_c{c#} images are not suitable input for a higher
+% analysis. (Note that the swe_{vox|dpx|dat}_beta_c{c#} and
+% swe_{vox|dpx|dat}_{T|F}stat_c{c#} images are not suitable input for a higher
 % level analysis.) See spm_RandFX.man for further details.
 %
 %__________________________________________________________________________
