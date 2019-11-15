@@ -537,7 +537,7 @@ case 'table'                                                        %-Table
      
      % Retrieve edf data
      if isfield(xSwE, 'Vedf')
-        edf = swe_data_read(xSwE.Vedf);
+        edf = swe_data_read(xSwE.Vedf, 'xyz', xSwE.XYZ_inMask);
      else
         edf = xSwE.edf;
      end
