@@ -1460,7 +1460,7 @@ if isfield(SwE, 'WB')
     
     % Uncorrected P values.
     Ps_vol = xSwE.VspmUncP;
-    Ps = swe_data_read(Ps_vol);
+    Ps = swe_data_read(Ps_vol, 'xyz', SwE.xVol.XYZ);
     Ps = 10.^(-Ps(~isnan(Ps)));
     xSwE.Ps = Ps;
     
