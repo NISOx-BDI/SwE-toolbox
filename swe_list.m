@@ -449,7 +449,8 @@ case 'table'                                                        %-Table
         end
         % We need the P uncorrected P values to be in the correct form to
         % use spm_uc_FDR.
-        Ts = swe_data_read(xSwE.VspmUncP);
+        % Make sure to load only the in-mask data to avoid loading zero values
+        Ts = swe_data_read(xSwE.VspmUncP, 'xyz', xSwE.XYZ_inMask);
         Ts(isnan(Ts)) = [];
         Ts = 10.^-Ts;
         Ts = sort(Ts(:));
@@ -536,7 +537,7 @@ case 'table'                                                        %-Table
      
      % Retrieve edf data
      if isfield(xSwE, 'Vedf')
-        edf = swe_data_read(xSwE.Vedf);
+        edf = swe_data_read(xSwE.Vedf, 'xyz', xSwE.XYZ_inMask);
      else
         edf = xSwE.edf;
      end
