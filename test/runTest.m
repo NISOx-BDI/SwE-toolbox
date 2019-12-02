@@ -146,6 +146,7 @@ function mapsEqual = verifyMapsUnchanged(porwb, inftype, torf, matorimg)
 		% Get the filenames
 		file = files(i, :);
 		gt_file = ['ground_truth' filesep file];
+		gt_file = strrep(gt_file, '_dat_', '_vox_');
 		disp(['Testing file: ' file])
 
 		if strcmp(filetype, 'nii')
