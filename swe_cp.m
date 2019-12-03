@@ -13,15 +13,27 @@ function swe_cp(SwE)
 %   - swe_vox_cov_g{g#}_v{v1#}_v{v2#}: The covariance map between betas
 %     {v1#} and {v2#} for group {g#}.
 %
+% For a parametric SwE analysis with GIfTI or CIfTI inputs, this function computes 
+% the following maps:
+%
+%   - swe_dpx_mask: The mask image for the analysis.
+%   - swe_dpx_con_c{c#}: The contrast map for contrast {c#}
+%   - swe_dpx_cov_b{b1#}_b{b2#}: The covariance map between betas {b1#}
+%     and {b2#}.
+%   - swe_dpx_cov_g{g#}_b{b1#}_b{b2#}: The covariance map between betas
+%     {b1#} and {b2#} for group {g#}.
+%   - swe_dpx_cov_g{g#}_v{v1#}_v{v2#}: The covariance map between betas
+%     {v1#} and {v2#} for group {g#}.
+%
 % For a parametric SwE analysis with '.mat' input, this function computes
 % the following analagous maps:
 %
-%   - swe_vox_mask: The mask image for the analysis.
-%   - swe_vox_beta_b: The beta map.
-%   - swe_vox_con_c: The contrast map for each contrast.
-%   - swe_vox_cov_bb: The between-betas covariance map.
-%   - swe_vox_cov_g_bb: The groupwise between-betas covariance maps.
-%   - swe_vox_cov_g_vv: The visitwise between-betas covariance maps.
+%   - swe_dat_mask: The mask image for the analysis.
+%   - swe_dat_beta_b: The beta map.
+%   - swe_dat_con_c: The contrast map for each contrast.
+%   - swe_dat_cov_bb: The between-betas covariance map.
+%   - swe_dat_cov_g_bb: The groupwise between-betas covariance maps.
+%   - swe_dat_cov_g_vv: The visitwise between-betas covariance maps.
 %
 % For non-parametric SwE analyses, the function `swe_cp_WB` is called
 % instead as these maps must be computed differently. See the header of
@@ -89,13 +101,19 @@ isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dscalar.nii'
 isOctave = exist('OCTAVE_VERSION','builtin');
 
 if isCifti
-	metadata = {'ciftiTemplate', SwE.xY.P{1}};  
+    metadata = {'ciftiTemplate', SwE.xY.P{1}};
+    file_data_type = 'dpx';
+end
+
+if isMat
+    file_data_type = 'dat';
 end
 
 if ~isMat && ~isCifti
     isMeshData = spm_mesh_detect(SwE.xY.VY);
     if isMeshData
         file_ext = '.gii';
+        file_data_type = 'dpx';
         g        = SwE.xY.VY(1).private;
         metadata = g.private.metadata;
         name     = {metadata.name};
@@ -113,13 +131,14 @@ if ~isMat && ~isCifti
         SwE.xVol.G = metadata{2};
     else
         file_ext = spm_file_ext;
+        file_data_type = 'vox';
         metadata = {};
     end
 end
 
 %-Delete files from previous analyses
 %--------------------------------------------------------------------------
-if exist(fullfile(SwE.swd,sprintf('swe_vox_mask%s',file_ext)),'file') == 2
+if exist(fullfile(SwE.swd,sprintf('swe_%s_mask%s',file_data_type,file_ext)),'file') == 2
  
     str = {'Current directory contains SwE estimation files:',...
         'pwd = ',SwE.swd,...
@@ -132,21 +151,29 @@ if exist(fullfile(SwE.swd,sprintf('swe_vox_mask%s',file_ext)),'file') == 2
     end
 end
  
-files = {'^swe_vox_mask(\.dtseries)?(\.dscalar)?\..{3}$',...
-        '^swe_vox_cov_b\d{2}_b\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
-        '^swe_vox_cov_vv(\.dtseries)?(\.dscalar)?\..{3}$',...
-        '^swe_vox_cov(\.dtseries)?(\.dscalar)?\..{3}$',...
-        '^swe_vox_con_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
-        '^swe_vox_beta_b(\.dtseries)?(\.dscalar)?\..{3}$',...
-        '^swe_vox_cov_g\d{2}_v\d{2}_v\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
-        '^swe_vox_edf_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
-        '^swe_vox_beta_\w{1}\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
-        '^swe_vox_\w{1,2}stat_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
-        '^swe_vox_\w{1,2}stat_lp\w{0,3}_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+files = {'^swe_.{3}_mask(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_.{3}_cov_b\d{2}_b\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_.{3}_cov_vv(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_.{3}_cov(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_.{3}_con_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_.{3}_beta_b\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_.{3}_cov_g\d{2}_v\d{2}_v\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_.{3}_cov_g\d{2}_b\d{2}_b\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_.{3}_edf_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_.{3}_beta_\w{1}\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_.{3}_\w{1,2}stat_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_.{3}_\w{1,2}stat-WB_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_.{3}_\w{1,2}stat_lp\w{0,3}_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_.{3}_\w{1,2}stat_lp\w{0,3}-WB_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
         '^swe_clustere_\w{1,2}stat_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
         '^swe_clustere_\w{1,2}stat_lp\w{0,3}_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
-        '^swe_vox_resid_y\d{2,4}(\.dtseries)?(\.dscalar)?\..{3}$',...
-        '^swe_vox_fit_y\d{2,4}(\.dtseries)?(\.dscalar)?\..{3}$'};
+        '^swe_clustere_\w{1,2}stat_lp\w{0,3}-WB_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_clusternorm_\w{1,2}stat_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_clusternorm_\w{1,2}stat_lp\w{0,3}-WB_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_clusternorm2_\w{1,2}stat_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_clusternorm2_\w{1,2}stat_lp\w{0,3}-WB_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_.{3}_resid_y\d{2,4}(\.dtseries)?(\.dscalar)?\..{3}$',...
+        '^swe_.{3}_fit_y\d{2,4}(\.dtseries)?(\.dscalar)?\..{3}$'};
  
 for i = 1:length(files)
     j = spm_select('List',SwE.swd,files{i});
@@ -502,14 +529,14 @@ if ~isMat
 
     %-Initialise new mask name: current mask & conditions on voxels
     %----------------------------------------------------------------------
-    VM    = swe_data_hdr_write(sprintf('swe_vox_mask%s', file_ext), DIM, M,...
+    VM    = swe_data_hdr_write(sprintf('swe_%s_mask%s', file_data_type, file_ext), DIM, M,...
                            'swe_cp:resultant analysis mask', metadata, 'uint8');
 
     %-Initialise beta image files
     %----------------------------------------------------------------------
 
     for i = 1:nBeta
-        Vbeta(i) = swe_data_hdr_write(sprintf('swe_vox_beta_b%02d%s',i,file_ext),...
+        Vbeta(i) = swe_data_hdr_write(sprintf('swe_%s_beta_b%02d%s',file_data_type,i,file_ext),...
                                   DIM, M,...
                                   sprintf('swe_cp:beta (%02d) - %s',i,xX.name{i}),...
                                   metadata);
@@ -522,7 +549,7 @@ if ~isMat
     for i=1:nBeta
         for ii=i:nBeta
             it=it+1;
-            Vcov_beta(it) = swe_data_hdr_write(sprintf('swe_vox_cov_b%02d_b%02d%s',i,ii,file_ext),...
+            Vcov_beta(it) = swe_data_hdr_write(sprintf('swe_%s_cov_b%02d_b%02d%s',file_data_type,i,ii,file_ext),...
                                            DIM, M, sprintf('cov_beta_%02d_%02d hats - %s/%s',...
                                                 i,ii,xX.name{i},xX.name{ii}),...
                                            metadata);
@@ -543,7 +570,7 @@ if ~isMat
             for ii=1:nBeta
                 for iii=ii:nBeta
                     it=it+1;
-                    Vcov_beta_g(it) = swe_data_hdr_write([sprintf('swe_vox_cov_g%02d_b%02d_b%02d',g,ii,iii) file_ext],...
+                    Vcov_beta_g(it) = swe_data_hdr_write([sprintf('swe_%s_cov_g%02d_b%02d_b%02d',file_data_type,g,ii,iii) file_ext],...
                         DIM, M, sprintf('cov_beta_g_%02d_%02d_%02d hats - group %s - %s/%s',...
                             g,ii,iii,num2str(uGr(g)),xX.name{ii},xX.name{iii}), metadata);
                 end
@@ -559,7 +586,7 @@ if ~isMat
             for ii=1:nVis_g(g)
                 for iii=ii:nVis_g(g)
                     it=it+1;
-                    Vcov_vis(it) = swe_data_hdr_write([sprintf('swe_vox_cov_g%02d_v%02d_v%02d',g,ii,iii) file_ext],...
+                    Vcov_vis(it) = swe_data_hdr_write([sprintf('swe_%s_cov_g%02d_v%02d_v%02d',file_data_type,g,ii,iii) file_ext],...
                                                   DIM, M, sprintf('cov_vis_%02d_%02d_%02d hats - group %s - visits %s/%s',...
                                                        g,ii,iii,num2str(uGr(g)),num2str(uVis_g{g}(ii)),num2str(uVis_g{g}(iii))),...
                                                        metadata);
@@ -570,7 +597,7 @@ if ~isMat
     %-Initialise standardised residual images
     %----------------------------------------------------------------------
     % for i = 1:nSres
-    %     VResI(i) = swe_create_vol(sprintf('swe_vox_resid_y%02d.img', i),...
+    %     VResI(i) = swe_create_vol(sprintf('swe_%s_resid_y%02d.img', i),...
     %                               DIM, M, sprintf('spm_spm:ResI (%02d)', i),...
     %                               isMeshData);
     % end
@@ -1016,30 +1043,30 @@ else % matrix input
     fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...saving results'); %-#
 
     mask = cmask;       
-    save(sprintf('swe_vox_mask%s',file_ext), 'mask');
+    save(sprintf('swe_%s_mask%s',file_data_type,file_ext), 'mask');
     clear mask
 
     beta = zeros(nBeta, nVox);
     beta(:,cmask) = crBeta;
-    save(sprintf('swe_vox_beta_b%s',file_ext), 'beta');
+    save(sprintf('swe_%s_beta_b%s',file_data_type,file_ext), 'beta');
     clear beta crBeta
 
     if isfield(SwE.type,'modified')
         cov_vis = zeros(nCov_vis, nVox);
         cov_vis(:,cmask) = crCov_vis;
-        save(sprintf('swe_vox_cov_vv%s',file_ext), 'cov_vis');
+        save(sprintf('swe_%s_cov_vv%s',file_data_type,file_ext), 'cov_vis');
         clear cov_vis crCov_vis
     end
 
     cov_beta = zeros(nCov_beta, nVox);
     cov_beta(:,cmask) = crCov_beta;
-    save(sprintf('swe_vox_cov%s',file_ext), 'cov_beta');
+    save(sprintf('swe_%s_cov%s',file_data_type,file_ext), 'cov_beta');
     clear cov_beta crCov_beta
     if dof_type == 1
         nGr = nSubj;
         cov_beta_g = zeros(nGr, nCov_beta, nVox);
         cov_beta_g(:,:,cmask) = crCov_beta_i;
-        save(sprintf('swe_vox_cov_g_bb%s',file_ext), 'cov_beta_g');
+        save(sprintf('swe_%s_cov_g_bb%s',file_data_type,file_ext), 'cov_beta_g');
         clear cov_beta_g crCov_beta_i
     end
     fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');   
@@ -1050,11 +1077,11 @@ else % matrix input
     M           = [];
     DIM         = [];
     S           = CrS;
-    VM          = sprintf('swe_vox_mask%s', file_ext);
-    Vbeta       = sprintf('swe_vox_beta_b%s', file_ext);
-    Vcov_beta   = sprintf('swe_vox_cov%s', file_ext);
-    Vcov_vis    = sprintf('swe_vox_cov_vv%s', file_ext);
-    Vcov_beta_g = sprintf('swe_vox_cov_g_bb%s', file_ext);
+    VM          = sprintf('swe_%s_mask%s', file_data_type, file_ext);
+    Vbeta       = sprintf('swe_%s_beta_b%s', file_data_type, file_ext);
+    Vcov_beta   = sprintf('swe_%s_cov%s', file_data_type, file_ext);
+    Vcov_vis    = sprintf('swe_%s_cov_vv%s', file_data_type, file_ext);
+    Vcov_beta_g = sprintf('swe_%s_cov_g_bb%s', file_data_type, file_ext);
 end
 
 %-place fields in SwE

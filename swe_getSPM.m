@@ -85,8 +85,8 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % .thresDesc - description of height threshold (string)
 %
 % In addition, the xCon structure is updated. For newly evaluated
-% contrasts, SwE images (swe_vox_{T|F}stat_c{c#}) are written, along 
-% with contrast (swe_vox_beta_c{c#}) images.
+% contrasts, SwE images (swe_{vox|dpx|dat}_{T|F}stat_c{c#}) are written, along 
+% with contrast (swe_{vox|dpx|dat}_beta_c{c#}) images.
 %
 % For a parametric analysis the following is added to the xCon
 % structure:
@@ -109,8 +109,8 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % contrast manager. These contrast images (for appropriate contrasts)
 % are suitable summary images of an effect at this level, and can be
 % used as input at a higher level when effecting a random effects
-% analysis. (Note that the swe_vox_beta_c{c#} and
-% swe_vox_{T|F}stat_c{c#} images are not suitable input for a higher
+% analysis. (Note that the swe_{vox|dpx|dat}_beta_c{c#} and
+% swe_{vox|dpx|dat}_{T|F}stat_c{c#} images are not suitable input for a higher
 % level analysis.) See spm_RandFX.man for further details.
 %
 %__________________________________________________________________________
@@ -260,8 +260,21 @@ file_ext = swe_get_file_extension(SwE.xY.P{1});
 isMat    = strcmpi(file_ext,'.mat');
 isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dscalar.nii');
 
+if isCifti
+  file_data_type = 'dpx';
+end
+
+if isMat
+  file_data_type = 'dat';
+end
+
 if ~isMat && ~isCifti
   isMeshData = spm_mesh_detect(SwE.xY.VY);
+  if isMeshData
+    file_data_type = 'dpx';
+  else
+    file_data_type = 'vox';
+  end
 end
 
 xX   = SwE.xX;                      %-Design definition structure
@@ -305,7 +318,7 @@ try
   % check if the Uncorrected p-value image is correctly set to the non-parametric version for WB (for retro-compatibility)
   if isfield(SwE, 'WB') && ~exist('OCTAVE_VERSION','builtin') && ~contains(xCon(1).VspmUncP.fname, '-WB')
     for i = 1:numel(xCon)
-      SwE.xCon(i).VspmUncP = spm_vol(sprintf('swe_vox_%cstat_lp%s_c%.2d%s', SwE.WB.stat, '-WB', i, file_ext));
+      SwE.xCon(i).VspmUncP = spm_vol(sprintf('swe_%s_%cstat_lp%s_c%.2d%s', file_data_type, SwE.WB.stat, '-WB', i, file_ext));
     end
     % save the modified SwE.mat
     if spm_check_version('matlab','7') >=0
