@@ -1397,12 +1397,6 @@ if isfield(SwE.type, 'modified')
     xSwE.min_nVis_g = SwE.Vis.min_nVis_g;
 end
 
-if dof_type == 0
-  xSwE.edf = xCon(Ic).edf;
-else
-  xSwE.Vedf = cat(1,xCon(Ic).Vedf);
-end
-
 % For WB analyses we have already computed uncorrected, FDR, FWE and
 % cluster-FWE P values at this point.
 if isfield(SwE, 'WB')
@@ -1499,7 +1493,12 @@ if isfield(SwE, 'WB')
     
     % edf
     xSwE.Vedf       = cat(1,xCon(Ic).Vedf);
-    
+  else
+    if dof_type == 0
+      xSwE.edf = xCon(Ic).edf;
+    else
+      xSwE.Vedf = cat(1,xCon(Ic).Vedf);
+    end    
 end
 
 % Record clusterwise FWE P value if there is one.
