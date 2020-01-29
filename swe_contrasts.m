@@ -242,8 +242,13 @@ for i = 1:length(Ic)
         if dof_type == 1
             cCovBc_g = zeros(nSizeCon*(nSizeCon+1)/2,S,SwE.Gr.nGr);
         else
-            xCon(ic).edf = sum(SwE.dof.nSubj_dof(unique(SwE.dof.iBeta_dof(ind))) - ...
-            SwE.dof.pB_dof(unique(SwE.dof.iBeta_dof(ind)))); 
+            indSubDesignMatrices = SwE.dof.iBeta_dof(ind);
+            subjectsInvolved = [];
+            for iIndSubDesignMatrices = indSubDesignMatrices
+              subjectsInvolved = [subjectsInvolved; SwE.Subj.iSubj(SwE.dof.iGr_dof == iIndSubDesignMatrices)];
+            end
+            subjectsInvolved = unique(subjectsInvolved);
+            xCon(ic).edf = sum(SwE.dof.edof_Subj(subjectsInvolved));
         end
         
         % load .mat file(s) if this is the format
