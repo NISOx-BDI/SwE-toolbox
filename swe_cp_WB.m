@@ -346,8 +346,14 @@ if dof_type == 0 % so naive estimation is used
   else
     ind = find(any(conWB~=0));
   end
-  edf = sum(nSubj_dof(unique(iBeta_dof(ind))) - pB_dof(unique(iBeta_dof(ind))));
-  
+  indSubDesignMatrices = iBeta_dof(ind);
+  subjectsInvolved = [];
+  for iIndSubDesignMatrices = indSubDesignMatrices
+    subjectsInvolved = [subjectsInvolved; iSubj(iGr_dof == iIndSubDesignMatrices)];
+  end
+  subjectsInvolved = unique(subjectsInvolved);
+  edf = sum(edof_Subj(subjectsInvolved));
+
   dof_cov = zeros(1,nBeta);
   for i = 1:nBeta
     dof_cov(i) = nSubj_dof(iBeta_dof(i)) - ...
