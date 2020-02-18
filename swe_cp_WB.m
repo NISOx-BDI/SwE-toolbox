@@ -293,7 +293,7 @@ while 1
   nGr_dof = length(uGr_dof);
   tmp = zeros(nGr_dof,nBeta);
   for i = 1:nGr_dof
-    tmp(i,:) = any(xX.X(iGr_dof==i,:));
+    tmp(i,:) = any(xX.X(iGr_dof==uGr_dof(i),:));
   end
   if nGr_dof==1 | all(sum(tmp, 1)==1) %#ok<OR2>
     break % all is ok, just stop the while
@@ -301,7 +301,7 @@ while 1
     ind1 = find(sum(tmp, 1)>1,1); % detect the first column in common
     ind2 = find(tmp(:,ind1)==1); % detect the groups to be fused
     for ii = ind2'
-      iGr_dof(iGr_dof==ii) = ind2(1); % fuse the groups
+      iGr_dof(iGr_dof==uGr_dof(ii)) = ind2(1); % fuse the groups
     end
   end
 end
