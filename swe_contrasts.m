@@ -248,7 +248,12 @@ for i = 1:length(Ic)
               subjectsInvolved = [subjectsInvolved; SwE.Subj.iSubj(SwE.dof.iGr_dof == iIndSubDesignMatrices)];
             end
             subjectsInvolved = unique(subjectsInvolved);
-            xCon(ic).edf = sum(SwE.dof.edof_Subj(subjectsInvolved));
+            indSubjInvolved = nan(length(subjectsInvolved),1);
+            % convert into in
+            for iSubjInvolved = 1:length(subjectsInvolved)
+              indSubjInvolved(iSubjInvolved) = find(SwE.Subj.uSubj == subjectsInvolved(iSubjInvolved));
+            end
+            xCon(ic).edf = sum(SwE.dof.edof_Subj(indSubjInvolved));
         end
         
         % load .mat file(s) if this is the format

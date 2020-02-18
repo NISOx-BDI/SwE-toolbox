@@ -352,7 +352,12 @@ if dof_type == 0 % so naive estimation is used
     subjectsInvolved = [subjectsInvolved; iSubj(iGr_dof == iIndSubDesignMatrices)];
   end
   subjectsInvolved = unique(subjectsInvolved);
-  edf = sum(edof_Subj(subjectsInvolved));
+  indSubjInvolved = nan(length(subjectsInvolved),1);
+  % convert into in
+  for iSubjInvolved = 1:length(subjectsInvolved)
+    indSubjInvolved(iSubjInvolved) = find(uSubj == subjectsInvolved(iSubjInvolved));
+  end
+  edf = sum(edof_Subj(indSubjInvolved));
 
   dof_cov = zeros(1,nBeta);
   for i = 1:nBeta
