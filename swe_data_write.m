@@ -30,6 +30,15 @@ function V = swe_data_write(V, Y, varargin)
         V.private.dat(varargin{1}) = reshape(Y,size(varargin{1}))';
       end
     end
+  elseif strcmpi(cl, 'gifti') && ~isempty(varargin) && exist('OCTAVE_VERSION','builtin') 
+    D = V.private.private.data{1};
+    tmp = reshape(Y,size(varargin{1}));
+    try
+      D.data(varargin{1}) = tmp;
+    catch
+      D.data(varargin{1}) = tmp';
+    end
+    V.private.private.data{1} = D;
   else
     V = spm_data_write(V, Y, varargin{:});
   end
