@@ -1,14 +1,13 @@
-function [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm, brainStructureShortLabels, brainStructureLongLabels] = swe_cifti_max(X, indSurvivingInCifti, ciftiInformation, boxcoxInfo)
+function [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm, brainStructureShortLabels, brainStructureLongLabels] = swe_cifti_max(X, indSurvivingInCifti, ciftiInformation, boxcoxInfo)
   % Sizes, local maxima and locations of excursion sets on a cifti file
-  % FORMAT [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm] = spm_mesh_max(X, indSurvivingInCifti, ciftiInformation, boxcoxInfo)
+  % FORMAT [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm] = spm_mesh_max(X, indSurvivingInCifti, ciftiInformation, boxcoxInfo)
   % X                     		- an [nx1] array of stat values
   % indSurvivingInCifti   		- an [nx1] array of locations {in cifti indices}
   % ciftiInformation      		- cifti information
   %
   % N                     		- a [px1] size of connected components {in voxels/vertices}
   % N_area                		- a [px1] size of cluster area {in mm^2} (empty for volume)
-  % N_boxcox1               	- a [px1] size of normalised cluster size based on a boxcox transformation normalised by the mean and the std 
-  % N_boxcox2               	- a [px1] size of normalised cluster size based on a boxcox transformation normalised by the median and twice (Q3-Q2)
+  % N_boxcox               	  - a [px1] size of normalised cluster size based on a boxcox transformation normalised by the median (Q2) and the high-IQR (Q3-Q2)
   % Z                     		- stat values of maxima
   % M                     		- location of maxima {in vertices or voxels}
   % A                     		- region number
@@ -17,7 +16,7 @@ function [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm, brainStructureShor
   % brainStructureShortLabels - short brain structure labels of each maxima
   % brainStructureLongLabels  - long brain structure labels of each maxima
   %__________________________________________________________________________
-  N = []; N_area = []; N_boxcox1 = []; N_boxcox2 = [];
+  N = []; N_area = []; N_boxcox = [];
   Z = []; M = []; A = []; XYZ = []; Mmm = []; 
   brainStructureShortLabels = []; brainStructureLongLabels = [];
   
@@ -48,7 +47,7 @@ function [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm, brainStructureShor
     isXColumnVector = false;
   end
 
-  scalingFactorNorm2 = 2 * swe_invNcdf(0.75);
+  scalingFactorNorm = 2 * swe_invNcdf(0.75);
 
   maxA = 0;
   if numel(ciftiInformation.surfaces) > 0
@@ -84,8 +83,7 @@ function [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm, brainStructureShor
           end
         end
         if ~isempty(boxcoxInfo)
-          N_boxcox1 = [N_boxcox1; (tmp - boxcoxInfo.surfaces.mean) ./ boxcoxInfo.surfaces.std];
-          N_boxcox2 = [N_boxcox2; scalingFactorNorm2 * (tmp - boxcoxInfo.surfaces.median) ./ boxcoxInfo.surfaces.hiqr];
+          N_boxcox = [N_boxcox; scalingFactorNorm * (tmp - boxcoxInfo.surfaces.median) ./ boxcoxInfo.surfaces.hiqr];
         end
         % need to convert the surface coordinates into CIfTI coordinates
         isMax = ismember(ciftiInformation.surfaces{i}.iV, M_tmp(1,:));
@@ -144,8 +142,7 @@ function [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm, brainStructureShor
       brainStructureShortLabels = [brainStructureShortLabels; tmpCell];
       if ~isempty(boxcoxInfo)
         tmp = boxcox(boxcoxInfo.volume.lambda, N_tmp);
-        N_boxcox1 = [N_boxcox1; (tmp - boxcoxInfo.volume.mean) ./ boxcoxInfo.volume.std];
-        N_boxcox2 = [N_boxcox2; scalingFactorNorm2 * (tmp - boxcoxInfo.volume.median) ./ boxcoxInfo.volume.hiqr];
+        N_boxcox = [N_boxcox; scalingFactorNorm * (tmp - boxcoxInfo.volume.median) ./ boxcoxInfo.volume.hiqr];
       end
     end
   end
@@ -186,8 +183,7 @@ function [N, N_area, N_boxcox1, N_boxcox2, Z, M, A, XYZ, Mmm, brainStructureShor
         brainStructureShortLabels = [brainStructureShortLabels; tmpCell];
         if ~isempty(boxcoxInfo)
           tmp = boxcox(boxcoxInfo.volume.lambda, N_tmp);
-          N_boxcox1 = [N_boxcox1; (tmp - boxcoxInfo.volume.mean) ./ boxcoxInfo.volume.std];
-          N_boxcox2 = [N_boxcox2; scalingFactorNorm2 * (tmp - boxcoxInfo.volume.median) ./ boxcoxInfo.volume.hiqr];
+          N_boxcox = [N_boxcox; scalingFactorNorm * (tmp - boxcoxInfo.volume.median) ./ boxcoxInfo.volume.hiqr];
         end
       end
       maxA = max(A);

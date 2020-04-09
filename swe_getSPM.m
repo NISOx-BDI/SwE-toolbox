@@ -1023,7 +1023,7 @@ if ~isMat
                     try
                       clusterSizeType = xSwE.clusterSizeType;
                     catch
-                      str = 'classic k_E|Box-Cox norm. k_{Z1}|Box-Cox norm. k_{Z2}';
+                      str = 'classic k_E|Box-Cox norm. k_{Z}';
                       clusterSizeType = spm_input('cluster size statistic','+1','b',str,[],1);
                     end
                   end
@@ -1211,25 +1211,8 @@ if ~isMat
               
               % recompute the p-values as they might have increased due to post-hoc masking
               if Ic == 1
-                if isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z1}')
-                  if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0) > 0
-                    clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
-                    clusterSizesInSurfaces = (clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_mean) ...
-                                  ./ SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_std;
-                  else
-                    clusterSizesInSurfaces = [];
-                  end
-                  if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0) > 0
-                    clusterSizesInVolume = boxcox(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_lambda, clusterSizesInVolume')';
-                    clusterSizesInVolume = (clusterSizesInVolume - SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_mean) ...
-                                  ./ SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_std;
-                  else
-                    clusterSizesInVolume = [];
-                  end
-                  clusterSizes = [clusterSizesInSurfaces, clusterSizesInVolume];
-                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSize_norm;
-                elseif isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z2}')
-                  scalingFactorNorm2 = 2 * swe_invNcdf(0.75);
+                if isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z}')
+                  scalingFactorNorm = 2 * swe_invNcdf(0.75);
                   if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0) > 0
                     clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
                     clusterSizesInSurfaces = (clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_median) ...
@@ -1244,8 +1227,8 @@ if ~isMat
                   else
                     clusterSizesInVolume = [];
                   end
-                  clusterSizes = scalingFactorNorm2 * [clusterSizesInSurfaces, clusterSizesInVolume];
-                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSize_norm2;
+                  clusterSizes = scalingFactorNorm * [clusterSizesInSurfaces, clusterSizesInVolume];
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSize_norm;
                 else
                   clusterSizes = NaN(1, numel(clusIndices));
                   for i = 1:numel(clusIndices)
@@ -1254,25 +1237,8 @@ if ~isMat
                   maxClusterSize = SwE.WB.clusterInfo.maxClusterSize;
                 end
               elseif Ic == 2
-                if isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z1}')
-                  if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0) > 0
-                    clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
-                    clusterSizesInSurfaces = (clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_mean) ...
-                                    ./ SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_std;
-                  else
-                    clusterSizesInSurfaces = [];
-                  end
-                  if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0) > 0
-                    clusterSizesInVolume = boxcox(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_lambda, clusterSizesInVolume')';
-                    clusterSizesInVolume = (clusterSizesInVolume - SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_mean) ...
-                                    ./ SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_std;
-                  else
-                    clusterSizesInVolume = [];
-                  end
-                  clusterSizes = [clusterSizesInSurfaces, clusterSizesInVolume];
-                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSizeNeg_norm;
-                elseif isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z2}')
-                  scalingFactorNorm2 = 2 * swe_invNcdf(0.75);
+                if isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z}')
+                  scalingFactorNorm = 2 * swe_invNcdf(0.75);
                   if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0) > 0
                     clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
                     clusterSizesInSurfaces = (clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_median) ...
@@ -1287,8 +1253,8 @@ if ~isMat
                   else
                     clusterSizesInVolume = [];
                   end
-                  clusterSizes = scalingFactorNorm2 * [clusterSizesInSurfaces, clusterSizesInVolume];
-                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSizeNeg_norm2;
+                  clusterSizes = scalingFactorNorm * [clusterSizesInSurfaces, clusterSizesInVolume];
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSizeNeg_norm;
                 else
                   clusterSizes = NaN(1, numel(clusIndices));
                   for i = 1:numel(clusIndices)
@@ -1413,7 +1379,6 @@ if isfield(SwE, 'WB')
         xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
         if isCifti
           xSwE.VspmFWEP_clusnorm = cat(1,xCon(Ic).VspmFWEP_clusnorm);
-          xSwE.VspmFWEP_clusnorm2 = cat(1,xCon(Ic).VspmFWEP_clusnorm2);
           if strcmp(clustWise, 'FWE')
             xSwE.clusterSizeType = clusterSizeType;
           end

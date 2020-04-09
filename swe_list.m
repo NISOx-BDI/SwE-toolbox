@@ -244,11 +244,6 @@ case 'table'                                                        %-Table
         else
             VspmFWEP_clusnorm = [];
         end
-        if isfield(xSwE, 'VspmFWEP_clusnorm2')
-            VspmFWEP_clusnorm2 = swe_data_read(xSwE.VspmFWEP_clusnorm2);
-        else
-            VspmFWEP_clusnorm2 = [];
-        end
     end
     
 %     if STAT~='P'
@@ -313,8 +308,7 @@ case 'table'                                                        %-Table
             % 'cluster',  'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
             'cluster',  'equivk',       '\itk\rm_E';...
             'cluster',  'equivkArea',       '\it{area}';...
-            'cluster',  'equivkZ1',       '\itk\rm_{Z1}';...
-            'cluster',  'equivkZ2',       '\itk\rm_{Z2}';...
+            'cluster',  'equivkZ',       '\itk\rm_{Z}';...
             % 'cluster',  'p(unc)',       '\itp\rm_{uncorr}';...
             'peak',     'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
             'peak',     'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
@@ -425,11 +419,8 @@ case 'table'                                                        %-Table
             end
         elseif xSwE.infType == 1 % cluster-wise
             if strcmp(xSwE.clustWise, 'FWE')
-              if isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z1}')
-                TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); k_{Z1} > %0.3f, p <= %0.3f (FWE).'];
-                TabDat.ftr{1,2} = [u, str2num(td.u), k, xSwE.fwep_c];
-              elseif isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z2}')
-                TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); k_{Z2} > %0.3f, p <= %0.3f (FWE).'];
+              if isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z}')
+                TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); k_{Z} > %0.3f, p <= %0.3f (FWE).'];
                 TabDat.ftr{1,2} = [u, str2num(td.u), k, xSwE.fwep_c];
               else
                 TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); Extent k > %0.0f ' strDataType ', p <= %0.3f (FWE).'];
@@ -483,7 +474,7 @@ case 'table'                                                        %-Table
      end
      
      if isCifti && xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') && isfield(xSwE, 'boxcoxInfo')
-        TabDat.ftr{(3+exlns),1} = 'k_{Z1} = (k_{\\lambda}-mean(k_{\\lambda}^{H0}))/std(k_{\\lambda}^{H0}), k_{Z2}=0.6745(k_{\\lambda}-Q2(k_{\\lambda}^{H0}))/(Q3(k_{\\lambda}^{H0})-Q2(k_{\\lambda}^{H0}))';
+        TabDat.ftr{(3+exlns),1} = 'k_{Z} = 0.6745 (k_{\\lambda} - Q2(k_{\\lambda}^{H0})) / (Q3(k_{\\lambda}^{H0})-Q2(k_{\\lambda}^{H0}))';
         % TabDat.ftr{(3+exlns),1} = 'Null cluster sizes in surfaces: \\lambda_S=%0.2f , \\lambda_V =%0.2f';
         % TabDat.ftr{(3+exlns),1} = 'Box-Cox(Surf): \lambda=%0.2f, mean=%0.2f, std=%0.2f, median=%0.2f, 2(Q3-Q2)=%0.2f';
         TabDat.ftr{(3+exlns),2} = [];
@@ -661,7 +652,7 @@ case 'table'                                                        %-Table
         else
             boxcoxInfo = [];
         end
-        [N, N_area, N_boxcox1, N_boxcox2, Z, XYZ, A, L, XYZmm, brainStructureShortLabels] = ...
+        [N, N_area, N_boxcox, Z, XYZ, A, L, XYZmm, brainStructureShortLabels] = ...
             swe_cifti_max(Z,XYZ(1,:),xSwE.cifti, boxcoxInfo);
     elseif ~spm_mesh_detect(xSwE.Vspm)
         [N Z XYZ A L]  = spm_max(Z,XYZ);
@@ -770,10 +761,8 @@ case 'table'                                                        %-Table
                 warning(ws);
                 
                 if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') % only for FWER clusterwise WB
-                    if isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z1}')
+                    if isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z}')
                         Pk  = 10.^-VspmFWEP_clusnorm(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                    elseif isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z2}')
-                        Pk  = 10.^-VspmFWEP_clusnorm2(XYZ(1,i),XYZ(2,i),XYZ(3,i));
                     else
                         Pk  = 10.^-VspmFWEP_clus(XYZ(1,i),XYZ(2,i),XYZ(3,i));
                     end
@@ -810,17 +799,12 @@ case 'table'                                                        %-Table
             else
                 N_area_tmp = N_area(i);
             end
-            if ~isCifti || i > numel(N_boxcox1)   
-                N_boxcox1_tmp = [];
+            if ~isCifti || i > numel(N_boxcox)   
+                N_boxcox_tmp = [];
             else
-                N_boxcox1_tmp = N_boxcox1(i);
+                N_boxcox_tmp = N_boxcox(i);
             end
-            if ~isCifti || i > numel(N_boxcox2)   
-                N_boxcox2_tmp = [];
-            else
-                N_boxcox2_tmp = N_boxcox2(i);
-            end
-            [TabDat.dat{TabLin,3:12}] = deal(Pk, N(i), N_area_tmp, N_boxcox1_tmp, N_boxcox2_tmp,Pu,Qu,U,Pz,XYZmm(:,i));
+            [TabDat.dat{TabLin,3:12}] = deal(Pk, N(i), N_area_tmp, N_boxcox_tmp,Pu,Qu,U,Pz,XYZmm(:,i));
         end
         if isCifti
           [TabDat.dat{TabLin, 13}] = char(brainStructureShortLabels(i));

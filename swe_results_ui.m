@@ -585,10 +585,8 @@ switch lower(Action), case 'setup'                         %-Set up results
         if strcmp(xSwE.clustWise, 'FWE') 
             if ~isfield(xSwE, 'clusterSizeType') || strcmp(xSwE.clusterSizeType, 'classic k_E')
                 text(0,00,sprintf('Wild Bootstrap extent threshold k > %0.0f %s {p<=%0.3f (FWE)}', xSwE.k, strDataType, xSwE.fwep_c), 'Parent', hResAx)
-            elseif strcmp(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z1}')
-                text(0,00,sprintf('Wild Bootstrap norm. ext. thresh. k_{Z1} > %0.3f {p<=%0.3f (FWE)}', xSwE.k, xSwE.fwep_c), 'Parent', hResAx, 'Interpreter', 'tex')
-            elseif strcmp(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z2}')
-                text(0,00,sprintf('Wild Bootstrap norm. ext. thresh. k_{Z2} > %0.3f {p<=%0.3f (FWE)}', xSwE.k, xSwE.fwep_c), 'Parent', hResAx, 'Interpreter', 'tex')
+            elseif strcmp(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z}')
+                text(0,00,sprintf('Wild Bootstrap norm. ext. thresh. k_{Z} > %0.3f {p<=%0.3f (FWE)}', xSwE.k, xSwE.fwep_c), 'Parent', hResAx, 'Interpreter', 'tex')
             else
                 error('Unknown cluster extent type!');
             end
