@@ -359,6 +359,15 @@ if isCifti
   SwE.cifti.isClusConstrainedInVolROI = (job.ciftiAdditionalInfo.volRoiConstraint == 1);
 end
 
+if isMeshData
+    SwE.gifti = struct;
+    if ~isempty(job.giftiAdditionalInfo.areaFileForGiftiInputs)) && ~strcmpi(job.giftiAdditionalInfo.areaFileForGiftiInputs, '')
+        SwE.gifti.areaFile = char(job.giftiAdditionalInfo.areaFileForGiftiInputs);
+    else
+        SwE.gifti.areaFile = '';
+    end
+end
+
 fprintf('%30s\n','...done')  
 
 
