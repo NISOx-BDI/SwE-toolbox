@@ -761,20 +761,6 @@ WB_nB.strtype = 'i';
 WB_nB.num     = [1 1];
 
 
-% % ---------------------------------------------------------------------
-% % WB_cluster WB cluster-wise inference 
-% % ---------------------------------------------------------------------
-% WB_cluster         = cfg_choice;
-% WB_cluster.tag     = 'WB_cluster';
-% WB_cluster.name    = 'Cluster-wise inference';
-% WB_cluster.values  = {WB_cluster_no WB_cluster_yes WB_cluster_yes_mat};
-% WB_cluster.val     = {WB_cluster_no};
-% WB_cluster.help    = {''
-%   'No: no cluster-wise inference will be performed'
-%   ''
-%   'Yes: a cluster-wise inference will be performed alongside the voxel-wise inference. If this option is selected, the U-SwE will be automatically used in order to produce "meaningful" parametric p-value bootstrap images to be thresholded by the specified cluster-forming threshold.'
-%   ''};
-
 % ---------------------------------------------------------------------
 % WB_voxelwise WB voxelwise inference
 % ---------------------------------------------------------------------
