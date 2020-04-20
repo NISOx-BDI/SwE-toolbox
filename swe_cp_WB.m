@@ -2635,7 +2635,7 @@ else
 
       % Calculate FWE negative p values.
       for b = 1:WB.nB
-	tfcefwevol_neg = tfcefwevol_neg + (maxTFCEScore_neg(b+1) > par_tfce_neg - tol);
+	      tfcefwevol_neg = tfcefwevol_neg + (maxTFCEScore_neg(b+1) > par_tfce_neg - tol);
       end
       tfcefwevol_neg = tfcefwevol_neg / (WB.nB + 1);
 
