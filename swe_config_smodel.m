@@ -65,7 +65,9 @@ areaFile.tag     = 'areaFile';
 areaFile.name    = 'Surface area file';
 areaFile.help    = {''
   'Surface file containing the area of each vertex of this surface brain structure'
-  'This file is optional. It will be used to display the area of clusters and to compute Box-Cox normalised cluster sizes. If it is not supplied, the Box-Cox normalised cluster sizes will be computed based on the number of vertices instead.'};
+  ''
+  'This file is optional. It will be used to display the area of clusters and to compute Box-Cox normalised cluster sizes. If it is not supplied, the Box-Cox normalised cluster sizes will be computed based on the number of vertices instead.'
+  };
 areaFile.filter  = 'any';
 areaFile.ufilter = '.*(gii)';
 areaFile.num     = [0 1];
@@ -80,6 +82,7 @@ ciftiGeomFile.name    = 'Surface brain structure';
 ciftiGeomFile.val     = {brainStructureLabel geomFile areaFile};
 ciftiGeomFile.help    = {''
   'Add a new surface brain structure for CIfTI inputs.'
+  ''
   'For each surface brain structure, a geometry file must be specified alonside its label in the CIfTI file (the function swe_read_cifti_info can be used on one the input to extract the label of the surface brain structure).'
   'The specifictation of the file containing the area of each vertex is optional. It will be used to display the area of clusters and to compute Box-Cox normalised cluster sizes. If it is not supplied, the Box-Cox normalised cluster sizes will be computed based on the number of vertices instead.'};
 
@@ -90,7 +93,8 @@ ciftiGeomFiles         = cfg_repeat;
 ciftiGeomFiles.tag     = 'ciftiGeomFiles';
 ciftiGeomFiles.name    = 'Surface geometry files for CIfTI inputs';
 ciftiGeomFiles.help    = {''
-  'This option must be used for CIfTI inputs. It is not needed for other types of inputs'
+  'This option must be used for CIfTI inputs. It is not needed for other types of inputs.'
+  ''
   'It allows for the specification of the geometry files of each surface brain structure in the CIfTI inputs.'
   'For each surface brain structure, a geometry file must provided alongside the label of this brain structure used in the CIfTI files.'
   'In addition, for each surface brain structure, a surface metric file containing the surface area of each vertex may be added. It will be used to display the area of clusters and to compute Box-Cox normalised cluster sizes. If it is not supplied, the Box-Cox normalised cluster sizes will be computed based on the number of vertices instead.'
@@ -104,16 +108,19 @@ ciftiGeomFiles.num     = [0 Inf];
 % ---------------------------------------------------------------------
 volRoiConstraint         = cfg_menu;
 volRoiConstraint.tag     = 'volRoiConstraint';
-volRoiConstraint.name    = 'Clusters constrained within the volume ROI boundaries';
-volRoiConstraint.help    = {'If yes, the surviving clusters will be contrained to be within the volume ROI boundaries. Thus, they will not be allowed to spread across several volume ROIs.'
-              ''
-              'If no, the surviving clusters will not be contrained to be within the volume ROI boundaries. Thus, they will be allowed to spread across several volume ROIs.'};
+volRoiConstraint.name    = 'Should the volume clusters be constrained within the volume ROI boundaries?';
+volRoiConstraint.help    = {''
+  'If yes, the surviving clusters will be contrained to be within the volume ROI boundaries. Thus, they will not be allowed to spread across several volume ROIs.'
+  ''
+  'If no, the surviving clusters will not be contrained to be within the volume ROI boundaries. Thus, they will be allowed to spread across several volume ROIs.'
+  };
 volRoiConstraint.labels = {
                           'Yes'
                           'No'
                           }';
 volRoiConstraint.values = {1 0};
 volRoiConstraint.val    = {1};
+
 % ---------------------------------------------------------------------
 % ciftiAdditionalInfo Additional information for CIfTI inputs
 % ---------------------------------------------------------------------
@@ -121,8 +128,9 @@ ciftiAdditionalInfo         = cfg_branch;
 ciftiAdditionalInfo.tag     = 'ciftiAdditionalInfo';
 ciftiAdditionalInfo.name    = 'CIfTI additional information';
 ciftiAdditionalInfo.val     = {ciftiGeomFiles volRoiConstraint};
-ciftiAdditionalInfo.help    = {'This option is used to specify mandatory additional information for CIfTI data. It is ignored for other types of data.'
-                                ''};
+ciftiAdditionalInfo.help    = {''
+  'This option is used to specify additional (mandatory and optional) information for CIfTI data. It is ignored for other types of data.'
+  };
 
 % ---------------------------------------------------------------------
 % areaFileForGiftiInputs Surface area file for GIfTI inputs
