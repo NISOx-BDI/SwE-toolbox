@@ -125,6 +125,33 @@ ciftiAdditionalInfo.help    = {'This option is used to specify mandatory additio
                                 ''};
 
 % ---------------------------------------------------------------------
+% areaFileForGiftiInputs Surface area file for GIfTI inputs
+% ---------------------------------------------------------------------
+areaFileForGiftiInputs         = cfg_files;
+areaFileForGiftiInputs.tag     = 'areaFileForGiftiInputs';
+areaFileForGiftiInputs.name    = 'Surface area file';
+areaFileForGiftiInputs.help    = {''
+  'Surface file containing the area of each vertex'
+  ''
+  'This file is optional. It will be used to display the area of clusters and to compute Box-Cox normalised cluster sizes. If it is not supplied, the Box-Cox normalised cluster sizes will be computed based on the number of vertices instead.'
+  };
+  areaFileForGiftiInputs.filter  = 'any';
+  areaFileForGiftiInputs.ufilter = '.*(gii)';
+  areaFileForGiftiInputs.num     = [0 1];
+  areaFileForGiftiInputs.val     = {{}};
+
+% ---------------------------------------------------------------------
+% giftiAdditionalInfo Additional information for GIfTI inputs
+% ---------------------------------------------------------------------
+giftiAdditionalInfo         = cfg_branch;
+giftiAdditionalInfo.tag     = 'giftiAdditionalInfo';
+giftiAdditionalInfo.name    = 'GIfTI additional information';
+giftiAdditionalInfo.val     = {areaFileForGiftiInputs};
+giftiAdditionalInfo.help    = {''
+  'This option is used to specify additional information for GIfTI data. It is ignored for other types of data.'
+  };
+
+% ---------------------------------------------------------------------
 % groups Groups
 % ---------------------------------------------------------------------
 groups         = cfg_entry;
@@ -977,7 +1004,7 @@ WB.val    = {WB_no};
 smodel        = cfg_exbranch;
 smodel.tag    = 'smodel';
 smodel.name   = 'Specify Model';
-smodel.val    = {dir scans ciftiAdditionalInfo type subjects generic generic2 masking WB globalc globalm};
+smodel.val    = {dir scans ciftiAdditionalInfo giftiAdditionalInfo type subjects generic generic2 masking WB globalc globalm};
 smodel.help   = {' '
                  'Module of the SwE toolbox allowing the specification of the data and design.'};
 smodel.prog   = @swe_run_smodel;
