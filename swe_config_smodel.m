@@ -886,7 +886,7 @@ WB_inputType.help    = {''
 WB_clusterwise         = cfg_branch;
 WB_clusterwise.tag     = 'WB_clusterwise';
 WB_clusterwise.name    = 'Clusterwise';
-WB_clusterwise.val     = {WB_inputType WB_clusThresh};
+WB_clusterwise.val     = {WB_clusThresh WB_inputType};
 WB_clusterwise.help    = {''
                      'Bootstrapped clusterwise inference will be performed with clusterwise FWE p values available at the results stage.'
 }';
