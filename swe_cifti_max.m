@@ -47,7 +47,7 @@ function [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm, brainStructureShortLabels, bra
     isXColumnVector = false;
   end
 
-  scalingFactorNorm = 2 * swe_invNcdf(0.75);
+  scalingFactorNorm = swe_invNcdf(0.75);
 
   maxA = 0;
   if numel(ciftiInformation.surfaces) > 0
@@ -83,7 +83,7 @@ function [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm, brainStructureShortLabels, bra
           end
         end
         if ~isempty(boxcoxInfo)
-          N_boxcox = [N_boxcox; scalingFactorNorm * (tmp - boxcoxInfo.surfaces.median) ./ boxcoxInfo.surfaces.hiqr];
+          N_boxcox = [N_boxcox; scalingFactorNorm * (tmp - boxcoxInfo.surfaces.median) ./ boxcoxInfo.surfaces.upperHalfIqr];
         end
         % need to convert the surface coordinates into CIfTI coordinates
         isMax = ismember(ciftiInformation.surfaces{i}.iV, M_tmp(1,:));
@@ -142,7 +142,7 @@ function [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm, brainStructureShortLabels, bra
       brainStructureShortLabels = [brainStructureShortLabels; tmpCell];
       if ~isempty(boxcoxInfo)
         tmp = boxcox(boxcoxInfo.volume.lambda, N_tmp);
-        N_boxcox = [N_boxcox; scalingFactorNorm * (tmp - boxcoxInfo.volume.median) ./ boxcoxInfo.volume.hiqr];
+        N_boxcox = [N_boxcox; scalingFactorNorm * (tmp - boxcoxInfo.volume.median) ./ boxcoxInfo.volume.upperHalfIqr];
       end
     end
   end
@@ -183,7 +183,7 @@ function [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm, brainStructureShortLabels, bra
         brainStructureShortLabels = [brainStructureShortLabels; tmpCell];
         if ~isempty(boxcoxInfo)
           tmp = boxcox(boxcoxInfo.volume.lambda, N_tmp);
-          N_boxcox = [N_boxcox; scalingFactorNorm * (tmp - boxcoxInfo.volume.median) ./ boxcoxInfo.volume.hiqr];
+          N_boxcox = [N_boxcox; scalingFactorNorm * (tmp - boxcoxInfo.volume.median) ./ boxcoxInfo.volume.upperHalfIqr];
         end
       end
       maxA = max(A);

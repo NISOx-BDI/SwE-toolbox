@@ -2297,25 +2297,24 @@ end
 % between surfaces and volume 
 %--------------------------------------------------------------------------
 if isCifti && WB.clusterWise == 1
-  scalingFactorNorm = 2 * swe_invNcdf(0.75);
   if numel(SwE.cifti.surfaces) > 0 && numel(clusterSizesInSurfacesUnderH0) > 0
     SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0 = clusterSizesInSurfacesUnderH0;
     [clusterSizesInSurfacesUnderH0, lambdaSurfacesUnderH0] = boxcox(clusterSizesInSurfacesUnderH0');
     clusterSizesInSurfacesUnderH0_boxCox_mean = mean(clusterSizesInSurfacesUnderH0);
     clusterSizesInSurfacesUnderH0_boxCox_std = std(clusterSizesInSurfacesUnderH0);
     clusterSizesInSurfacesUnderH0_boxCox_median = median(clusterSizesInSurfacesUnderH0);
-    clusterSizesInSurfacesUnderH0_boxCox_hiqr = swe_hiqr(clusterSizesInSurfacesUnderH0);
+    clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr = swe_upperHalfIqr(clusterSizesInSurfacesUnderH0);
     clusterSizesInSurfaces_boxCox = boxcox(lambdaSurfacesUnderH0, SwE.WB.clusterInfo.clusterSizesInSurfaces')';
     SwE.WB.clusterInfo.clusterSizesInSurfaces_norm = scalingFactorNorm * ...
-      (clusterSizesInSurfaces_boxCox - clusterSizesInSurfacesUnderH0_boxCox_median) ./ clusterSizesInSurfacesUnderH0_boxCox_hiqr;
+      (clusterSizesInSurfaces_boxCox - clusterSizesInSurfacesUnderH0_boxCox_median) ./ clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr;
     SwE.WB.clusterInfo.maxClusterSizeInSurfaces = maxClusterSizeInSurfaces;
     SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda = lambdaSurfacesUnderH0;
     SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_mean = clusterSizesInSurfacesUnderH0_boxCox_mean;
     SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_std = clusterSizesInSurfacesUnderH0_boxCox_std;
     SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_median = clusterSizesInSurfacesUnderH0_boxCox_median;
-    SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_hiqr = clusterSizesInSurfacesUnderH0_boxCox_hiqr;
+    SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr = clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr;
     maxClusterSizeInSurfaces_boxCox = boxcox(lambdaSurfacesUnderH0, maxClusterSizeInSurfaces')';
-    SwE.WB.clusterInfo.maxClusterSizeInSurfaces_norm = scalingFactorNorm * (maxClusterSizeInSurfaces_boxCox - clusterSizesInSurfacesUnderH0_boxCox_median) ./ clusterSizesInSurfacesUnderH0_boxCox_hiqr;
+    SwE.WB.clusterInfo.maxClusterSizeInSurfaces_norm = scalingFactorNorm * (maxClusterSizeInSurfaces_boxCox - clusterSizesInSurfacesUnderH0_boxCox_median) ./ clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr;
   elseif numel(clusterSizesInSurfacesUnderH0) == 0
     if numel(SwE.cifti.surfaces) > 0
       warning('no null cluster in surfaces was produced for positive effects!')
@@ -2330,18 +2329,18 @@ if isCifti && WB.clusterWise == 1
     clusterSizesInVolumeUnderH0_boxCox_mean = mean(clusterSizesInVolumeUnderH0);
     clusterSizesInVolumeUnderH0_boxCox_std = std(clusterSizesInVolumeUnderH0);
     clusterSizesInVolumeUnderH0_boxCox_median = median(clusterSizesInVolumeUnderH0);
-    clusterSizesInVolumeUnderH0_boxCox_hiqr = swe_hiqr(clusterSizesInVolumeUnderH0);
+    clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr = swe_upperHalfIqr(clusterSizesInVolumeUnderH0);
     clusterSizesInVolume_boxCox = boxcox(lambdaVolumeUnderH0, SwE.WB.clusterInfo.clusterSizesInVolume')';
     SwE.WB.clusterInfo.clusterSizesInVolume_norm = scalingFactorNorm * ...
-      (clusterSizesInVolume_boxCox - clusterSizesInVolumeUnderH0_boxCox_median) ./ clusterSizesInVolumeUnderH0_boxCox_hiqr;
+      (clusterSizesInVolume_boxCox - clusterSizesInVolumeUnderH0_boxCox_median) ./ clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr;
     SwE.WB.clusterInfo.maxClusterSizeInVolume = maxClusterSizeInVolume;
     SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_lambda = lambdaVolumeUnderH0;
     SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_mean = clusterSizesInVolumeUnderH0_boxCox_mean;
     SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_std = clusterSizesInVolumeUnderH0_boxCox_std;
     SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_median = clusterSizesInVolumeUnderH0_boxCox_median;
-    SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_hiqr = clusterSizesInVolumeUnderH0_boxCox_hiqr;
+    SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr = clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr;
     maxClusterSizeInVolume_boxCox = boxcox(lambdaVolumeUnderH0, maxClusterSizeInVolume')';
-    SwE.WB.clusterInfo.maxClusterSizeInVolume_norm = scalingFactorNorm * (maxClusterSizeInVolume_boxCox - clusterSizesInVolumeUnderH0_boxCox_median) ./ clusterSizesInVolumeUnderH0_boxCox_hiqr;
+    SwE.WB.clusterInfo.maxClusterSizeInVolume_norm = scalingFactorNorm * (maxClusterSizeInVolume_boxCox - clusterSizesInVolumeUnderH0_boxCox_median) ./ clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr;
   elseif numel(clusterSizesInVolumeUnderH0) == 0
     if numel(SwE.cifti.volume) > 0
       warning('no null cluster in volume was produced for positive effects!')
@@ -2360,18 +2359,18 @@ if isCifti && WB.clusterWise == 1
       clusterSizesInSurfacesNegUnderH0_boxCox_mean = mean(clusterSizesInSurfacesNegUnderH0);
       clusterSizesInSurfacesNegUnderH0_boxCox_std = std(clusterSizesInSurfacesNegUnderH0);
       clusterSizesInSurfacesNegUnderH0_boxCox_median = median(clusterSizesInSurfacesNegUnderH0);
-      clusterSizesInSurfacesNegUnderH0_boxCox_hiqr = swe_hiqr(clusterSizesInSurfacesNegUnderH0);
+      clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr = swe_upperHalfIqr(clusterSizesInSurfacesNegUnderH0);
       clusterSizesInSurfacesNeg_boxCox = boxcox(lambdaSurfacesNegUnderH0, SwE.WB.clusterInfo.clusterSizesInSurfacesNeg')';
       SwE.WB.clusterInfo.clusterSizesInSurfacesNeg_norm = scalingFactorNorm * ...
-        (clusterSizesInSurfacesNeg_boxCox - clusterSizesInSurfacesNegUnderH0_boxCox_median) ./ clusterSizesInSurfacesNegUnderH0_boxCox_hiqr;
+        (clusterSizesInSurfacesNeg_boxCox - clusterSizesInSurfacesNegUnderH0_boxCox_median) ./ clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr;
       SwE.WB.clusterInfo.maxClusterSizeInSurfacesNeg = maxClusterSizeInSurfacesNeg;
       SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_lambda = lambdaSurfacesNegUnderH0;
       SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_mean = clusterSizesInSurfacesNegUnderH0_boxCox_mean;
       SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_std = clusterSizesInSurfacesNegUnderH0_boxCox_std;
       SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_median = clusterSizesInSurfacesNegUnderH0_boxCox_median;
-      SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_hiqr = clusterSizesInSurfacesNegUnderH0_boxCox_hiqr;
+      SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr = clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr;
       maxClusterSizeInSurfacesNeg_boxCox = boxcox(lambdaSurfacesNegUnderH0, maxClusterSizeInSurfacesNeg')';
-      SwE.WB.clusterInfo.maxClusterSizeInSurfacesNeg_norm = scalingFactorNorm * (maxClusterSizeInSurfacesNeg_boxCox - clusterSizesInSurfacesNegUnderH0_boxCox_median) ./ clusterSizesInSurfacesNegUnderH0_boxCox_hiqr;
+      SwE.WB.clusterInfo.maxClusterSizeInSurfacesNeg_norm = scalingFactorNorm * (maxClusterSizeInSurfacesNeg_boxCox - clusterSizesInSurfacesNegUnderH0_boxCox_median) ./ clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr;
     elseif numel(clusterSizesInSurfacesNegUnderH0) == 0
       if numel(SwE.cifti.surfaces) > 0
         warning('no null cluster in surfaces was produced for negative effects!')
@@ -2386,18 +2385,18 @@ if isCifti && WB.clusterWise == 1
       clusterSizesInVolumeNegUnderH0_boxCox_mean = mean(clusterSizesInVolumeNegUnderH0);
       clusterSizesInVolumeNegUnderH0_boxCox_std = std(clusterSizesInVolumeNegUnderH0);
       clusterSizesInVolumeNegUnderH0_boxCox_median = median(clusterSizesInVolumeNegUnderH0);
-      clusterSizesInVolumeNegUnderH0_boxCox_hiqr = swe_hiqr(clusterSizesInVolumeNegUnderH0);
+      clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr = swe_upperHalfIqr(clusterSizesInVolumeNegUnderH0);
       clusterSizesInVolumeNeg_boxCox = boxcox(lambdaVolumeNegUnderH0, SwE.WB.clusterInfo.clusterSizesInVolumeNeg')';
       SwE.WB.clusterInfo.clusterSizesInVolumeNeg_norm = scalingFactorNorm * ...
-        (clusterSizesInVolumeNeg_boxCox - clusterSizesInVolumeNegUnderH0_boxCox_median) ./ clusterSizesInVolumeNegUnderH0_boxCox_hiqr;
+        (clusterSizesInVolumeNeg_boxCox - clusterSizesInVolumeNegUnderH0_boxCox_median) ./ clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr;
       SwE.WB.clusterInfo.maxClusterSizeInVolumeNeg = maxClusterSizeInVolumeNeg;
       SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_lambda = lambdaVolumeNegUnderH0;
       SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_mean = clusterSizesInVolumeNegUnderH0_boxCox_mean;
       SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_std = clusterSizesInVolumeNegUnderH0_boxCox_std;
       SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_median = clusterSizesInVolumeNegUnderH0_boxCox_median;
-      SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_hiqr = clusterSizesInVolumeNegUnderH0_boxCox_hiqr;
+      SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr = clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr;
       maxClusterSizeInVolumeNeg_boxCox = boxcox(lambdaVolumeNegUnderH0, maxClusterSizeInVolumeNeg')';
-      SwE.WB.clusterInfo.maxClusterSizeInVolumeNeg_norm = scalingFactorNorm * (maxClusterSizeInVolumeNeg_boxCox - clusterSizesInVolumeNegUnderH0_boxCox_median) ./ clusterSizesInVolumeNegUnderH0_boxCox_hiqr;
+      SwE.WB.clusterInfo.maxClusterSizeInVolumeNeg_norm = scalingFactorNorm * (maxClusterSizeInVolumeNeg_boxCox - clusterSizesInVolumeNegUnderH0_boxCox_median) ./ clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr;
     elseif numel(clusterSizesInVolumeNegUnderH0) == 0
       if numel(SwE.cifti.volume) > 0
         warning('no null cluster in volume was produced for negative effects!')
@@ -3118,7 +3117,6 @@ end
 
 end
 
-% this function computes the 2 * (Q3(X) - Q2(X))
-function value = swe_hiqr(X)
-  value = 2 * diff( quantile(X, [.5 .75]) );
+function value = swe_upperHalfIqr(X)
+  value = diff( quantile(X, [.5 .75]) );
 end
