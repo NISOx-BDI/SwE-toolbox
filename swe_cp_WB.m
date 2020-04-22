@@ -99,21 +99,20 @@ isOctave = exist('OCTAVE_VERSION','builtin');
 if isCifti
   metadata = {'ciftiTemplate', SwE.xY.P{1}};  
   file_data_type = 'dpx';
-  dataType == swe_DataType.Cifti;
+  dataType = swe_DataType.Cifti;
   dataTypeSpecificInformation = SwE.cifti;
 end
 
 if isMat
   file_data_type = 'dat';
-  matAreaFile = '';
   if SwE.WB.clusterWise == 1
     isVolumeMat = isfield(SwE.WB.clusterInfo, 'Vxyz');
     isSurfaceMat = isfield(SwE.WB.clusterInfo, 'Vfaces');
     if isVolumeMat
-      dataType == swe_DataType.VolumeMat;
+      dataType = swe_DataType.VolumeMat;
       dataTypeSpecificInformation = [];
     elseif isSurfaceMat
-      dataType == swe_DataType.SurfaceMat;
+      dataType = swe_DataType.SurfaceMat;
       dataTypeSpecificInformation = importdata(SwE.WB.clusterInfo.Vfaces{1});
       if size(dataTypeSpecificInformation,1) ~=3 && size(dataTypeSpecificInformation,2) ~=3
         error('faces coodinates do not seem correct')
@@ -121,11 +120,11 @@ if isMat
         dataTypeSpecificInformation = dataTypeSpecificInformation';
       end
     else
-      dataType == swe_DataType.Mat;
+      dataType = swe_DataType.Mat;
       dataTypeSpecificInformation = [];
     end
   else
-    dataType == swe_DataType.Mat;
+    dataType = swe_DataType.Mat;
     dataTypeSpecificInformation = [];
   end
 end
@@ -135,7 +134,7 @@ if ~isMat && ~isCifti
   if isMeshData
       file_ext = '.gii';
       file_data_type = 'dpx';
-      dataType == swe_DataType.Gifti;
+      dataType = swe_DataType.Gifti;
       g        = SwE.xY.VY(1).private;
       metadata = g.private.metadata;
       name     = {metadata.name};
@@ -156,7 +155,7 @@ if ~isMat && ~isCifti
       end
   else
       isNifti = true;
-      dataType == swe_DataType.Nifti;
+      dataType = swe_DataType.Nifti;
       file_ext = spm_file_ext;
       file_data_type = 'vox';
       metadata = {};
