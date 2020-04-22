@@ -1613,7 +1613,7 @@ if S == 0, spm('alert!','No inmask voxels - empty analysis!'); return; end
 %-place fields in SwE
 %--------------------------------------------------------------------------
 if WB.clusterWise == 1
-  if isfield(SwE.WB, 'clusterInfo') && isSurfaceMat
+  if isfield(SwE.WB, 'clusterInfo') && dataType == swe_DataType.SurfaceMat
     XYZ = [];
   end
 end
