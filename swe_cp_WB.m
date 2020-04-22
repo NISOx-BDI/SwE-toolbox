@@ -2391,7 +2391,7 @@ if isMat
   else
     
     VX_wb = zeros(1, nVox);
-    VX_wb = spm_invXcdf(1 - uncP,1);
+    VX_wb(:,cmask) = spm_invXcdf(1 - uncP,1);
     save(sprintf('swe_%s_x%cstat-WB_c%02d%s', file_data_type, WB.stat, 1, file_ext), 'VX_wb');
     clear VX_wb
     
