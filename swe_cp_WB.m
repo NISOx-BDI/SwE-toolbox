@@ -156,6 +156,7 @@ if ~isMat && ~isCifti
   else
       isNifti = true;
       dataType = swe_DataType.Nifti;
+      dataTypeSpecificInformation = [];
       file_ext = spm_file_ext;
       file_data_type = 'vox';
       metadata = {};
