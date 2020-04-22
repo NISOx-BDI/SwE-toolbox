@@ -50,7 +50,7 @@ function clusterStatistics = swe_getClusterStatistics(dataType, locationActivate
 			end
 
 		otherwise
-			error('The data type is not recognised';)
+			error('The data type is not recognised');
 	end
 
 	if isnan(clusterStatistics.clusterAssignment)
