@@ -282,14 +282,7 @@ if isMat && WB.clusterWise == 1
     elseif size(XYZ,2) ==3
       XYZ = XYZ';
     end
-  elseif isSurfaceMat
-    faces = importdata(SwE.WB.clusterInfo.Vfaces{1});
-    if size(faces,1) ~=3 && size(faces,2) ~=3
-      error('faces coodinates do not seem correct')
-    elseif size(faces,1) ==3
-      faces = faces';
-    end
-  else
+  elseif ~isSurfaceMat
     error('clusterWise inference cannot be done without spatial information when inputs are in ".mat" format. Please supply faces coordinates (faces or tris) for surface data or voxel coordinates (XYZ_vox) for volumetric data');
   end
 end
