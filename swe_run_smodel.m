@@ -361,7 +361,7 @@ end
 
 if isMeshData
     SwE.gifti = struct;
-    if ~isempty(job.giftiAdditionalInfo.areaFileForGiftiInputs)) && ~strcmpi(job.giftiAdditionalInfo.areaFileForGiftiInputs, '')
+    if ~isempty(job.giftiAdditionalInfo.areaFileForGiftiInputs) && ~strcmpi(job.giftiAdditionalInfo.areaFileForGiftiInputs, '')
         SwE.gifti.areaFile = char(job.giftiAdditionalInfo.areaFileForGiftiInputs);
     else
         SwE.gifti.areaFile = '';
