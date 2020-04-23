@@ -2285,8 +2285,10 @@ if WB.clusterWise == 1
   else
     if (isCifti && numel(SwE.cifti.surfaces) > 0) || isMeshData || isSurfaceMat
       warning('no null cluster in surfaces was produced for positive effects!')
+      SwE.WB.clusterInfo.clusterSizesInSurfaces_norm = nan(1, numel(SwE.WB.clusterInfo.clusterSizesInSurfaces));
+    else
+      SwE.WB.clusterInfo.clusterSizesInSurfaces_norm = [];
     end
-    SwE.WB.clusterInfo.clusterSizesInSurfaces_norm = nan(1, numel(SwE.WB.clusterInfo.clusterSizesInSurfaces));
     SwE.WB.clusterInfo.maxClusterSizeInSurfaces_norm = nan(1, WB.nB + 1);
   end
   
@@ -2311,9 +2313,11 @@ if WB.clusterWise == 1
   else
     if (isCifti && numel(SwE.cifti.volume) > 0) || isNifti || isVolumeMat
       warning('no null cluster in volume was produced for positive effects!')
+      SwE.WB.clusterInfo.clusterSizesInVolume_norm = nan(1, numel(SwE.WB.clusterInfo.clusterSizesInVolume));
+    else
+      SwE.WB.clusterInfo.clusterSizesInVolume_norm = [];
     end
-    SwE.WB.clusterInfo.clusterSizesInVolume_norm = nan(1, numel(SwE.WB.clusterInfo.clusterSizesInVolume));
-    SwE.WB.clusterInfo.maxClusterSizeInVolume_norm = nan(1, WB.nB + 1);
+    SwE.WB.clusterInfo.maxClusterSizeInVolume_norm = nan(1, WB.nB + 1);     
   end
   
   SwE.WB.clusterInfo.clusterSize_norm = [SwE.WB.clusterInfo.clusterSizesInSurfaces_norm, SwE.WB.clusterInfo.clusterSizesInVolume_norm];
@@ -2341,8 +2345,10 @@ if WB.clusterWise == 1
     else
       if (isCifti && numel(SwE.cifti.surfaces) > 0) || isMeshData || isSurfaceMat
         warning('no null cluster in surfaces was produced for negative effects!')
+        SwE.WB.clusterInfo.clusterSizesInSurfacesNeg_norm = nan(1, numel(SwE.WB.clusterInfo.clusterSizesInSurfacesNeg));
+      else
+        SwE.WB.clusterInfo.clusterSizesInSurfacesNeg_norm = [];
       end
-      SwE.WB.clusterInfo.clusterSizesInSurfacesNeg_norm = nan(1, numel(SwE.WB.clusterInfo.clusterSizesInSurfacesNeg));
       SwE.WB.clusterInfo.maxClusterSizeInSurfacesNeg_norm = nan(1, WB.nB + 1);
     end
 
@@ -2367,8 +2373,10 @@ if WB.clusterWise == 1
     else
       if (isCifti && numel(SwE.cifti.volume) > 0) || isNifti || isVolumeMat
         warning('no null cluster in volume was produced for negative effects!')
+        SwE.WB.clusterInfo.clusterSizesInVolumeNeg_norm = nan(1, numel(SwE.WB.clusterInfo.clusterSizesInVolumeNeg));
+      else
+        SwE.WB.clusterInfo.clusterSizesInVolumeNeg_norm = [];
       end
-      SwE.WB.clusterInfo.clusterSizesInVolumeNeg_norm = nan(1, numel(SwE.WB.clusterInfo.clusterSizesInVolumeNeg));
       SwE.WB.clusterInfo.maxClusterSizeInVolumeNeg_norm = nan(1, WB.nB + 1);
     end
 
