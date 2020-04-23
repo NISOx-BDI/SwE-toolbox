@@ -171,6 +171,9 @@ catch
   giftiAreaFile = '';
 end
 
+isVolumeMat = (dataType == swe_DataType.VolumeMat);
+isSurfaceMat = (dataType == swe_DataType.SurfaceMat);
+
 %-Check whether we are doing a TFCE analysis
 %--------------------------------------------------------------------------
 % deactivate for now TFCE if we analyse surface data
