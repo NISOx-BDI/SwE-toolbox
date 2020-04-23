@@ -1653,6 +1653,10 @@ if (SwE.WB.clusterWise == 1)
   if isCifti
     SwE.WB.clusterInfo.clusterSizesInSurfaces = originalClusterStatistics.clusterSizesInSurfaces;
     SwE.WB.clusterInfo.clusterSizesInVolume = originalClusterStatistics.clusterSizesInVolume;
+  elseif isNifti || isVolumeMat
+    SwE.WB.clusterInfo.clusterSizesInVolume = originalClusterStatistics.clusterSize;
+  elseif isGifti || isSurfaceMat
+    SwE.WB.clusterInfo.clusterSizesInSurfaces = originalClusterStatistics.clusterSize;
   end
   if (SwE.WB.stat == 'T')
     SwE.WB.clusterInfo.LocActivatedVoxelsNeg = LocActivatedVoxelsNeg;
@@ -1663,6 +1667,10 @@ if (SwE.WB.clusterWise == 1)
     if isCifti
       SwE.WB.clusterInfo.clusterSizesInSurfacesNeg = originalClusterStatisticsNeg.clusterSizesInSurfaces;
       SwE.WB.clusterInfo.clusterSizesInVolumeNeg = originalClusterStatisticsNeg.clusterSizesInVolume;
+    elseif isNifti || isVolumeMat
+      SwE.WB.clusterInfo.clusterSizesInVolumeNeg = originalClusterStatisticsNeg.clusterSize;
+    elseif isGifti || isSurfaceMat
+      SwE.WB.clusterInfo.clusterSizesInSurfacesNeg = originalClusterStatisticsNeg.clusterSize;
     end
   end
 end
