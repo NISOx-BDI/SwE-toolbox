@@ -1018,13 +1018,16 @@ if ~isMat
               case 'FWE' % Family-wise false positive rate
                   % This is performed on the FWE P value map
                   %--------------------------------------------------------
-                  % if CIfTI, ask which type of cluster statistics 
-                  if isCifti
-                    try
-                      clusterSizeType = xSwE.clusterSizeType;
-                    catch
-                      str = 'classic k_E|Box-Cox norm. k_{Z}';
-                      clusterSizeType = spm_input('cluster size statistic','+1','b',str,[],1);
+                  
+                  try
+                    clusterSizeType = xSwE.clusterSizeType;
+                  catch
+                    if isfield(xCon(Ic), 'VspmFWEP_clusnorm')
+                      clusterSizeType = 'Box-Cox norm. k_{Z}';
+                    elseif isfield(xCon(Ic), 'VspmFWEP_clus')
+                      clusterSizeType = 'classic k_E';
+                    else
+                      error('unknown type of cluster statistics')
                     end
                   end
                   % Record what type of clusterwise inference we are doing.
