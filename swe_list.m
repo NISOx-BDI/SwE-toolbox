@@ -695,28 +695,6 @@ case 'table'                                                        %-Table
         [U,i]  = max(Z);            %-largest maxima
         mj     = find(A == A(i));   %-maxima in cluster
 
-
-        %-Compute cluster {k} and peak-level {u} p values for this cluster
-        %------------------------------------------------------------------
-%         if STAT ~= 'P'
-%             
-%             % p-values (FWE)
-%             %--------------------------------------------------------------
-%             Pz      = spm_P(1,0,   U,df,STAT,1,n,S);  % uncorrected p value
-%             Pu      = spm_P(1,0,   U,df,STAT,R,n,S);  % FWE-corrected {based on Z}
-%             [Pk Pn] = spm_P(1,K(i),u,df,STAT,R,n,S);  % [un]corrected {based on K}
-%             
-%             % q-values (FDR)
-%             %--------------------------------------------------------------
-%             if topoFDR
-%                 Qc  = spm_P_clusterFDR(K(i),df,STAT,R,n,u,QPc); % based on K
-%                 Qp  = spm_P_peakFDR(U,df,STAT,R,n,u,QPp);       % based on Z
-%                 Qu  = [];
-%             else
-%                 Qc  = [];
-%                 Qp  = [];
-%             end
-%         else
         if ~xSwE.WB
             switch STATe
                 case 'Z'
