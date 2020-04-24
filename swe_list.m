@@ -418,12 +418,14 @@ case 'table'                                                        %-Table
             end
         elseif xSwE.infType == 1 % cluster-wise
             if strcmp(xSwE.clustWise, 'FWE')
-              if isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z}')
+              if strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z}')
                 TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); k_{Z} > %0.3f, p <= %0.3f (FWE).'];
                 TabDat.ftr{1,2} = [u, str2num(td.u), k, xSwE.fwep_c];
-              else
+              elseif strcmpi(xSwE.clusterSizeType, 'classic k_E')
                 TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); Extent k > %0.0f ' strDataType ', p <= %0.3f (FWE).'];
                 TabDat.ftr{1,2} = [u, str2num(td.u), k, xSwE.fwep_c];
+              else
+                error('Unknow type of cluster statistics');
               end
             elseif strcmp(xSwE.clustWise, 'Uncorr')
               TabDat.ftr{1,1} = ['Threshold: p <= %0.3f (unc.); Extent k >= %0.0f ' strDataType '.'];
@@ -472,7 +474,7 @@ case 'table'                                                        %-Table
         
      end
      
-     if isCifti && xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') && isfield(xSwE, 'boxcoxInfo')
+     if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') && isfield(xSwE, 'boxcoxInfo')
         TabDat.ftr{(3+exlns),1} = 'k_{Z} = 0.6745 (k_{\\lambda} - Q2(k_{\\lambda}^{H0})) / (Q3(k_{\\lambda}^{H0})-Q2(k_{\\lambda}^{H0}))';
         % TabDat.ftr{(3+exlns),1} = 'Null cluster sizes in surfaces: \\lambda_S=%0.2f , \\lambda_V =%0.2f';
         % TabDat.ftr{(3+exlns),1} = 'Box-Cox(Surf): \lambda=%0.2f, mean=%0.2f, std=%0.2f, median=%0.2f, 2(Q3-Q2)=%0.2f';
@@ -645,18 +647,21 @@ case 'table'                                                        %-Table
     %----------------------------------------------------------------------
     minz           = abs(min(min(Z)));
     Z              = 1 + minz + Z;
-    if isCifti
-        if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') && isfield(xSwE, 'boxcoxInfo')
-            boxcoxInfo = xSwE.boxcoxInfo;
-        else
-            boxcoxInfo = [];
-        end
-        [N, N_area, N_boxcox, Z, XYZ, A, L, XYZmm, brainStructureShortLabels] = ...
-            swe_cifti_max(Z,XYZ(1,:),xSwE.cifti, boxcoxInfo);
-    elseif ~spm_mesh_detect(xSwE.Vspm)
-        [N Z XYZ A L]  = spm_max(Z,XYZ);
+
+    if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') && isfield(xSwE, 'boxcoxInfo')
+        boxcoxInfo = xSwE.boxcoxInfo;
     else
-        [N Z XYZ A L]  = spm_mesh_max(Z,XYZ,xSwE.G);
+        boxcoxInfo = [];
+    end
+
+    if isCifti
+        [N, N_area, N_boxcox, Z, XYZ, A, L, XYZmm, brainStructureShortLabels] = ...
+            swe_cifti_max(Z,XYZ(1,:), xSwE.cifti, boxcoxInfo);
+    elseif ~spm_mesh_detect(xSwE.Vspm)
+        [N, N_boxcox, Z, XYZ, A, L]  = swe_max(Z, XYZ, boxcoxInfo);
+        N_area = [];
+    else
+        [N, N_area, N_boxcox, Z, XYZ, A, L]  = spm_mesh_max(Z, XYZ, xSwE.G, boxcoxInfo);
     end
     Z              = Z - minz - 1;
 
@@ -769,12 +774,12 @@ case 'table'                                                        %-Table
             
         end
         
-        if ~isCifti ||i > numel(N_area) % means that this is for volume or there is no area info
+        if i > numel(N_area) % means that this is for volume or there is no area info
             N_area_tmp = [];
         else
             N_area_tmp = N_area(i);
         end
-        if ~isCifti || i > numel(N_boxcox)   
+        if i > numel(N_boxcox)   
             N_boxcox_tmp = [];
         else
             N_boxcox_tmp = N_boxcox(i);
