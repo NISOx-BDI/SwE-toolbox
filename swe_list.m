@@ -791,22 +791,18 @@ case 'table'                                                        %-Table
             
         end
         
-        if topoFDR
-            [TabDat.dat{TabLin,3:11}] = deal(Pk,Qc,N(i),Pn,Pu,Qp,U,Pz,XYZmm(:,i));
+        if ~isCifti ||i > numel(N_area) % means that this is for volume or there is no area info
+            N_area_tmp = [];
         else
-        % [TabDat.dat{TabLin,3:11}] = deal(Pk,Qc,N(i),Pn,Pu,Qu,U,Pz,XYZmm(:,i));
-            if ~isCifti ||i > numel(N_area) % means that this is for volume or there is no area info
-                N_area_tmp = [];
-            else
-                N_area_tmp = N_area(i);
-            end
-            if ~isCifti || i > numel(N_boxcox)   
-                N_boxcox_tmp = [];
-            else
-                N_boxcox_tmp = N_boxcox(i);
-            end
-            [TabDat.dat{TabLin,3:11}] = deal(Pk, N(i), N_area_tmp, N_boxcox_tmp,Pu,Qu,U,Pz,XYZmm(:,i));
+            N_area_tmp = N_area(i);
         end
+        if ~isCifti || i > numel(N_boxcox)   
+            N_boxcox_tmp = [];
+        else
+            N_boxcox_tmp = N_boxcox(i);
+        end
+        [TabDat.dat{TabLin,3:11}] = deal(Pk, N(i), N_area_tmp, N_boxcox_tmp,Pu,Qu,U,Pz,XYZmm(:,i));
+
         if isCifti
           [TabDat.dat{TabLin, 12}] = char(brainStructureShortLabels(i));
         end
