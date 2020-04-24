@@ -717,77 +717,79 @@ case 'table'                                                        %-Table
 %                 Qp  = [];
 %             end
 %         else
-            if ~xSwE.WB
-              switch STATe
-                  case 'Z'
-                    try
-                      Pz      = normcdf(-U);
-                    catch
-                      Pz      = spm_Ncdf(-U);
-                    end
-                  case 'X'
-                    try
-                      Pz      = 1-chi2cdf(U,1);
-                    catch 
-                      Pz      = 1-spm_Xcdf(U,1);
-                    end
-              end
-            else
-              Pz = 10.^-VspmUncP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-            end
-
-            % If we are not running a wild bootstrap or we are doing a 
-            % small volume correction we need to calculate the FDR P value
-            % and leave the other values blank.
-            if ~xSwE.WB || isfield(xSwE,'svc')
-                Pu      = [];
-                Pk      = [];
-                Pn      = [];
-                Qc      = [];
-                Qp      = [];
-                Qu      = spm_P_FDR(U,[1 1],STATe,n,QPs);    % voxel FDR-corrected
-                ws      = warning('off','SPM:outOfRangeNormal');
-                warning(ws);
-            % If we are running a wild bootstrap we only need to read in
-            % results we calculated earlier.
-            else
-                Pu      = 10.^-VspmFWEP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                Qu      = 10.^-VspmFDRP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                Pn      = [];
-                Qc      = [];
-                Qp      = [];
-                ws      = warning('off','SPM:outOfRangeNormal');
-                warning(ws);
-                
-                if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') % only for FWER clusterwise WB
-                    if isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z}')
-                        Pk  = 10.^-VspmFWEP_clusnorm(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                    else
-                        Pk  = 10.^-VspmFWEP_clus(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                    end
-                    % It is possible to get the results window to display
-                    % details about voxels that were thresholded out by the
-                    % cluster-forming threshold used for the wild bootstrap.
-                    % These regions will have NaN for the cluster FWE P-value
-                    % when they should have one. So the below is necessary:
-                    Pk(isnan(Pk)) = 1;
-                    
-                elseif xSwE.TFCEanaly
-                    
-                    % Get coordinates of all voxels in the current cluster.
-                    currentClus = find(A == A(i));
-                    XYZ_clus = XYZ(:, currentClus);
-                    
-                    % Read in all TFCE FWE P values in this cluser
-                    tfp = 10.^-swe_data_read(xSwE.VspmTFCEFWEP, 'xyz', XYZ_clus);
-                    
-                    % Record the minimum TFCE FWE P value in said cluster.
-                    Pk  = min(tfp);
-                else
-                    Pk  = [];
+        if ~xSwE.WB
+            switch STATe
+                case 'Z'
+                try
+                    Pz      = normcdf(-U);
+                catch
+                    Pz      = spm_Ncdf(-U);
                 end
-                
+                case 'X'
+                try
+                    Pz      = 1-chi2cdf(U,1);
+                catch 
+                    Pz      = 1-spm_Xcdf(U,1);
+                end
             end
+        else
+            Pz = 10.^-VspmUncP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+        end
+
+        % If we are not running a wild bootstrap or we are doing a 
+        % small volume correction we need to calculate the FDR P value
+        % and leave the other values blank.
+        if ~xSwE.WB || isfield(xSwE,'svc')
+            Pu      = [];
+            Pk      = [];
+            Pn      = [];
+            Qc      = [];
+            Qp      = [];
+            Qu      = spm_P_FDR(U,[1 1],STATe,n,QPs);    % voxel FDR-corrected
+            ws      = warning('off','SPM:outOfRangeNormal');
+            warning(ws);
+        % If we are running a wild bootstrap we only need to read in
+        % results we calculated earlier.
+        else
+            Pu      = 10.^-VspmFWEP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+            Qu      = 10.^-VspmFDRP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+            Pn      = [];
+            Qc      = [];
+            Qp      = [];
+            ws      = warning('off','SPM:outOfRangeNormal');
+            warning(ws);
+            
+            if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') % only for FWER clusterwise WB
+                if strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z}')
+                    Pk  = 10.^-VspmFWEP_clusnorm(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                elseif strcmpi(xSwE.clusterSizeType, 'classic k_E')
+                    Pk  = 10.^-VspmFWEP_clus(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                else
+                    error('Unknow type of cluster statistics');
+                end
+                % It is possible to get the results window to display
+                % details about voxels that were thresholded out by the
+                % cluster-forming threshold used for the wild bootstrap.
+                % These regions will have NaN for the cluster FWE P-value
+                % when they should have one. So the below is necessary:
+                Pk(isnan(Pk)) = 1;
+                
+            elseif xSwE.TFCEanaly
+                
+                % Get coordinates of all voxels in the current cluster.
+                currentClus = find(A == A(i));
+                XYZ_clus = XYZ(:, currentClus);
+                
+                % Read in all TFCE FWE P values in this cluser
+                tfp = 10.^-swe_data_read(xSwE.VspmTFCEFWEP, 'xyz', XYZ_clus);
+                
+                % Record the minimum TFCE FWE P value in said cluster.
+                Pk  = min(tfp);
+            else
+                Pk  = [];
+            end
+            
+        end
         
         if topoFDR
             [TabDat.dat{TabLin,3:11}] = deal(Pk,Qc,N(i),Pn,Pu,Qp,U,Pz,XYZmm(:,i));
