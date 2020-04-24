@@ -1030,6 +1030,7 @@ if ~isMat
                       error('unknown type of cluster statistics')
                     end
                   end
+
                   % Record what type of clusterwise inference we are doing.
                   clustWise = 'FWE';
                   
@@ -1379,21 +1380,26 @@ if isfield(SwE, 'WB')
     xSwE.VspmFDRP = cat(1,xCon(Ic).VspmFDRP);
     xSwE.VspmFWEP = cat(1,xCon(Ic).VspmFWEP);
     if SwE.WB.clusterWise
-        xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
-        if isCifti
+        
+        try
+
           xSwE.VspmFWEP_clusnorm = cat(1,xCon(Ic).VspmFWEP_clusnorm);
           if strcmp(clustWise, 'FWE')
             xSwE.clusterSizeType = clusterSizeType;
           end
+          
+          hasVolumeData = (SwE.xY.dataType == swe_DataType.Cifti && numel(SwE.cifti.surfaces) > 0) || SwE.xY.dataType == swe_DataType.Gifti || SwE.xY.dataType == swe_DataType.SurfaceMat;
+          hasSurfaceData = (SwE.xY.dataType == swe_DataType.Cifti && numel(SwE.cifti.volume) > 0) || SwE.xY.dataType == swe_DataType.Nifti || SwE.xY.dataType == swe_DataType.VolumeMat;
+          
           if Ic == 1
-            if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0) > 0
+            if hasVolumeData && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0) > 0
               xSwE.boxcoxInfo.surfaces.lambda = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda;
               xSwE.boxcoxInfo.surfaces.mean = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_mean;
               xSwE.boxcoxInfo.surfaces.std = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_std;
               xSwE.boxcoxInfo.surfaces.median = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_median;
               xSwE.boxcoxInfo.surfaces.upperHalfIqr = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr;
             end
-            if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0) > 0
+            if hasSurfaceData && numel(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0) > 0
               xSwE.boxcoxInfo.volume.lambda = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_lambda;
               xSwE.boxcoxInfo.volume.mean = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_mean;
               xSwE.boxcoxInfo.volume.std = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_std;
@@ -1401,14 +1407,14 @@ if isfield(SwE, 'WB')
               xSwE.boxcoxInfo.volume.upperHalfIqr = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr;
             end
           elseif Ic == 2
-            if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0) > 0
+            if hasVolumeData > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0) > 0
               xSwE.boxcoxInfo.surfaces.lambda = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_lambda;
               xSwE.boxcoxInfo.surfaces.mean = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_mean;
               xSwE.boxcoxInfo.surfaces.std = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_std;
               xSwE.boxcoxInfo.surfaces.median = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_median;
               xSwE.boxcoxInfo.surfaces.upperHalfIqr = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr;
             end
-            if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0) > 0
+            if hasSurfaceData && numel(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0) > 0
               xSwE.boxcoxInfo.volume.lambda = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_lambda;
               xSwE.boxcoxInfo.volume.mean = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_mean;
               xSwE.boxcoxInfo.volume.std = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_std;
@@ -1416,6 +1422,11 @@ if isfield(SwE, 'WB')
               xSwE.boxcoxInfo.volume.upperHalfIqr = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr;
             end
           end
+
+        catch
+
+          xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
+        
         end
     end
     if isfield(SwE.WB, 'TFCE')
