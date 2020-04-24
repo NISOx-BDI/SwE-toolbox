@@ -11,12 +11,14 @@ function [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm, brainStructureShortLabels, bra
   % Z                     		- stat values of maxima
   % M                     		- location of maxima {in vertices or voxels}
   % A                     		- region number
-  % XYZ                   		- cell array of vertices locations in voxels/vertices
+  % XYZ                   		- cell array of locations in voxels/vertices
   % Mmm                   		- location of maxima {in vertices or voxels}
   % brainStructureShortLabels - short brain structure labels of each maxima
   % brainStructureLongLabels  - long brain structure labels of each maxima
-  %__________________________________________________________________________
-  N = []; N_area = []; N_boxcox = [];
+  % =========================================================================
+  % Bryan Guillaume
+  % Version Info:  $Format:%ci$ $Format:%h$
+
   Z = []; M = []; A = []; XYZ = []; Mmm = []; 
   brainStructureShortLabels = []; brainStructureLongLabels = [];
   
