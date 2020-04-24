@@ -2735,6 +2735,8 @@ end
 % save the version number of the toolbox
 SwE.ver = swe('ver');
 
+SwE.xY.dataType = dataType;
+
 %==========================================================================
 %- E N D: Cleanup GUI
 %==========================================================================
