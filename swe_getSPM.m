@@ -1388,8 +1388,8 @@ if isfield(SwE, 'WB')
             xSwE.clusterSizeType = clusterSizeType;
           end
           
-          hasVolumeData = (SwE.xY.dataType == swe_DataType.Cifti && numel(SwE.cifti.surfaces) > 0) || SwE.xY.dataType == swe_DataType.Gifti || SwE.xY.dataType == swe_DataType.SurfaceMat;
-          hasSurfaceData = (SwE.xY.dataType == swe_DataType.Cifti && numel(SwE.cifti.volume) > 0) || SwE.xY.dataType == swe_DataType.Nifti || SwE.xY.dataType == swe_DataType.VolumeMat;
+          hasVolumeData = (SwE.xY.dataType == swe_DataType('Cifti') && numel(SwE.cifti.surfaces) > 0) || SwE.xY.dataType == swe_DataType('Gifti') || SwE.xY.dataType == swe_DataType('SurfaceMat');
+          hasSurfaceData = (SwE.xY.dataType == swe_DataType('Cifti') && numel(SwE.cifti.volume) > 0) || SwE.xY.dataType == swe_DataType('Nifti') || SwE.xY.dataType == swe_DataType('VolumeMat');
           
           if Ic == 1
             if hasVolumeData && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0) > 0

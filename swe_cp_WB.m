@@ -99,7 +99,7 @@ isOctave = exist('OCTAVE_VERSION','builtin');
 if isCifti
   metadata = {'ciftiTemplate', SwE.xY.P{1}};  
   file_data_type = 'dpx';
-  dataType = swe_DataType.Cifti;
+  dataType = swe_DataType('Cifti');
   dataTypeSpecificInformation = SwE.cifti;
 end
 
@@ -109,10 +109,10 @@ if isMat
     isVolumeMat = isfield(SwE.WB.clusterInfo, 'Vxyz');
     isSurfaceMat = isfield(SwE.WB.clusterInfo, 'Vfaces');
     if isVolumeMat
-      dataType = swe_DataType.VolumeMat;
+      dataType = swe_DataType('VolumeMat');
       dataTypeSpecificInformation = [];
     elseif isSurfaceMat
-      dataType = swe_DataType.SurfaceMat;
+      dataType = swe_DataType('SurfaceMat');
       dataTypeSpecificInformation = importdata(SwE.WB.clusterInfo.Vfaces{1});
       if size(dataTypeSpecificInformation,1) ~=3 && size(dataTypeSpecificInformation,2) ~=3
         error('faces coodinates do not seem correct')
@@ -120,11 +120,11 @@ if isMat
         dataTypeSpecificInformation = dataTypeSpecificInformation';
       end
     else
-      dataType = swe_DataType.Mat;
+      dataType = swe_DataType('Mat');
       dataTypeSpecificInformation = [];
     end
   else
-    dataType = swe_DataType.Mat;
+    dataType = swe_DataType('Mat');
     dataTypeSpecificInformation = [];
   end
 end
@@ -134,7 +134,7 @@ if ~isMat && ~isCifti
   if isMeshData
       file_ext = '.gii';
       file_data_type = 'dpx';
-      dataType = swe_DataType.Gifti;
+      dataType = swe_DataType('Gifti');
       g        = SwE.xY.VY(1).private;
       metadata = g.private.metadata;
       name     = {metadata.name};
@@ -155,7 +155,7 @@ if ~isMat && ~isCifti
       end
   else
       isNifti = true;
-      dataType = swe_DataType.Nifti;
+      dataType = swe_DataType('Nifti');
       dataTypeSpecificInformation = [];
       file_ext = spm_file_ext;
       file_data_type = 'vox';
@@ -171,8 +171,8 @@ catch
   giftiAreaFile = '';
 end
 
-isVolumeMat = (dataType == swe_DataType.VolumeMat);
-isSurfaceMat = (dataType == swe_DataType.SurfaceMat);
+isVolumeMat = (dataType == swe_DataType('VolumeMat'));
+isSurfaceMat = (dataType == swe_DataType('SurfaceMat'));
 
 %-Check whether we are doing a TFCE analysis
 %--------------------------------------------------------------------------
@@ -1570,7 +1570,7 @@ else % ".mat" format
   % done... Not sure this solution is the best)
   if (SwE.WB.clusterWise == 1)
     
-    if dataType == swe_DataType.VolumeMat
+    if dataType == swe_DataType('VolumeMat')
       LocActivatedVoxels = XYZ(:,activatedVoxels);
     else %surface data
       LocActivatedVoxels = false(1, nVox);
@@ -1587,7 +1587,7 @@ else % ".mat" format
 
     if (SwE.WB.stat == 'T')
 
-      if dataType == swe_DataType.VolumeMat
+      if dataType == swe_DataType('VolumeMat')
         LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);
       else %surface data
         LocActivatedVoxelsNeg = false(nVox,1);
@@ -1616,7 +1616,7 @@ if S == 0, spm('alert!','No inmask voxels - empty analysis!'); return; end
 %-place fields in SwE
 %--------------------------------------------------------------------------
 if WB.clusterWise == 1
-  if isfield(SwE.WB, 'clusterInfo') && dataType == swe_DataType.SurfaceMat
+  if isfield(SwE.WB, 'clusterInfo') && dataType == swe_DataType('SurfaceMat')
     XYZ = [];
   end
 end
@@ -2166,7 +2166,7 @@ for b = 1:WB.nB
   % done... Not sure this solution is the best)
   if (WB.clusterWise == 1)
 
-    if dataType == swe_DataType.SurfaceMat
+    if dataType == swe_DataType('SurfaceMat')
       LocActivatedVoxels = false(1,nVox);
       LocActivatedVoxels(cmask) = activatedVoxels;
     else
@@ -2181,7 +2181,7 @@ for b = 1:WB.nB
     elseif isfield(bootstrapedClusterStatistics, 'clusterAreas')
       clusterSizesInSurfacesUnderH0 = [clusterSizesInSurfacesUnderH0, bootstrapedClusterStatistics.clusterAreas];
       maxClusterSizeInSurfaces(b+1) = bootstrapedClusterStatistics.maxClusterAreas;
-    elseif (dataType == swe_DataType.Gifti || dataType == swe_DataType.SurfaceMat)
+    elseif (dataType == swe_DataType('Gifti') || dataType == swe_DataType('SurfaceMat'))
       clusterSizesInSurfacesUnderH0 = [clusterSizesInSurfacesUnderH0, bootstrapedClusterStatistics.clusterSize];
       maxClusterSizeInSurfaces(b+1) = bootstrapedClusterStatistics.maxClusterSize;
     end
@@ -2189,7 +2189,7 @@ for b = 1:WB.nB
     if isfield(bootstrapedClusterStatistics, 'clusterSizesInVolume')
       clusterSizesInVolumeUnderH0 = [clusterSizesInVolumeUnderH0, bootstrapedClusterStatistics.clusterSizesInVolume];
       maxClusterSizeInVolume(b+1) = bootstrapedClusterStatistics.maxClusterSizeInVolume;
-    elseif (dataType == swe_DataType.Nifti || dataType == swe_DataType.VolumeMat)
+    elseif (dataType == swe_DataType('Nifti') || dataType == swe_DataType('VolumeMat'))
       clusterSizesInVolumeUnderH0 = [clusterSizesInVolumeUnderH0, bootstrapedClusterStatistics.clusterSize];
       maxClusterSizeInVolume(b+1) = bootstrapedClusterStatistics.maxClusterSize;
     end
@@ -2198,7 +2198,7 @@ for b = 1:WB.nB
 
     if (WB.stat == 'T')
 
-      if dataType == swe_DataType.SurfaceMat
+      if dataType == swe_DataType('SurfaceMat')
         LocActivatedVoxelsNeg = false(1,nVox);
         LocActivatedVoxelsNeg(cmask) = activatedVoxelsNeg;
       else
@@ -2217,7 +2217,7 @@ for b = 1:WB.nB
       elseif isfield(bootstrapedClusterStatisticsNeg, 'clusterAreas')
         clusterSizesInSurfacesNegUnderH0 = [clusterSizesInSurfacesNegUnderH0, bootstrapedClusterStatisticsNeg.clusterAreas];
         maxClusterSizeInSurfacesNeg(b+1) = bootstrapedClusterStatisticsNeg.maxClusterArea;
-      elseif (dataType == swe_DataType.Gifti || dataType == swe_DataType.SurfaceMat)
+      elseif (dataType == swe_DataType('Gifti') || dataType == swe_DataType('SurfaceMat'))
         clusterSizesInSurfacesNegUnderH0 = [clusterSizesInSurfacesNegUnderH0, bootstrapedClusterStatisticsNeg.clusterSize];
         maxClusterSizeInSurfacesNeg(b+1) = bootstrapedClusterStatisticsNeg.maxClusterSize;
       end
@@ -2225,7 +2225,7 @@ for b = 1:WB.nB
       if isfield(bootstrapedClusterStatisticsNeg, 'clusterSizesInVolume')
         clusterSizesInVolumeNegUnderH0 = [clusterSizesInVolumeNegUnderH0, bootstrapedClusterStatisticsNeg.clusterSizesInVolume];
         maxClusterSizeInVolumeNeg(b+1) = bootstrapedClusterStatisticsNeg.maxClusterSizeInVolume;
-      elseif (dataType == swe_DataType.Nifti || dataType == swe_DataType.VolumeMat)
+      elseif (dataType == swe_DataType('Nifti') || dataType == swe_DataType('VolumeMat'))
         clusterSizesInVolumeNegUnderH0 = [clusterSizesInVolumeNegUnderH0, bootstrapedClusterStatisticsNeg.clusterSize];
         maxClusterSizeInVolumeNeg(b+1) = bootstrapedClusterStatisticsNeg.maxClusterSize;
       end
