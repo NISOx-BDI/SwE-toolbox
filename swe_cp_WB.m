@@ -2266,12 +2266,13 @@ if WB.clusterWise == 1
   scalingFactorNorm = swe_invNcdf(0.75);
   if numel(clusterSizesInSurfacesUnderH0) > 0
     SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0 = clusterSizesInSurfacesUnderH0;
-    [clusterSizesInSurfacesUnderH0, lambdaSurfacesUnderH0] = boxcox(clusterSizesInSurfacesUnderH0');
+    lambdaSurfacesUnderH0 = swe_estimateBoxCoxLambda(clusterSizesInSurfacesUnderH0);
+    clusterSizesInSurfacesUnderH0 = swe_boxCoxTransform(clusterSizesInSurfacesUnderH0, lambdaSurfacesUnderH0);
     clusterSizesInSurfacesUnderH0_boxCox_mean = mean(clusterSizesInSurfacesUnderH0);
     clusterSizesInSurfacesUnderH0_boxCox_std = std(clusterSizesInSurfacesUnderH0);
     clusterSizesInSurfacesUnderH0_boxCox_median = median(clusterSizesInSurfacesUnderH0);
     clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr = swe_upperHalfIqr(clusterSizesInSurfacesUnderH0);
-    clusterSizesInSurfaces_boxCox = boxcox(lambdaSurfacesUnderH0, SwE.WB.clusterInfo.clusterSizesInSurfaces')';
+    clusterSizesInSurfaces_boxCox = swe_boxCoxTransform(SwE.WB.clusterInfo.clusterSizesInSurfaces, lambdaSurfacesUnderH0);
     SwE.WB.clusterInfo.clusterSizesInSurfaces_norm = scalingFactorNorm * ...
       (clusterSizesInSurfaces_boxCox - clusterSizesInSurfacesUnderH0_boxCox_median) ./ clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr;
     SwE.WB.clusterInfo.maxClusterSizeInSurfaces = maxClusterSizeInSurfaces;
@@ -2280,7 +2281,7 @@ if WB.clusterWise == 1
     SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_std = clusterSizesInSurfacesUnderH0_boxCox_std;
     SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_median = clusterSizesInSurfacesUnderH0_boxCox_median;
     SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr = clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr;
-    maxClusterSizeInSurfaces_boxCox = boxcox(lambdaSurfacesUnderH0, maxClusterSizeInSurfaces')';
+    maxClusterSizeInSurfaces_boxCox = swe_boxCoxTransform(maxClusterSizeInSurfaces, lambdaSurfacesUnderH0);
     SwE.WB.clusterInfo.maxClusterSizeInSurfaces_norm = scalingFactorNorm * (maxClusterSizeInSurfaces_boxCox - clusterSizesInSurfacesUnderH0_boxCox_median) ./ clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr;
   else
     if (isCifti && numel(SwE.cifti.surfaces) > 0) || isMeshData || isSurfaceMat
@@ -2294,12 +2295,13 @@ if WB.clusterWise == 1
   
   if numel(clusterSizesInVolumeUnderH0) > 0
     SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0 = clusterSizesInVolumeUnderH0;
-    [clusterSizesInVolumeUnderH0, lambdaVolumeUnderH0] = boxcox(clusterSizesInVolumeUnderH0');
+    lambdaVolumeUnderH0 = swe_estimateBoxCoxLambda(clusterSizesInVolumeUnderH0);
+    clusterSizesInVolumeUnderH0 = swe_boxCoxTransform(clusterSizesInVolumeUnderH0, lambdaVolumeUnderH0);
     clusterSizesInVolumeUnderH0_boxCox_mean = mean(clusterSizesInVolumeUnderH0);
     clusterSizesInVolumeUnderH0_boxCox_std = std(clusterSizesInVolumeUnderH0);
     clusterSizesInVolumeUnderH0_boxCox_median = median(clusterSizesInVolumeUnderH0);
     clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr = swe_upperHalfIqr(clusterSizesInVolumeUnderH0);
-    clusterSizesInVolume_boxCox = boxcox(lambdaVolumeUnderH0, SwE.WB.clusterInfo.clusterSizesInVolume')';
+    clusterSizesInVolume_boxCox = swe_boxCoxTransform(SwE.WB.clusterInfo.clusterSizesInVolume, lambdaVolumeUnderH0);
     SwE.WB.clusterInfo.clusterSizesInVolume_norm = scalingFactorNorm * ...
       (clusterSizesInVolume_boxCox - clusterSizesInVolumeUnderH0_boxCox_median) ./ clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr;
     SwE.WB.clusterInfo.maxClusterSizeInVolume = maxClusterSizeInVolume;
@@ -2308,7 +2310,7 @@ if WB.clusterWise == 1
     SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_std = clusterSizesInVolumeUnderH0_boxCox_std;
     SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_median = clusterSizesInVolumeUnderH0_boxCox_median;
     SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr = clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr;
-    maxClusterSizeInVolume_boxCox = boxcox(lambdaVolumeUnderH0, maxClusterSizeInVolume')';
+    maxClusterSizeInVolume_boxCox = swe_boxCoxTransform(maxClusterSizeInVolume, lambdaVolumeUnderH0);
     SwE.WB.clusterInfo.maxClusterSizeInVolume_norm = scalingFactorNorm * (maxClusterSizeInVolume_boxCox - clusterSizesInVolumeUnderH0_boxCox_median) ./ clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr;
   else
     if (isCifti && numel(SwE.cifti.volume) > 0) || isNifti || isVolumeMat
@@ -2326,12 +2328,13 @@ if WB.clusterWise == 1
   if (WB.stat == 'T')
     if numel(clusterSizesInSurfacesNegUnderH0) > 0
       SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0 = clusterSizesInSurfacesNegUnderH0;
-      [clusterSizesInSurfacesNegUnderH0, lambdaSurfacesNegUnderH0] = boxcox(clusterSizesInSurfacesNegUnderH0');
+      lambdaSurfacesNegUnderH0 = swe_estimateBoxCoxLambda(clusterSizesInSurfacesNegUnderH0);
+      clusterSizesInSurfacesNegUnderH0 = swe_boxCoxTransform(clusterSizesInSurfacesNegUnderH0, lambdaSurfacesNegUnderH0);
       clusterSizesInSurfacesNegUnderH0_boxCox_mean = mean(clusterSizesInSurfacesNegUnderH0);
       clusterSizesInSurfacesNegUnderH0_boxCox_std = std(clusterSizesInSurfacesNegUnderH0);
       clusterSizesInSurfacesNegUnderH0_boxCox_median = median(clusterSizesInSurfacesNegUnderH0);
       clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr = swe_upperHalfIqr(clusterSizesInSurfacesNegUnderH0);
-      clusterSizesInSurfacesNeg_boxCox = boxcox(lambdaSurfacesNegUnderH0, SwE.WB.clusterInfo.clusterSizesInSurfacesNeg')';
+      clusterSizesInSurfacesNeg_boxCox = swe_boxCoxTransform(SwE.WB.clusterInfo.clusterSizesInSurfacesNeg, lambdaSurfacesNegUnderH0);
       SwE.WB.clusterInfo.clusterSizesInSurfacesNeg_norm = scalingFactorNorm * ...
         (clusterSizesInSurfacesNeg_boxCox - clusterSizesInSurfacesNegUnderH0_boxCox_median) ./ clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr;
       SwE.WB.clusterInfo.maxClusterSizeInSurfacesNeg = maxClusterSizeInSurfacesNeg;
@@ -2340,7 +2343,7 @@ if WB.clusterWise == 1
       SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_std = clusterSizesInSurfacesNegUnderH0_boxCox_std;
       SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_median = clusterSizesInSurfacesNegUnderH0_boxCox_median;
       SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr = clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr;
-      maxClusterSizeInSurfacesNeg_boxCox = boxcox(lambdaSurfacesNegUnderH0, maxClusterSizeInSurfacesNeg')';
+      maxClusterSizeInSurfacesNeg_boxCox = swe_boxCoxTransform(maxClusterSizeInSurfacesNeg, lambdaSurfacesNegUnderH0);
       SwE.WB.clusterInfo.maxClusterSizeInSurfacesNeg_norm = scalingFactorNorm * (maxClusterSizeInSurfacesNeg_boxCox - clusterSizesInSurfacesNegUnderH0_boxCox_median) ./ clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr;
     else
       if (isCifti && numel(SwE.cifti.surfaces) > 0) || isMeshData || isSurfaceMat
@@ -2354,12 +2357,13 @@ if WB.clusterWise == 1
 
     if numel(clusterSizesInVolumeNegUnderH0) > 0
       SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0 = clusterSizesInVolumeNegUnderH0;
-      [clusterSizesInVolumeNegUnderH0, lambdaVolumeNegUnderH0] = boxcox(clusterSizesInVolumeNegUnderH0');
+      lambdaVolumeNegUnderH0 = swe_estimateBoxCoxLambda(clusterSizesInVolumeNegUnderH0);
+      clusterSizesInVolumeNegUnderH0 = swe_boxCoxTransform(clusterSizesInVolumeNegUnderH0, lambdaVolumeNegUnderH0);
       clusterSizesInVolumeNegUnderH0_boxCox_mean = mean(clusterSizesInVolumeNegUnderH0);
       clusterSizesInVolumeNegUnderH0_boxCox_std = std(clusterSizesInVolumeNegUnderH0);
       clusterSizesInVolumeNegUnderH0_boxCox_median = median(clusterSizesInVolumeNegUnderH0);
       clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr = swe_upperHalfIqr(clusterSizesInVolumeNegUnderH0);
-      clusterSizesInVolumeNeg_boxCox = boxcox(lambdaVolumeNegUnderH0, SwE.WB.clusterInfo.clusterSizesInVolumeNeg')';
+      clusterSizesInVolumeNeg_boxCox = swe_boxCoxTransform(SwE.WB.clusterInfo.clusterSizesInVolumeNeg, lambdaVolumeNegUnderH0);
       SwE.WB.clusterInfo.clusterSizesInVolumeNeg_norm = scalingFactorNorm * ...
         (clusterSizesInVolumeNeg_boxCox - clusterSizesInVolumeNegUnderH0_boxCox_median) ./ clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr;
       SwE.WB.clusterInfo.maxClusterSizeInVolumeNeg = maxClusterSizeInVolumeNeg;
@@ -2368,7 +2372,7 @@ if WB.clusterWise == 1
       SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_std = clusterSizesInVolumeNegUnderH0_boxCox_std;
       SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_median = clusterSizesInVolumeNegUnderH0_boxCox_median;
       SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr = clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr;
-      maxClusterSizeInVolumeNeg_boxCox = boxcox(lambdaVolumeNegUnderH0, maxClusterSizeInVolumeNeg')';
+      maxClusterSizeInVolumeNeg_boxCox = swe_boxCoxTransform(maxClusterSizeInVolumeNeg, lambdaVolumeNegUnderH0);
       SwE.WB.clusterInfo.maxClusterSizeInVolumeNeg_norm = scalingFactorNorm * (maxClusterSizeInVolumeNeg_boxCox - clusterSizesInVolumeNegUnderH0_boxCox_median) ./ clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr;
     else
       if (isCifti && numel(SwE.cifti.volume) > 0) || isNifti || isVolumeMat

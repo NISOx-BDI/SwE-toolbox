@@ -21,7 +21,7 @@ function [N, N_boxcox, Z, M, A, XYZ] = swe_max(X, locationsInVoxels, boxcoxInfo)
 
   try
     scalingFactorNorm = swe_invNcdf(0.75);
-    N_boxcox = (boxcox(boxcoxInfo.volume.lambda, N) - boxcoxInfo.volume.median) * (scalingFactorNorm / boxcoxInfo.volume.upperHalfIqr);
+    N_boxcox = (swe_boxCoxTransform(N, boxcoxInfo.volume.lambda) - boxcoxInfo.volume.median) * (scalingFactorNorm / boxcoxInfo.volume.upperHalfIqr);
   catch
     N_boxcox = [];
   end

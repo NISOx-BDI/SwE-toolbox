@@ -77,11 +77,11 @@ function [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm, brainStructureShortLabels, bra
           end
           N_area = [N_area; N_area_tmp];
           if ~isempty(boxcoxInfo)
-            tmp = boxcox(boxcoxInfo.surfaces.lambda, N_area_tmp);
+            tmp = swe_boxCoxTransform(N_area_tmp, boxcoxInfo.surfaces.lambda);
           end
         else
           if ~isempty(boxcoxInfo)
-            tmp = boxcox(boxcoxInfo.surfaces.lambda, N_tmp);
+            tmp = swe_boxCoxTransform(N_tmp, boxcoxInfo.surfaces.lambda);
           end
         end
         if ~isempty(boxcoxInfo)
@@ -143,7 +143,7 @@ function [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm, brainStructureShortLabels, bra
       [tmpCell{:}] = deal('V');
       brainStructureShortLabels = [brainStructureShortLabels; tmpCell];
       if ~isempty(boxcoxInfo)
-        tmp = boxcox(boxcoxInfo.volume.lambda, N_tmp);
+        tmp = swe_boxCoxTransform(N_tmp, boxcoxInfo.volume.lambda);
         N_boxcox = [N_boxcox; scalingFactorNorm * (tmp - boxcoxInfo.volume.median) ./ boxcoxInfo.volume.upperHalfIqr];
       end
     end
@@ -184,7 +184,7 @@ function [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm, brainStructureShortLabels, bra
         end
         brainStructureShortLabels = [brainStructureShortLabels; tmpCell];
         if ~isempty(boxcoxInfo)
-          tmp = boxcox(boxcoxInfo.volume.lambda, N_tmp);
+          tmp = swe_boxCoxTransform(N_tmp, boxcoxInfo.volume.lambda);
           N_boxcox = [N_boxcox; scalingFactorNorm * (tmp - boxcoxInfo.volume.median) ./ boxcoxInfo.volume.upperHalfIqr];
         end
       end

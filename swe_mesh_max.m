@@ -35,9 +35,9 @@ function [N, N_area, N_boxcox, Z, M, A, XYZ] = swe_mesh_max(X, locationsInVertic
   if canComputeBoxCoxNorm
     scalingFactorNorm = swe_invNcdf(0.75);
     if canComputeArea
-      N_boxcox = (boxcox(boxcoxInfo.surfaces.lambda, N_area) - boxcoxInfo.surfaces.median) * (scalingFactorNorm / boxcoxInfo.surfaces.upperHalfIqr);
+      N_boxcox = (swe_boxCoxTransform(N_area, boxcoxInfo.surfaces.lambda) - boxcoxInfo.surfaces.median) * (scalingFactorNorm / boxcoxInfo.surfaces.upperHalfIqr);
     else
-      N_boxcox = (boxcox(boxcoxInfo.surfaces.lambda, N) - boxcoxInfo.surfaces.median) * (scalingFactorNorm / boxcoxInfo.surfaces.upperHalfIqr);
+      N_boxcox = (swe_boxCoxTransform(N, boxcoxInfo.surfaces.lambda) - boxcoxInfo.surfaces.median) * (scalingFactorNorm / boxcoxInfo.surfaces.upperHalfIqr);
     end
   else
     N_boxcox = [];
