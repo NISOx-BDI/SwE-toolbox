@@ -17,42 +17,40 @@ function clusterStatistics = swe_getClusterStatistics(dataType, locationActivate
 
   clusterStatistics = struct;
 
-  switch dataType
+  if dataType == swe_DataType('Nifti') || dataType == swe_DataType('VolumeMat')
 
-    case {swe_DataType('Nifti'), swe_DataType('VolumeMat')}
+    clusterStatistics.clusterAssignment = spm_clusters(locationActivatedElements);
 
-      clusterStatistics.clusterAssignment = spm_clusters(locationActivatedElements);
+  elseif dataType == swe_DataType('Gifti') || dataType == swe_DataType('SurfaceMat')
 
-    case {swe_DataType('Gifti'), swe_DataType('SurfaceMat')}
+    [clusterStatistics.clusterAssignment, ~, clusterAreas] = swe_mesh_clusters(dataTypeSpecificInformation, locationActivatedElements(1,:), giftiAreaFile);
+    
+    if ~isnan(clusterStatistics.clusterAreas)
+      clusterStatistics.clusterAreas = clusterAreas;
+      clusterStatistics.maxClusterArea = max(clusterStatistics.clusterAreas);
+    end
 
-      [clusterStatistics.clusterAssignment, ~, clusterAreas] = swe_mesh_clusters(dataTypeSpecificInformation, locationActivatedElements(1,:), giftiAreaFile);
+  elseif dataType == swe_DataType('Cifti')
       
-      if ~isnan(clusterStatistics.clusterAreas)
-        clusterStatistics.clusterAreas = clusterAreas;
-        clusterStatistics.maxClusterArea = max(clusterStatistics.clusterAreas);
-      end
+    [clusterStatistics.clusterAssignment, ...
+      clusterStatistics.clusterSizesInSurfaces, ...
+      clusterStatistics.clusterSizesInVolume] = ...
+      swe_cifti_clusters(dataTypeSpecificInformation, locationActivatedElements(1,:));
 
-    case swe_DataType('Cifti')
-      
-      [clusterStatistics.clusterAssignment, ...
-        clusterStatistics.clusterSizesInSurfaces, ...
-        clusterStatistics.clusterSizesInVolume] = ...
-        swe_cifti_clusters(dataTypeSpecificInformation, locationActivatedElements(1,:));
+    if isempty(clusterStatistics.clusterSizesInSurfaces)
+      clusterStatistics.maxClusterSizeInSurfaces = 0;
+    else 
+      clusterStatistics.maxClusterSizeInSurfaces = max(clusterStatistics.clusterSizesInSurfaces);
+    end
 
-      if isempty(clusterStatistics.clusterSizesInSurfaces)
-        clusterStatistics.maxClusterSizeInSurfaces = 0;
-      else 
-        clusterStatistics.maxClusterSizeInSurfaces = max(clusterStatistics.clusterSizesInSurfaces);
-      end
+    if isempty(clusterStatistics.clusterSizesInVolume)
+      clusterStatistics.maxClusterSizeInVolume = 0;
+    else 
+      clusterStatistics.maxClusterSizeInVolume = max(clusterStatistics.clusterSizesInVolume);
+    end
 
-      if isempty(clusterStatistics.clusterSizesInVolume)
-        clusterStatistics.maxClusterSizeInVolume = 0;
-      else 
-        clusterStatistics.maxClusterSizeInVolume = max(clusterStatistics.clusterSizesInVolume);
-      end
-
-    otherwise
-      error('The data type is not recognised');
+  else
+    error('The data type is not recognised');
   end
 
   if isnan(clusterStatistics.clusterAssignment)
