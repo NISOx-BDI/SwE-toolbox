@@ -312,11 +312,12 @@ isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dscalar.nii'
 
 if isMat
     VY = {};
+    isMeshData = false;
 else
     VY = swe_data_hdr_read(char(P));
+    isMeshData = spm_mesh_detect(VY);
 end
 
-isMeshData = spm_mesh_detect(VY);
 
 %-Check compatibility of images
 %--------------------------------------------------------------------------
