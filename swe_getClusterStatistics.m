@@ -25,7 +25,7 @@ function clusterStatistics = swe_getClusterStatistics(dataType, locationActivate
 
     [clusterStatistics.clusterAssignment, ~, clusterAreas] = swe_mesh_clusters(dataTypeSpecificInformation, locationActivatedElements(1,:), giftiAreaFile);
     
-    if ~isnan(clusterStatistics.clusterAreas)
+    if ~isnan(clusterAreas)
       clusterStatistics.clusterAreas = clusterAreas;
       clusterStatistics.maxClusterArea = max(clusterStatistics.clusterAreas);
     end
