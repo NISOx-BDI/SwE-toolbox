@@ -1578,7 +1578,7 @@ else % ".mat" format
       LocActivatedVoxels(cmask) = activatedVoxels;
     end
 
-    originalClusterStatistics = swe_getClusterStatistics(dataType, LocActivatedVoxels, dataTypeSpecificInformation, areaFileForGifti);
+    originalClusterStatistics = swe_getClusterStatistics(dataType, LocActivatedVoxels, dataTypeSpecificInformation, giftiAreaFile);
     
     if originalClusterStatistics.nCluster == 0
       warning('no clusters survived the cluster-forming thresholding of the original data for positive effects!');
@@ -1595,7 +1595,7 @@ else % ".mat" format
         LocActivatedVoxelsNeg(cmask) = activatedVoxelsNeg;
       end
 
-      originalClusterStatisticsNeg = swe_getClusterStatistics(dataType, LocActivatedVoxelsNeg, dataTypeSpecificInformation, areaFileForGifti);
+      originalClusterStatisticsNeg = swe_getClusterStatistics(dataType, LocActivatedVoxelsNeg, dataTypeSpecificInformation, giftiAreaFile);
 
       if originalClusterStatisticsNeg.nCluster == 0
         warning('no clusters survived the cluster-forming thresholding of the original data for negative effects!')
