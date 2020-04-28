@@ -154,7 +154,6 @@ if ~isMat && ~isCifti
           dataTypeSpecificInformation = export(gifti(SwE.xVol.G),'patch');
       end
   else
-      isNifti = true;
       dataType = swe_DataType('Nifti');
       dataTypeSpecificInformation = [];
       file_ext = spm_file_ext;
@@ -173,6 +172,8 @@ end
 
 isVolumeMat = (dataType == swe_DataType('VolumeMat'));
 isSurfaceMat = (dataType == swe_DataType('SurfaceMat'));
+isNifti = (dataType == swe_DataType('Nifti'));
+isGifti  = (dataType == swe_DataType('Gifti'));
 
 %-Check whether we are doing a TFCE analysis
 %--------------------------------------------------------------------------
