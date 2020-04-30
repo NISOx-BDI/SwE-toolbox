@@ -777,26 +777,11 @@ if ~isMat
     V_clustere_pos = swe_data_hdr_write(sprintf('swe_clustere_%cstat_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
                                            sprintf('Cluster extent (positive, CFT %g).',...
                                                    SwE.WB.clusterInfo.primaryThreshold), metadata);
-    V_normCluster_pos = swe_data_hdr_write(sprintf('swe_clusternorm_%cstat_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-      sprintf('Box-Cox normalised cluster size (positive, CFT %g).',...
-      SwE.WB.clusterInfo.primaryThreshold), metadata);
-
-    VlP_wb_normClusterFWE_pos = swe_data_hdr_write(sprintf('swe_clusternorm_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
-      sprintf('Non-parametric normalised clusterwise FWE -log10(P) value data (positive, CFT %g).',...
-      SwE.WB.clusterInfo.primaryThreshold), metadata);
     
     if WB.stat=='T'
       V_clustere_neg = swe_data_hdr_write(sprintf('swe_clustere_%cstat_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
                                           sprintf('Cluster extent (negative, CFT %g).',...
-                                                   SwE.WB.clusterInfo.primaryThreshold), metadata);
-
-      V_normCluster_neg = swe_data_hdr_write(sprintf('swe_clusternorm_%cstat_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-        sprintf('Box-Cox normalised cluster size (negative, CFT %g).',...
-        SwE.WB.clusterInfo.primaryThreshold), metadata);
-     
-      VlP_wb_normClusterFWE_neg = swe_data_hdr_write(sprintf('swe_clusternorm_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
-        sprintf('Non-parametric normalised clusterwise FWE -log10(P) value data (negative, CFT %g).',...
-        SwE.WB.clusterInfo.primaryThreshold), metadata);
+                                                   SwE.WB.clusterInfo.primaryThreshold), metadata);     
     end
   end
   
@@ -2274,8 +2259,7 @@ if WB.clusterWise == 1
     clusterSizesInSurfacesUnderH0_boxCox_median = median(clusterSizesInSurfacesUnderH0);
     clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr = swe_upperHalfIqr(clusterSizesInSurfacesUnderH0);
     clusterSizesInSurfaces_boxCox = swe_boxCoxTransform(SwE.WB.clusterInfo.clusterSizesInSurfaces, lambdaSurfacesUnderH0);
-    SwE.WB.clusterInfo.clusterSizesInSurfaces_norm = scalingFactorNorm * ...
-      (clusterSizesInSurfaces_boxCox - clusterSizesInSurfacesUnderH0_boxCox_median) ./ clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr;
+    
     SwE.WB.clusterInfo.maxClusterSizeInSurfaces = maxClusterSizeInSurfaces;
     SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda = lambdaSurfacesUnderH0;
     SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_mean = clusterSizesInSurfacesUnderH0_boxCox_mean;
@@ -2283,7 +2267,16 @@ if WB.clusterWise == 1
     SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_median = clusterSizesInSurfacesUnderH0_boxCox_median;
     SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr = clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr;
     maxClusterSizeInSurfaces_boxCox = swe_boxCoxTransform(maxClusterSizeInSurfaces, lambdaSurfacesUnderH0);
-    SwE.WB.clusterInfo.maxClusterSizeInSurfaces_norm = scalingFactorNorm * (maxClusterSizeInSurfaces_boxCox - clusterSizesInSurfacesUnderH0_boxCox_median) ./ clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr;
+    
+    if (clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr > 0)
+      SwE.WB.clusterInfo.clusterSizesInSurfaces_norm = scalingFactorNorm * ...
+        (clusterSizesInSurfaces_boxCox - clusterSizesInSurfacesUnderH0_boxCox_median) ./ clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr;
+      SwE.WB.clusterInfo.maxClusterSizeInSurfaces_norm = scalingFactorNorm * (maxClusterSizeInSurfaces_boxCox - clusterSizesInSurfacesUnderH0_boxCox_median) ./ clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr;
+    else
+      SwE.WB.clusterInfo.clusterSizesInSurfaces_norm = nan(1, numel(SwE.WB.clusterInfo.clusterSizesInSurfaces));
+      SwE.WB.clusterInfo.maxClusterSizeInSurfaces_norm = nan(1, WB.nB + 1);
+    end
+
   else
     if (isCifti && numel(SwE.cifti.surfaces) > 0) || isMeshData || isSurfaceMat
       warning('no null cluster in surfaces was produced for positive effects!')
@@ -2303,8 +2296,7 @@ if WB.clusterWise == 1
     clusterSizesInVolumeUnderH0_boxCox_median = median(clusterSizesInVolumeUnderH0);
     clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr = swe_upperHalfIqr(clusterSizesInVolumeUnderH0);
     clusterSizesInVolume_boxCox = swe_boxCoxTransform(SwE.WB.clusterInfo.clusterSizesInVolume, lambdaVolumeUnderH0);
-    SwE.WB.clusterInfo.clusterSizesInVolume_norm = scalingFactorNorm * ...
-      (clusterSizesInVolume_boxCox - clusterSizesInVolumeUnderH0_boxCox_median) ./ clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr;
+    
     SwE.WB.clusterInfo.maxClusterSizeInVolume = maxClusterSizeInVolume;
     SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_lambda = lambdaVolumeUnderH0;
     SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_mean = clusterSizesInVolumeUnderH0_boxCox_mean;
@@ -2312,7 +2304,16 @@ if WB.clusterWise == 1
     SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_median = clusterSizesInVolumeUnderH0_boxCox_median;
     SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr = clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr;
     maxClusterSizeInVolume_boxCox = swe_boxCoxTransform(maxClusterSizeInVolume, lambdaVolumeUnderH0);
-    SwE.WB.clusterInfo.maxClusterSizeInVolume_norm = scalingFactorNorm * (maxClusterSizeInVolume_boxCox - clusterSizesInVolumeUnderH0_boxCox_median) ./ clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr;
+    
+    if (clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr > 0)
+      SwE.WB.clusterInfo.clusterSizesInVolume_norm = scalingFactorNorm * ...
+        (clusterSizesInVolume_boxCox - clusterSizesInVolumeUnderH0_boxCox_median) ./ clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr;
+      SwE.WB.clusterInfo.maxClusterSizeInVolume_norm = scalingFactorNorm * (maxClusterSizeInVolume_boxCox - clusterSizesInVolumeUnderH0_boxCox_median) ./ clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr;
+    else
+      SwE.WB.clusterInfo.clusterSizesInVolume_norm = nan(1, numel(SwE.WB.clusterInfo.clusterSizesInVolume));
+      SwE.WB.clusterInfo.maxClusterSizeInVolume_norm = nan(1, WB.nB + 1);
+    end
+
   else
     if (isCifti && numel(SwE.cifti.volume) > 0) || isNifti || isVolumeMat
       warning('no null cluster in volume was produced for positive effects!')
@@ -2326,6 +2327,8 @@ if WB.clusterWise == 1
   SwE.WB.clusterInfo.clusterSize_norm = [SwE.WB.clusterInfo.clusterSizesInSurfaces_norm, SwE.WB.clusterInfo.clusterSizesInVolume_norm];
   SwE.WB.clusterInfo.maxClusterSize_norm = max(SwE.WB.clusterInfo.maxClusterSizeInSurfaces_norm, SwE.WB.clusterInfo.maxClusterSizeInVolume_norm);
 
+  canUseBoxCoxNormalisation = ~any(isnan(SwE.WB.clusterInfo.clusterSize_norm));
+
   if (WB.stat == 'T')
     if numel(clusterSizesInSurfacesNegUnderH0) > 0
       SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0 = clusterSizesInSurfacesNegUnderH0;
@@ -2336,8 +2339,7 @@ if WB.clusterWise == 1
       clusterSizesInSurfacesNegUnderH0_boxCox_median = median(clusterSizesInSurfacesNegUnderH0);
       clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr = swe_upperHalfIqr(clusterSizesInSurfacesNegUnderH0);
       clusterSizesInSurfacesNeg_boxCox = swe_boxCoxTransform(SwE.WB.clusterInfo.clusterSizesInSurfacesNeg, lambdaSurfacesNegUnderH0);
-      SwE.WB.clusterInfo.clusterSizesInSurfacesNeg_norm = scalingFactorNorm * ...
-        (clusterSizesInSurfacesNeg_boxCox - clusterSizesInSurfacesNegUnderH0_boxCox_median) ./ clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr;
+      
       SwE.WB.clusterInfo.maxClusterSizeInSurfacesNeg = maxClusterSizeInSurfacesNeg;
       SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_lambda = lambdaSurfacesNegUnderH0;
       SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_mean = clusterSizesInSurfacesNegUnderH0_boxCox_mean;
@@ -2345,7 +2347,16 @@ if WB.clusterWise == 1
       SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_median = clusterSizesInSurfacesNegUnderH0_boxCox_median;
       SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr = clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr;
       maxClusterSizeInSurfacesNeg_boxCox = swe_boxCoxTransform(maxClusterSizeInSurfacesNeg, lambdaSurfacesNegUnderH0);
-      SwE.WB.clusterInfo.maxClusterSizeInSurfacesNeg_norm = scalingFactorNorm * (maxClusterSizeInSurfacesNeg_boxCox - clusterSizesInSurfacesNegUnderH0_boxCox_median) ./ clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr;
+      
+      if (clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr > 0)
+        SwE.WB.clusterInfo.clusterSizesInSurfacesNeg_norm = scalingFactorNorm * ...
+          (clusterSizesInSurfacesNeg_boxCox - clusterSizesInSurfacesNegUnderH0_boxCox_median) ./ clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr;
+        SwE.WB.clusterInfo.maxClusterSizeInSurfacesNeg_norm = scalingFactorNorm * (maxClusterSizeInSurfacesNeg_boxCox - clusterSizesInSurfacesNegUnderH0_boxCox_median) ./ clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr;
+      else
+        SwE.WB.clusterInfo.clusterSizesInSurfacesNeg_norm = nan(1, numel(SwE.WB.clusterInfo.clusterSizesInSurfacesNeg));
+        SwE.WB.clusterInfo.maxClusterSizeInSurfacesNeg_norm = nan(1, WB.nB + 1);
+      end
+
     else
       if (isCifti && numel(SwE.cifti.surfaces) > 0) || isMeshData || isSurfaceMat
         warning('no null cluster in surfaces was produced for negative effects!')
@@ -2365,8 +2376,7 @@ if WB.clusterWise == 1
       clusterSizesInVolumeNegUnderH0_boxCox_median = median(clusterSizesInVolumeNegUnderH0);
       clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr = swe_upperHalfIqr(clusterSizesInVolumeNegUnderH0);
       clusterSizesInVolumeNeg_boxCox = swe_boxCoxTransform(SwE.WB.clusterInfo.clusterSizesInVolumeNeg, lambdaVolumeNegUnderH0);
-      SwE.WB.clusterInfo.clusterSizesInVolumeNeg_norm = scalingFactorNorm * ...
-        (clusterSizesInVolumeNeg_boxCox - clusterSizesInVolumeNegUnderH0_boxCox_median) ./ clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr;
+      
       SwE.WB.clusterInfo.maxClusterSizeInVolumeNeg = maxClusterSizeInVolumeNeg;
       SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_lambda = lambdaVolumeNegUnderH0;
       SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_mean = clusterSizesInVolumeNegUnderH0_boxCox_mean;
@@ -2374,7 +2384,16 @@ if WB.clusterWise == 1
       SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_median = clusterSizesInVolumeNegUnderH0_boxCox_median;
       SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr = clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr;
       maxClusterSizeInVolumeNeg_boxCox = swe_boxCoxTransform(maxClusterSizeInVolumeNeg, lambdaVolumeNegUnderH0);
-      SwE.WB.clusterInfo.maxClusterSizeInVolumeNeg_norm = scalingFactorNorm * (maxClusterSizeInVolumeNeg_boxCox - clusterSizesInVolumeNegUnderH0_boxCox_median) ./ clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr;
+      
+      if (clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr > 0)
+        SwE.WB.clusterInfo.clusterSizesInVolumeNeg_norm = scalingFactorNorm * ...
+          (clusterSizesInVolumeNeg_boxCox - clusterSizesInVolumeNegUnderH0_boxCox_median) ./ clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr;
+        SwE.WB.clusterInfo.maxClusterSizeInVolumeNeg_norm = scalingFactorNorm * (maxClusterSizeInVolumeNeg_boxCox - clusterSizesInVolumeNegUnderH0_boxCox_median) ./ clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr;
+      else
+        SwE.WB.clusterInfo.clusterSizesInVolumeNeg_norm = nan(1, numel(SwE.WB.clusterInfo.clusterSizesInVolumeNeg));
+        SwE.WB.clusterInfo.maxClusterSizeInVolumeNeg_norm = nan(1, WB.nB + 1);
+      end
+
     else
       if (isCifti && numel(SwE.cifti.volume) > 0) || isNifti || isVolumeMat
         warning('no null cluster in volume was produced for negative effects!')
@@ -2387,6 +2406,8 @@ if WB.clusterWise == 1
 
     SwE.WB.clusterInfo.clusterSizeNeg_norm = [SwE.WB.clusterInfo.clusterSizesInSurfacesNeg_norm, SwE.WB.clusterInfo.clusterSizesInVolumeNeg_norm];
     SwE.WB.clusterInfo.maxClusterSizeNeg_norm = max(SwE.WB.clusterInfo.maxClusterSizeInSurfacesNeg_norm, SwE.WB.clusterInfo.maxClusterSizeInVolumeNeg_norm);
+
+    canUseBoxCoxNormalisationNeg = ~any(isnan(SwE.WB.clusterInfo.clusterSizeNeg_norm));
 
   end
 end
@@ -2489,57 +2510,118 @@ if isMat
     % For now, -log(p_{cluster-wise FWER}) image with nan for non-surviving
     % voxels after the thresholding of the original data
     
-    normClusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
-    if (~isempty(SwE.WB.clusterInfo.clusterSize))
-      for b = 1:WB.nB
-        normClusterFwerP_pos_perCluster = normClusterFwerP_pos_perCluster + (SwE.WB.clusterInfo.maxClusterSize_norm(b+1) > SwE.WB.clusterInfo.clusterSize_norm - tol);
+    if canUseBoxCoxNormalisation
+      
+      normClusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
+      if (~isempty(SwE.WB.clusterInfo.clusterSize))
+        for b = 1:WB.nB
+          normClusterFwerP_pos_perCluster = normClusterFwerP_pos_perCluster + (SwE.WB.clusterInfo.maxClusterSize_norm(b+1) > SwE.WB.clusterInfo.clusterSize_norm - tol);
+        end
+        normClusterFwerP_pos_perCluster = normClusterFwerP_pos_perCluster / (WB.nB + 1);
       end
-      normClusterFwerP_pos_perCluster = normClusterFwerP_pos_perCluster / (WB.nB + 1);
-    end
+      
+      VlP_wb_normClusterFWE_pos = zeros(1, nVox);
+      if isVolumeMat      
+        tmp = find(cmask);
+        tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
+        for iC = 1:SwE.WB.clusterInfo.nCluster
+          tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = normClusterFwerP_pos_perCluster(iC);
+        end
+        VlP_wb_normClusterFWE_pos(tmp(activatedVoxels)) = -log10(tmp3);
+      else
+        tmp3 = zeros(1, sum(SwE.WB.clusterInfo.LocActivatedVoxels));
+        for iC = 1:SwE.WB.clusterInfo.nCluster
+          tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = normClusterFwerP_pos_perCluster(iC);
+        end
+        VlP_wb_normClusterFWE_pos(SwE.WB.clusterInfo.LocActivatedVoxels) = -log10(tmp3);
+      end
+      save(sprintf('swe_clusternorm_%cstat_lpFWE-WB_c%02d%s',WB.stat,1,file_ext), 'VlP_wb_normClusterFWE_pos');
     
-    VlP_wb_normClusterFWE_pos = zeros(1, nVox);
-    if isVolumeMat      
-      tmp = find(cmask);
-      tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
-      for iC = 1:SwE.WB.clusterInfo.nCluster
-        tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = normClusterFwerP_pos_perCluster(iC);
-      end
-      VlP_wb_normClusterFWE_pos(tmp(activatedVoxels)) = -log10(tmp3);
     else
-      tmp3 = zeros(1, sum(SwE.WB.clusterInfo.LocActivatedVoxels));
-      for iC = 1:SwE.WB.clusterInfo.nCluster
-        tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = normClusterFwerP_pos_perCluster(iC);
+      
+      clusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
+      if (~isempty(SwE.WB.clusterInfo.clusterSize))
+        for b = 1:WB.nB
+          clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (SwE.WB.clusterInfo.maxClusterSize(b+1) > SwE.WB.clusterInfo.clusterSize - tol);
+        end
+        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster / (WB.nB + 1);
       end
-      VlP_wb_normClusterFWE_pos(SwE.WB.clusterInfo.LocActivatedVoxels) = -log10(tmp3);
-    end
-    save(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s',WB.stat,1,file_ext), 'VlP_wb_normClusterFWE_pos');
+      
+      VlP_wb_clusterFWE_pos = zeros(1, nVox);
+      if isVolumeMat      
+        tmp = find(cmask);
+        tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
+        for iC = 1:SwE.WB.clusterInfo.nCluster
+          tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = clusterFwerP_pos_perCluster(iC);
+        end
+        VlP_wb_clusterFWE_pos(tmp(activatedVoxels)) = -log10(tmp3);
+      else
+        tmp3 = zeros(1, sum(SwE.WB.clusterInfo.LocActivatedVoxels));
+        for iC = 1:SwE.WB.clusterInfo.nCluster
+          tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = clusterFwerP_pos_perCluster(iC);
+        end
+        VlP_wb_clusterFWE_pos(SwE.WB.clusterInfo.LocActivatedVoxels) = -log10(tmp3);
+      end
+      save(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s',WB.stat,1,file_ext), 'VlP_wb_clusterFWE_pos');      
     
+    end
+
     if WB.stat =='T'
       
-      normClusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
-      if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
-        for b = 1:WB.nB
-          normClusterFwerP_neg_perCluster = normClusterFwerP_neg_perCluster + (SwE.WB.clusterInfo.maxClusterSizeNeg_norm(b+1) > SwE.WB.clusterInfo.clusterSizeNeg_norm - tol);
+      if canUseBoxCoxNormalisationNeg
+
+        normClusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
+        if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
+          for b = 1:WB.nB
+            normClusterFwerP_neg_perCluster = normClusterFwerP_neg_perCluster + (SwE.WB.clusterInfo.maxClusterSizeNeg_norm(b+1) > SwE.WB.clusterInfo.clusterSizeNeg_norm - tol);
+          end
+          normClusterFwerP_neg_perCluster = normClusterFwerP_neg_perCluster / (WB.nB + 1);
         end
-        normClusterFwerP_neg_perCluster = normClusterFwerP_neg_perCluster / (WB.nB + 1);
-      end
+        
+        VlP_wb_normClusterFWE_neg = zeros(1, nVox);
+        if isVolumeMat
+          tmp = find(cmask);
+          tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
+          for iC = 1:SwE.WB.clusterInfo.nClusterNeg
+            tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = normClusterFwerP_neg_perCluster(iC);
+          end
+          VlP_wb_normClusterFWE_neg(tmp(activatedVoxelsNeg)) = -log10(tmp3);
+        else
+          tmp3 = zeros(1, sum(SwE.WB.clusterInfo.LocActivatedVoxelsNeg));
+          for iC = 1:SwE.WB.clusterInfo.nClusterNeg
+            tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = normClusterFwerP_neg_perCluster(iC);
+          end
+          VlP_wb_normClusterFWE_neg(SwE.WB.clusterInfo.LocActivatedVoxelsNeg) = -log10(tmp3);
+        end
+        save(sprintf('swe_clusternorm_%cstat_lpFWE-WB_c%02d%s',WB.stat,2,file_ext), 'VlP_wb_normClusterFWE_neg');
       
-      VlP_wb_normClusterFWE_neg = zeros(1, nVox);
-      if isVolumeMat
-        tmp = find(cmask);
-        tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
-        for iC = 1:SwE.WB.clusterInfo.nClusterNeg
-          tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = normClusterFwerP_neg_perCluster(iC);
-        end
-        VlP_wb_normClusterFWE_neg(tmp(activatedVoxelsNeg)) = -log10(tmp3);
       else
-        tmp3 = zeros(1, sum(SwE.WB.clusterInfo.LocActivatedVoxelsNeg));
-        for iC = 1:SwE.WB.clusterInfo.nClusterNeg
-          tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = normClusterFwerP_neg_perCluster(iC);
+  
+        clusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
+        if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
+          for b = 1:WB.nB
+            clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (SwE.WB.clusterInfo.maxClusterSizeNeg(b+1) > SwE.WB.clusterInfo.clusterSizeNeg - tol);
+          end
+          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster / (WB.nB + 1);
         end
-        VlP_wb_normClusterFWE_neg(SwE.WB.clusterInfo.LocActivatedVoxelsNeg) = -log10(tmp3);
+        
+        VlP_wb_clusterFWE_neg = zeros(1, nVox);
+        if isVolumeMat
+          tmp = find(cmask);
+          tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
+          for iC = 1:SwE.WB.clusterInfo.nClusterNeg
+            tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = clusterFwerP_neg_perCluster(iC);
+          end
+          VlP_wb_clusterFWE_neg(tmp(activatedVoxelsNeg)) = -log10(tmp3);
+        else
+          tmp3 = zeros(1, sum(SwE.WB.clusterInfo.LocActivatedVoxelsNeg));
+          for iC = 1:SwE.WB.clusterInfo.nClusterNeg
+            tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = clusterFwerP_neg_perCluster(iC);
+          end
+          VlP_wb_clusterFWE_neg(SwE.WB.clusterInfo.LocActivatedVoxelsNeg) = -log10(tmp3);
+        end
+        save(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s',WB.stat,2,file_ext), 'VlP_wb_clusterFWE_neg');
       end
-      save(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s',WB.stat,2,file_ext), 'VlP_wb_normClusterFWE_neg');
     end
   end
 else
@@ -2673,28 +2755,61 @@ else
     tmp(Q) = tmp4;
     swe_data_write(V_clustere_pos, tmp);
 
-    normClusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
-    if (~isempty(SwE.WB.clusterInfo.clusterSize))
-      for b = 1:WB.nB
-        normClusterFwerP_pos_perCluster = normClusterFwerP_pos_perCluster + (SwE.WB.clusterInfo.maxClusterSize_norm(b+1) > SwE.WB.clusterInfo.clusterSize_norm - tol);
+    if canUseBoxCoxNormalisation
+      
+      VlP_wb_normClusterFWE_pos = swe_data_hdr_write(sprintf('swe_clusternorm_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+      sprintf('Non-parametric normalised clusterwise FWE -log10(P) value data (positive, CFT %g).',...
+      SwE.WB.clusterInfo.primaryThreshold), metadata);
+
+      V_normCluster_pos = swe_data_hdr_write(sprintf('swe_clusternorm_%cstat_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+      sprintf('Box-Cox normalised cluster size (positive, CFT %g).',...
+      SwE.WB.clusterInfo.primaryThreshold), metadata);
+
+      normClusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
+      if (~isempty(SwE.WB.clusterInfo.clusterSize))
+        for b = 1:WB.nB
+          normClusterFwerP_pos_perCluster = normClusterFwerP_pos_perCluster + (SwE.WB.clusterInfo.maxClusterSize_norm(b+1) > SwE.WB.clusterInfo.clusterSize_norm - tol);
+        end
+        normClusterFwerP_pos_perCluster = normClusterFwerP_pos_perCluster / (WB.nB + 1);
       end
-      normClusterFwerP_pos_perCluster = normClusterFwerP_pos_perCluster / (WB.nB + 1);
+      tmp2 = -log10(normClusterFwerP_pos_perCluster);   
+      tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
+      tmp4 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
+      for iC = 1:SwE.WB.clusterInfo.nCluster
+        tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = tmp2(iC);
+        tmp4(SwE.WB.clusterInfo.clusterAssignment == iC) = SwE.WB.clusterInfo.clusterSize_norm(iC);
+      end
+      tmp(Q) = tmp3;
+      swe_data_write(VlP_wb_normClusterFWE_pos, tmp);
+      tmp(Q) = tmp4;
+      swe_data_write(V_normCluster_pos, tmp);
+      
+    else
+
+      VlP_wb_clusterFWE_pos = swe_data_hdr_write(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 1, file_ext), DIM, M,...
+      sprintf('Non-parametric clusterwise FWE -log10(P) value data (positive, CFT %g).',...
+      SwE.WB.clusterInfo.primaryThreshold), metadata);
+
+      clusterFwerP_pos_perCluster = ones(1, SwE.WB.clusterInfo.nCluster); % 1 because the original maxScore is always > original Score
+      if (~isempty(SwE.WB.clusterInfo.clusterSize))
+        for b = 1:WB.nB
+          clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster + (SwE.WB.clusterInfo.maxClusterSize(b+1) > SwE.WB.clusterInfo.clusterSize - tol);
+        end
+        clusterFwerP_pos_perCluster = clusterFwerP_pos_perCluster / (WB.nB + 1);
+      end
+      tmp2 = -log10(clusterFwerP_pos_perCluster);   
+      tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
+      for iC = 1:SwE.WB.clusterInfo.nCluster
+        tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = tmp2(iC);
+      end
+      tmp(Q) = tmp3;
+      swe_data_write(VlP_wb_clusterFWE_pos, tmp);
+
     end
-    tmp2 = -log10(normClusterFwerP_pos_perCluster);   
-    tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
-    tmp4 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
-    for iC = 1:SwE.WB.clusterInfo.nCluster
-      tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = tmp2(iC);
-      tmp4(SwE.WB.clusterInfo.clusterAssignment == iC) = SwE.WB.clusterInfo.clusterSize_norm(iC);
-    end
-    tmp(Q) = tmp3;
-    swe_data_write(VlP_wb_normClusterFWE_pos, tmp);
-    tmp(Q) = tmp4;
-    swe_data_write(V_normCluster_pos, tmp);
     
     if WB.stat =='T'
       Q = cumprod([1,SwE.xVol.DIM(1:2)']) * SwE.WB.clusterInfo.LocActivatedVoxelsNeg - ...
-	      sum(cumprod(SwE.xVol.DIM(1:2)'));
+        sum(cumprod(SwE.xVol.DIM(1:2)'));
       tmp= zeros(SwE.xVol.DIM');
       
       tmp4 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg, 2));
@@ -2704,24 +2819,57 @@ else
       tmp(Q) = tmp4;
       swe_data_write(V_clustere_neg, tmp);
 
-      normClusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
-      if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
-        for b = 1:WB.nB
-          normClusterFwerP_neg_perCluster = normClusterFwerP_neg_perCluster + (SwE.WB.clusterInfo.maxClusterSizeNeg_norm(b+1) > SwE.WB.clusterInfo.clusterSizeNeg_norm - tol);
+      if canUseBoxCoxNormalisationNeg
+
+        VlP_wb_normClusterFWE_neg = swe_data_hdr_write(sprintf('swe_clusternorm_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+        sprintf('Non-parametric normalised clusterwise FWE -log10(P) value data (negative, CFT %g).',...
+        SwE.WB.clusterInfo.primaryThreshold), metadata);
+
+        V_normCluster_neg = swe_data_hdr_write(sprintf('swe_clusternorm_%cstat_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+        sprintf('Box-Cox normalised cluster size (negative, CFT %g).',...
+        SwE.WB.clusterInfo.primaryThreshold), metadata);
+
+        normClusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
+        if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
+          for b = 1:WB.nB
+            normClusterFwerP_neg_perCluster = normClusterFwerP_neg_perCluster + (SwE.WB.clusterInfo.maxClusterSizeNeg_norm(b+1) > SwE.WB.clusterInfo.clusterSizeNeg_norm - tol);
+          end
+          normClusterFwerP_neg_perCluster = normClusterFwerP_neg_perCluster / (WB.nB + 1);
         end
-        normClusterFwerP_neg_perCluster = normClusterFwerP_neg_perCluster / (WB.nB + 1);
+        tmp2 = -log10(normClusterFwerP_neg_perCluster);
+        tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
+        tmp4 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
+        for iC = 1:SwE.WB.clusterInfo.nClusterNeg
+          tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = tmp2(iC);
+          tmp4(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = SwE.WB.clusterInfo.clusterSizeNeg_norm(iC);
+        end
+        tmp(Q) = tmp3;
+        swe_data_write(VlP_wb_normClusterFWE_neg, tmp);
+        tmp(Q) = tmp4;
+        swe_data_write(V_normCluster_neg, tmp);
+
+      else
+
+        VlP_wb_clusterFWE_neg = swe_data_hdr_write(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s', WB.stat, 2, file_ext), DIM, M,...
+        sprintf('Non-parametric clusterwise FWE -log10(P) value data (negative, CFT %g).',...
+        SwE.WB.clusterInfo.primaryThreshold), metadata);
+
+        clusterFwerP_neg_perCluster = ones(1, SwE.WB.clusterInfo.nClusterNeg); % 1 because the original maxScore is always > original Score
+        if (~isempty(SwE.WB.clusterInfo.clusterSizeNeg))
+          for b = 1:WB.nB
+            clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster + (SwE.WB.clusterInfo.maxClusterSizeNeg(b+1) > SwE.WB.clusterInfo.clusterSizeNeg - tol);
+          end
+          clusterFwerP_neg_perCluster = clusterFwerP_neg_perCluster / (WB.nB + 1);
+        end
+        tmp2 = -log10(clusterFwerP_neg_perCluster);
+        tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
+        for iC = 1:SwE.WB.clusterInfo.nClusterNeg
+          tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = tmp2(iC);
+        end
+        tmp(Q) = tmp3;
+        swe_data_write(VlP_wb_clusterFWE_neg, tmp);
+
       end
-      tmp2 = -log10(normClusterFwerP_neg_perCluster);
-      tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
-      tmp4 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
-      for iC = 1:SwE.WB.clusterInfo.nClusterNeg
-        tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = tmp2(iC);
-        tmp4(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = SwE.WB.clusterInfo.clusterSizeNeg_norm(iC);
-      end
-      tmp(Q) = tmp3;
-      swe_data_write(VlP_wb_normClusterFWE_neg, tmp);
-      tmp(Q) = tmp4;
-      swe_data_write(V_normCluster_neg, tmp);
       
     end
   end
