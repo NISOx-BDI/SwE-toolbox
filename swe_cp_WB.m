@@ -1576,7 +1576,7 @@ else % ".mat" format
       if dataType == swe_DataType('VolumeMat')
         LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);
       else %surface data
-        LocActivatedVoxelsNeg = false(nVox,1);
+        LocActivatedVoxelsNeg = false(1,nVox);
         LocActivatedVoxelsNeg(cmask) = activatedVoxelsNeg;
       end
 
