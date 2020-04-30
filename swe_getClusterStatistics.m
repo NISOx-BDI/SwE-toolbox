@@ -59,7 +59,7 @@ function clusterStatistics = swe_getClusterStatistics(dataType, locationActivate
 
   clusterStatistics.nCluster = max(clusterStatistics.clusterAssignment);
   
-  if clusterStatistics.nCluster > 1
+  if clusterStatistics.nCluster > 0
     clusterStatistics.clusterSize = histc(clusterStatistics.clusterAssignment, 1:clusterStatistics.nCluster);
     clusterStatistics.maxClusterSize = max(clusterStatistics.clusterSize);
   else
