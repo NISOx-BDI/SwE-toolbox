@@ -269,7 +269,7 @@ if WB.clusterWise == 1 && WB.RSwE ==1
   WB.RSwE = 0;
   SwE.WB.RSwE = 0;
   if isOctave
-    save('SwE','SwE');
+    save('SwE.mat','SwE');
   elseif spm_matlab_version_chk('7') >=0
     save('SwE','SwE','-V6');
   else
@@ -1689,7 +1689,7 @@ end
 %-Save analysis parameters in SwE.mat file
 %--------------------------------------------------------------------------
 if isOctave
-  save('SwE','SwE');
+  save('SwE.mat','SwE');
 elseif spm_matlab_version_chk('7') >=0
   save('SwE','SwE','-V6');
 else
@@ -2907,7 +2907,7 @@ end
 
 %Save SwE.
 if isOctave
-  save('SwE','SwE');
+  save('SwE.mat','SwE');
 elseif spm_matlab_version_chk('7') >=0
   save('SwE','SwE','-V6');
 else
