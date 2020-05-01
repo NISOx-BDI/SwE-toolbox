@@ -833,17 +833,13 @@ if ~isMat
   if (WB.clusterWise == 1)
     activatedVoxels = false(0);
     maxClusterSize = nan(1, WB.nB + 1);
-    if isCifti
-      maxClusterSizeInSurfaces = nan(1, WB.nB + 1);
-      maxClusterSizeInVolume = nan(1, WB.nB + 1);
-    end
+    maxClusterSizeInSurfaces = nan(1, WB.nB + 1);
+    maxClusterSizeInVolume = nan(1, WB.nB + 1);
     activatedVoxelsNeg = false(0);
     if (WB.stat == 'T')
       maxClusterSizeNeg = nan(1, WB.nB + 1);
-      if isCifti
-        maxClusterSizeInSurfacesNeg = nan(1, WB.nB + 1);
-        maxClusterSizeInVolumeNeg = nan(1, WB.nB + 1);
-      end
+      maxClusterSizeInSurfacesNeg = nan(1, WB.nB + 1);
+      maxClusterSizeInVolumeNeg = nan(1, WB.nB + 1);
     end
   end
   maxScore = nan(1, WB.nB + 1);
@@ -1204,6 +1200,20 @@ if ~isMat
 
     maxClusterSize(1) = originalClusterStatistics.maxClusterSize;
 
+    if isfield(originalClusterStatistics, 'clusterSizesInSurfaces')
+      maxClusterSizeInSurfaces(1) = originalClusterStatistics.maxClusterSizeInSurfaces;
+    elseif isfield(originalClusterStatistics, 'clusterAreas')
+      maxClusterSizeInSurfaces(1) = originalClusterStatistics.maxClusterAreas;
+    elseif (dataType == swe_DataType('Gifti') || dataType == swe_DataType('SurfaceMat'))
+      maxClusterSizeInSurfaces(1) = originalClusterStatistics.maxClusterSize;
+    end
+
+    if isfield(originalClusterStatistics, 'clusterSizesInVolume')
+      maxClusterSizeInVolume(1) = originalClusterStatistics.maxClusterSizeInVolume;
+    elseif (dataType == swe_DataType('Nifti') || dataType == swe_DataType('VolumeMat'))
+      maxClusterSizeInVolume(1) = originalClusterStatistics.maxClusterSize;
+    end
+
     if (SwE.WB.stat == 'T')
       
       LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);
@@ -1215,6 +1225,20 @@ if ~isMat
       end
 
       maxClusterSizeNeg(1) = originalClusterStatisticsNeg.maxClusterSize;
+
+      if isfield(originalClusterStatistics, 'clusterSizesInSurfaces')
+        maxClusterSizeInSurfacesNeg(1) = originalClusterStatisticsNeg.maxClusterSizeInSurfaces;
+      elseif isfield(originalClusterStatistics, 'clusterAreas')
+        maxClusterSizeInSurfacesNeg(1) = originalClusterStatisticsNeg.maxClusterAreas;
+      elseif (dataType == swe_DataType('Gifti') || dataType == swe_DataType('SurfaceMat'))
+        maxClusterSizeInSurfacesNeg(1) = originalClusterStatisticsNeg.maxClusterSize;
+      end
+
+      if isfield(originalClusterStatisticsNeg, 'clusterSizesInVolume')
+        maxClusterSizeInVolumeNeg(1) = originalClusterStatisticsNeg.maxClusterSizeInVolume;
+      elseif (dataType == swe_DataType('Nifti') || dataType == swe_DataType('VolumeMat'))
+        maxClusterSizeInVolumeNeg(1) = originalClusterStatisticsNeg.maxClusterSize;
+      end
 
     end
   end
