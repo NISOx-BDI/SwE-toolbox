@@ -1537,7 +1537,6 @@ else % ".mat" format
 
   mask = cmask;       
   save(sprintf('swe_%s_mask%s', file_data_type, file_ext), 'mask');
-  clear mask
   
   edf(:,cmask) = edf;
   save(Vedf, 'edf');
@@ -1594,8 +1593,8 @@ else % ".mat" format
     if dataType == swe_DataType('VolumeMat')
       LocActivatedVoxels = XYZ(:,activatedVoxels);
     else %surface data
-      LocActivatedVoxels(cmask) = activatedVoxels;
       LocActivatedVoxels = false(nDataElements, 1);
+      LocActivatedVoxels(mask) = activatedVoxels;
     end
 
     originalClusterStatistics = swe_getClusterStatistics(dataType, LocActivatedVoxels, dataTypeSpecificInformation, giftiAreaFile);
@@ -1611,8 +1610,8 @@ else % ".mat" format
       if dataType == swe_DataType('VolumeMat')
         LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);
       else %surface data
-        LocActivatedVoxelsNeg(cmask) = activatedVoxelsNeg;
         LocActivatedVoxelsNeg = false(nDataElements, 1);
+        LocActivatedVoxelsNeg(mask) = activatedVoxelsNeg;
       end
 
       originalClusterStatisticsNeg = swe_getClusterStatistics(dataType, LocActivatedVoxelsNeg, dataTypeSpecificInformation, giftiAreaFile);
@@ -2205,9 +2204,9 @@ for b = 1:WB.nB
   % done... Not sure this solution is the best)
   if (WB.clusterWise == 1)
 
-      LocActivatedVoxels(cmask) = activatedVoxels;
     if dataType == swe_DataType('SurfaceMat') || dataType == swe_DataType('Gifti')
       LocActivatedVoxels = false(nDataElements, 1);
+      LocActivatedVoxels(mask) = activatedVoxels;
     else
       LocActivatedVoxels = XYZ(:,activatedVoxels);
     end
@@ -2237,9 +2236,9 @@ for b = 1:WB.nB
 
     if (WB.stat == 'T')
 
-        LocActivatedVoxelsNeg(cmask) = activatedVoxelsNeg;
       if dataType == swe_DataType('SurfaceMat') || dataType == swe_DataType('Gifti')
         LocActivatedVoxelsNeg = false(nDataElements, 1);
+        LocActivatedVoxelsNeg(mask) = activatedVoxelsNeg;
       else
         LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);
       end
