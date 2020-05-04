@@ -1191,7 +1191,12 @@ if ~isMat
   % done... Not sure this solution is the best)
   if (SwE.WB.clusterWise == 1)
 
-    LocActivatedVoxels = XYZ(:,activatedVoxels);
+    if dataType == swe_DataType('Gifti')
+      LocActivatedVoxels = false(nDataElements, 1);
+      LocActivatedVoxels(mask) = activatedVoxels;
+    else
+      LocActivatedVoxels = XYZ(:,activatedVoxels);
+    end
 
     originalClusterStatistics = swe_getClusterStatistics(dataType, LocActivatedVoxels, dataTypeSpecificInformation, giftiAreaFile);
     
@@ -1217,7 +1222,12 @@ if ~isMat
 
     if (SwE.WB.stat == 'T')
       
-      LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);
+      if dataType == swe_DataType('Gifti')
+        LocActivatedVoxelsNeg = false(nDataElements, 1);
+        LocActivatedVoxelsNeg(mask) = activatedVoxelsNeg;
+      else
+        LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);
+      end
 
       originalClusterStatisticsNeg = swe_getClusterStatistics(dataType, LocActivatedVoxelsNeg, dataTypeSpecificInformation, giftiAreaFile);
 
@@ -1656,6 +1666,15 @@ SwE.WB.tmpR2      = tmpR2;
 
 % cluster-wise specific fields if needed
 if (SwE.WB.clusterWise == 1)
+
+  if isSurfaceMat || isGifti
+    nInMaskVertices = sum(LocActivatedVoxels);
+    tmp = ones(3, nInMaskVertices);
+    tmp(1,:) = find(LocActivatedVoxels);
+    LocActivatedVoxels = tmp;
+    clear tmp nInMaskVertices
+  end
+
   SwE.WB.clusterInfo.LocActivatedVoxels = LocActivatedVoxels;
   SwE.WB.clusterInfo.nCluster = originalClusterStatistics.nCluster;
   SwE.WB.clusterInfo.clusterAssignment = originalClusterStatistics.clusterAssignment;
@@ -1670,6 +1689,15 @@ if (SwE.WB.clusterWise == 1)
     SwE.WB.clusterInfo.clusterSizesInSurfaces = originalClusterStatistics.clusterSize;
   end
   if (SwE.WB.stat == 'T')
+
+    if isSurfaceMat || isGifti
+      nInMaskVertices = sum(LocActivatedVoxelsNeg);
+      tmp = ones(3, nInMaskVertices);
+      tmp(1,:) = find(LocActivatedVoxelsNeg);
+      LocActivatedVoxelsNeg = tmp;
+      clear tmp nInMaskVertices
+    end
+
     SwE.WB.clusterInfo.LocActivatedVoxelsNeg = LocActivatedVoxelsNeg;
     SwE.WB.clusterInfo.nClusterNeg = originalClusterStatisticsNeg.nCluster;
     SwE.WB.clusterInfo.clusterAssignmentNeg = originalClusterStatisticsNeg.clusterAssignment;
@@ -2177,8 +2205,8 @@ for b = 1:WB.nB
   % done... Not sure this solution is the best)
   if (WB.clusterWise == 1)
 
-    if dataType == swe_DataType('SurfaceMat')
       LocActivatedVoxels(cmask) = activatedVoxels;
+    if dataType == swe_DataType('SurfaceMat') || dataType == swe_DataType('Gifti')
       LocActivatedVoxels = false(nDataElements, 1);
     else
       LocActivatedVoxels = XYZ(:,activatedVoxels);
@@ -2209,8 +2237,8 @@ for b = 1:WB.nB
 
     if (WB.stat == 'T')
 
-      if dataType == swe_DataType('SurfaceMat')
         LocActivatedVoxelsNeg(cmask) = activatedVoxelsNeg;
+      if dataType == swe_DataType('SurfaceMat') || dataType == swe_DataType('Gifti')
         LocActivatedVoxelsNeg = false(nDataElements, 1);
       else
         LocActivatedVoxelsNeg = XYZ(:,activatedVoxelsNeg);

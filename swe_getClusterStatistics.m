@@ -23,7 +23,7 @@ function clusterStatistics = swe_getClusterStatistics(dataType, locationActivate
 
   elseif dataType == swe_DataType('Gifti') || dataType == swe_DataType('SurfaceMat')
 
-    [clusterStatistics.clusterAssignment, ~, clusterAreas] = swe_mesh_clusters(dataTypeSpecificInformation, locationActivatedElements(1,:), giftiAreaFile);
+    [clusterStatistics.clusterAssignment, ~, clusterAreas] = swe_mesh_clusters(dataTypeSpecificInformation, locationActivatedElements, giftiAreaFile);
     
     if ~isnan(clusterAreas)
       clusterStatistics.clusterAreas = clusterAreas;
