@@ -938,7 +938,7 @@ if ~isMat
                   elseif Ic == 2
                     maxScore = sort(-SwE.WB.minScore);
                   else
-                    error("Unknown contrast");
+                    error('Unknown contrast');
                   end
                   u = maxScore( ceil( (1-pu) * (SwE.WB.nB+1) ) );
 
@@ -1037,7 +1037,7 @@ if ~isMat
                   elseif Ic == 2
                     locActVox = SwE.WB.clusterInfo.LocActivatedVoxelsNeg;
                   else
-                    error("Unknown contrast");
+                    error('Unknown contrast');
                   end
                   [~, index]=ismember(XYZ',locActVox','rows');
                   Q=find(index~=0);
@@ -1297,7 +1297,7 @@ if ~isMat
                   maxClusterSize = SwE.WB.clusterInfo.maxClusterSizeNeg;
                 end
               else
-                error("unknown contrast");
+                error('Unknown contrast');
               end
               
               ps_fwe = nan(1,numel(A));
@@ -1477,7 +1477,7 @@ if isfield(SwE, 'WB')
     elseif Ic == 2
       maxScore = sort(-SwE.WB.minScore);
     else
-      error("Unknown contrast");
+      error('Unknown contrast');
     end
     xSwE.Pfv = maxScore(ceil(0.95*(xSwE.nB+1))); % Voxelwise FWE P 
     if SwE.WB.clusterWise
@@ -1486,7 +1486,7 @@ if isfield(SwE, 'WB')
       elseif Ic == 2
         maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSizeNeg);
       else
-        error("Unknown contrast");
+        error('Unknown contrast');
       end
       xSwE.Pfc = maxClusterSize(ceil(0.95*(xSwE.nB+1))); % Clusterwise FWE P      
     end

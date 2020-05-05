@@ -287,7 +287,7 @@ switch lower(Action), case 'setup'                         %-Set up results
 
     if isCifti
       DIM(3) = Inf;
-      strDataType = "voxels/vertices";
+      strDataType = 'voxels/vertices';
     end
 
     %-Space units

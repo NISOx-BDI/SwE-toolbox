@@ -130,10 +130,10 @@ function mapsEqual = verifyMapsUnchanged(porwb, inftype, torf, matorimg)
 	
 	% List all files for testing
 	if strcmp(matorimg, 'img')
-		files = ls("*.nii");
+		files = ls('*.nii');
 		filetype = 'nii';
 	else
-		files = ls("swe_*.mat");
+		files = ls('swe_*.mat');
 		filetype = 'mat';
 	end
 
@@ -160,8 +160,8 @@ function mapsEqual = verifyMapsUnchanged(porwb, inftype, torf, matorimg)
 		else
 
 			% Read in the surface data.
-			file = load(strrep(file, " ", ""));
-			gt_file = load(strrep(gt_file, " ", ""));
+			file = load(strrep(file, ' ', ''));
+			gt_file = load(strrep(gt_file, ' ', ''));
 
 			% Retrieve field name.
 			fieldname = fieldnames(file){1};
