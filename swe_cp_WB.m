@@ -1675,7 +1675,6 @@ if (SwE.WB.clusterWise == 1)
   SwE.WB.clusterInfo.LocActivatedVoxels = LocActivatedVoxels;
   SwE.WB.clusterInfo.nCluster = originalClusterStatistics.nCluster;
   SwE.WB.clusterInfo.clusterAssignment = originalClusterStatistics.clusterAssignment;
-  SwE.WB.clusterInfo.maxClusterSize = originalClusterStatistics.maxClusterSize;
   SwE.WB.clusterInfo.clusterSize = originalClusterStatistics.clusterSize;
   if isCifti
     SwE.WB.clusterInfo.clusterSizesInSurfaces = originalClusterStatistics.clusterSizesInSurfaces;
@@ -1698,7 +1697,6 @@ if (SwE.WB.clusterWise == 1)
     SwE.WB.clusterInfo.LocActivatedVoxelsNeg = LocActivatedVoxelsNeg;
     SwE.WB.clusterInfo.nClusterNeg = originalClusterStatisticsNeg.nCluster;
     SwE.WB.clusterInfo.clusterAssignmentNeg = originalClusterStatisticsNeg.clusterAssignment;
-    SwE.WB.clusterInfo.maxClusterSizeNeg = originalClusterStatisticsNeg.maxClusterSize;
     SwE.WB.clusterInfo.clusterSizeNeg = originalClusterStatisticsNeg.clusterSize;
     if isCifti
       SwE.WB.clusterInfo.clusterSizesInSurfacesNeg = originalClusterStatisticsNeg.clusterSizesInSurfaces;
