@@ -106,6 +106,7 @@ table = {...
     3003,'CONNECTIVITY_PARCELLATED'            ,'Parcellated connectivity',{}
     3004,'CONNECTIVITY_PARCELLATED_TIME'       ,'Parcellated time series',{}
     3005,'CONNECTIVITY_CONNECTIVITY_TRAJECTORY','Trajectory connectivity',{}
+    3006,'CONNECTIVITY_DENSE_SCALARS'          ,'Dense Scalar',{}
 };
 intent = struct('code',table(:,1),'label',table(:,2),...
     'fullname',table(:,3),'param',table(:,4));
