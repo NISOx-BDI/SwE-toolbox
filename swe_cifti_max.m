@@ -18,7 +18,7 @@ function [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm, brainStructureShortLabels, bra
   % =========================================================================
   % Bryan Guillaume
   % Version Info:  $Format:%ci$ $Format:%h$
-
+  N = []; N_area = []; N_boxcox = [];
   Z = []; M = []; A = []; XYZ = []; Mmm = []; 
   brainStructureShortLabels = []; brainStructureLongLabels = [];
   
