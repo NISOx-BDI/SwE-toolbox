@@ -75,7 +75,11 @@ function h = swe_cifti(varargin)
           h     = class(h,'swe_cifti');
 
       elseif isstruct(varargin{1})
-          h     = class(varargin{1},'swe_cifti');
+        
+          h     = struct('hdr', varargin{1}.hdr,...
+                         'dat', varargin{1}.dat,...
+                         'extras', varargin{1}.extras);
+          h     = class(h,'swe_cifti');
 
       elseif iscell(varargin{1})
           fnames = varargin{1};
