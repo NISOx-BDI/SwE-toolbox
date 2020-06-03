@@ -6,7 +6,7 @@ function result = runTest(pOrWb, inferenceType, tOrF, matNiiGiiOrCii)
   % Inputs:
   %
   %   - pOrWb:    			'p' for parametric or 'wb' for wild bootstrap.
-  %		- inferenceType		'vox' for voxel-wise, 'dat' for .mat element-wise
+  %   - inferenceType		'vox' for voxel-wise, 'dat' for .mat element-wise
   %											'dpx' for CIfTI/GIfTI element-wise, 'clus' for clusterwise or
   %											'tfce' for TFCE
   %   - tOrF:     			't' for a t test or 'f' for an f test.
