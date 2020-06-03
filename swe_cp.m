@@ -822,7 +822,9 @@ if ~isMat
       %-Write beta files
       %----------------------------------------------------------------------
       for iBeta=1:nBeta
-        c(cmask) = beta(iBeta,:);
+        if CrS
+          c(cmask) = beta(iBeta,:);
+        end
         Vbeta(iBeta) = swe_data_write(Vbeta(iBeta), c, chunk); 
       end
 
@@ -830,7 +832,9 @@ if ~isMat
       %----------------------------------------------------------------------
       if isfield(SwE.type,'modified') 
         for iCov_vis=1:nCov_vis
-          c(cmask) = Cov_vis(iCov_vis,:);
+          if CrS
+            c(cmask) = Cov_vis(iCov_vis,:);
+          end
           Vcov_vis(iCov_vis) = swe_data_write(Vcov_vis(iCov_vis), c, chunk);
         end
       end
@@ -838,7 +842,9 @@ if ~isMat
       %-Write CovBeta files
       %----------------------------------------------------------------------
       for iCov_beta=1:nCov_beta
-        c(cmask) = Cov_beta(iCov_beta,:);
+        if CrS
+          c(cmask) = Cov_beta(iCov_beta,:);
+        end
         Vcov_beta(iCov_beta) = swe_data_write(Vcov_beta(iCov_beta), c, chunk);
       end
       
@@ -1045,13 +1051,17 @@ else % matrix input
     clear mask
 
     beta = zeros(nBeta, nVox);
-    beta(:,cmask) = crBeta;
+    if CrS
+      beta(:,cmask) = crBeta;
+    end
     save(sprintf('swe_%s_beta_b%s',file_data_type,file_ext), 'beta');
     clear beta crBeta
 
     if isfield(SwE.type,'modified')
         cov_vis = zeros(nCov_vis, nVox);
-        cov_vis(:,cmask) = crCov_vis;
+        if CrS
+          cov_vis(:,cmask) = crCov_vis;
+        end
         save(sprintf('swe_%s_cov_vv%s',file_data_type,file_ext), 'cov_vis');
         clear cov_vis crCov_vis
     end

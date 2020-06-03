@@ -342,11 +342,11 @@ function mapsEqual = verifyMapsUnchanged(pOrWb, inferenceType, tOrF, matNiiGiiOr
     % Record result
     equalMaps = [equalMaps result];
 
-    end
+  end
 
-    % return true if all maps were equal false otherwise.
+  % return true if all maps were equal false otherwise.
 
-    mapsEqual = ~any(~equalMaps);
+  mapsEqual = ~any(~equalMaps);
 
 end
 
