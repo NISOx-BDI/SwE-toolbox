@@ -32,7 +32,7 @@ jobs:
     # Each '-' with the same indentation as this comment is a job that is run in parallel in the
     # results generation stage.
     - stage: Results generation 
-    env:
+      env:
       - testname='p_vox_t_nii'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
