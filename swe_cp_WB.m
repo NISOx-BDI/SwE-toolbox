@@ -1093,47 +1093,63 @@ if ~isMat
     %-Write beta files
     %----------------------------------------------------------------------
     for iBeta = 1:nBeta
-      c(cmask) = beta(iBeta,:);
+      if CrS
+        c(cmask) = beta(iBeta,:);
+      end
       Vbeta(iBeta) = swe_data_write(Vbeta(iBeta), c, chunk); 
     end
 
     %-Write WB fitted data images
     %------------------------------------------------------------------
     for iScan = 1:nScan
-      c(cmask) = YWB(iScan,:);
+      if CrS
+        c(cmask) = YWB(iScan,:);
+      end
       VYWB(iScan) = swe_data_write(VYWB(iScan), c, chunk);
     end
     
     %-Write WB residuals
     %------------------------------------------------------------------
     for iScan = 1:nScan
-      c(cmask) = resWB(iScan,:);
+      if CrS
+        c(cmask) = resWB(iScan,:);
+      end
       VResWB(iScan) = swe_data_write(VResWB(iScan), c, chunk);
     end
 
     %-Write parametric score image of the original data
     %------------------------------------------------------------------
-    c(cmask) = score;
+    if CrS
+      c(cmask) = score;
+    end
     Vscore = swe_data_write(Vscore,  c, chunk);
     
     %-Write parametric edf image of the original data
     %------------------------------------------------------------------
-    c(cmask) = hyptest.positive.edf;
+    if CrS
+      c(cmask) = hyptest.positive.edf;
+    end
     Vedf = swe_data_write(Vedf,  c, chunk);
     
     %-Write parametric p-value image
     %------------------------------------------------------------------
-    c(cmask) = -log10(hyptest.positive.p);
+    if CrS
+      c(cmask) = -log10(hyptest.positive.p);
+    end
     VlP = swe_data_write(VlP,  c, chunk);
     
     if WB.stat=='T'
-      c(cmask) = -log10(hyptest.negative.p);
+      if CrS
+        c(cmask) = -log10(hyptest.negative.p);
+      end
       VlP_Neg = swe_data_write(VlP_Neg,  c, chunk);
     end
     
     %-Write converted parametric score image of the original data
     %------------------------------------------------------------------
-    c(cmask) = hyptest.positive.conScore;
+    if CrS
+      c(cmask) = hyptest.positive.conScore;
+    end
     VcScore = swe_data_write(VcScore,  c, chunk);
 
     if WB.stat == 'T'
