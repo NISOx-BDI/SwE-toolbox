@@ -1594,6 +1594,8 @@ else % ".mat" format
       LocActivatedVoxels = false(nDataElements, 1);
       LocActivatedVoxels(mask) = activatedVoxels;
     end
+    
+    originalActivatedVoxels = activatedVoxels;
 
     originalClusterStatistics = swe_getClusterStatistics(dataType, LocActivatedVoxels, dataTypeSpecificInformation, giftiAreaFile);
     
@@ -1611,6 +1613,8 @@ else % ".mat" format
         LocActivatedVoxelsNeg = false(nDataElements, 1);
         LocActivatedVoxelsNeg(mask) = activatedVoxelsNeg;
       end
+
+      originalActivatedVoxelsNeg = activatedVoxelsNeg;
 
       originalClusterStatisticsNeg = swe_getClusterStatistics(dataType, LocActivatedVoxelsNeg, dataTypeSpecificInformation, giftiAreaFile);
 
@@ -2569,20 +2573,12 @@ if isMat
       end
       
       lP_wb_normClusterFWE_pos = zeros(1, nDataElements);
-      if isVolumeMat      
-        tmp = find(cmask);
-        tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
-        for iC = 1:SwE.WB.clusterInfo.nCluster
-          tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = normClusterFwerP_pos_perCluster(iC);
-        end
-        lP_wb_normClusterFWE_pos(tmp(activatedVoxels)) = -log10(tmp3);
-      else
-        tmp3 = zeros(1, sum(SwE.WB.clusterInfo.LocActivatedVoxels));
-        for iC = 1:SwE.WB.clusterInfo.nCluster
-          tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = normClusterFwerP_pos_perCluster(iC);
-        end
-        lP_wb_normClusterFWE_pos(SwE.WB.clusterInfo.LocActivatedVoxels) = -log10(tmp3);
+      tmp = find(cmask);
+      tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
+      for iC = 1:SwE.WB.clusterInfo.nCluster
+        tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = normClusterFwerP_pos_perCluster(iC);
       end
+      lP_wb_normClusterFWE_pos(tmp(originalActivatedVoxels)) = -log10(tmp3);
       save(sprintf('swe_clusternorm_%cstat_lpFWE-WB_c%02d%s',WB.stat,1,file_ext), 'lP_wb_normClusterFWE_pos');
     
     else
@@ -2596,20 +2592,12 @@ if isMat
       end
       
       lP_wb_clusterFWE_pos = zeros(1, nDataElements);
-      if isVolumeMat      
-        tmp = find(cmask);
-        tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
-        for iC = 1:SwE.WB.clusterInfo.nCluster
-          tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = clusterFwerP_pos_perCluster(iC);
-        end
-        lP_wb_clusterFWE_pos(tmp(activatedVoxels)) = -log10(tmp3);
-      else
-        tmp3 = zeros(1, sum(SwE.WB.clusterInfo.LocActivatedVoxels));
-        for iC = 1:SwE.WB.clusterInfo.nCluster
-          tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = clusterFwerP_pos_perCluster(iC);
-        end
-        lP_wb_clusterFWE_pos(SwE.WB.clusterInfo.LocActivatedVoxels) = -log10(tmp3);
+      tmp = find(cmask);
+      tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxels,2));
+      for iC = 1:SwE.WB.clusterInfo.nCluster
+        tmp3(SwE.WB.clusterInfo.clusterAssignment == iC) = clusterFwerP_pos_perCluster(iC);
       end
+      lP_wb_clusterFWE_pos(tmp(originalActivatedVoxels)) = -log10(tmp3);
       save(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s',WB.stat,1,file_ext), 'lP_wb_clusterFWE_pos');      
     
     end
@@ -2627,20 +2615,12 @@ if isMat
         end
         
         lP_wb_normClusterFWE_neg = zeros(1, nDataElements);
-        if isVolumeMat
-          tmp = find(cmask);
-          tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
-          for iC = 1:SwE.WB.clusterInfo.nClusterNeg
-            tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = normClusterFwerP_neg_perCluster(iC);
-          end
-          lP_wb_normClusterFWE_neg(tmp(activatedVoxelsNeg)) = -log10(tmp3);
-        else
-          tmp3 = zeros(1, sum(SwE.WB.clusterInfo.LocActivatedVoxelsNeg));
-          for iC = 1:SwE.WB.clusterInfo.nClusterNeg
-            tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = normClusterFwerP_neg_perCluster(iC);
-          end
-          lP_wb_normClusterFWE_neg(SwE.WB.clusterInfo.LocActivatedVoxelsNeg) = -log10(tmp3);
+        tmp = find(cmask);
+        tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
+        for iC = 1:SwE.WB.clusterInfo.nClusterNeg
+          tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = normClusterFwerP_neg_perCluster(iC);
         end
+        lP_wb_normClusterFWE_neg(tmp(originalActivatedVoxelsNeg)) = -log10(tmp3);
         save(sprintf('swe_clusternorm_%cstat_lpFWE-WB_c%02d%s',WB.stat,2,file_ext), 'lP_wb_normClusterFWE_neg');
       
       else
@@ -2654,20 +2634,12 @@ if isMat
         end
         
         lP_wb_clusterFWE_neg = zeros(1, nDataElements);
-        if isVolumeMat
-          tmp = find(cmask);
-          tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
-          for iC = 1:SwE.WB.clusterInfo.nClusterNeg
-            tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = clusterFwerP_neg_perCluster(iC);
-          end
-          lP_wb_clusterFWE_neg(tmp(activatedVoxelsNeg)) = -log10(tmp3);
-        else
-          tmp3 = zeros(1, sum(SwE.WB.clusterInfo.LocActivatedVoxelsNeg));
-          for iC = 1:SwE.WB.clusterInfo.nClusterNeg
-            tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = clusterFwerP_neg_perCluster(iC);
-          end
-          lP_wb_clusterFWE_neg(SwE.WB.clusterInfo.LocActivatedVoxelsNeg) = -log10(tmp3);
+        tmp = find(cmask);
+        tmp3 = zeros(1, size(SwE.WB.clusterInfo.LocActivatedVoxelsNeg,2));
+        for iC = 1:SwE.WB.clusterInfo.nClusterNeg
+          tmp3(SwE.WB.clusterInfo.clusterAssignmentNeg == iC) = clusterFwerP_neg_perCluster(iC);
         end
+        lP_wb_clusterFWE_neg(tmp(originalActivatedVoxelsNeg)) = -log10(tmp3);
         save(sprintf('swe_clustere_%cstat_lpFWE-WB_c%02d%s',WB.stat,2,file_ext), 'lP_wb_clusterFWE_neg');
       end
     end
