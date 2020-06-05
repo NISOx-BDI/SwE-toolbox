@@ -616,8 +616,8 @@ switch lower(Action), case 'setup'                         %-Set up results
     %-Plot design matrix
     %----------------------------------------------------------------------
     hDesMtx   = axes('Parent',Fgraph,'Position',[0.65 0.55 0.25 0.25]);
-    hDesMtxIm = image((SwE.xX.X + 1)*32);
-    xlabel('Design matrix')
+    hDesMtxIm = image((SwE.xX.nKX + 1)*32,'Parent',hDesMtx);
+    xlabel(hDesMtx,'Design matrix','FontSize',FS(10))
     set(hDesMtxIm,'ButtonDownFcn','spm_DesRep(''SurfDesMtx_CB'')',...
         'UserData',struct(...
         'X',        SwE.xX.X,...
