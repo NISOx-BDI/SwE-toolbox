@@ -823,15 +823,29 @@ if isfield(job.WB, 'WB_yes')
     case 'WB_T'
       WB.stat = 'T';
       WB.con = job.WB.WB_yes.WB_stat.WB_T.WB_T_con;
-      if any(size(WB.con) ~= [1 size(X,2)])
-        error('contrast not well specified');
+      if size(WB.con,1) ~= 1
+          WB.con = WB.con';
+      end
+      if size(WB.con,1) ~= 1
+          error('T contrast must be a row-vector');
+      end
+      if size(WB.con,2) > size(X,2)
+          error('T contrast has too many elements');
+      end
+      if size(WB.con,2) < size(X,2)
+          % Pad with zeros
+          WB.con = [WB.con zeros(1,size(X,2)-size(WB.con,2))];
       end
       
     case 'WB_F'
       WB.stat = 'F';
       WB.con = job.WB.WB_yes.WB_stat.WB_F.WB_F_con;
-      if size(WB.con,2) ~= size(X,2)
-        error('contrast not well specified');
+      if size(WB.con,2) > size(X,2)
+          error('F contrast has too many rows');
+      end
+      if size(WB.con,2) < size(X,2)
+          % Pad with zeros
+          WB.con = [WB.con zeros(size(WB.con,1),size(X,2)-size(WB.con,2))];
       end
       
     otherwise
