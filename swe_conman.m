@@ -633,8 +633,8 @@ switch lower(varargin{1})
         %-Picture design matrix
         %------------------------------------------------------------------
         axes(h)
-        if isfield(varargin{2},'nKX') && ~isempty(varargin{2}.X)
-            hDesMtxIm = image((varargin{2}.X+1)*32);
+        if isfield(varargin{2},'nKX') && ~isempty(varargin{2}.nKX)
+            hDesMtxIm = image((varargin{2}.nKX+1)*32);
         else
             hDesMtxIm = image(...
                 (spm_DesMtx('sca',varargin{2}.X,varargin{2}.name)+1)*32);
