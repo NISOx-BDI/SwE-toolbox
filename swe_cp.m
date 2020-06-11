@@ -1119,6 +1119,7 @@ end
 % end
 SwE.VM         = VM;                %-Filehandle - Mask
 
+xX.nKX         = spm_DesMtx('sca',xX.X,xX.name); %-Scaled DesMtx for display
 SwE.xX         = xX;                %-design structure
 SwE.xM         = xM;                %-mask structure
 
