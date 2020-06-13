@@ -865,6 +865,11 @@ if ~isMat
     %------------------------------------------------------------------
     Y = zeros(nScan, numel(chunk));
     cmask = mask(chunk);
+          
+    if size(cmask, 2) == 1
+      cmask = cmask';
+    end
+
     for iScan=1:nScan
       if ~any(cmask), break, end                 %-Break if empty mask
       
