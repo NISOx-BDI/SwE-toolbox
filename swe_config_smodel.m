@@ -65,7 +65,9 @@ areaFile.tag     = 'areaFile';
 areaFile.name    = 'Surface area file';
 areaFile.help    = {''
   'Surface file containing the area of each vertex of this surface brain structure'
-  'This file is optional. It will be used to display the area of clusters and to compute Box-Cox normalised cluster sizes. If it is not supplied, the Box-Cox normalised cluster sizes will be computed based on the number of vertices instead.'};
+  ''
+  'This file is optional. It will be used to display the area of clusters and to compute Box-Cox normalised cluster sizes. If it is not supplied, the Box-Cox normalised cluster sizes will be computed based on the number of vertices instead.'
+  };
 areaFile.filter  = 'any';
 areaFile.ufilter = '.*(gii)';
 areaFile.num     = [0 1];
@@ -80,6 +82,7 @@ ciftiGeomFile.name    = 'Surface brain structure';
 ciftiGeomFile.val     = {brainStructureLabel geomFile areaFile};
 ciftiGeomFile.help    = {''
   'Add a new surface brain structure for CIfTI inputs.'
+  ''
   'For each surface brain structure, a geometry file must be specified alonside its label in the CIfTI file (the function swe_read_cifti_info can be used on one the input to extract the label of the surface brain structure).'
   'The specifictation of the file containing the area of each vertex is optional. It will be used to display the area of clusters and to compute Box-Cox normalised cluster sizes. If it is not supplied, the Box-Cox normalised cluster sizes will be computed based on the number of vertices instead.'};
 
@@ -90,7 +93,8 @@ ciftiGeomFiles         = cfg_repeat;
 ciftiGeomFiles.tag     = 'ciftiGeomFiles';
 ciftiGeomFiles.name    = 'Surface geometry files for CIfTI inputs';
 ciftiGeomFiles.help    = {''
-  'This option must be used for CIfTI inputs. It is not needed for other types of inputs'
+  'This option must be used for CIfTI inputs. It is not needed for other types of inputs.'
+  ''
   'It allows for the specification of the geometry files of each surface brain structure in the CIfTI inputs.'
   'For each surface brain structure, a geometry file must provided alongside the label of this brain structure used in the CIfTI files.'
   'In addition, for each surface brain structure, a surface metric file containing the surface area of each vertex may be added. It will be used to display the area of clusters and to compute Box-Cox normalised cluster sizes. If it is not supplied, the Box-Cox normalised cluster sizes will be computed based on the number of vertices instead.'
@@ -104,16 +108,19 @@ ciftiGeomFiles.num     = [0 Inf];
 % ---------------------------------------------------------------------
 volRoiConstraint         = cfg_menu;
 volRoiConstraint.tag     = 'volRoiConstraint';
-volRoiConstraint.name    = 'Clusters constrained within the volume ROI boundaries';
-volRoiConstraint.help    = {'If yes, the surviving clusters will be contrained to be within the volume ROI boundaries. Thus, they will not be allowed to spread across several volume ROIs.'
-              ''
-              'If no, the surviving clusters will not be contrained to be within the volume ROI boundaries. Thus, they will be allowed to spread across several volume ROIs.'};
+volRoiConstraint.name    = 'Should the volume clusters be constrained within the volume ROI boundaries?';
+volRoiConstraint.help    = {''
+  'If yes, the surviving clusters will be contrained to be within the volume ROI boundaries. Thus, they will not be allowed to spread across several volume ROIs.'
+  ''
+  'If no, the surviving clusters will not be contrained to be within the volume ROI boundaries. Thus, they will be allowed to spread across several volume ROIs.'
+  };
 volRoiConstraint.labels = {
                           'Yes'
                           'No'
                           }';
 volRoiConstraint.values = {1 0};
 volRoiConstraint.val    = {1};
+
 % ---------------------------------------------------------------------
 % ciftiAdditionalInfo Additional information for CIfTI inputs
 % ---------------------------------------------------------------------
@@ -121,8 +128,36 @@ ciftiAdditionalInfo         = cfg_branch;
 ciftiAdditionalInfo.tag     = 'ciftiAdditionalInfo';
 ciftiAdditionalInfo.name    = 'CIfTI additional information';
 ciftiAdditionalInfo.val     = {ciftiGeomFiles volRoiConstraint};
-ciftiAdditionalInfo.help    = {'This option is used to specify mandatory additional information for CIfTI data. It is ignored for other types of data.'
-                                ''};
+ciftiAdditionalInfo.help    = {''
+  'This option is used to specify additional (mandatory and optional) information for CIfTI data. It is ignored for other types of data.'
+  };
+
+% ---------------------------------------------------------------------
+% areaFileForGiftiInputs Surface area file for GIfTI inputs
+% ---------------------------------------------------------------------
+areaFileForGiftiInputs         = cfg_files;
+areaFileForGiftiInputs.tag     = 'areaFileForGiftiInputs';
+areaFileForGiftiInputs.name    = 'Surface area file';
+areaFileForGiftiInputs.help    = {''
+  'Surface file containing the area of each vertex'
+  ''
+  'This file is optional. It will be used to display the area of clusters and to compute Box-Cox normalised cluster sizes. If it is not supplied, the Box-Cox normalised cluster sizes will be computed based on the number of vertices instead.'
+  };
+  areaFileForGiftiInputs.filter  = 'any';
+  areaFileForGiftiInputs.ufilter = '.*(gii)';
+  areaFileForGiftiInputs.num     = [0 1];
+  areaFileForGiftiInputs.val     = {{}};
+
+% ---------------------------------------------------------------------
+% giftiAdditionalInfo Additional information for GIfTI inputs
+% ---------------------------------------------------------------------
+giftiAdditionalInfo         = cfg_branch;
+giftiAdditionalInfo.tag     = 'giftiAdditionalInfo';
+giftiAdditionalInfo.name    = 'GIfTI additional information';
+giftiAdditionalInfo.val     = {areaFileForGiftiInputs};
+giftiAdditionalInfo.help    = {''
+  'This option is used to specify additional information for GIfTI data. It is ignored for other types of data.'
+  };
 
 % ---------------------------------------------------------------------
 % groups Groups
@@ -747,83 +782,6 @@ WB_ss.help    = {  ' '
                 'H_ii is the sub-matrix of the hat matrix H=X''(X''X)^(-1)X corresponding to subject i.'
                 ' '}';
 
-% % ---------------------------------------------------------------------
-% % WB_cluster_no No
-% % ---------------------------------------------------------------------
-% WB_cluster_no         = cfg_const;
-% WB_cluster_no.tag     = 'WB_cluster_no';
-% WB_cluster_no.name    = 'No';
-% WB_cluster_no.val     = {0};
-% WB_cluster_no.help    = {''
-%   'No cluster-wise inference will be performed'
-%   ''};
-% % ---------------------------------------------------------------------
-% % WB_cluster_yes Yes
-% % ---------------------------------------------------------------------
-% WB_cluster_yes         = cfg_entry;
-% WB_cluster_yes.tag     = 'WB_cluster_yes';
-% WB_cluster_yes.name    = 'Yes for image input, set the cluster-forming threshold now';
-% WB_cluster_yes.val     = {0.001};
-% WB_cluster_yes.help    = {''
-%                      'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default)'
-% ''}';
-% WB_cluster_yes.strtype = 'e';
-% WB_cluster_yes.num     = [1 1];
-% 
-% % ---------------------------------------------------------------------
-% % WB_cluster_yes_mat_clusP cluP
-% % ---------------------------------------------------------------------
-% WB_cluster_yes_mat_clusP         = cfg_entry;
-% WB_cluster_yes_mat_clusP.tag     = 'WB_cluster_yes_mat_clusP';
-% WB_cluster_yes_mat_clusP.name    = 'Set the cluster-forming threshold now for ".mat" input';
-% WB_cluster_yes_mat_clusP.val     = {0.001};
-% WB_cluster_yes_mat_clusP.help    = {''
-%                      'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default)'
-% ''}';
-% WB_cluster_yes_mat_clusP.strtype = 'e';
-% WB_cluster_yes_mat_clusP.num     = [1 1];
-% 
-% % ---------------------------------------------------------------------
-% % WB_cluster_yes_mat_type cluP
-% % ---------------------------------------------------------------------
-% WB_cluster_yes_mat_type         = cfg_menu;
-% WB_cluster_yes_mat_type.tag     = 'WB_cluster_yes_mat_type';
-% WB_cluster_yes_mat_type.name    = 'Select the type of ".mat" inputs';
-% WB_cluster_yes_mat_type.val     = {};
-% WB_cluster_yes_mat_type.labels  = { 'Volumetric (voxels)' 'Surface (vertices)'};
-% WB_cluster_yes_mat_type.help    = {''
-%                      'Select the type of ".mat" inputs. Either volumetric or surface data'
-% ''}';
-% WB_cluster_yes_mat_type.values  = {0 1};
-% 
-% % ---------------------------------------------------------------------
-% % WB_cluster_yes_mat_loc loc
-% % ---------------------------------------------------------------------
-% WB_cluster_yes_mat_loc         = cfg_files;
-% WB_cluster_yes_mat_loc.tag     = 'WB_cluster_yes_mat_loc';
-% WB_cluster_yes_mat_loc.name    = 'Spatial information';
-% WB_cluster_yes_mat_loc.help    = {''
-%                      'For volumetric data, the 3D location of voxels is expected in voxel coordinates (XYZ_vox).'
-%                      ''
-%                      'For surface data, the faces (or triangles) information is expected in vertex coordinates.'
-%                      ''
-%                      'Note that this spatial information needs to be saved in a ".mat" file as a matrix of size 3 x nVoxels (or its transposed) or nFaces x 3 (or its transposed)'
-% }';
-% WB_cluster_yes_mat_loc.filter = {'mat'};
-% WB_cluster_yes_mat_loc.ufilter = '.*';
-% WB_cluster_yes_mat_loc.num     = [1 1];
-% 
-% % ---------------------------------------------------------------------
-% % WB_cluster_yesMat Yes
-% % ---------------------------------------------------------------------
-% WB_cluster_yes_mat         = cfg_branch;
-% WB_cluster_yes_mat.tag     = 'WB_cluster_yes_mat';
-% WB_cluster_yes_mat.name    = 'Yes for ".mat" input';
-% WB_cluster_yes_mat.val     = {WB_cluster_yes_mat_clusP WB_cluster_yes_mat_type WB_cluster_yes_mat_loc};
-% WB_cluster_yes_mat.help    = {''
-%                      'A cluster-wise inference will be performed alongside the voxel-wise inference. The cluster-forming threshold needs to be set now (p=0.001 per default) and some spatial information needs to be specified in order to form clusters.'
-% }';
-
 % ---------------------------------------------------------------------
 % WB_nB nB
 % ---------------------------------------------------------------------
@@ -837,20 +795,6 @@ WB_nB.help    = {''
 WB_nB.strtype = 'i';
 WB_nB.num     = [1 1];
 
-
-% % ---------------------------------------------------------------------
-% % WB_cluster WB cluster-wise inference 
-% % ---------------------------------------------------------------------
-% WB_cluster         = cfg_choice;
-% WB_cluster.tag     = 'WB_cluster';
-% WB_cluster.name    = 'Cluster-wise inference';
-% WB_cluster.values  = {WB_cluster_no WB_cluster_yes WB_cluster_yes_mat};
-% WB_cluster.val     = {WB_cluster_no};
-% WB_cluster.help    = {''
-%   'No: no cluster-wise inference will be performed'
-%   ''
-%   'Yes: a cluster-wise inference will be performed alongside the voxel-wise inference. If this option is selected, the U-SwE will be automatically used in order to produce "meaningful" parametric p-value bootstrap images to be thresholded by the specified cluster-forming threshold.'
-%   ''};
 
 % ---------------------------------------------------------------------
 % WB_voxelwise WB voxelwise inference
@@ -977,7 +921,7 @@ WB_inputType.help    = {''
 WB_clusterwise         = cfg_branch;
 WB_clusterwise.tag     = 'WB_clusterwise';
 WB_clusterwise.name    = 'Clusterwise';
-WB_clusterwise.val     = {WB_inputType WB_clusThresh};
+WB_clusterwise.val     = {WB_clusThresh WB_inputType};
 WB_clusterwise.help    = {''
                      'Bootstrapped clusterwise inference will be performed with clusterwise FWE p values available at the results stage.'
 }';
@@ -1068,7 +1012,7 @@ WB.val    = {WB_no};
 smodel        = cfg_exbranch;
 smodel.tag    = 'smodel';
 smodel.name   = 'Specify Model';
-smodel.val    = {dir scans ciftiAdditionalInfo type subjects generic generic2 masking WB globalc globalm};
+smodel.val    = {dir scans ciftiAdditionalInfo giftiAdditionalInfo type subjects generic generic2 masking WB globalc globalm};
 smodel.help   = {' '
                  'Module of the SwE toolbox allowing the specification of the data and design.'};
 smodel.prog   = @swe_run_smodel;

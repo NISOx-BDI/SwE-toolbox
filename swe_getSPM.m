@@ -1018,15 +1018,19 @@ if ~isMat
               case 'FWE' % Family-wise false positive rate
                   % This is performed on the FWE P value map
                   %--------------------------------------------------------
-                  % if CIfTI, ask which type of cluster statistics 
-                  if isCifti
-                    try
-                      clusterSizeType = xSwE.clusterSizeType;
-                    catch
-                      str = 'classic k_E|Box-Cox norm. k_{Z1}|Box-Cox norm. k_{Z2}';
-                      clusterSizeType = spm_input('cluster size statistic','+1','b',str,[],1);
+                  
+                  try
+                    clusterSizeType = xSwE.clusterSizeType;
+                  catch
+                    if isfield(xCon(Ic), 'VspmFWEP_clusnorm')
+                      clusterSizeType = 'Box-Cox norm. k_{Z}';
+                    elseif isfield(xCon(Ic), 'VspmFWEP_clus')
+                      clusterSizeType = 'classic k_E';
+                    else
+                      error('unknown type of cluster statistics')
                     end
                   end
+
                   % Record what type of clusterwise inference we are doing.
                   clustWise = 'FWE';
                   
@@ -1211,41 +1215,24 @@ if ~isMat
               
               % recompute the p-values as they might have increased due to post-hoc masking
               if Ic == 1
-                if isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z1}')
+                if isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z}')
+                  scalingFactorNorm = swe_invNcdf(0.75);
                   if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0) > 0
-                    clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
-                    clusterSizesInSurfaces = (clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_mean) ...
-                                  ./ SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_std;
-                  else
-                    clusterSizesInSurfaces = [];
-                  end
-                  if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0) > 0
-                    clusterSizesInVolume = boxcox(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_lambda, clusterSizesInVolume')';
-                    clusterSizesInVolume = (clusterSizesInVolume - SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_mean) ...
-                                  ./ SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_std;
-                  else
-                    clusterSizesInVolume = [];
-                  end
-                  clusterSizes = [clusterSizesInSurfaces, clusterSizesInVolume];
-                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSize_norm;
-                elseif isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z2}')
-                  scalingFactorNorm2 = 2 * swe_invNcdf(0.75);
-                  if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0) > 0
-                    clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
+                    clusterSizesInSurfaces = swe_boxCoxTransform(clusterSizesInSurfaces, SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda);
                     clusterSizesInSurfaces = (clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_median) ...
-                                  ./ SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_hiqr;
+                                  ./ SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr;
                   else
                     clusterSizesInSurfaces = [];
                   end
                   if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0) > 0
-                    clusterSizesInVolume = boxcox(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_lambda, clusterSizesInVolume')';
+                    clusterSizesInVolume = swe_boxCoxTransform(clusterSizesInVolume, SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_lambda);
                     clusterSizesInVolume = (clusterSizesInVolume - SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_median) ...
-                                  ./ SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_hiqr;
+                                  ./ SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr;
                   else
                     clusterSizesInVolume = [];
                   end
-                  clusterSizes = scalingFactorNorm2 * [clusterSizesInSurfaces, clusterSizesInVolume];
-                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSize_norm2;
+                  clusterSizes = scalingFactorNorm * [clusterSizesInSurfaces, clusterSizesInVolume];
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSize_norm;
                 else
                   clusterSizes = NaN(1, numel(clusIndices));
                   for i = 1:numel(clusIndices)
@@ -1254,41 +1241,24 @@ if ~isMat
                   maxClusterSize = SwE.WB.clusterInfo.maxClusterSize;
                 end
               elseif Ic == 2
-                if isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z1}')
+                if isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z}')
+                  scalingFactorNorm = swe_invNcdf(0.75);
                   if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0) > 0
-                    clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
-                    clusterSizesInSurfaces = (clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_mean) ...
-                                    ./ SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_std;
-                  else
-                    clusterSizesInSurfaces = [];
-                  end
-                  if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0) > 0
-                    clusterSizesInVolume = boxcox(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_lambda, clusterSizesInVolume')';
-                    clusterSizesInVolume = (clusterSizesInVolume - SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_mean) ...
-                                    ./ SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_std;
-                  else
-                    clusterSizesInVolume = [];
-                  end
-                  clusterSizes = [clusterSizesInSurfaces, clusterSizesInVolume];
-                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSizeNeg_norm;
-                elseif isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z2}')
-                  scalingFactorNorm2 = 2 * swe_invNcdf(0.75);
-                  if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0) > 0
-                    clusterSizesInSurfaces = boxcox(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_lambda, clusterSizesInSurfaces')';
+                    clusterSizesInSurfaces = swe_boxCoxTransform(clusterSizesInSurfaces, SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_lambda);
                     clusterSizesInSurfaces = (clusterSizesInSurfaces - SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_median) ...
-                                    ./ SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_hiqr;
+                                    ./ SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr;
                   else
                     clusterSizesInSurfaces = [];
                   end
                   if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0) > 0
-                    clusterSizesInVolume = boxcox(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_lambda, clusterSizesInVolume')';
+                    clusterSizesInVolume = swe_boxCoxTransform(clusterSizesInVolume, SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_lambda);
                     clusterSizesInVolume = (clusterSizesInVolume - SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_median) ...
-                                    ./ SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_hiqr;
+                                    ./ SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr;
                   else
                     clusterSizesInVolume = [];
                   end
-                  clusterSizes = scalingFactorNorm2 * [clusterSizesInSurfaces, clusterSizesInVolume];
-                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSizeNeg_norm2;
+                  clusterSizes = scalingFactorNorm * [clusterSizesInSurfaces, clusterSizesInVolume];
+                  maxClusterSize = SwE.WB.clusterInfo.maxClusterSizeNeg_norm;
                 else
                   clusterSizes = NaN(1, numel(clusIndices));
                   for i = 1:numel(clusIndices)
@@ -1410,44 +1380,53 @@ if isfield(SwE, 'WB')
     xSwE.VspmFDRP = cat(1,xCon(Ic).VspmFDRP);
     xSwE.VspmFWEP = cat(1,xCon(Ic).VspmFWEP);
     if SwE.WB.clusterWise
-        xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
-        if isCifti
+        
+        try
+
           xSwE.VspmFWEP_clusnorm = cat(1,xCon(Ic).VspmFWEP_clusnorm);
-          xSwE.VspmFWEP_clusnorm2 = cat(1,xCon(Ic).VspmFWEP_clusnorm2);
           if strcmp(clustWise, 'FWE')
             xSwE.clusterSizeType = clusterSizeType;
           end
+          
+          hasVolumeData = (SwE.xY.dataType == swe_DataType('Cifti') && numel(SwE.cifti.surfaces) > 0) || SwE.xY.dataType == swe_DataType('Gifti') || SwE.xY.dataType == swe_DataType('SurfaceMat');
+          hasSurfaceData = (SwE.xY.dataType == swe_DataType('Cifti') && numel(SwE.cifti.volume) > 0) || SwE.xY.dataType == swe_DataType('Nifti') || SwE.xY.dataType == swe_DataType('VolumeMat');
+          
           if Ic == 1
-            if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0) > 0
+            if hasVolumeData && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0) > 0
               xSwE.boxcoxInfo.surfaces.lambda = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda;
               xSwE.boxcoxInfo.surfaces.mean = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_mean;
               xSwE.boxcoxInfo.surfaces.std = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_std;
               xSwE.boxcoxInfo.surfaces.median = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_median;
-              xSwE.boxcoxInfo.surfaces.hiqr = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_hiqr;
+              xSwE.boxcoxInfo.surfaces.upperHalfIqr = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_upperHalfIqr;
             end
-            if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0) > 0
+            if hasSurfaceData && numel(SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0) > 0
               xSwE.boxcoxInfo.volume.lambda = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_lambda;
               xSwE.boxcoxInfo.volume.mean = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_mean;
               xSwE.boxcoxInfo.volume.std = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_std;
               xSwE.boxcoxInfo.volume.median = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_median;
-              xSwE.boxcoxInfo.volume.hiqr = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_hiqr;
+              xSwE.boxcoxInfo.volume.upperHalfIqr = SwE.WB.clusterInfo.clusterSizesInVolumeUnderH0_boxCox_upperHalfIqr;
             end
           elseif Ic == 2
-            if numel(SwE.cifti.surfaces) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0) > 0
+            if hasVolumeData > 0 && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0) > 0
               xSwE.boxcoxInfo.surfaces.lambda = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_lambda;
               xSwE.boxcoxInfo.surfaces.mean = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_mean;
               xSwE.boxcoxInfo.surfaces.std = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_std;
               xSwE.boxcoxInfo.surfaces.median = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_median;
-              xSwE.boxcoxInfo.surfaces.hiqr = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_hiqr;
+              xSwE.boxcoxInfo.surfaces.upperHalfIqr = SwE.WB.clusterInfo.clusterSizesInSurfacesNegUnderH0_boxCox_upperHalfIqr;
             end
-            if numel(SwE.cifti.volume) > 0 && numel(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0) > 0
+            if hasSurfaceData && numel(SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0) > 0
               xSwE.boxcoxInfo.volume.lambda = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_lambda;
               xSwE.boxcoxInfo.volume.mean = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_mean;
               xSwE.boxcoxInfo.volume.std = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_std;
               xSwE.boxcoxInfo.volume.median = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_median;
-              xSwE.boxcoxInfo.volume.hiqr = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_hiqr;
+              xSwE.boxcoxInfo.volume.upperHalfIqr = SwE.WB.clusterInfo.clusterSizesInVolumeNegUnderH0_boxCox_upperHalfIqr;
             end
           end
+
+        catch
+
+          xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
+        
         end
     end
     if isfield(SwE.WB, 'TFCE')

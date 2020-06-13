@@ -244,11 +244,6 @@ case 'table'                                                        %-Table
         else
             VspmFWEP_clusnorm = [];
         end
-        if isfield(xSwE, 'VspmFWEP_clusnorm2')
-            VspmFWEP_clusnorm2 = swe_data_read(xSwE.VspmFWEP_clusnorm2);
-        else
-            VspmFWEP_clusnorm2 = [];
-        end
     end
     
 %     if STAT~='P'
@@ -299,10 +294,10 @@ case 'table'                                                        %-Table
     % normal SPM header.
     if isCifti
       additionalField = {'brain structure','label','label'};
-      nColTable = 13;
+      nColTable = 12;
     else
       additionalField = {};
-      nColTable = 12;
+      nColTable = 11;
     end
     
     if ~isfield(xSwE, 'TFCEanaly') || ~xSwE.TFCEanaly
@@ -313,8 +308,7 @@ case 'table'                                                        %-Table
             % 'cluster',  'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
             'cluster',  'equivk',       '\itk\rm_E';...
             'cluster',  'equivkArea',       '\it{area}';...
-            'cluster',  'equivkZ1',       '\itk\rm_{Z1}';...
-            'cluster',  'equivkZ2',       '\itk\rm_{Z2}';...
+            'cluster',  'equivkZ',       '\itk\rm_{Z}';...
             % 'cluster',  'p(unc)',       '\itp\rm_{uncorr}';...
             'peak',     'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
             'peak',     'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
@@ -331,7 +325,6 @@ case 'table'                                                        %-Table
             'TFCE',     'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
             'TFCE',     '',             '';...
             'TFCE',     'equivk',       '\itk\rm_E';...
-            'TFCE',     '',             '';...
             'TFCE',     '',             '';...
             'peak',     'p(FWE-corr)',  '\itp\rm_{FWE-corr}';...
             'peak',     'p(FDR-corr)',  '\itq\rm_{FDR-corr}';...
@@ -369,7 +362,7 @@ case 'table'                                                        %-Table
         voxfmt = [tmpfmt{:}];
     end
     TabDat.fmt = {'%-0.3f','%g',...                            %-Set
-        '%0.3f', '%0.0f','%0.2f','%0.3f', '%0.3f',...          %-Cluster
+        '%0.3f', '%0.0f','%0.2f','%0.3f',...                   %-Cluster
         '%0.3f', '%0.3f', '%6.2f', '%0.3f',...                 %-Peak
         xyzfmt, '%s'};                                         %-XYZ
     
@@ -425,15 +418,14 @@ case 'table'                                                        %-Table
             end
         elseif xSwE.infType == 1 % cluster-wise
             if strcmp(xSwE.clustWise, 'FWE')
-              if isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z1}')
-                TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); k_{Z1} > %0.3f, p <= %0.3f (FWE).'];
+              if strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z}')
+                TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); k_{Z} > %0.3f, p <= %0.3f (FWE).'];
                 TabDat.ftr{1,2} = [u, str2num(td.u), k, xSwE.fwep_c];
-              elseif isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z2}')
-                TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); k_{Z2} > %0.3f, p <= %0.3f (FWE).'];
-                TabDat.ftr{1,2} = [u, str2num(td.u), k, xSwE.fwep_c];
-              else
+              elseif strcmpi(xSwE.clusterSizeType, 'classic k_E')
                 TabDat.ftr{1,1} = ['Threshold: Height ' eSTAT ' > %0.2f, p < %0.3f (unc.); Extent k > %0.0f ' strDataType ', p <= %0.3f (FWE).'];
                 TabDat.ftr{1,2} = [u, str2num(td.u), k, xSwE.fwep_c];
+              else
+                error('Unknow type of cluster statistics');
               end
             elseif strcmp(xSwE.clustWise, 'Uncorr')
               TabDat.ftr{1,1} = ['Threshold: p <= %0.3f (unc.); Extent k >= %0.0f ' strDataType '.'];
@@ -482,8 +474,8 @@ case 'table'                                                        %-Table
         
      end
      
-     if isCifti && xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') && isfield(xSwE, 'boxcoxInfo')
-        TabDat.ftr{(3+exlns),1} = 'k_{Z1} = (k_{\\lambda}-mean(k_{\\lambda}^{H0}))/std(k_{\\lambda}^{H0}), k_{Z2}=0.6745(k_{\\lambda}-Q2(k_{\\lambda}^{H0}))/(Q3(k_{\\lambda}^{H0})-Q2(k_{\\lambda}^{H0}))';
+     if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') && isfield(xSwE, 'boxcoxInfo')
+        TabDat.ftr{(3+exlns),1} = 'k_{Z} = 0.6745 (k_{\\lambda} - Q2(k_{\\lambda}^{H0})) / (Q3(k_{\\lambda}^{H0})-Q2(k_{\\lambda}^{H0}))';
         % TabDat.ftr{(3+exlns),1} = 'Null cluster sizes in surfaces: \\lambda_S=%0.2f , \\lambda_V =%0.2f';
         % TabDat.ftr{(3+exlns),1} = 'Box-Cox(Surf): \lambda=%0.2f, mean=%0.2f, std=%0.2f, median=%0.2f, 2(Q3-Q2)=%0.2f';
         TabDat.ftr{(3+exlns),2} = [];
@@ -655,18 +647,21 @@ case 'table'                                                        %-Table
     %----------------------------------------------------------------------
     minz           = abs(min(min(Z)));
     Z              = 1 + minz + Z;
-    if isCifti
-        if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') && isfield(xSwE, 'boxcoxInfo')
-            boxcoxInfo = xSwE.boxcoxInfo;
-        else
-            boxcoxInfo = [];
-        end
-        [N, N_area, N_boxcox1, N_boxcox2, Z, XYZ, A, L, XYZmm, brainStructureShortLabels] = ...
-            swe_cifti_max(Z,XYZ(1,:),xSwE.cifti, boxcoxInfo);
-    elseif ~spm_mesh_detect(xSwE.Vspm)
-        [N Z XYZ A L]  = spm_max(Z,XYZ);
+
+    if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') && isfield(xSwE, 'boxcoxInfo')
+        boxcoxInfo = xSwE.boxcoxInfo;
     else
-        [N Z XYZ A L]  = spm_mesh_max(Z,XYZ,xSwE.G);
+        boxcoxInfo = [];
+    end
+
+    if isCifti
+        [N, N_area, N_boxcox, Z, XYZ, A, L, XYZmm, brainStructureShortLabels] = ...
+            swe_cifti_max(Z,XYZ(1,:), xSwE.cifti, boxcoxInfo);
+    elseif ~spm_mesh_detect(xSwE.Vspm)
+        [N, N_boxcox, Z, XYZ, A, L]  = swe_max(Z, XYZ, boxcoxInfo);
+        N_area = [];
+    else
+        [N, N_area, N_boxcox, Z, XYZ, A, L]  = spm_mesh_max(Z, XYZ, xSwE.G, boxcoxInfo);
     end
     Z              = Z - minz - 1;
 
@@ -705,125 +700,94 @@ case 'table'                                                        %-Table
         [U,i]  = max(Z);            %-largest maxima
         mj     = find(A == A(i));   %-maxima in cluster
 
-
-        %-Compute cluster {k} and peak-level {u} p values for this cluster
-        %------------------------------------------------------------------
-%         if STAT ~= 'P'
-%             
-%             % p-values (FWE)
-%             %--------------------------------------------------------------
-%             Pz      = spm_P(1,0,   U,df,STAT,1,n,S);  % uncorrected p value
-%             Pu      = spm_P(1,0,   U,df,STAT,R,n,S);  % FWE-corrected {based on Z}
-%             [Pk Pn] = spm_P(1,K(i),u,df,STAT,R,n,S);  % [un]corrected {based on K}
-%             
-%             % q-values (FDR)
-%             %--------------------------------------------------------------
-%             if topoFDR
-%                 Qc  = spm_P_clusterFDR(K(i),df,STAT,R,n,u,QPc); % based on K
-%                 Qp  = spm_P_peakFDR(U,df,STAT,R,n,u,QPp);       % based on Z
-%                 Qu  = [];
-%             else
-%                 Qc  = [];
-%                 Qp  = [];
-%             end
-%         else
-            if ~xSwE.WB
-              switch STATe
-                  case 'Z'
-                    try
-                      Pz      = normcdf(-U);
-                    catch
-                      Pz      = spm_Ncdf(-U);
-                    end
-                  case 'X'
-                    try
-                      Pz      = 1-chi2cdf(U,1);
-                    catch 
-                      Pz      = 1-spm_Xcdf(U,1);
-                    end
-              end
-            else
-              Pz = 10.^-VspmUncP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-            end
-
-            % If we are not running a wild bootstrap or we are doing a 
-            % small volume correction we need to calculate the FDR P value
-            % and leave the other values blank.
-            if ~xSwE.WB || isfield(xSwE,'svc')
-                Pu      = [];
-                Pk      = [];
-                Pn      = [];
-                Qc      = [];
-                Qp      = [];
-                Qu      = spm_P_FDR(U,[1 1],STATe,n,QPs);    % voxel FDR-corrected
-                ws      = warning('off','SPM:outOfRangeNormal');
-                warning(ws);
-            % If we are running a wild bootstrap we only need to read in
-            % results we calculated earlier.
-            else
-                Pu      = 10.^-VspmFWEP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                Qu      = 10.^-VspmFDRP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                Pn      = [];
-                Qc      = [];
-                Qp      = [];
-                ws      = warning('off','SPM:outOfRangeNormal');
-                warning(ws);
-                
-                if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') % only for FWER clusterwise WB
-                    if isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z1}')
-                        Pk  = 10.^-VspmFWEP_clusnorm(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                    elseif isCifti && strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z2}')
-                        Pk  = 10.^-VspmFWEP_clusnorm2(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                    else
-                        Pk  = 10.^-VspmFWEP_clus(XYZ(1,i),XYZ(2,i),XYZ(3,i));
-                    end
-                    % It is possible to get the results window to display
-                    % details about voxels that were thresholded out by the
-                    % cluster-forming threshold used for the wild bootstrap.
-                    % These regions will have NaN for the cluster FWE P-value
-                    % when they should have one. So the below is necessary:
-                    Pk(isnan(Pk)) = 1;
-                    
-                elseif xSwE.TFCEanaly
-                    
-                    % Get coordinates of all voxels in the current cluster.
-                    currentClus = find(A == A(i));
-                    XYZ_clus = XYZ(:, currentClus);
-                    
-                    % Read in all TFCE FWE P values in this cluser
-                    tfp = 10.^-swe_data_read(xSwE.VspmTFCEFWEP, 'xyz', XYZ_clus);
-                    
-                    % Record the minimum TFCE FWE P value in said cluster.
-                    Pk  = min(tfp);
-                else
-                    Pk  = [];
+        if ~xSwE.WB
+            switch STATe
+                case 'Z'
+                try
+                    Pz      = normcdf(-U);
+                catch
+                    Pz      = spm_Ncdf(-U);
                 end
-                
+                case 'X'
+                try
+                    Pz      = 1-chi2cdf(U,1);
+                catch 
+                    Pz      = 1-spm_Xcdf(U,1);
+                end
             end
-        
-        if topoFDR
-            [TabDat.dat{TabLin,3:11}] = deal(Pk,Qc,N(i),Pn,Pu,Qp,U,Pz,XYZmm(:,i));
         else
-        % [TabDat.dat{TabLin,3:11}] = deal(Pk,Qc,N(i),Pn,Pu,Qu,U,Pz,XYZmm(:,i));
-            if ~isCifti ||i > numel(N_area) % means that this is for volume or there is no area info
-                N_area_tmp = [];
-            else
-                N_area_tmp = N_area(i);
-            end
-            if ~isCifti || i > numel(N_boxcox1)   
-                N_boxcox1_tmp = [];
-            else
-                N_boxcox1_tmp = N_boxcox1(i);
-            end
-            if ~isCifti || i > numel(N_boxcox2)   
-                N_boxcox2_tmp = [];
-            else
-                N_boxcox2_tmp = N_boxcox2(i);
-            end
-            [TabDat.dat{TabLin,3:12}] = deal(Pk, N(i), N_area_tmp, N_boxcox1_tmp, N_boxcox2_tmp,Pu,Qu,U,Pz,XYZmm(:,i));
+            Pz = 10.^-VspmUncP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
         end
+
+        % If we are not running a wild bootstrap or we are doing a 
+        % small volume correction we need to calculate the FDR P value
+        % and leave the other values blank.
+        if ~xSwE.WB || isfield(xSwE,'svc')
+            Pu      = [];
+            Pk      = [];
+            Pn      = [];
+            Qc      = [];
+            Qp      = [];
+            Qu      = spm_P_FDR(U,[1 1],STATe,n,QPs);    % voxel FDR-corrected
+            ws      = warning('off','SPM:outOfRangeNormal');
+            warning(ws);
+        % If we are running a wild bootstrap we only need to read in
+        % results we calculated earlier.
+        else
+            Pu      = 10.^-VspmFWEP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+            Qu      = 10.^-VspmFDRP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+            Pn      = [];
+            Qc      = [];
+            Qp      = [];
+            ws      = warning('off','SPM:outOfRangeNormal');
+            warning(ws);
+            
+            if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') % only for FWER clusterwise WB
+                if strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z}')
+                    Pk  = 10.^-VspmFWEP_clusnorm(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                elseif strcmpi(xSwE.clusterSizeType, 'classic k_E')
+                    Pk  = 10.^-VspmFWEP_clus(XYZ(1,i),XYZ(2,i),XYZ(3,i));
+                else
+                    error('Unknow type of cluster statistics');
+                end
+                % It is possible to get the results window to display
+                % details about voxels that were thresholded out by the
+                % cluster-forming threshold used for the wild bootstrap.
+                % These regions will have NaN for the cluster FWE P-value
+                % when they should have one. So the below is necessary:
+                Pk(isnan(Pk)) = 1;
+                
+            elseif xSwE.TFCEanaly
+                
+                % Get coordinates of all voxels in the current cluster.
+                currentClus = find(A == A(i));
+                XYZ_clus = XYZ(:, currentClus);
+                
+                % Read in all TFCE FWE P values in this cluser
+                tfp = 10.^-swe_data_read(xSwE.VspmTFCEFWEP, 'xyz', XYZ_clus);
+                
+                % Record the minimum TFCE FWE P value in said cluster.
+                Pk  = min(tfp);
+            else
+                Pk  = [];
+            end
+            
+        end
+        
+        if i > numel(N_area) % means that this is for volume or there is no area info
+            N_area_tmp = [];
+        else
+            N_area_tmp = N_area(i);
+        end
+        if i > numel(N_boxcox)   
+            N_boxcox_tmp = [];
+        else
+            N_boxcox_tmp = N_boxcox(i);
+        end
+        [TabDat.dat{TabLin,3:11}] = deal(Pk, N(i), N_area_tmp, N_boxcox_tmp,Pu,Qu,U,Pz,XYZmm(:,i));
+
         if isCifti
-          [TabDat.dat{TabLin, 13}] = char(brainStructureShortLabels(i));
+          [TabDat.dat{TabLin, 12}] = char(brainStructureShortLabels(i));
         end
         TabLin = TabLin + 1;
         
@@ -883,10 +847,10 @@ case 'table'                                                        %-Table
                     
                     D     = [D d];
                     if topoFDR
-                    [TabDat.dat{TabLin,8:12}] = ...
+                    [TabDat.dat{TabLin,7:11}] = ...
                         deal(Pu,Qp,Z(d),Pz,XYZmm(:,d));
                     else
-                    [TabDat.dat{TabLin,8:12}] = ...
+                    [TabDat.dat{TabLin,7:11}] = ...
                         deal(Pu,Qu,Z(d),Pz,XYZmm(:,d));
                     end
                     TabLin = TabLin+1;
@@ -909,13 +873,13 @@ case 'table'                                                        %-Table
     else           TabDat = varargin{2}; end
     if nargin < 3, hReg = []; else hReg = varargin{3}; end
     
-    isCifti = (size(TabDat.hdr,2) == 13);
+    isCifti = (size(TabDat.hdr,2) == 12);
     if isCifti
       scalingFactor = 0.9;
-      nColTable = 13;
+      nColTable = 12;
     else
       scalingFactor = 1;
-      nColTable = 12;
+      nColTable = 11;
     end
 
     %-Get current location (to highlight selected voxel in table)
@@ -972,24 +936,23 @@ case 'table'                                                        %-Table
     h  = text(0.08*scalingFactor,y-9*dy/8,    TabDat.hdr{3,2});              Hs = [Hs,h];
     
     text(0.22*scalingFactor,y, [TabDat.hdr{1,3} '-level'],'FontSize',FS(9));
-    line([0.12,0.44]*scalingFactor,[1,1]*(y-dy/4),'LineWidth',0.5,'Color','r');
-    h  = text(0.13*scalingFactor,y-9*dy/8,    TabDat.hdr{3,3});              Hc = [Hc,h];
-    h  = text(0.21*scalingFactor,y-9*dy/8,    TabDat.hdr{3,4});              Hc = [Hc,h];
-    h  = text(0.26*scalingFactor,y-9*dy/8,    TabDat.hdr{3,5});              Hc = [Hc,h];
-    h  = text(0.34*scalingFactor,y-9*dy/8,    TabDat.hdr{3,6});              Hc = [Hc,h];
-    h  = text(0.40*scalingFactor,y-9*dy/8,    TabDat.hdr{3,7});              Hc = [Hc,h];
+    line([0.14,0.44]*scalingFactor,[1,1]*(y-dy/4),'LineWidth',0.5,'Color','r');
+    h  = text(0.15*scalingFactor,y-9*dy/8,    TabDat.hdr{3,3});              Hc = [Hc,h];
+    h  = text(0.24*scalingFactor,y-9*dy/8,    TabDat.hdr{3,4});              Hc = [Hc,h];
+    h  = text(0.31*scalingFactor,y-9*dy/8,    TabDat.hdr{3,5});              Hc = [Hc,h];
+    h  = text(0.39*scalingFactor,y-9*dy/8,    TabDat.hdr{3,6});              Hc = [Hc,h];
     
     text(0.59*scalingFactor,y, [TabDat.hdr{1,8} '-level'],'FontSize',FS(9));
     line([0.48,0.80]*scalingFactor,[1,1]*(y-dy/4),'LineWidth',0.5,'Color','r');
-    h  = text(0.49*scalingFactor,y-9*dy/8,    TabDat.hdr{3,8});              Hp = [Hp,h];
-    h  = text(0.58*scalingFactor,y-9*dy/8,    TabDat.hdr{3,9});              Hp = [Hp,h];
-    h  = text(0.67*scalingFactor,y-9*dy/8,    TabDat.hdr{3,10});              Hp = [Hp,h];
-    h  = text(0.74*scalingFactor,y-9*dy/8,    TabDat.hdr{3,11});             Hp = [Hp,h];
+    h  = text(0.49*scalingFactor,y-9*dy/8,    TabDat.hdr{3,7});              Hp = [Hp,h];
+    h  = text(0.58*scalingFactor,y-9*dy/8,    TabDat.hdr{3,8});              Hp = [Hp,h];
+    h  = text(0.67*scalingFactor,y-9*dy/8,    TabDat.hdr{3,9});              Hp = [Hp,h];
+    h  = text(0.74*scalingFactor,y-9*dy/8,    TabDat.hdr{3,10});             Hp = [Hp,h];
     
-    text(0.845*scalingFactor,y - dy/2,TabDat.hdr{3,12},'Fontsize',FS(8));
+    text(0.845*scalingFactor,y - dy/2,TabDat.hdr{3,11},'Fontsize',FS(8));
     
     if isCifti
-      text(0.88,y - dy/2,TabDat.hdr{1,13},'Fontsize',FS(8));
+      text(0.88,y - dy/2,TabDat.hdr{1,12},'Fontsize',FS(8));
     end
 
     %-Move to next vertical position marker
@@ -1037,10 +1000,10 @@ case 'table'                                                        %-Table
     %-Column Locations
     %----------------------------------------------------------------------
     tCol = [ 0.01      0.08 ...                                %-Set
-             0.13      0.21     0.26    0.33      0.40 ...     %-Cluster
+             0.15      0.24      0.31      0.39 ...            %-Cluster
              0.49      0.58      0.65      0.74 ...            %-Peak
              0.84 ...                                          %-XYZ
-             0.93/scalingFactor ] * scalingFactor;                                            %-Brain structure labels
+             0.88/scalingFactor ] * scalingFactor;                                            %-Brain structure labels
     
     %-Pagination variables
     %----------------------------------------------------------------------
@@ -1088,13 +1051,13 @@ case 'table'                                                        %-Table
         if  ~isempty(TabDat.dat{i,4}), fw = 'Bold'; else fw = 'Normal'; end
         
         for k=3:nColTable
-          if k < 12
+          if k < 11
             h     = text(tCol(k),y,sprintf(TabDat.fmt{k},TabDat.dat{i,k}),...
                         'FontWeight',fw,...
                         'UserData',TabDat.dat{i,k},...
                         'ButtonDownFcn','get(gcbo,''UserData'')', 'Interpreter', 'none');
             hPage = [hPage, h];
-          elseif k == 13
+          elseif k == 12
             BDFcn  = ['shortLabel = get(gcbo,''UserData'');',...
                       'if strcmp(shortLabel, ''S_L''),',...
                       'longLabels = ''CIFTI_STRUCTURE_CORTEX_LEFT'';',...
@@ -1114,12 +1077,12 @@ case 'table'                                                        %-Table
         
         % Specifically changed so it properly finds hMIPax
         %------------------------------------------------------------------
-        tXYZmm = TabDat.dat{i,12};
+        tXYZmm = TabDat.dat{i,11};
         BDFcn  = [...
             'spm_mip_ui(''SetCoords'',get(gcbo,''UserData''),',...
             'findobj(''tag'',''hMIPax''));'];
         BDFcn = 'spm_XYZreg(''SetCoords'',get(gcbo,''UserData''),hReg,1);';
-        h      = text(tCol(12),y,sprintf(TabDat.fmt{12},tXYZmm),...
+        h      = text(tCol(11),y,sprintf(TabDat.fmt{11},tXYZmm),...
             'FontWeight',fw,...
             'Tag','ListXYZ',...
             'ButtonDownFcn',BDFcn,...

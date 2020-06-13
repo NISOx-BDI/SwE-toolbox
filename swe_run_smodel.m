@@ -312,9 +312,13 @@ isCifti  = strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dscalar.nii'
 
 if isMat
     VY = {};
+    isMeshData = false;
 else
     VY = swe_data_hdr_read(char(P));
+    isMeshData = spm_mesh_detect(VY);
 end
+
+
 %-Check compatibility of images
 %--------------------------------------------------------------------------
 spm_check_orientations(VY);
@@ -354,6 +358,15 @@ if isCifti
     end
   end
   SwE.cifti.isClusConstrainedInVolROI = (job.ciftiAdditionalInfo.volRoiConstraint == 1);
+end
+
+if isMeshData
+    SwE.gifti = struct;
+    if ~isempty(job.giftiAdditionalInfo.areaFileForGiftiInputs) && ~strcmpi(job.giftiAdditionalInfo.areaFileForGiftiInputs, '')
+        SwE.gifti.areaFile = char(job.giftiAdditionalInfo.areaFileForGiftiInputs);
+    else
+        SwE.gifti.areaFile = '';
+    end
 end
 
 fprintf('%30s\n','...done')  
@@ -435,7 +448,7 @@ switch iGXcalc,
         %-Compute as mean voxel value (within per image fullmean/8 mask)
         g = zeros(nScan,1);
         fprintf('%-40s: %30s','Calculating globals',' ')                %-#
-        if spm_mesh_detect(VY)
+        if isMeshData
             for i = 1:nScan
                 str = sprintf('%3d/%-3d',i,nScan);
                 fprintf('%s%30s',repmat(sprintf('\b'),1,30),str)            %-#
@@ -807,7 +820,7 @@ if isfield(job.WB, 'WB_yes')
               error('TFCE is not currently available for ''.mat'' input.')
           end
           % Error if '.gii' input.
-          if spm_mesh_detect(VY)
+          if isMeshData
               error('TFCE is not currently available for surface data input.')
           end
 
