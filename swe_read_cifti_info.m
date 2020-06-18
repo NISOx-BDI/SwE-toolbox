@@ -11,7 +11,7 @@ function [surfaces, volume, volumes] = swe_read_cifti_info(filename)
   %   - volumes: information from each volumetric brain structure
   % Bryan Guillaume
   % Version Info:  $Format:%ci$ $Format:%h$
-	
+
 	% fetch the cifti information
 	ciftiObject  = swe_cifti(filename);
   xml = char(ciftiObject.hdr.ext.edata(:)');
@@ -19,7 +19,7 @@ function [surfaces, volume, volumes] = swe_read_cifti_info(filename)
   root_uid = root(tree);
   hdr = convert(tree);
   hdr.attributes = getAttributes(tree, root_uid);
-  
+
   % Check if input is a CIFTI-2 file
   switch hdr.attributes.Version
     case {'2'}
@@ -31,7 +31,7 @@ function [surfaces, volume, volumes] = swe_read_cifti_info(filename)
       warning('Unknown CIFTI version: %s.', hdr.attributes.Version);
       return;
   end
-  
+
   % extract surfaces and a single volume (by concatenating all brain volumes)
   surfaces = {};
   volumes = {};
@@ -91,7 +91,7 @@ function [surfaces, volume, volumes] = swe_read_cifti_info(filename)
           error('Data have to be dense scalars or series.');
     end
   end
-end 
+end
 %==========================================================================
 function attrb = getAttributes(tree, uid)
     attrb = attributes(tree, 'get', uid);

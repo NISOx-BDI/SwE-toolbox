@@ -11,7 +11,7 @@ function boxCoxTransformedData = swe_boxCoxTransform(data, boxCoxLambda)
   % =========================================================================
   % Bryan Guillaume
   % Version Info:  $Format:%ci$ $Format:%h$
-  
+
   if min(data) < 0
     error('The data must be positive.')
   end

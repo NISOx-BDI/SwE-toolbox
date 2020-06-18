@@ -24,14 +24,14 @@ function clusterStatistics = swe_getClusterStatistics(dataType, locationActivate
   elseif dataType == swe_DataType('Gifti') || dataType == swe_DataType('SurfaceMat')
 
     [clusterStatistics.clusterAssignment, ~, clusterAreas] = swe_mesh_clusters(dataTypeSpecificInformation, locationActivatedElements, giftiAreaFile);
-    
+
     if ~isnan(clusterAreas)
       clusterStatistics.clusterAreas = clusterAreas;
       clusterStatistics.maxClusterArea = max(clusterStatistics.clusterAreas);
     end
 
   elseif dataType == swe_DataType('Cifti')
-      
+
     [clusterStatistics.clusterAssignment, ...
       clusterStatistics.clusterSizesInSurfaces, ...
       clusterStatistics.clusterSizesInVolume] = ...
@@ -39,13 +39,13 @@ function clusterStatistics = swe_getClusterStatistics(dataType, locationActivate
 
     if isempty(clusterStatistics.clusterSizesInSurfaces)
       clusterStatistics.maxClusterSizeInSurfaces = 0;
-    else 
+    else
       clusterStatistics.maxClusterSizeInSurfaces = max(clusterStatistics.clusterSizesInSurfaces);
     end
 
     if isempty(clusterStatistics.clusterSizesInVolume)
       clusterStatistics.maxClusterSizeInVolume = 0;
-    else 
+    else
       clusterStatistics.maxClusterSizeInVolume = max(clusterStatistics.clusterSizesInVolume);
     end
 
@@ -58,7 +58,7 @@ function clusterStatistics = swe_getClusterStatistics(dataType, locationActivate
   end
 
   clusterStatistics.nCluster = max(clusterStatistics.clusterAssignment);
-  
+
   if clusterStatistics.nCluster > 0
     clusterStatistics.clusterSize = histc(clusterStatistics.clusterAssignment, 1:clusterStatistics.nCluster);
     clusterStatistics.maxClusterSize = max(clusterStatistics.clusterSize);

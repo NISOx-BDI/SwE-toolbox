@@ -60,7 +60,7 @@ function result = runTest(pOrWb, inferenceType, tOrF, matNiiGiiOrCii)
     error(['Test ' testname ' has failed.'])
   else
     disp('All tests pass!!')
-  end 
+  end
   disp(sprintf('==============================================================\n'))
 
   % Teardown method
@@ -75,8 +75,8 @@ function testSetup(pOrWb, inferenceType, tOrF, matNiiGiiOrCii)
   ls;
   addpath('/swe');
   addpath('/swe/test');
-    
-  % Run teardown method just in case some of the files from the previous 
+
+  % Run teardown method just in case some of the files from the previous
   % run managed to get cached.
   testTearDown(pOrWb, inferenceType, tOrF, matNiiGiiOrCii);
 
@@ -110,30 +110,30 @@ function generateData(pOrWb, inferenceType, tOrF, matNiiGiiOrCii)
 
     % Define a contrast.
     load('SwE.mat');
-    
+
     load('/swe/test/data/xCon.mat');
-    
+
     if strcmp(tOrF, 't')
       xCon.name = 'T contrast 1';
       xCon.STAT = 'T';
-      xCon.c = [1 0 0]'; 
+      xCon.c = [1 0 0]';
     else
       xCon.name = 'F contrast 1';
       xCon.STAT = 'F';
-      xCon.c = eye(3); 
+      xCon.c = eye(3);
     end
 
     SwE.xCon = xCon;
-    
+
     save('SwE.mat', 'SwE');
-    
+
     % Run swe_getSPM(). For the nii
     % case we use the xSwE object to
     % avoid user input.
     if strcmp(matNiiGiiOrCii, 'nii') || strcmp(matNiiGiiOrCii, 'gii') || strcmp(matNiiGiiOrCii, 'cii')
-      
+
       load('/swe/test/data/xSwE.mat')
-      
+
       xSwE.swd = SwE.swd;
       xSwE.STAT = upper(tOrF);
       xSwE.S = SwE.xVol.S;
@@ -143,13 +143,13 @@ function generateData(pOrWb, inferenceType, tOrF, matNiiGiiOrCii)
       M    = SwE.xVol.M(1:3,1:3);
       VOX  = sqrt(diag(M'*M))';
       xSwE.VOX = VOX;
-      
+
       swe_getSPM(xSwE);
-    
+
     else
-    
+
       swe_getSPM();
-    
+
     end
 
   end
@@ -157,12 +157,12 @@ function generateData(pOrWb, inferenceType, tOrF, matNiiGiiOrCii)
 end
 
 function design = createDesignFromTemplate(pOrWb, inferenceType, tOrF, matNiiGiiOrCii)
-  
+
   % Load template design
   load('/swe/test/data/design_wb_clus_f_mat.mat');
-  
+
   design.dir = {['/swe/test/data/test_' pOrWb '_' inferenceType '_' tOrF '_' matNiiGiiOrCii]};
-  
+
   if strcmp(matNiiGiiOrCii, 'nii')
     fileExtension = 'img';
   elseif strcmp(matNiiGiiOrCii, 'cii')
@@ -182,11 +182,11 @@ function design = createDesignFromTemplate(pOrWb, inferenceType, tOrF, matNiiGii
 
   if strcmp(matNiiGiiOrCii, 'cii')
     design.ciftiAdditionalInfo = struct;
-    
+
     design.ciftiAdditionalInfo.ciftiGeomFile(1) = struct;
     design.ciftiAdditionalInfo.ciftiGeomFile(1).brainStructureLabel = 'CIFTI_STRUCTURE_CORTEX_LEFT';
     design.ciftiAdditionalInfo.ciftiGeomFile(1).geomFile = '/swe/test/data/gii_input/L.sphere.4k_fs_LR.surf.gii';
-    
+
     design.ciftiAdditionalInfo.volRoiConstraint = 1;
   end
 
@@ -194,9 +194,9 @@ function design = createDesignFromTemplate(pOrWb, inferenceType, tOrF, matNiiGii
     design.WB = rmfield(design.WB, 'WB_yes');
     design.WB.WB_no = 0;
   else
-    
+
     if strcmp(inferenceType, 'clus')
-      
+
       if ~strcmp(matNiiGiiOrCii, 'mat')
         design.WB.WB_yes.WB_infType.WB_clusterwise.WB_inputType = ...
           rmfield(design.WB.WB_yes.WB_infType.WB_clusterwise.WB_inputType, 'WB_mat');
@@ -204,7 +204,7 @@ function design = createDesignFromTemplate(pOrWb, inferenceType, tOrF, matNiiGii
       end
 
     elseif strcmp(inferenceType, 'tfce')
-      
+
       design.WB.WB_yes.WB_infType = rmfield(design.WB.WB_yes.WB_infType, 'WB_clusterwise');
       design.WB.WB_yes.WB_infType.WB_TFCE = struct;
       design.WB.WB_yes.WB_infType.WB_TFCE.WB_TFCE_E = 0.5;
@@ -228,7 +228,7 @@ function design = createDesignFromTemplate(pOrWb, inferenceType, tOrF, matNiiGii
 end
 
 function mapsEqual = verifyMapsUnchanged(pOrWb, inferenceType, tOrF, matNiiGiiOrCii)
-  
+
   % List all files for testing
   if strcmp(matNiiGiiOrCii, 'nii')
     files = ls("*.nii");
@@ -238,7 +238,7 @@ function mapsEqual = verifyMapsUnchanged(pOrWb, inferenceType, tOrF, matNiiGiiOr
     filetype = 'gii';
   elseif strcmp(matNiiGiiOrCii, 'cii')
     files = ls("*.nii");
-    filetype = 'cii';  
+    filetype = 'cii';
   else
     files = ls("swe_*.mat");
     filetype = 'mat';
@@ -281,19 +281,19 @@ function mapsEqual = verifyMapsUnchanged(pOrWb, inferenceType, tOrF, matNiiGiiOr
     % Remove NaN and zero values
     file = file(~isnan(file) & file ~= 0);
     gt_file = gt_file(~isnan(gt_file) & gt_file ~= 0);
-    
+
     % Check whether the remaining values are equal.
     %
     % Footnote: There is some form of machine tolerance
     % error with the mat cases. Even with all seeds
     % reset, differences in voxel values of around ~e16
-    % ~e16 can occur occasionally on runs. These errors 
-    % can propogate and grow as large as  ~e8. To 
+    % ~e16 can occur occasionally on runs. These errors
+    % can propogate and grow as large as  ~e8. To
     % counter this, in these cases we just look to see
     % if we are within e-10 of the ground truth.
-    % Suspected cause: The `beta` and `betainc` 
-    % functions which are only run in these cases and 
-    % are built on old fortran numeric approximations 
+    % Suspected cause: The `beta` and `betainc`
+    % functions which are only run in these cases and
+    % are built on old fortran numeric approximations
     % in octave. (Tom Maullin 07/06/2018)
     if strcmp(matNiiGiiOrCii, 'mat')
       result = ~any(abs(file-gt_file) > 10^(-7));
@@ -302,35 +302,35 @@ function mapsEqual = verifyMapsUnchanged(pOrWb, inferenceType, tOrF, matNiiGiiOr
       result = ~any(file~=gt_file)
       indexWrong = file~=gt_file;
     end
-    
+
     % Useful for debugging.
     if ~result
       disp('Length file: ')
       disp(size(file))
-      
+
       disp('Length gt_file: ')
       disp(size(gt_file))
-      
+
       disp('size disagreement values: ')
       disp(sum(indexWrong))
-      
+
       disp('sum of disagreement (file): ')
       disp(sum(file(indexWrong)))
-      
+
       disp('sum of disagreement (gt_file): ')
       disp(sum(gt_file(indexWrong)))
-      
+
       disp('disagreement values (file)')
       d1 = file(indexWrong);
       disp(sprintf('%.9f', d1(1)))
-      
+
       disp('disagreement values (gt_file)')
       d2 = gt_file(indexWrong);
       disp(sprintf('%.9f', d2(1)))
-      
+
       disp('diff')
       disp(d2(1)-d1(1))
-      
+
     end
 
     if result
@@ -351,7 +351,7 @@ function mapsEqual = verifyMapsUnchanged(pOrWb, inferenceType, tOrF, matNiiGiiOr
 end
 
 function testTearDown(pOrWb, inferenceType, tOrF, matNiiGiiOrCii)
-  
+
   % Delete all files from this run.
   delete('swe_*');
   delete('SwE*');

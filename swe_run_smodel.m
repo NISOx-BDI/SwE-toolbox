@@ -35,7 +35,7 @@ if exist(fullfile(swd,'SwE.mat'),'file')
 end
 
 % If we've gotten to this point we're committed to overwriting files.
-% Delete them so we don't get stuck 
+% Delete them so we don't get stuck
 %--------------------------------------------------------------------------
 files = {'^mask\..{3}$','^ResMS\..{3}$','^RPV\..{3}$',...
     '^beta_.{4}\..{3}$','^con_.{4}\..{3}$','^ResI_.{4}\..{3}$',...
@@ -157,7 +157,7 @@ Subj.nSubj = length(unique(Subj.iSubj));  %number of subjects
 switch char(fieldnames(job.type))
 
     case 'modified'
-     
+
         Vis.iVis = job.type.modified.visits;
         Vis.nVis = length(unique(Vis.iVis));
         Gr.iGr   = job.type.modified.groups;
@@ -198,7 +198,7 @@ for m=1:numel(job.multi_cov)
             % If it's a manually created structure with field 'R' mandatory
             % containing matrix and field 'names' optionally containing a
             % cell array of names.
-            if isfield(tmp,'R') 
+            if isfield(tmp,'R')
                 R = tmp.R;
                 if isfield(tmp,'names')
                     names = tmp.names;
@@ -304,7 +304,7 @@ clear c tI tConst tFnames
 % dimensions and orientation / voxel size
 %==========================================================================
 
-fprintf('%-40s: ','Mapping files')    
+fprintf('%-40s: ','Mapping files')
 P = job.scans;
 file_ext = swe_get_file_extension(P{1});
 isMat    = strcmpi(file_ext,'.mat');
@@ -346,13 +346,13 @@ if isCifti
       for ii = 1:nSurfaceBrainStructures
         if strcmpi(job.ciftiAdditionalInfo.ciftiGeomFile(ii).brainStructureLabel, SwE.cifti.surfaces{i}.brainStructure)
           SwE.cifti.surfaces{i}.geomFile = char(job.ciftiAdditionalInfo.ciftiGeomFile(ii).geomFile);
-          if isfield(job.ciftiAdditionalInfo.ciftiGeomFile(ii), 'areaFile') && ~isempty(job.ciftiAdditionalInfo.ciftiGeomFile(ii).areaFile) && ~strcmpi(job.ciftiAdditionalInfo.ciftiGeomFile(ii).areaFile, '') 
+          if isfield(job.ciftiAdditionalInfo.ciftiGeomFile(ii), 'areaFile') && ~isempty(job.ciftiAdditionalInfo.ciftiGeomFile(ii).areaFile) && ~strcmpi(job.ciftiAdditionalInfo.ciftiGeomFile(ii).areaFile, '')
             SwE.cifti.surfaces{i}.areaFile = char(job.ciftiAdditionalInfo.ciftiGeomFile(ii).areaFile);
           end
           break;
         end
         if (ii == nSurfaceBrainStructures)
-          error('At least one of the surface brain structure label in the CIfTI files cannot be found in those specified by the user. Please revise your specification.');    
+          error('At least one of the surface brain structure label in the CIfTI files cannot be found in those specified by the user. Please revise your specification.');
         end
       end
     end
@@ -369,7 +369,7 @@ if isMeshData
     end
 end
 
-fprintf('%30s\n','...done')  
+fprintf('%30s\n','...done')
 
 
 %-Global values, scaling and global normalisation
@@ -623,7 +623,7 @@ if any(iGloNorm == [1:7])
         'type',         3,...
         'cols',2 + size([H C B G],2),...
         'descrip',      {str}       );
-    
+
     G = [G,fB,fW]; Gnames = [Gnames; {gnamesB}; {gnamesW}];
     if isempty(xC), xC = [tmpB,tmpW]; else xC = [xC,tmpB,tmpW]; end
 
@@ -738,7 +738,7 @@ N = size(X, 1);
 if any(abs(ones(N,1)-P_x*ones(N,1))>sqrt(eps))
     error(['Input model does not include an intercept. You must '...
            'include an intercept in this model.']);
-    
+
 end
 
 %-Design description (an nx2 cellstr) - for saving and display
@@ -763,58 +763,58 @@ fprintf('%30s\n','...done')                                             %-#
 % - WB configuration - Only if needed
 %==========================================================================
 if isfield(job.WB, 'WB_yes')
-  
+
   WB.SS             = job.WB.WB_yes.WB_ss;
   WB.nB             = job.WB.WB_yes.WB_nB;
   WB.RSwE           = job.WB.WB_yes.WB_SwE;
   WB.voxelWiseInfo = [];
   switch char(fieldnames(job.WB.WB_yes.WB_infType))
-      
+
       case 'WB_voxelwise'
           WB.clusterWise  = 0;
           WB.voxelWise    = 1;
-                    
+
       case 'WB_clusterwise'
-      
+
           WB.clusterWise = 1;
           WB.voxelWise   = 0;
-          
+
           % Cluster forming threshold.
           WB.clusterInfo.primaryThreshold = job.WB.WB_yes.WB_infType.WB_clusterwise.WB_clusThresh;
           if WB.clusterInfo.primaryThreshold > 1 || WB.clusterInfo.primaryThreshold < 0
               error('cluster-forming threshold should be between 0 an 1 (this is a probability)');
           end
-          
+
           % Work out which type of file we are looking at.
           inputType = job.WB.WB_yes.WB_infType.WB_clusterwise.WB_inputType;
-          
+
           % If we are looking at '.mat' we need more information.
           if isfield(inputType, 'WB_mat')
-              
+
               % Check whether we are looking at surface data.
               if isfield(inputType.WB_mat, 'WB_surface')
                   WB.clusterInfo.Vfaces = inputType.WB_mat.WB_surface.WB_surfacemask;
               else
                   WB.clusterInfo.Vxyz = inputType.WB_mat.WB_volumetric.WB_volumetricmask;
               end
-              
+
           end
-          
+
       case 'WB_TFCE'
-          
+
           % We have no clusterwise results for TFCE
-          WB.clusterWise  = 0; 
+          WB.clusterWise  = 0;
           WB.voxelWise    = 0;
-          
+
           % Create TFCE structure for TFCE analysis.
           WB.TFCE.H = job.WB.WB_yes.WB_infType.WB_TFCE.WB_TFCE_H;
           WB.TFCE.E = job.WB.WB_yes.WB_infType.WB_TFCE.WB_TFCE_E;
-          
+
           % This is by default set to 0.1 as recommended per Smith &
           % Nichols (2007). If a user wishes to change this value, change
           % it on the below line:
           WB.TFCE.dh = 0.1;
-          
+
           % Error if '.mat' input.
           if isMat
               error('TFCE is not currently available for ''.mat'' input.')
@@ -828,11 +828,11 @@ if isfield(job.WB, 'WB_yes')
         if isCifti
             error('TFCE is not currently available for CIfTI data input.')
         end
-          
+
   end
-  
+
   switch char(fieldnames(job.WB.WB_yes.WB_stat))
-    
+
     case 'WB_T'
       WB.stat = 'T';
       WB.con = job.WB.WB_yes.WB_stat.WB_T.WB_T_con;
@@ -849,7 +849,7 @@ if isfield(job.WB, 'WB_yes')
           % Pad with zeros
           WB.con = [WB.con zeros(1,size(X,2)-size(WB.con,2))];
       end
-      
+
     case 'WB_F'
       WB.stat = 'F';
       WB.con = job.WB.WB_yes.WB_stat.WB_F.WB_F_con;
@@ -860,11 +860,11 @@ if isfield(job.WB, 'WB_yes')
           % Pad with zeros
           WB.con = [WB.con zeros(size(WB.con,1),size(X,2)-size(WB.con,2))];
       end
-      
+
     otherwise
       error('unexpected statistic type');
   end
- 
+
 end
 
 
@@ -906,7 +906,7 @@ out.swemat{1} = fullfile(pwd, 'SwE.mat');
 %-Display Design report
 %==========================================================================
 if ~spm('CmdLine')
-    fprintf('%-40s: ','Design reporting') 
+    fprintf('%-40s: ','Design reporting')
     if strcmpi(file_ext,'.mat')
         fname = cellstr(repmat('  ', nScan, 1));
     else

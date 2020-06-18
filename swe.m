@@ -27,8 +27,8 @@ end
 
 switch lower(Action)
     %==================================================================
-    case 'startup'                                % Startup the toolbox 
-    %==================================================================     
+    case 'startup'                                % Startup the toolbox
+    %==================================================================
         % check installation of toolbox and of SPM8/SPM12
         ok = check_installation;
         if ~ok
@@ -36,26 +36,26 @@ switch lower(Action)
             fprintf('INSTALLATION PROBLEM!');
             return
         end
-        
+
         % Welcome message
         swe('ASCIIwelcome');
-        
+
         % Add pathes for SPM functions
         addpath(fullfile(spm('Dir'),'matlabbatch'))
         if strncmpi(spm('ver'),'spm12',5)
             addpath(fullfile(spm('Dir'),'compat'))
         end
-        
+
         % Add path to SwE toolbox.
         addpath(fileparts(mfilename('fullpath')));
-        
+
         % launch the main GUI
         swe_ui_main;
-        
+
         % print present working directory
         fprintf('SwE present working directory:\n\t%s\n',pwd)
-        
-        
+
+
         %==================================================================
     case 'asciiwelcome'                          %-ASCII swe banner welcome
         %==================================================================
@@ -64,20 +64,20 @@ switch lower(Action)
         a = generateAscii(['SwE v' tmp]);
         fprintf('%s \n', a{1}, a{2}, a{3}, a{4});
         fprintf('swe v%s \n', versionNo);
-  
+
     case 'colour'
-        
+
         varargout = {[0.8 0.8 1.0], 'Diluted Blackcurrent Purple'};
-        
+
     case 'ver'
-        
+
         varargout{1}=versionNo;
-        
+
         %==================================================================
     otherwise                                       %-Unknown action string
         %==================================================================
         error('Unknown action string');
-        
+
 end
 
 return
@@ -116,125 +116,125 @@ return
 end
 
 % The following functions are for generating the ascii welcome message for
-% SwE. 
+% SwE.
 % -------------------------------------------------------------------------
 % This method converts character 'char' to it's equivalent 4-line ascii
 % art. New characters can be added by creating new cases in the below
 % switch.
 function aChar = char2ascii(char)
-    
+
     switch char
-        
+
         case '0'
-            
+
             aChar = {' ___ ',...
                      '|   |',...
                      '| | |',...
                      '|___|'};
-            
+
         case '1'
-            
+
             aChar = {' _ ',...
                      '/_|',...
                      ' ||',...
                      ' ||'};
-                
+
         case '2'
-            
+
             aChar = {' ___ ',...
                      '(__ \',...
                      '/ __/',...
                      '\___)'};
-                
+
         case '3'
-            
+
             aChar = {' ___ ',...
                      '(__ )',...
                      ' (_ \',...
-                     '(___/'};           
+                     '(___/'};
         case '4'
-            
+
             aChar = {'  __ ',...
                      ' /. |',...
                      '(_  _)',...
-                     '  (_) '};           
-        case '5' 
-            
+                     '  (_) '};
+        case '5'
+
             aChar = {' ___ ',...
                      '| __)',...
                      '|__ \',...
                      '(___/'};
-                
+
         case '6'
-            
+
             aChar = {'  _  ',...
                      ' / ) ',...
                      '/ _ \',...
-                     '\___/'};     
+                     '\___/'};
         case '7'
-            
+
             aChar = {' ___ ',...
                      '(__ )',...
                      ' / / ',...
-                     '(_/  '};      
+                     '(_/  '};
         case '8'
-            
+
             aChar = {' ___ ',...
                      '| _ |',...
                      '| _ |',...
-                     '|___| '};   
+                     '|___| '};
         case '9'
-            
+
             aChar = {' ___ ',...
                      '/ _ \',...
                      '\_  /',...
-                     ' (_/ '};   
-                
+                     ' (_/ '};
+
         case '.'
-            
+
             aChar = {'   ',...
                      '   ',...
                      ' _ ',...
-                     '|_|'};  
-                
+                     '|_|'};
+
         case 'S'
- 
+
             aChar = {' ___ ',...
                      '/ __)',...
                      '\__ \',...
-                     '(___/'}; 
-                
+                     '(___/'};
+
          case 'w'
- 
+
             aChar = {'      ',...
                      '_    _',...
                      '\\/\//',...
-                     ' \/\/ '};  
-                
+                     ' \/\/ '};
+
         case 'E'
- 
+
             aChar = {' ___ ',...
                      '| __)',...
                      '| __)',...
-                     '|___)'};      
-                
+                     '|___)'};
+
         case ' '
-            
+
             aChar = {'   ',...
                      '   ',...
                      '   ',...
                      '   '};
-                
+
         case 'v'
-            
+
             aChar = {'     ',...
                      '_  _ ',...
                      '\\// ',...
-                     ' \/  '};  
-            
-            
+                     ' \/  '};
+
+
     end
-    
+
 end
 
 % This function takes two cell arrays containing ascii art in the form
@@ -247,11 +247,11 @@ end
 % This function takes in a string as input and recursively generates the
 % ASCII art representation of said string.
 function ascii = generateAscii(str)
-    
+
     if length(str)~=1
         ascii = concatAscii(generateAscii(str(1:(end-1))), generateAscii(str(end)));
     else
         ascii = char2ascii(str);
     end
-    
+
 end

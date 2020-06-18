@@ -1,8 +1,8 @@
 function varargout = swe_get_defaults(defstr, varargin)
 % Get/set the defaults values associated with an identifier
 % FORMAT defval = swe_get_defaults(defstr)
-% Return the defaults value associated with identifier "defstr". 
-% Currently, this is a '.' subscript reference into the global  
+% Return the defaults value associated with identifier "defstr".
+% Currently, this is a '.' subscript reference into the global
 % "defaults" variable defined in swe_defaults.m.
 %
 % FORMAT swe_get_defaults(defstr, defval)

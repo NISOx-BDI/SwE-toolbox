@@ -14,25 +14,25 @@ function swe_update()
 
     % Obtain swe version number.
     vswe=swe('ver');
-    
+
     % Look to github for a newer version.
     url='https://github.com/NISOx-BDI/SwE-toolbox/releases/latest';
     [s,stat]=urlread(url);
-    
+
     % Error if we couldn't contact github.
-    if ~stat 
-      try 
+    if ~stat
+      try
         s  = webread(url);
       catch
         error('Can''t contact GitHub');
       end
     end
-    
+
     % Look for latest swe version number.
     [tok,x]=regexp(s,'Version [0-9.]*','match','tokens');
     tok=tok{1};
     tok=strrep(tok,'Version ','');
-    
+
     % Tell the user whether their version is the newest.
     if strcmp(tok,vswe)
       msg = 'Your version of swe is current.';

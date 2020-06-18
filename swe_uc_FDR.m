@@ -81,15 +81,15 @@ function [u,Ps,Ts] = swe_uc_FDR(q,df,STAT,n,Vs,Vm)
 	% Copyright (C) 2002-2015 Wellcome Trust Centre for Neuroimaging
 	% Thomas Nichols
   % Version Info:  $Format:%ci$ $Format:%h$
-	
-	
+
+
 	if (nargin<6), Vm = []; end
-	
+
 	% Set Benjamini & Yeuketeli cV for independence/PosRegDep case
 	%--------------------------------------------------------------------------
 	cV = 1;
-	
-	
+
+
 	% Load, mask & sort statistic image (if needed)
 	%--------------------------------------------------------------------------
 	if isstruct(Vs)
@@ -110,8 +110,8 @@ function [u,Ps,Ts] = swe_uc_FDR(q,df,STAT,n,Vs,Vm)
 			Ts = sort(Ts(:));
 			if STAT ~= 'P', Ts = flipud(Ts); end
 	end
-	
-	
+
+
 	% Calculate p values of image (if needed)
 	%--------------------------------------------------------------------------
 	if isstruct(Vs)
@@ -119,15 +119,15 @@ function [u,Ps,Ts] = swe_uc_FDR(q,df,STAT,n,Vs,Vm)
 	else
 			Ps = Vs;
 	end
-	
+
 	S = length(Ps);
-	
-	
+
+
 	% Calculate FDR inequality RHS
 	%--------------------------------------------------------------------------
 	Fi  = (1:S)'/S*q/cV;
-	
-	
+
+
 	% Find threshold
 	%--------------------------------------------------------------------------
 	I = find(Ps<=Fi, 1, 'last' );
@@ -156,4 +156,3 @@ function [u,Ps,Ts] = swe_uc_FDR(q,df,STAT,n,Vs,Vm)
 					end
 			end
 	end
-	

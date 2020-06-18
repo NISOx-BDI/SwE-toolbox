@@ -11,7 +11,7 @@ function V = swe_data_write(V, Y, varargin)
   % =========================================================================
   % Bryan Guillaume
   % Version Info:  $Format:%ci$ $Format:%h$
-  
+
   if isfield(V,'private')
     cl = class(V.private);
   elseif isfield(V,'dat')
@@ -30,7 +30,7 @@ function V = swe_data_write(V, Y, varargin)
         V.private.dat(varargin{1}) = reshape(Y,size(varargin{1}))';
       end
     end
-  elseif strcmpi(cl, 'gifti') && ~isempty(varargin) && exist('OCTAVE_VERSION','builtin') 
+  elseif strcmpi(cl, 'gifti') && ~isempty(varargin) && exist('OCTAVE_VERSION','builtin')
     D = V.private.private.data{1};
     tmp = reshape(Y,size(varargin{1}));
     try

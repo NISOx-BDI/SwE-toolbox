@@ -7,18 +7,18 @@ function vechCovVechV = swe_vechCovVechV(covVis,dofMat,type)
 %
 %  - type:
 %        1: based on the estimate "II" proposed in Guillaume (2015).
-%           It accounts partially for missing data (not for a missing data 
+%           It accounts partially for missing data (not for a missing data
 %           bias) and for a small sample bias
 %        2: based on the estimate "III" proposed in Guillaume (2015).
-%           It accounts for missing data (included the missing data bias), 
+%           It accounts for missing data (included the missing data bias),
 %           but not for the small sample bias.
 %        3: based on the estimate "II" proposed in Guillaume (2015), but
-%           requires no missing data (so accounts for the small sample 
+%           requires no missing data (so accounts for the small sample
 %           bias).
-%  - covVis: matrix (nCovVis X nVox)  containing vech(\hat V) for several 
-%            voxels 
-%  - dofMat: for type 1 and 2, matrix (nCovVis X nCovVis) containing 
-%            degrees of freedom information (precalculated in swe_cp.m). 
+%  - covVis: matrix (nCovVis X nVox)  containing vech(\hat V) for several
+%            voxels
+%  - dofMat: for type 1 and 2, matrix (nCovVis X nCovVis) containing
+%            degrees of freedom information (precalculated in swe_cp.m).
 %            for type 3, scalar.
 %            See Guillaume (2015)for more information.
 % -------------------------------------------------------------------------
@@ -27,7 +27,7 @@ function vechCovVechV = swe_vechCovVechV(covVis,dofMat,type)
 %  - vechCovVechV: vech(Cov(vech(\hat V))) as given in Guillaume (2015).
 % =========================================================================
 %
-% Note: there are probably ways to compute this quicker, but this will do 
+% Note: there are probably ways to compute this quicker, but this will do
 % for now.
 % By Bryan Guillaume
 % Version Info:  $Format:%ci$ $Format:%h$
@@ -42,28 +42,28 @@ if type == 3
     factor = dofMat / (dofMat - 1) / (2* dofMat + 1);
 end
 
-it = 0;        
+it = 0;
 for i = 1:nCovVis
     for ii = i:nCovVis
         it = it + 1;
-        
+
         ind11 = rIndex == rIndex(i) & cIndex == rIndex(ii);
         ind12 = rIndex == rIndex(i) & cIndex == cIndex(ii);
         ind22 = (rIndex == cIndex(i) & cIndex == cIndex(ii)) | (cIndex == cIndex(i) & rIndex == cIndex(ii));
         ind21 = (rIndex == cIndex(i) & cIndex == rIndex(ii)) | (cIndex == cIndex(i) & rIndex == rIndex(ii));
         indi1 = rIndex == rIndex(i) & cIndex == rIndex(i);
         indi2 = rIndex == cIndex(i) & cIndex == cIndex(i);
-        indii1 = rIndex == rIndex(ii) & cIndex == rIndex(ii); 
+        indii1 = rIndex == rIndex(ii) & cIndex == rIndex(ii);
         indii2 = rIndex == cIndex(ii) & cIndex == cIndex(ii);
-        
+
         switch type
-            
+
             case 1
                 tmp = 1 + 2 * dofMat(i,ii) * dofMat(ind11,ind22) * dofMat(ind12,ind21) - ...
                     dofMat(i,ii) * dofMat(ind11,ind22) - ...
                     dofMat(ind11,ind22) * dofMat(ind12,ind21) - ...
                     dofMat(i,ii) * dofMat(ind12,ind21);
-     
+
                 vechCovVechV(it,:) = dofMat(i,ii) / tmp * (...
                     (2 * dofMat(ind11,ind22) * dofMat(ind12,ind21) - dofMat(ind11,ind22) - dofMat(ind12,ind21)) * covVis(i,:) .* covVis(ii,:) + ...
                     (1 - dofMat(ind12,ind21)) * covVis(ind11,:) .* covVis(ind22,:) + ...

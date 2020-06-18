@@ -17,8 +17,8 @@ function z = swe_invNcdf(p, mu, var)
       var = 1;
     end
     if nargin<2
-      mu = 0; 
+      mu = 0;
     end
-    z = -sqrt(2).* (sqrt(var) .* erfcinv(2*p)) + mu;  
-    
+    z = -sqrt(2).* (sqrt(var) .* erfcinv(2*p)) + mu;
+
 end

@@ -1,7 +1,7 @@
 function [tfced] = swe_tfce_transform(img,H,E,C,dh)
 % This function calculates the TFCE statistical from a Z statistic image.
 % =========================================================================
-%   FORMAT [tfced] = matlab_tfce_transform(img,H,E,C,ndh) 
+%   FORMAT [tfced] = matlab_tfce_transform(img,H,E,C,ndh)
 % -------------------------------------------------------------------------
 % Inputs:
 %   - img the 3D image to be transformed
@@ -15,7 +15,7 @@ function [tfced] = swe_tfce_transform(img,H,E,C,dh)
 %
 % This function was modified from 'matlab_tfce_transform' from MatlabTFCE.
 % -------------------------------------------------------------------------
-% Additional Octave compatability using SPM functions was added by 
+% Additional Octave compatability using SPM functions was added by
 % Tom Maullin (19/09/2018)
 % Version Info:  $Format:%ci$ $Format:%h$
 %
@@ -56,7 +56,7 @@ if bwfuncexists
 % installed. The same computation can be performed with SPM functions but
 % in much slower time.
 else
-    
+
     % find connected components
     vals = zeros(size(img));
     for h = 1:ndh

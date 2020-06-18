@@ -5,7 +5,7 @@ function swe = swe_cfg_batch
 % =========================================================================
 % Written by Bryan Guillaume
 % Version Info:  $Format:%ci$ $Format:%h$
-    
+
     toolboxDir = spm_str_manip(mfilename('fullpath'), 'h');
     addpath(toolboxDir);
     addpath(fullfile(toolboxDir, 'test'));
@@ -18,7 +18,7 @@ function swe = swe_cfg_batch
 	    'Method for Neuroimaging Longitudinal Data Analysis.']
 	                  }';
 	swe.values  = {swe_config_smodel swe_config_rmodel swe_config_results};
-	              
+
 	%----------------------------------------------------------------------
 
 end
