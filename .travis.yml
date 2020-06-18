@@ -1,9 +1,9 @@
 language: python
 # use container-based infrastructure
 sudo: required
-services: 
+services:
   - docker
-cache: 
+cache:
   timeout: 1000
   directories:
   - test/data
@@ -11,16 +11,16 @@ python:
   - "3.5"
 bundler_args: --retry 9
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-install: 
- # Install git-lfs 
+install:
+ # Install git-lfs
  - cd ..
  - curl -sLo - https://github.com/github/git-lfs/releases/download/v1.4.1/git-lfs-linux-amd64-1.4.1.tar.gz | tar xzvf -
  - export PATH=$PATH:`pwd`/git-lfs-1.4.1
- - git lfs install  
+ - git lfs install
  # Download data.
  - cd SwE-toolbox/test/data
  - if ! [ -d .git ]; then git clone https://github.com/NISOx-BDI/SwE-toolbox-testdata.git .; fi
- # Delete any previous changes (retry because lfs might download files) 
+ # Delete any previous changes (retry because lfs might download files)
  - git checkout master
  - travis_retry git reset --hard origin/master
  # A second time to allow for 3 more retries as "--retry 9" does not seem to be
@@ -31,7 +31,7 @@ jobs:
   include:
     # Each '-' with the same indentation as this comment is a job that is run in parallel in the
     # results generation stage.
-    - stage: Results generation 
+    - stage: Results generation
       env:
       - testname='p_vox_t_nii'
       script:
@@ -41,7 +41,7 @@ jobs:
       - testname='p_vox_f_nii'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
-      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'vox', 'f', 'nii')"   
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'vox', 'f', 'nii')"
     - env:
       - testname='wb_vox_t_nii'
       script:
@@ -66,7 +66,7 @@ jobs:
       - testname='wb_tfce_t_nii'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
-      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'tfce', 't', 'nii')"          
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('wb', 'tfce', 't', 'nii')"
     - env:
       - testname='wb_tfce_f_nii'
       script:
@@ -81,7 +81,7 @@ jobs:
       - testname='p_dat_f_mat'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
-      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'dat', 'f', 'mat')"   
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'dat', 'f', 'mat')"
     - env:
       - testname='wb_dat_t_mat'
       script:
@@ -111,7 +111,7 @@ jobs:
       - testname='p_dpx_f_gii'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
-      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'dpx', 'f', 'gii')"   
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'dpx', 'f', 'gii')"
     - env:
       - testname='wb_dpx_t_gii'
       script:
@@ -141,7 +141,7 @@ jobs:
       - testname='p_dpx_f_cii'
       script:
       - did=$(sudo docker run -ti -d --rm -v `pwd`:/swe cmaumet/octave-spm)
-      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'dpx', 'f', 'cii')"   
+      - sudo docker exec -t -i $did octave --no-window-system --eval "addpath('/swe/test');runTest('p', 'dpx', 'f', 'cii')"
     - env:
       - testname='wb_dpx_t_cii'
       script:
@@ -166,6 +166,6 @@ before_install:
  # Update docker version
  - sudo apt-get update
  - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
- - git config --global user.name "TravisCI" 
+ - git config --global user.name "TravisCI"
  - git config --global user.email "travis@dummy.com"
- - docker pull cmaumet/octave-spm 
+ - docker pull cmaumet/octave-spm

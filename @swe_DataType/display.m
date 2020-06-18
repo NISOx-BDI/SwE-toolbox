@@ -3,7 +3,7 @@ function display(obj)
 	% =========================================================================
   % Bryan Guillaume
   % Version Info:  $Format:%ci$ $Format:%h$
-	
+
 	display(get(obj));
-	
+
 end

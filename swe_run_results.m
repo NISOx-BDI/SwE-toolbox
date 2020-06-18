@@ -19,6 +19,6 @@ cd(fileparts(job.dis{1}));
 
 % Display results.
 % -------------------------------------------------------------------------
-swe_results_ui; 
+swe_results_ui;
 
 end

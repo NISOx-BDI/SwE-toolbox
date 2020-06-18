@@ -20,7 +20,7 @@ function h = swe_cifti(varargin)
   case {1, 2}
       if isa(varargin{1},'swe_cifti')
           h = varargin{1};
-          
+
       elseif ischar(varargin{1})
           if size(varargin{1},1)>1
               h = swe_cifti(cellstr(varargin{1}));
@@ -75,7 +75,7 @@ function h = swe_cifti(varargin)
           h     = class(h,'swe_cifti');
 
       elseif isstruct(varargin{1})
-        
+
           h     = struct('hdr', varargin{1}.hdr,...
                          'dat', varargin{1}.dat,...
                          'extras', varargin{1}.extras);
@@ -92,7 +92,7 @@ function h = swe_cifti(varargin)
       else
           error('Don''t know what to do yet.');
       end
-      
+
   otherwise
       error('Don''t know what to do yet.');
   end

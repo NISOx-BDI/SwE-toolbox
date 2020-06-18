@@ -7,13 +7,13 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % FORMAT [SwE,xSwE] = swe_getSPM(xSwE);
 % -------------------------------------------------------------------------
 %
-% Query SwE in batch mode. See below for a description of fields that 
-% may be present in xSwE input. Values for missing fields will be 
+% Query SwE in batch mode. See below for a description of fields that
+% may be present in xSwE input. Values for missing fields will be
 % queried interactively.
 %
-% xSwE       - structure containing spm, distribution & filtering 
+% xSwE       - structure containing spm, distribution & filtering
 %              details
-% .swd       - SwE working directory - directory containing current 
+% .swd       - SwE working directory - directory containing current
 %              SwE.mat
 % .title     - title for comparison (string)
 % .Z         - minimum of Statistics {filtered on u and k}
@@ -85,7 +85,7 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % .thresDesc - description of height threshold (string)
 %
 % In addition, the xCon structure is updated. For newly evaluated
-% contrasts, SwE images (swe_{vox|dpx|dat}_{T|F}stat_c{c#}) are written, along 
+% contrasts, SwE images (swe_{vox|dpx|dat}_{T|F}stat_c{c#}) are written, along
 % with contrast (swe_{vox|dpx|dat}_beta_c{c#}) images.
 %
 % For a parametric analysis the following is added to the xCon
@@ -125,18 +125,18 @@ function [SwE,xSwE] = swe_getSPM(varargin)
 % parameters (with contrast weights c) is estimated by c'b, where b are
 % the parameter estimates given by b=pinv(X)*Y.
 %
-% For a paramertic analysis, either single contrasts can be examined 
-% or conjunctions of different contrasts. Contrasts are estimable 
-% linear combinations of the parameters, and are specified using 
-% the SwE contrast manager interface [swe_conman.m]. For a 
+% For a paramertic analysis, either single contrasts can be examined
+% or conjunctions of different contrasts. Contrasts are estimable
+% linear combinations of the parameters, and are specified using
+% the SwE contrast manager interface [swe_conman.m]. For a
 % non-parametric analysis, two contrasts are recorded; activation
 % and deactivation for the contrast vector specified in the batch
-% window. These are recorded a priori in a seperate function 
+% window. These are recorded a priori in a seperate function
 % with certain thresholds applied here [swe_contrasts_WB].
 %
-% SwE parametric maps are generated for the null hypotheses that 
-% the contrast is zero (or zero vector in the case of F-contrasts). 
-% See the help for the contrast manager [swe_conman.m] for a further 
+% SwE parametric maps are generated for the null hypotheses that
+% the contrast is zero (or zero vector in the case of F-contrasts).
+% See the help for the contrast manager [swe_conman.m] for a further
 % details on contrasts and contrast specification.
 %
 % A conjunction assesses the conjoint expression of multiple effects. The
@@ -248,11 +248,11 @@ cd(SwE.swd);
 try
     SwE.xVol.XYZ;
 catch
-    
+
     %-Check the model has been estimated
     %----------------------------------------------------------------------
     error( 'This model has not been estimated.');
-    
+
 end
 
 % check format of data
@@ -292,7 +292,7 @@ end
 
 % Tolerance for comparing real numbers for WB analyses
 % Use a value < to the smallest WB p-value as it will be used to include WB p-values equal to alpha
-if isfield(SwE, 'WB') 
+if isfield(SwE, 'WB')
   tol = 0.1 / (SwE.WB.nB + 1);
 end
 
@@ -326,7 +326,7 @@ try
     else
       save('SwE.mat', 'SwE');
     end
-    xCon = SwE.xCon; 
+    xCon = SwE.xCon;
   end
 catch
   if isfield(SwE, 'WB') && ~exist('OCTAVE_VERSION','builtin')
@@ -337,7 +337,7 @@ catch
     else
       save('SwE.mat', 'SwE');
     end
-    xCon = SwE.xCon;    
+    xCon = SwE.xCon;
   else
     xCon = {};
   end
@@ -346,7 +346,7 @@ end
 try
     Ic        = xSwE.Ic;
 catch
-    
+
     % If we're not doing wild bootstrap and not in octave, ask for a contrast.
     if ~isfield(SwE, 'WB') && ~exist('OCTAVE_VERSION','builtin')
         [Ic,xCon] = swe_conman(SwE,'T&F',Inf,...
@@ -408,7 +408,7 @@ if nc > 1
         end
     end
 else
-    n = 1; 
+    n = 1;
 end
 
 % not sure we want to do that with the SwE (commented for now)
@@ -416,9 +416,9 @@ end
 % (Orthogonality within subspace spanned by contrasts)
 %--------------------------------------------------------------------------
 % if nc > 1 && n > 1 && ~spm_FcUtil('|_?',xCon(Ic), xX.xKXs)
-%     
+%
 %     OrthWarn = 0;
-%     
+%
 %     %-Successively orthogonalise
 %     %-NB: This loop is peculiarly controlled to account for the
 %     %     possibility that Ic may shrink if some contrasts disappear
@@ -426,32 +426,32 @@ end
 %     %----------------------------------------------------------------------
 %     i = 1;
 %     while(i < nc), i = i + 1;
-%         
+%
 %         %-Orthogonalise (subspace spanned by) contrast i w.r.t. previous
 %         %------------------------------------------------------------------
 %         oxCon = spm_FcUtil('|_',xCon(Ic(i)), xX.xKXs, xCon(Ic(1:i-1)));
-%         
+%
 %         %-See if this orthogonalised contrast has already been entered
 %         % or is colinear with a previous one. Define a new contrast if
 %         % neither is the case.
 %         %------------------------------------------------------------------
 %         d     = spm_FcUtil('In',oxCon,xX.xKXs,xCon);
-%         
+%
 %         if spm_FcUtil('0|[]',oxCon,xX.xKXs)
-%             
+%
 %             %-Contrast was colinear with a previous one - drop it
 %             %--------------------------------------------------------------
 %             Ic(i) = [];
 %             i     = i - 1;
-%             
+%
 %         elseif any(d)
-%             
+%
 %             %-Contrast unchanged or already defined - note index
 %             %--------------------------------------------------------------
 %             Ic(i) = min(d);
-%             
+%
 %         else
-%             
+%
 %             %-Define orthogonalised contrast as new contrast
 %             %--------------------------------------------------------------
 %             OrthWarn   = OrthWarn + 1;
@@ -461,13 +461,13 @@ end
 %             xCon       = [xCon, oxCon];
 %             Ic(i)      = length(xCon);
 %         end
-%         
+%
 %     end % while...
-%     
+%
 %     if OrthWarn
 %         warning('SwE:ConChange','%d contrasts orthogonalized',OrthWarn)
 %     end
-%     
+%
 %     SwE.xCon = xCon;
 % end % if nc>1...
 SwE.xCon = xCon;
@@ -604,7 +604,7 @@ if ~isMat
     % Ask whether to do additional voxelwise or clusterwise inference.
     try
         infType = xSwE.infType;
-    catch 
+    catch
         if isfield(SwE, 'WB')
             if isfield(SwE.WB, 'TFCE')
                 infType = spm_input('inference type','+1','b','voxelwise|clusterwise|TFCE',[0,1,2],3);
@@ -615,20 +615,20 @@ if ~isMat
             infType = spm_input('inference type','+1','b','voxelwise|clusterwise',[0,1],1);
         end
     end
-    
+
     if isfield(SwE, 'WB')
         % Work out the original form of inference performed. This will tell us
         % which maps have already been generated. Most importantly, whether we
         % can do FWE p value clusterwise inference.
         if SwE.WB.voxelWise
             orig_infType = 'vox';
-        elseif SwE.WB.clusterWise 
+        elseif SwE.WB.clusterWise
             orig_infType = 'clus';
         else
             orig_infType = 'tfce';
         end
     end
-    
+
 end
 
 %-Compute & store contrast parameters, contrast/ESS images, & SwE images
@@ -645,8 +645,8 @@ xCon     = SwE.xCon;
 STAT     = xCon(Ic(1)).STAT;
 VspmSv   = cat(1,xCon(Ic).Vspm);
 
-    
-    
+
+
 %-Check conjunctions - Must be same STAT w/ same df
 %--------------------------------------------------------------------------
 if (nc > 1) && (any(diff(double(cat(1,xCon(Ic).STAT)))) || ...
@@ -671,7 +671,7 @@ end
 
 % We display the equivalent statistics.
 switch STAT
-    case 'T' 
+    case 'T'
         STATstr = sprintf('%c','Z',str);
     case 'F'
         STATstr = sprintf('%c','X',str);
@@ -692,7 +692,7 @@ for i = Ic
   else
     Z = min(Z, swe_data_read(xCon(i).Vspm, 'xyz', XYZ));
   end
-      
+
 end
 
 
@@ -762,23 +762,23 @@ if ~isMat
   %-Height threshold - classical inference
   %--------------------------------------------------------------------------
   if STAT ~= 'P'
-      
+
       % Get the equivalent statistic
       switch STAT
-          
+
           case 'T'
-              
+
               eSTAT = 'Z';
-              
+
           case 'F'
-              
+
               eSTAT = 'X';
-              
+
       end
-      
+
       % If we are doing voxelwise inference on a parametric.
       if ~isfield(SwE, 'WB') && infType == 0
-          
+
           %-Get height threshold
           %----------------------------------------------------------------
           fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...height threshold')  %-#
@@ -790,7 +790,7 @@ if ~isMat
 
               thresDesc = spm_input('p value adjustment to control','+1','b',str,[],1);
           end
-          
+
           switch thresDesc
 
               case 'FDR' % False discovery rate
@@ -803,9 +803,9 @@ if ~isMat
                   thresDesc = ['p<' num2str(u) ' (' thresDesc ')'];
                   switch STAT
                       case 'T'
-                         u = swe_uc_FDR(u,Inf,'Z',n,VspmSv,0); 
+                         u = swe_uc_FDR(u,Inf,'Z',n,VspmSv,0);
                       case 'F'
-                         u = swe_uc_FDR(u,[1 1],'X',n,VspmSv,0); 
+                         u = swe_uc_FDR(u,[1 1],'X',n,VspmSv,0);
                   end
 
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
@@ -831,35 +831,35 @@ if ~isMat
                   %--------------------------------------------------------------
                   fprintf('\n');                                              %-#
                   error('Unknown control method "%s".',thresDesc);
-                  
+
 
           end % switch thresDesc
-          
+
           %-Compute p-values for topological and voxel-wise FDR (all search voxels)
           %----------------------------------------------------------------
           fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...for voxelFDR')  %-#
           switch STAT
               case 'T'
-                  Ps = (1-spm_Ncdf(Zum)).^n; 
+                  Ps = (1-spm_Ncdf(Zum)).^n;
               case 'F'
                   Ps = (1-spm_Xcdf(Zum,1)).^n;
           end
-          
+
           up  = NaN;
           Pp  = NaN;
           uc  = NaN;
           ue  = NaN;
           Pc  = [];
           uu = [];
-          
+
           Q      = find(Z > u);
-      
+
       % If we are doing clusterwise inference on a parametric.
       elseif ~isfield(SwE, 'WB') && infType == 1
-          
+
           % Record what type of clusterwise inference we are doing.
           clustWise = 'Uncorr';
-          
+
           % No adjustment: p for conjunctions is p of the conjunction SwE
           %--------------------------------------------------------------
           try
@@ -878,29 +878,29 @@ if ~isMat
           else
               thresDesc = '';
           end
-          
+
           %-Compute p-values for topological and voxel-wise FDR (all search voxels)
           %----------------------------------------------------------------
           fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...for voxelFDR')  %-#
           switch STAT
               case 'T'
-                  Ps = (1-spm_Ncdf(Zum)).^n; 
+                  Ps = (1-spm_Ncdf(Zum)).^n;
               case 'F'
                   Ps = (1-spm_Xcdf(Zum,1)).^n;
           end
-          
+
           up  = NaN;
           Pp  = NaN;
           uc  = NaN;
           ue  = NaN;
           Pc  = [];
           uu = [];
-          
+
           Q      = find(Z > u);
 
       % If we are doing voxelwise inference on a WB.
       elseif isfield(SwE, 'WB') && infType == 0
-          
+
           %-Get height threshold
           %----------------------------------------------------------------------
           fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...height threshold')  %-#
@@ -911,7 +911,7 @@ if ~isMat
               str = 'FWE|FDR|none';
               thresDesc = spm_input('p value adjustment to control','+1','b',str,[],1);
           end
-          
+
           switch thresDesc
 
               case 'FWE' % Family-wise false positive rate
@@ -923,14 +923,14 @@ if ~isMat
                       pu = spm_input('p value (FWE)','+0','r',0.05,1,[0,1]);
                   end
                   thresDesc = ['p<=' num2str(pu) ' (' thresDesc ')'];
-                  
+
                   FWE_ps = 10.^-swe_data_read(xCon(Ic).VspmFWEP,'xyz', XYZ);
-                  
+
                   % When thresholding on WB FWER p-values, we should include those = to pu
                   % Here, we are using a - tol < b instead of a <= b due to numerical errors
                   % tol was set to 0.1/(nB+1) in order to make sure it is smaller than the smallest WB p-value
                   Q = find(FWE_ps - tol  < pu);
-                  
+
                   % Obtain the exclusive statistic threshold. This will be the (1-pu)th
                   % percentile of the max. statistic distribution
                   if Ic == 1
@@ -951,14 +951,14 @@ if ~isMat
                       pu = spm_input('p value (FDR)','+0','r',0.05,1,[0,1]);
                   end
                   thresDesc = ['p<=' num2str(pu) ' (' thresDesc ')'];
-                  
+
                   % select the WB FDR p-values within the mask
                   FDR_ps = 10.^-swe_data_read(xCon(Ic).VspmFDRP, 'xyz', XYZ);
 
                   % Here, a parametric score threshold u would differ from voxel to voxel
                   % Thus, setting it to NaN
                   u = NaN;
-                  
+
                   % inclusive thresholding for WB
                   Q = find(FDR_ps - tol < pu);
 
@@ -977,7 +977,7 @@ if ~isMat
                   % Here, a parametric score threshold u would differ from voxel to voxel
                   % Thus, setting it to NaN
                   u = NaN
-                  
+
                   % inclusive thresholding for WB
                   Q = find(unc_ps - tol < pu);
 
@@ -986,7 +986,7 @@ if ~isMat
                   fprintf('\n');                                              %-#
                   error('Unknown control method "%s".',thresDesc);
           end
-          
+
           up  = NaN;
           Pp  = NaN;
           uc  = NaN;
@@ -996,7 +996,7 @@ if ~isMat
 
       % If we are doing clusterwise WB.
       elseif isfield(SwE, 'WB') && infType == 1
-          
+
           fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...height threshold')  %-#
           try
               thresDesc = xSwE.thresDesc;
@@ -1012,13 +1012,13 @@ if ~isMat
                 thresDesc = 'none';
               end
           end
-          
+
           switch thresDesc
-              
+
               case 'FWE' % Family-wise false positive rate
                   % This is performed on the FWE P value map
                   %--------------------------------------------------------
-                  
+
                   try
                     clusterSizeType = xSwE.clusterSizeType;
                   catch
@@ -1033,9 +1033,9 @@ if ~isMat
 
                   % Record what type of clusterwise inference we are doing.
                   clustWise = 'FWE';
-                  
-                  % For WB we have performed our thresholding and worked out of 
-                  % regions of activation. 
+
+                  % For WB we have performed our thresholding and worked out of
+                  % regions of activation.
                   if Ic == 1
                     locActVox = SwE.WB.clusterInfo.LocActivatedVoxels;
                   elseif Ic == 2
@@ -1045,7 +1045,7 @@ if ~isMat
                   end
                   [~, index]=ismember(XYZ',locActVox','rows');
                   Q=find(index~=0);
-                  
+
                   % We also should record the cluster forming threshold that was
                   % used.
                   pu = SwE.WB.clusterInfo.primaryThreshold;
@@ -1055,7 +1055,7 @@ if ~isMat
                   else
                       u = chi2inv(1-pu, 1);
                   end
-                  
+
                   % We should display the cluster forming threshold that
                   % was used.
                   try
@@ -1064,13 +1064,13 @@ if ~isMat
                     spm_input(['threshold {p value}'],...
                         '+1','b',['(pre-set: P=' num2str(pu) ')'],[0],0)
                   end
-                  
+
               case 'none'  % No adjustment: p for conjunctions is p of the conjunction SwE
                   % This should be performed on the uncorrected WB p-values
                   %--------------------------------------------------------
                   % Record what type of clusterwise inference we are doing.
                   clustWise = 'Uncorr';
-                  
+
                   % Cluster-forming threshold.
                   try
                       pu = xSwE.u;
@@ -1080,39 +1080,39 @@ if ~isMat
                   thresDesc = ['p<=' num2str(pu) ' (unc.)'];
                   % select the WB unc. p-values within the mask
                   unc_ps = 10.^-swe_data_read(xCon(Ic).VspmUncP, 'xyz', XYZ);
-  
+
                   % Here, a parametric score threshold u would differ from voxel to voxel
                   % Thus, setting it to NaN
                   u = NaN
-                  
+
                   % inclusive thresholding for WB
                   Q = find(unc_ps - tol < pu);
-                  
+
                   up  = NaN;
                   Pp  = NaN;
                   uc  = NaN;
                   ue  = NaN;
                   Pc  = [];
                   uu = [];
-                            
+
           end
-          
-      % If we are doing TFCE.    
+
+      % If we are doing TFCE.
       else
-          
+
           % Remember we are not doing clusterwise.
           clustWise = 'None';
-          
+
           % Ask user for TFCE FWE alpha.
           pt = spm_input('p value (TFCE FWE)','+0','r',0.05,1,[0,1]);
           thresDesc = ['p<=' num2str(pt) ' (FWE)'];
-          
+
           % Get Tfce Fwe P-values.
           % In older version of the toolbox, the max TFCE scores were not saved.
-          % Thus, to avoid retro-compatibility issues, we cannot threshold using 
+          % Thus, to avoid retro-compatibility issues, we cannot threshold using
           % the (1-pt)th percentile of the max distribution, but only using the FWER p-values
           tfp = 10.^-swe_data_read(xCon(Ic).VspmTFCEFWEP, 'xyz', XYZ);
-          
+
           up  = NaN;
           Pp  = NaN;
           uc  = NaN;
@@ -1124,7 +1124,7 @@ if ~isMat
           % Here, we are using a - tol < b instead of a <= b due to numerical errors
           % tol was set to 0.1/(nB+1) in order to make sure it is smaller than the smallest WB p-value
           Q = find(tfp - tol < pt);
-          
+
       end
 
   end
@@ -1142,23 +1142,23 @@ if ~isMat
       strDataType = 'voxels/vertices';
     elseif spm_mesh_detect(xCon(Ic(1)).Vspm)
 			strDataType = 'vertices';
-    else 
-			strDataType = 'voxels'; 
+    else
+			strDataType = 'voxels';
     end
 	end
   if isempty(Q)
       fprintf('\n');
       warning('SwE:NoVoxels','No %s survive thresholding', strDataType);
   end
-  
+
   % If we are doing clusterwise ask for threshold.
   if ~strcmp(clustWise, 'None')
       %-Extent threshold (disallowed for conjunctions)
       %--------------------------------------------------------------------------
-      if ~isempty(XYZ) && nc == 1 
+      if ~isempty(XYZ) && nc == 1
 
           fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...extent threshold')  %-#
-          
+
           % Uncorrected threshold.
           if strcmp(clustWise, 'Uncorr')
               %-Get extent threshold [default = 0]
@@ -1172,7 +1172,7 @@ if ~isMat
               %-Calculate extent threshold filtering
 							%----------------------------------------------------------------------
               if isCifti
-                A = swe_cifti_clusters(SwE.cifti, XYZ(1,:));              
+                A = swe_cifti_clusters(SwE.cifti, XYZ(1,:));
               elseif  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
                 A = spm_clusters(XYZ);
               else
@@ -1187,7 +1187,7 @@ if ~isMat
                   if length(j) >= k; Q = [Q j]; end
               end
           end
-          
+
           % FWE WB threshold.
           if strcmp(clustWise, 'FWE')
               %-Get extent threshold [default = 0]
@@ -1202,7 +1202,7 @@ if ~isMat
               %----------------------------------------------------------------------
               % recompute the clusters as they may have been reduced due to post-hoc masking
               if isCifti
-                [A, clusterSizesInSurfaces, clusterSizesInVolume] = swe_cifti_clusters(SwE.cifti, XYZ(1,:));              
+                [A, clusterSizesInSurfaces, clusterSizesInVolume] = swe_cifti_clusters(SwE.cifti, XYZ(1,:));
               elseif  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
                 A = spm_clusters(XYZ);
               else
@@ -1212,7 +1212,7 @@ if ~isMat
                 A = A(XYZ(1,:));
             	end
               clusIndices = unique(A);
-              
+
               % recompute the p-values as they might have increased due to post-hoc masking
               if Ic == 1
                 if isCifti && strcmpi(clusterSizeType, 'Box-Cox norm. k_{Z}')
@@ -1269,17 +1269,17 @@ if ~isMat
               else
                 error('Unknown contrast');
               end
-              
+
               ps_fwe = nan(1,numel(A));
               for i = 1:length(clusIndices)
                 ind = ( A==clusIndices(i) );
                 ps_fwe(ind) = sum( maxClusterSize > clusterSizes(i) - 1e-8) / (SwE.WB.nB + 1);
               end
 
-              % select only the voxels surviving the FWER threshold 
+              % select only the voxels surviving the FWER threshold
               % Here, we use an inclusive p-value threshold to be consistent with an exclusive cluster threshold
               Q = find(ps_fwe - tol < fwep_c);
-              
+
               % The exclusive threshold k should be the (1-fwep_c)th percentile of the max cluster size distribution
               maxClusterSize = sort(maxClusterSize);
 
@@ -1295,20 +1295,20 @@ if ~isMat
               fprintf('\n');                                                  %-#
               warning('SwE:NoVoxels','No %s survive cluster extent threshoding', strDataType);
           end
-          
+
       else
 
           k = 0;
 
-      end 
+      end
   end
-end 
+end
 
 % Doftype
 if isfield(SwE.type,'modified')
     dof_type = SwE.type.modified.dof_mo;
 else
-    dof_type = SwE.type.classic.dof_cl;        
+    dof_type = SwE.type.classic.dof_cl;
 end
 
 %==========================================================================
@@ -1360,7 +1360,7 @@ xSwE   = struct( ...
             'nPredict',   size(SwE.xX.X, 2),...
             'df_Con',     rank(xCon(Ic).c),...
             'SS',         SwE.SS);
-        
+
 if isfield(SwE.type, 'modified')
     xSwE.nSubj_g    = SwE.Gr.nSubj_g;
     xSwE.max_nVis_g = SwE.Vis.max_nVis_g;
@@ -1370,27 +1370,27 @@ end
 % For WB analyses we have already computed uncorrected, FDR, FWE and
 % cluster-FWE P values at this point.
 if isfield(SwE, 'WB')
-    
+
     % Bootstrap variables.
     xSwE.WB = 1;
     xSwE.nB = SwE.WB.nB;
-    
+
     % Volumes
     xSwE.VspmUncP = cat(1,xCon(Ic).VspmUncP);
     xSwE.VspmFDRP = cat(1,xCon(Ic).VspmFDRP);
     xSwE.VspmFWEP = cat(1,xCon(Ic).VspmFWEP);
     if SwE.WB.clusterWise
-        
+
         try
 
           xSwE.VspmFWEP_clusnorm = cat(1,xCon(Ic).VspmFWEP_clusnorm);
           if strcmp(clustWise, 'FWE')
             xSwE.clusterSizeType = clusterSizeType;
           end
-          
+
           hasVolumeData = (SwE.xY.dataType == swe_DataType('Cifti') && numel(SwE.cifti.surfaces) > 0) || SwE.xY.dataType == swe_DataType('Gifti') || SwE.xY.dataType == swe_DataType('SurfaceMat');
           hasSurfaceData = (SwE.xY.dataType == swe_DataType('Cifti') && numel(SwE.cifti.volume) > 0) || SwE.xY.dataType == swe_DataType('Nifti') || SwE.xY.dataType == swe_DataType('VolumeMat');
-          
+
           if Ic == 1
             if hasVolumeData && numel(SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0) > 0
               xSwE.boxcoxInfo.surfaces.lambda = SwE.WB.clusterInfo.clusterSizesInSurfacesUnderH0_boxCox_lambda;
@@ -1426,7 +1426,7 @@ if isfield(SwE, 'WB')
         catch
 
           xSwE.VspmFWEP_clus = cat(1,xCon(Ic).VspmFWEP_clus);
-        
+
         end
     end
     if isfield(SwE.WB, 'TFCE')
@@ -1443,13 +1443,13 @@ if isfield(SwE, 'WB')
     else
         xSwE.TFCEthresh = 0;
     end
-    
+
     % Uncorrected P values.
     Ps_vol = xSwE.VspmUncP;
     Ps = swe_data_read(Ps_vol, 'xyz', SwE.xVol.XYZ);
     Ps = 10.^(-Ps(~isnan(Ps)));
     xSwE.Ps = Ps;
-    
+
     % 95% percentiles
     if Ic == 1
       maxScore = sort(SwE.WB.maxScore);
@@ -1458,7 +1458,7 @@ if isfield(SwE, 'WB')
     else
       error('Unknown contrast');
     end
-    xSwE.Pfv = maxScore(ceil(0.95*(xSwE.nB+1))); % Voxelwise FWE P 
+    xSwE.Pfv = maxScore(ceil(0.95*(xSwE.nB+1))); % Voxelwise FWE P
     if SwE.WB.clusterWise
       if Ic == 1
         maxClusterSize = sort(SwE.WB.clusterInfo.maxClusterSize);
@@ -1467,9 +1467,9 @@ if isfield(SwE, 'WB')
       else
         error('Unknown contrast');
       end
-      xSwE.Pfc = maxClusterSize(ceil(0.95*(xSwE.nB+1))); % Clusterwise FWE P      
+      xSwE.Pfc = maxClusterSize(ceil(0.95*(xSwE.nB+1))); % Clusterwise FWE P
     end
-    
+
     % edf
     xSwE.Vedf       = cat(1,xCon(Ic).Vedf);
   else
@@ -1477,7 +1477,7 @@ if isfield(SwE, 'WB')
       xSwE.edf = xCon(Ic).edf;
     else
       xSwE.Vedf = cat(1,xCon(Ic).Vedf);
-    end    
+    end
 end
 
 % Record clusterwise FWE P value if there is one.
@@ -1510,7 +1510,7 @@ if isCifti
     xSwE.S_vol = 0;
   end
 end
-          
+
 %-RESELS per voxel (density) if it exists
 %--------------------------------------------------------------------------
 try, xSwE.VRpv = SwE.xVol.VRpv; end

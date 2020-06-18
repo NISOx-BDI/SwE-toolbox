@@ -1,6 +1,6 @@
 function varargout = swe_jobman(varargin)
 	% Main interface for SPM Batch System
-	% Copy of spm_jobman using swe_select instead of spm_select 
+	% Copy of spm_jobman using swe_select instead of spm_select
 	% This function provides a compatibility layer between SPM and matlabbatch.
 	%
 	% FORMAT swe_jobman('initcfg')
@@ -17,7 +17,7 @@ function varargout = swe_jobman(varargin)
 	% input1,...  - optional list of input arguments. These are filled into
 	%               open inputs ('X->' marked in the GUI) before a job is
 	%               run. When using an "{:}" subscript on a cell array,
-	%               MATLAB expands this cell array into a comma separated 
+	%               MATLAB expands this cell array into a comma separated
 	%               list of arguments. Therefore, one can collect input
 	%               arguments in the right order into a cell array named e.g.
 	%               input_array and call swe_jobman('run',job,input_array{:})
@@ -57,8 +57,8 @@ function varargout = swe_jobman(varargin)
 	% Copyright (C) 2005-2016 Wellcome Trust Centre for Neuroimaging
 	% Volkmar Glauche
 	% Modified by Bryan Guillaume
-  % Version Info:  $Format:%ci$ $Format:%h$	
-	
+  % Version Info:  $Format:%ci$ $Format:%h$
+
 	%__________________________________________________________________________
 	%
 	% Programmers help:
@@ -84,21 +84,21 @@ function varargout = swe_jobman(varargin)
 	% FORMAT [tag, job] = swe_jobman('harvest', job_id|job|cfg_item|cfg_struct)
 	% Take the job with id job_id in cfg_util and extract what is
 	% needed to save it as a batch job (for experts only). If a (partial) job
-	% is given instead, the output job is augmented with default settings. 
+	% is given instead, the output job is augmented with default settings.
 	% If the argument is a cfg_item or cfg_struct tree, it will be harvested
-	% outside cfg_util.  
+	% outside cfg_util.
 	% tag - tag of the root node of the current job/cfg_item tree
 	% job - harvested data from the current job/cfg_item tree
 	%__________________________________________________________________________
-	% 
-	% This code is based on earlier versions by John Ashburner, Philippe 
+	%
+	% This code is based on earlier versions by John Ashburner, Philippe
 	% Ciuciu and Guillaume Flandin.
 	% It now relies on matlabbatch
 	%                http://sourceforge.net/projects/matlabbatch/
 	% Copyright (C) 2008 Freiburg Brain Imaging
 	%__________________________________________________________________________
-	
-	
+
+
 	%-Force jobs configuration initialisation if needed
 	%--------------------------------------------------------------------------
 	persistent isInitCfg;
@@ -109,7 +109,7 @@ function varargout = swe_jobman(varargin)
 			fprintf('done.\n');
 	end
 	isInitCfg = true;
-	
+
 	%-Open GUI when called without input arguments
 	%--------------------------------------------------------------------------
 	if ~nargin
@@ -117,7 +117,7 @@ function varargout = swe_jobman(varargin)
 			if nargout > 0, varargout = {findobj(0,'tag','cfg_ui')}; end
 			return;
 	end
-	
+
 	%-Warn about deprecated syntax
 	%--------------------------------------------------------------------------
 	action = lower(varargin{1});
@@ -131,7 +131,7 @@ function varargout = swe_jobman(varargin)
 							'Callback ''%s'' is deprecated. Use ''convert'' instead.',action);
 					action = 'convert';
 	end
-	
+
 	%-Load and convert batch jobs
 	%--------------------------------------------------------------------------
 	if ismember(action, {'interactive','run','serial'})
@@ -160,7 +160,7 @@ function varargout = swe_jobman(varargin)
 					end
 			end
 	end
-	
+
 	%-Perform action
 	%--------------------------------------------------------------------------
 	switch action
@@ -193,7 +193,7 @@ function varargout = swe_jobman(varargin)
 					%    f2 = uimenu(f0,'Label','xxx', 'Callback',@xxx, ...
 					%        'HandleVisibility','off', 'tag','xxx');
 					%end
-					
+
 			case {'interactive'}
 					if exist('mljob', 'var')
 							cjob = cfg_util('initjob', mljob);
@@ -217,7 +217,7 @@ function varargout = swe_jobman(varargin)
 					if nargout > 0
 							varargout{1} = cjob;
 					end
-					
+
 			case {'serial'}
 					if exist('mljob', 'var')
 							cjob = cfg_util('initjob', mljob);
@@ -238,7 +238,7 @@ function varargout = swe_jobman(varargin)
 							end
 							cfg_util('deljob', cjob);
 					end
-					
+
 			case {'run'}
 					if ~exist('mljob', 'var')
 							error('Not enough input arguments.');
@@ -254,10 +254,10 @@ function varargout = swe_jobman(varargin)
 							end
 							cfg_util('deljob', cjob);
 					end
-					
+
 			case {'convert'}
 					varargout{1} = convert_jobs(varargin{2:end});
-					
+
 			case {'harvest'}
 					if nargin == 1
 							error('spm:swe_jobman:CantHarvest', ...
@@ -281,7 +281,7 @@ function varargout = swe_jobman(varargin)
 					end
 					varargout{1} = tag;
 					varargout{2} = job;
-					
+
 			case {'help'}
 					if (nargin < 2) || isempty(varargin{2})
 							node = 'spm';
@@ -294,12 +294,12 @@ function varargout = swe_jobman(varargin)
 							width = varargin{3};
 					end
 					varargout{1} = cfg_util('showdocwidth', width, node);
-					
+
 			otherwise
 					error('spm:swe_jobman:unknownOption','Unknown option "%s".',varargin{1});
 	end
-	
-	
+
+
 	%==========================================================================
 	% function newjobs = load_jobs(job)
 	%==========================================================================
@@ -355,8 +355,8 @@ function varargout = swe_jobman(varargin)
 					newjobs = [newjobs(:); {[]}];
 			end
 	end
-	
-	
+
+
 	%==========================================================================
 	% function varargout = convert_jobs(varargin)
 	%==========================================================================
@@ -386,8 +386,8 @@ function varargout = swe_jobman(varargin)
 			end
 	end
 	varargout = {outnames};
-	
-	
+
+
 	%==========================================================================
 	% function [mljob, comp] = canonicalise_jobs(job)
 	%==========================================================================
@@ -417,8 +417,8 @@ function varargout = swe_jobman(varargin)
 					mljob{i} = job{i};
 			end
 	end
-	
-	
+
+
 	%==========================================================================
 	% function njobs = sub_canonicalise_job(jobs)
 	%==========================================================================
@@ -453,8 +453,8 @@ function varargout = swe_jobman(varargin)
 					njobs{end+1} = jobs{i0};
 			end
 	end
-	
-	
+
+
 	%==========================================================================
 	% function sts = fill_run_job(action, cjob, varargin)
 	%==========================================================================
@@ -471,8 +471,8 @@ function varargout = swe_jobman(varargin)
 			cfg_util('deljob', cjob);
 			error('spm:swe_jobman:jobNotFilled', 'No executable modules, but still unresolved dependencies or incomplete module inputs.');
 	end
-	
-	
+
+
 	%==========================================================================
 	% function [val sts] = serial_ui(item)
 	%==========================================================================
@@ -507,7 +507,7 @@ function varargout = swe_jobman(varargin)
 					% enter more (up to varargin{3}(2) values
 					labels = {labels{:} 'Done'};
 					% values is a cell list of natural numbers, use -1 for Done
-					values = {values{:} -1}; 
+					values = {values{:} -1};
 					while numel(val) < item.num(2)
 							val1 = spm_input(sprintf('%s(%d)', item.name, numel(val)+1), 1, ...
 															 'm', labels, values);
@@ -530,8 +530,8 @@ function varargout = swe_jobman(varargin)
 							error('File selector was closed.');
 					end
 	end
-	
-	
+
+
 	%==========================================================================
 	% function [code cont] = genscript_run
 	%==========================================================================
@@ -542,10 +542,9 @@ function varargout = swe_jobman(varargin)
 	code{1}  = sprintf('spm(''defaults'', ''%s'');', modality);
 	code{2}  = 'swe_jobman(''run'', jobs, inputs{:});';
 	cont     = false;
-	
-	
+
+
 	%-Compatibility layer for SPM5
 	function varargout = interactive(varargin)
 	function varargout = defaults_edit(varargin)
 	function varargout = run_serial(varargin)
-	

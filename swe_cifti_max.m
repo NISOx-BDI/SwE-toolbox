@@ -19,9 +19,9 @@ function [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm, brainStructureShortLabels, bra
   % Bryan Guillaume
   % Version Info:  $Format:%ci$ $Format:%h$
   N = []; N_area = []; N_boxcox = [];
-  Z = []; M = []; A = []; XYZ = []; Mmm = []; 
+  Z = []; M = []; A = []; XYZ = []; Mmm = [];
   brainStructureShortLabels = []; brainStructureLongLabels = [];
-  
+
   % for retro-compatibility
   if isfield(ciftiInformation, 'isClusConstrainedInVolROI')
     isClusConstrainedInVolROI = ciftiInformation.isClusConstrainedInVolROI;
@@ -127,7 +127,7 @@ function [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm, brainStructureShortLabels, bra
         Z = [Z, Z_tmp];
       end
 			% need to convert the volume coordinates into CIfTI coordinates
-      isMax = ismember(ciftiInformation.volume.XYZ', M_tmp', 'rows')'; 
+      isMax = ismember(ciftiInformation.volume.XYZ', M_tmp', 'rows')';
       M = [M, [ciftiInformation.volume.indices(isMax); ones(2,sum(isMax))]];
       A = [A; A_tmp + maxA];
       % need to convert the volume coordinates into CIfTI coordinates
@@ -163,7 +163,7 @@ function [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm, brainStructureShortLabels, bra
           Z = [Z, Z_tmp];
         end
         % need to convert the volume coordinates into CIfTI coordinates
-        isMax = ismember(ciftiInformation.volume.XYZ', M_tmp', 'rows')'; 
+        isMax = ismember(ciftiInformation.volume.XYZ', M_tmp', 'rows')';
         M = [M, [ciftiInformation.volume.indices(isMax); ones(2,sum(isMax))]];
         A = [A; A_tmp + maxA];
         % need to convert the volume coordinates into CIfTI coordinates

@@ -3,7 +3,7 @@ function out = eq(a,b)
   % =========================================================================
   % Bryan Guillaume
 	% Version Info:  $Format:%ci$ $Format:%h$
-	
+
 	out = strcmp(a.value, b.value);
 
 end

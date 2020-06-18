@@ -8,7 +8,7 @@ function varargout = swe_list(varargin)
 %    Num    - number of maxima per cluster [3]
 %    Dis    - distance among clusters {mm} [8]
 %    Str    - header string
-% 
+%
 % FORMAT TabDat = swe_list('ListCluster',xSwE,hReg,[Num,Dis,Str])
 %    List of local maxima for a single suprathreshold cluster
 %    xSwE - Structure containing data (format as below)
@@ -45,7 +45,7 @@ function varargout = swe_list(varargin)
 % .M     - voxels - > mm matrix
 % .VOX   - voxel dimensions {mm}
 % .DIM   - image dimensions {voxels}
-% .units - space units 
+% .units - space units
 % .VRpv  - filehandle - Resels per voxel
 % .Ps    - uncorrected P values in searched volume (for voxel FDR)
 % .Pp    - uncorrected P values of peaks (for peak FDR)
@@ -91,9 +91,9 @@ function varargout = swe_list(varargin)
 % excursion sets (a collection of face, edge and vertex connected subsets
 % or clusters).  The corrected significance of the results are based on
 % set, cluster and voxel-level inferences using distributional
-% approximations from the Theory of Gaussian Fields and/or common bootstrap 
-% methods. These distributions assume that the SwE map is a reasonable 
-% lattice approximation of a continuous random field with known component 
+% approximations from the Theory of Gaussian Fields and/or common bootstrap
+% methods. These distributions assume that the SwE map is a reasonable
+% lattice approximation of a continuous random field with known component
 % field smoothness.
 %
 % The p values are based on the probability of obtaining c, or more,
@@ -155,40 +155,40 @@ switch lower(varargin{1}), case 'list'                               %-List
     if nargin < 2, error('Not enough input arguments.'); end
     if nargin < 3, hReg = []; else  hReg = varargin{3};  end
     xSwE = varargin{2};
-    
+
     %-Extract results table and display it
     %----------------------------------------------------------------------
     spm('Pointer','Watch')
-    
+
     TabDat = swe_list('Table',xSwE,varargin{4:end});
-    
+
     swe_list('Display',TabDat,hReg);
-    
+
     spm('Pointer','Arrow')
-    
+
     %-Return TabDat structure
     %----------------------------------------------------------------------
     varargout = { TabDat };
-    
-    
+
+
 %==========================================================================
 case 'table'                                                        %-Table
 %==========================================================================
     % FORMAT TabDat = swe_list('table',xSwE,[Num,Dis,Str])
-    
+
     %-Parse arguments
     %----------------------------------------------------------------------
     if nargin < 2, error('Not enough input arguments.'); end
     xSwE = varargin{2};
-    
+
     %-Get number of maxima per cluster to be reported
     %----------------------------------------------------------------------
     if length(varargin) > 2, Num = varargin{3}; else Num = spm_get_defaults('stats.results.volume.nbmax'); end
-    
+
     %-Get minimum distance among clusters (mm) to be reported
     %----------------------------------------------------------------------
     if length(varargin) > 3, Dis = varargin{4}; else Dis = spm_get_defaults('stats.results.volume.distmin'); end
-    
+
     %-Get header string
     %----------------------------------------------------------------------
     if length(varargin) > 4 && ~isempty(varargin{5})
@@ -200,7 +200,7 @@ case 'table'                                                        %-Table
             Title = 'Posterior Probabilities';
         end
     end
-    
+
     %-Extract data from xSwE
     %----------------------------------------------------------------------
     isCifti   = xSwE.isCifti;
@@ -225,7 +225,7 @@ case 'table'                                                        %-Table
     try, QPs  = xSwE.Ps; end
     try, QPp  = xSwE.Pp; end
     try, QPc  = xSwE.Pc; end
-    
+
     % For WB analyses we have already calculated the information for the
     % table and footer. We just need to read it in.
     if xSwE.WB
@@ -245,7 +245,7 @@ case 'table'                                                        %-Table
             VspmFWEP_clusnorm = [];
         end
     end
-    
+
 %     if STAT~='P'
 %         R     = full(xSwE.R);
 %         FWHM  = full(xSwE.FWHM);
@@ -257,7 +257,7 @@ case 'table'                                                        %-Table
     end
     units{1}  = [units{1} ' '];
     units{2}  = [units{2} ' '];
-    
+
     if ~spm_mesh_detect(xSwE.Vspm)
         DIM   = DIM > 1;                  % non-empty dimensions
         strDataType = 'voxels';
@@ -267,7 +267,7 @@ case 'table'                                                        %-Table
     end
     D         = sum(DIM);             % highest dimension
     VOX       = VOX(DIM);             % scaling
-    
+
 %     if STAT ~= 'P'
 %         FWHM  = FWHM(DIM);            % Full width at half max
 %         FWmm  = FWHM.*VOX;            % FWHM {units}
@@ -281,15 +281,15 @@ case 'table'                                                        %-Table
     % Choose between voxel-wise and topological FDR
     %----------------------------------------------------------------------
     topoFDR = false; %to be checked
-    
+
     %-Tolerance for p-value underflow, when computing equivalent Z's
     %----------------------------------------------------------------------
     tol = eps*10;
-    
+
     %-Table Headers
     %----------------------------------------------------------------------
     TabDat.tit = Title;
-    
+
     % If we are doing a clusterwise/voxelwise analysis the header is the
     % normal SPM header.
     if isCifti
@@ -299,7 +299,7 @@ case 'table'                                                        %-Table
       additionalField = {};
       nColTable = 11;
     end
-    
+
     if ~isfield(xSwE, 'TFCEanaly') || ~xSwE.TFCEanaly
         TabDat.hdr = {...
             'set',      'p',            '\itp';...
@@ -331,9 +331,9 @@ case 'table'                                                        %-Table
             'peak',      STATe,         sprintf('\\it%c',STATe);...
             'peak',     'p(unc)',       '\itp\rm_{uncorr}';...
             ' ',         'x,y,z {mm}',   [units{:}];...
-            additionalField{:} }';        
+            additionalField{:} }';
     end
-        
+
     %-Coordinate Precisions
     %----------------------------------------------------------------------
     if isempty(xSwE.XYZmm) || isCifti % empty results or cifti
@@ -365,7 +365,7 @@ case 'table'                                                        %-Table
         '%0.3f', '%0.0f','%0.2f','%0.3f',...                   %-Cluster
         '%0.3f', '%0.3f', '%6.2f', '%0.3f',...                 %-Peak
         xyzfmt, '%s'};                                         %-XYZ
-    
+
     %-Table filtering note
     %----------------------------------------------------------------------
     if isinf(Num)
@@ -373,8 +373,8 @@ case 'table'                                                        %-Table
     else
         TabDat.str = sprintf(['table shows %d local maxima ',...
             'more than %.1fmm apart'],Num,Dis);
-    end 
-    
+    end
+
     %-Footnote with SPM parameters
     %----------------------------------------------------------------------
      if strcmp(STAT, 'T')
@@ -384,10 +384,10 @@ case 'table'                                                        %-Table
          Pz              = 1-spm_Xcdf(u, 1);
          eSTAT = 'X';
      end
-    
+
      % Create footer for display.
      TabDat.ftr      = cell(6,2);
-     
+
      % Number of `extra` lines inserted that don't have to be present in
      % every display
      exlns           = 0;
@@ -446,11 +446,11 @@ case 'table'                                                        %-Table
         Ts(isnan(Ts)) = [];
         Ts = 10.^-Ts;
         Ts = sort(Ts(:));
-            
+
         % Obtain the FDR p 0.05 value.
         FDRp_05 = swe_uc_FDR(0.05,Inf,'P',n,Ts);
         clear Ts
-        
+
         % Record FWE/FDR/clus FWE p values. (No clus FWE for voxelwise and
         % TFCE analyses)
         if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE')
@@ -466,14 +466,14 @@ case 'table'                                                        %-Table
         % Record height thresholds.
         TabDat.ftr{1,1} = ...
         ['Threshold: Height ' eSTAT ' = %0.2f, p = %0.3f; Extent k = %0.0f ' strDataType '.'];
-        TabDat.ftr{1,2} = [u,Pz,k];         
+        TabDat.ftr{1,2} = [u,Pz,k];
         % Record FDR p value.
         TabDat.ftr{2,1} = ...
              'vox P(5%% FDR): %0.3f';
         TabDat.ftr{2,2} = swe_uc_FDR(0.05,Inf,'P',n,sort(xSwE.Ps)');
-        
+
      end
-     
+
      if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') && isfield(xSwE, 'boxcoxInfo')
         TabDat.ftr{(3+exlns),1} = 'k_{Z} = 0.6745 (k_{\\lambda} - Q2(k_{\\lambda}^{H0})) / (Q3(k_{\\lambda}^{H0})-Q2(k_{\\lambda}^{H0}))';
         % TabDat.ftr{(3+exlns),1} = 'Null cluster sizes in surfaces: \\lambda_S=%0.2f , \\lambda_V =%0.2f';
@@ -495,7 +495,7 @@ case 'table'                                                        %-Table
         else
             error('Unknown Box-Cox Info!')
         end
-        exlns = exlns + 2;   
+        exlns = exlns + 2;
      end
 
      % If we have groups display group details in ftr.
@@ -523,10 +523,10 @@ case 'table'                                                        %-Table
          end
          TabDat.ftr{3+exlns,1} = [nSubjString nVisitsString];
          TabDat.ftr{3+exlns,2} = [xSwE.nSubj_g nVisitsNumbers];
-         
+
          exlns = exlns + 1;
      end
-     
+
      % Retrieve edf data
      if isfield(xSwE, 'Vedf')
         edf = swe_data_read(xSwE.Vedf, 'xyz', xSwE.XYZ_inMask);
@@ -534,21 +534,21 @@ case 'table'                                                        %-Table
         edf = xSwE.edf;
      end
      edf(isnan(edf)) = [];
-        
+
      edf_max = max(edf);
      edf_min = min(edf);
      edf_med = median(edf);
-     
+
      % Work out range of dof values
      diff = abs(edf_max - edf_min);
-     
+
      % Work out dofType
      switch xSwE.dofType
-        
-         case 0 
-             
+
+         case 0
+
              dofTypeStr = 'Naive';
-             
+
          case 1
 
              dofTypeStr = 'Approx I';
@@ -566,7 +566,7 @@ case 'table'                                                        %-Table
              error('Unknown degrees of freedom.')
 
      end
-     
+
      % Recording effective Degrees of freedom
      if xSwE.dofType~=0 && diff > 10^-10
         TabDat.ftr{(3+exlns),1}=['Error DF: (' dofTypeStr '): (min) %0.1f, (median) %0.1f, (max) %0.1f'];
@@ -575,7 +575,7 @@ case 'table'                                                        %-Table
         TabDat.ftr{(3+exlns),1}=['Error DF: (' dofTypeStr '): %0.1f'];
         TabDat.ftr{(3+exlns),2}=edf_med;
      end
-     
+
     % Record small sample adjustments.
     TabDat.ftr{(4+exlns),1}='Resid. Adj.: %s';
     switch xSwE.SS
@@ -589,7 +589,7 @@ case 'table'                                                        %-Table
      % Record contrast degrees of freedom.
      TabDat.ftr{(5+exlns),1} = 'Contrast DF: %0.0f; Number of predictors: %0.0f';
      TabDat.ftr{(5+exlns),2} = [xSwE.df_Con xSwE.nPredict];
-     
+
      % Record volume.
      if isCifti
         TabDat.ftr{(6+exlns),1} = ...
@@ -612,27 +612,27 @@ case 'table'                                                        %-Table
         TabDat.ftr{(7+exlns),2} = sqrt(diag(xSwE.cifti.volume.M(1:3,1:3)'*xSwE.cifti.volume.M(1:3,1:3)))';
      elseif isCifti && numel(xSwE.cifti.volume) == 0
         exlns = exlns - 1;
-     elseif ~spm_mesh_detect(xSwE.Vspm) 
+     elseif ~spm_mesh_detect(xSwE.Vspm)
         TabDat.ftr{(7+exlns),1} = ...
             ['Voxel size: ' voxfmt units{:}];
         TabDat.ftr{(7+exlns),2} = VOX;
      else
         exlns = exlns - 1;
      end
-     
+
      if isfield(xSwE, 'TFCEanaly') && xSwE.TFCEanaly
          TabDat.ftr{(8+exlns),1} = 'TFCE: E=%0.1f, H=%0.1f';
          TabDat.ftr{(8+exlns),2} = [xSwE.TFCE.E, xSwE.TFCE.H];
          exlns = exlns + 1;
      end
      if xSwE.WB
-         
+
         % Recording number of bootstraps.
         TabDat.ftr{(8+exlns),1}='Bootstrap samples = %0.0f';
         TabDat.ftr{(8+exlns),2}= xSwE.nB;
-        
+
         exlns = exlns + 1;
-        
+
     end
     %-Characterize excursion set in terms of maxima
     % (sorted on Z values and grouped by regions)
@@ -669,7 +669,7 @@ case 'table'                                                        %-Table
     %----------------------------------------------------------------------
     c              = max(A);                           %-Number of clusters
     NONSTAT        = spm_get_defaults('stats.rft.nonstat');
-    
+
     %-Convert maxima locations from voxels to mm
     %----------------------------------------------------------------------
     if isCifti
@@ -690,11 +690,11 @@ case 'table'                                                        %-Table
 
     TabDat.dat = {Pc,c};
     TabLin     = 1;
-    
+
     %-Cluster and local maxima p-values & statistics
     %----------------------------------------------------------------------
     while numel(find(isfinite(Z)))
-    
+
         %-Find largest remaining local maximum
         %------------------------------------------------------------------
         [U,i]  = max(Z);            %-largest maxima
@@ -711,7 +711,7 @@ case 'table'                                                        %-Table
                 case 'X'
                 try
                     Pz      = 1-chi2cdf(U,1);
-                catch 
+                catch
                     Pz      = 1-spm_Xcdf(U,1);
                 end
             end
@@ -719,7 +719,7 @@ case 'table'                                                        %-Table
             Pz = 10.^-VspmUncP(XYZ(1,i),XYZ(2,i),XYZ(3,i));
         end
 
-        % If we are not running a wild bootstrap or we are doing a 
+        % If we are not running a wild bootstrap or we are doing a
         % small volume correction we need to calculate the FDR P value
         % and leave the other values blank.
         if ~xSwE.WB || isfield(xSwE,'svc')
@@ -741,7 +741,7 @@ case 'table'                                                        %-Table
             Qp      = [];
             ws      = warning('off','SPM:outOfRangeNormal');
             warning(ws);
-            
+
             if xSwE.infType == 1 && strcmp(xSwE.clustWise, 'FWE') % only for FWER clusterwise WB
                 if strcmpi(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z}')
                     Pk  = 10.^-VspmFWEP_clusnorm(XYZ(1,i),XYZ(2,i),XYZ(3,i));
@@ -756,30 +756,30 @@ case 'table'                                                        %-Table
                 % These regions will have NaN for the cluster FWE P-value
                 % when they should have one. So the below is necessary:
                 Pk(isnan(Pk)) = 1;
-                
+
             elseif xSwE.TFCEanaly
-                
+
                 % Get coordinates of all voxels in the current cluster.
                 currentClus = find(A == A(i));
                 XYZ_clus = XYZ(:, currentClus);
-                
+
                 % Read in all TFCE FWE P values in this cluser
                 tfp = 10.^-swe_data_read(xSwE.VspmTFCEFWEP, 'xyz', XYZ_clus);
-                
+
                 % Record the minimum TFCE FWE P value in said cluster.
                 Pk  = min(tfp);
             else
                 Pk  = [];
             end
-            
+
         end
-        
+
         if i > numel(N_area) % means that this is for volume or there is no area info
             N_area_tmp = [];
         else
             N_area_tmp = N_area(i);
         end
-        if i > numel(N_boxcox)   
+        if i > numel(N_boxcox)
             N_boxcox_tmp = [];
         else
             N_boxcox_tmp = N_boxcox(i);
@@ -790,7 +790,7 @@ case 'table'                                                        %-Table
           [TabDat.dat{TabLin, 12}] = char(brainStructureShortLabels(i));
         end
         TabLin = TabLin + 1;
-        
+
         %-Print Num secondary maxima (> Dis mm apart)
         %------------------------------------------------------------------
         [l,q] = sort(-Z(mj));                              % sort on Z value
@@ -814,11 +814,11 @@ case 'table'                                                        %-Table
 %                         if Pz < tol
 %                             Ze = Inf;
 %                         else
-%                             Ze = swe_invNcdf(1 - Pz); 
+%                             Ze = swe_invNcdf(1 - Pz);
 %                         end
 %                     else
 
-                    % If we are not running a wild bootstrap or if we are  
+                    % If we are not running a wild bootstrap or if we are
                     % doing a small volume correction we need to calculate
                     % the FDR P value and leave the other values blank.
                     if ~xSwE.WB || isfield(xSwE,'svc')
@@ -835,16 +835,16 @@ case 'table'                                                        %-Table
                     % If we are running a wild bootstrap we only need to read in
                     % results we calculated earlier.
                     else
-                        
+
                         Pz      = 10.^-VspmUncP(XYZ(1,d),XYZ(2,d),XYZ(3,d));
                         Pu      = 10.^-VspmFWEP(XYZ(1,d),XYZ(2,d),XYZ(3,d));
                         Qu      = 10.^-VspmFDRP(XYZ(1,d),XYZ(2,d),XYZ(3,d));
                         ws     = warning('off','SPM:outOfRangeNormal');
                         Ze     = swe_invNcdf(Z(d));
                         warning(ws);
-                        
+
                     end
-                    
+
                     D     = [D d];
                     if topoFDR
                     [TabDat.dat{TabLin,7:11}] = ...
@@ -859,20 +859,20 @@ case 'table'                                                        %-Table
         end
         Z(mj) = NaN;     % Set local maxima to NaN
     end
-    
+
     varargout = {TabDat};
-    
+
     %======================================================================
     case 'display'                       %-Display table in Graphics window
     %======================================================================
     % FORMAT swe_list('display',TabDat,hReg)
-    
+
     %-Parse arguments
     %----------------------------------------------------------------------
-    if nargin < 2, error('Not enough input arguments.'); 
+    if nargin < 2, error('Not enough input arguments.');
     else           TabDat = varargin{2}; end
     if nargin < 3, hReg = []; else hReg = varargin{3}; end
-    
+
     isCifti = (size(TabDat.hdr,2) == 12);
     if isCifti
       scalingFactor = 0.9;
@@ -885,7 +885,7 @@ case 'table'                                                        %-Table
     %-Get current location (to highlight selected voxel in table)
     %----------------------------------------------------------------------
     xyzmm = swe_results_ui('GetCoords');
-    
+
     %-Setup Graphics panel
     %----------------------------------------------------------------------
     Fgraph = spm_figure('FindWin','Satellite');
@@ -897,10 +897,10 @@ case 'table'                                                        %-Table
         ht = 0.4; bot = 0.1;
     end
     swe_results_ui('Clear',Fgraph)
-    
+
     FS     = spm('FontSizes');           %-Scaled font sizes
     PF     = spm_platform('fonts');      %-Font names (for this platform)
-    
+
     %-Table axes & Title
     %----------------------------------------------------------------------
     hAx   = axes('Parent',Fgraph,...
@@ -916,7 +916,7 @@ case 'table'                                                        %-Table
         hRotate3d = rotate3d(Fgraph);
         setAllowAxesRotate(hRotate3d, hAx, false);
     end
-    
+
     AxPos = get(hAx,'Position'); set(hAx,'YLim',[0,AxPos(4)])
     dy    = FS(9);
     y     = floor(AxPos(4)) - dy;
@@ -934,23 +934,23 @@ case 'table'                                                        %-Table
     h  = line([0,0.11]*scalingFactor,[1,1]*(y-dy/4),'LineWidth',0.5,'Color','r');
     h  = text(0.02*scalingFactor,y-9*dy/8,    TabDat.hdr{3,1});              Hs = [Hs,h];
     h  = text(0.08*scalingFactor,y-9*dy/8,    TabDat.hdr{3,2});              Hs = [Hs,h];
-    
+
     text(0.22*scalingFactor,y, [TabDat.hdr{1,3} '-level'],'FontSize',FS(9));
     line([0.14,0.44]*scalingFactor,[1,1]*(y-dy/4),'LineWidth',0.5,'Color','r');
     h  = text(0.15*scalingFactor,y-9*dy/8,    TabDat.hdr{3,3});              Hc = [Hc,h];
     h  = text(0.24*scalingFactor,y-9*dy/8,    TabDat.hdr{3,4});              Hc = [Hc,h];
     h  = text(0.31*scalingFactor,y-9*dy/8,    TabDat.hdr{3,5});              Hc = [Hc,h];
     h  = text(0.39*scalingFactor,y-9*dy/8,    TabDat.hdr{3,6});              Hc = [Hc,h];
-    
+
     text(0.59*scalingFactor,y, [TabDat.hdr{1,8} '-level'],'FontSize',FS(9));
     line([0.48,0.80]*scalingFactor,[1,1]*(y-dy/4),'LineWidth',0.5,'Color','r');
     h  = text(0.49*scalingFactor,y-9*dy/8,    TabDat.hdr{3,7});              Hp = [Hp,h];
     h  = text(0.58*scalingFactor,y-9*dy/8,    TabDat.hdr{3,8});              Hp = [Hp,h];
     h  = text(0.67*scalingFactor,y-9*dy/8,    TabDat.hdr{3,9});              Hp = [Hp,h];
     h  = text(0.74*scalingFactor,y-9*dy/8,    TabDat.hdr{3,10});             Hp = [Hp,h];
-    
+
     text(0.845*scalingFactor,y - dy/2,TabDat.hdr{3,11},'Fontsize',FS(8));
-    
+
     if isCifti
       text(0.88,y - dy/2,TabDat.hdr{1,12},'Fontsize',FS(8));
     end
@@ -973,7 +973,7 @@ case 'table'                                                        %-Table
     if ~isempty(TabDat.ftr)
         set(gca,'DefaultTextFontName',PF.helvetica,...
             'DefaultTextInterpreter','Tex','DefaultTextFontSize',FS(8))
-        
+
         fx = repmat([0 0.645],ceil(size(TabDat.ftr,1)/2),1);
         fy = repmat((1:ceil(size(TabDat.ftr,1)/2))',1,2);
         for i=1:size(TabDat.ftr,1)
@@ -982,7 +982,7 @@ case 'table'                                                        %-Table
                 'ButtonDownFcn','get(gcbo,''UserData'')');
         end
     end
-    
+
     %-Characterize excursion set in terms of maxima
     % (sorted on Z values and grouped by regions)
     %======================================================================
@@ -993,7 +993,7 @@ case 'table'                                                        %-Table
             'FontSize',FS(16),'Color',[1,1,1]*.5);
         return
     end
-    
+
     %-Table proper
     %======================================================================
 
@@ -1004,7 +1004,7 @@ case 'table'                                                        %-Table
              0.49      0.58      0.65      0.74 ...            %-Peak
              0.84 ...                                          %-XYZ
              0.88/scalingFactor ] * scalingFactor;                                            %-Brain structure labels
-    
+
     %-Pagination variables
     %----------------------------------------------------------------------
     hPage = [];
@@ -1015,7 +1015,7 @@ case 'table'                                                        %-Table
      if isempty(TabDat.dat{1,1}) && isempty(TabDat.dat{1,2}) % Pc
         set(Hs,'Visible','off');
      end
-    
+
     if TabDat.dat{1,2} >= 1 % c
         h     = text(tCol(1),y,sprintf(TabDat.fmt{1},TabDat.dat{1,1}),...
                     'FontWeight','Bold', 'UserData',TabDat.dat{1,1},...
@@ -1028,12 +1028,12 @@ case 'table'                                                        %-Table
     else
         set(Hs,'Visible','off');
     end
-    
+
     %-Cluster and local maxima p-values & statistics
     %----------------------------------------------------------------------
     HlistXYZ = [];
     for i=1:size(TabDat.dat,1)
-        
+
         %-Paginate if necessary
         %------------------------------------------------------------------
         if y < dy
@@ -1045,11 +1045,11 @@ case 'table'                                                        %-Table
             hPage = [];
             y     = y0;
         end
-        
+
         %-Print cluster and maximum peak-level p values
         %------------------------------------------------------------------
         if  ~isempty(TabDat.dat{i,4}), fw = 'Bold'; else fw = 'Normal'; end
-        
+
         for k=3:nColTable
           if k < 11
             h     = text(tCol(k),y,sprintf(TabDat.fmt{k},TabDat.dat{i,k}),...
@@ -1074,7 +1074,7 @@ case 'table'                                                        %-Table
             hPage = [hPage, h];
           end
         end
-        
+
         % Specifically changed so it properly finds hMIPax
         %------------------------------------------------------------------
         tXYZmm = TabDat.dat{i,11};
@@ -1098,7 +1098,7 @@ case 'table'                                                        %-Table
 
         y      = y - dy;
     end
-    
+
     %-Number and register last page (if paginated)
     %----------------------------------------------------------------------
     if spm_figure('#page',Fgraph)>1
@@ -1106,7 +1106,7 @@ case 'table'                                                        %-Table
 %             'FontName',PF.helvetica,'FontSize',FS(8),'FontAngle','Italic');
         spm_figure('NewPage',hPage)
     end
-    
+
     %-End: Store TabDat in UserData of context menu
     %======================================================================
     h = uicontextmenu('Tag','TabDat','UserData',TabDat);
@@ -1137,7 +1137,7 @@ case 'table'                                                        %-Table
     spm_XYZreg('Add2Reg',hReg,hAx,'swe_list');
 
     varargout = {};
-    
+
     %======================================================================
     case 'listcluster'                      %-List for current cluster only
     %======================================================================
@@ -1148,7 +1148,7 @@ case 'table'                                                        %-Table
         if nargin < 2, error('Not enough input arguments.'); end
         if nargin < 3, hReg = []; else hReg = varargin{3};   end
         xSwE = varargin{2};
-        
+
         if isfield(xSwE,'G')
             warning('"current cluster" option not implemented for meshes.');
             varargout = { evalin('base','TabDat') };
@@ -1158,7 +1158,7 @@ case 'table'                                                        %-Table
         %-Get number of maxima per cluster to be reported
         %------------------------------------------------------------------
         if nargin < 4, Num = spm_get_defaults('stats.results.svc.nbmax'); else Num = varargin{4}; end
-        
+
         %-Get minimum distance among clusters (mm) to be reported
         %------------------------------------------------------------------
         if nargin < 5, Dis = spm_get_defaults('stats.results.svc.distmin'); else Dis = varargin{5}; end
@@ -1166,7 +1166,7 @@ case 'table'                                                        %-Table
         %-Get header string
         %------------------------------------------------------------------
         if nargin < 6, Str = ''; else Str = varargin{6}; end
-        
+
         %-If there are suprathreshold voxels, filter out all but current cluster
         %------------------------------------------------------------------
         if ~isempty(xSwE.Z)
@@ -1231,7 +1231,7 @@ case 'table'                                                        %-Table
         end
         fprintf('%c',repmat('=',1,80)), fprintf('\n\n')
 
-        
+
     %======================================================================
     case 'xlslist'                                  %-Export table to Excel
     %======================================================================
@@ -1239,7 +1239,7 @@ case 'table'                                                        %-Table
 
         if nargin<2, error('Not enough input arguments.'); end
         TabDat = varargin{2};
-        
+
         d          = [TabDat.hdr(1:2,:);TabDat.dat];
         xyz        = d(3:end,end);
         xyz        = num2cell([xyz{:}]');
@@ -1249,7 +1249,7 @@ case 'table'                                                        %-Table
         tmpfile    = [tempname '.xls'];
         xlswrite(tmpfile, d);
         winopen(tmpfile);
-    
+
     %======================================================================
     case 'csvlist'            %-Export table to comma-separated values file
     %======================================================================
@@ -1257,7 +1257,7 @@ case 'table'                                                        %-Table
 
         if nargin<2, error('Not enough input arguments.'); end
         TabDat = varargin{2};
-        
+
         tmpfile = [tempname '.csv'];
         fid = fopen(tmpfile,'wt');
         fprintf(fid,[repmat('%s,',1,11) '%d,,\n'],TabDat.hdr{1,:});
@@ -1270,7 +1270,7 @@ case 'table'                                                        %-Table
         end
         fclose(fid);
         open(tmpfile);
-    
+
     %======================================================================
     case 'setcoords'                                    %-Coordinate change
     %======================================================================

@@ -5,9 +5,9 @@ function obj = swe_DataType(dataType)
   % =========================================================================
   % Bryan Guillaume
   % Version Info:  $Format:%ci$ $Format:%h$
-  
+
   availableDataTypes = {'Nifti', 'Gifti', 'Cifti', 'Mat', 'VolumeMat', 'SurfaceMat'};
-  
+
   if nargin == 0
     error( "swe_DataType cannot be initialized empty; choose from 'Nifti', 'Gifti', 'Cifti', 'Mat', 'VolumeMat' or 'SurfaceMat'.");
   end
@@ -17,7 +17,7 @@ function obj = swe_DataType(dataType)
   end
 
   obj.value = dataType;
-  
+
   obj = class(obj, 'swe_DataType');
 
 end

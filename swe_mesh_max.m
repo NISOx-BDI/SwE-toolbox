@@ -20,7 +20,7 @@ function [N, N_area, N_boxcox, Z, M, A, XYZ] = swe_mesh_max(X, locationsInVertic
   % Version Info:  $Format:%ci$ $Format:%h$
 
   [N, Z, M, A, XYZ] = spm_mesh_max(X, locationsInVertices, G);
-  
+
   canComputeArea = nargin > 4 && ~isempty(areaFile);
   if canComputeArea
     N_area = zeros(numel(N),1);

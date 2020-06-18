@@ -64,7 +64,7 @@ function varargout = swe_DesRep(varargin)
 %     If (and only if) both vectors have zero mean, i.e.
 %     sum(a)==sum(b)==0, then the cosine of the angle between the
 %     vectors is the same as the correlation between the two variates.
-%     
+%
 %     The design orthogonality matrix is "surfable": Clicking (and
 %     holding or dragging) the cursor around the design orthogonality
 %     image reports the orthogonality of the correponding pair of
@@ -83,7 +83,7 @@ function varargout = swe_DesRep(varargin)
 %     If not an fMRI design, then the Explore sub-menu has two options:
 %     "Files and factors" & "Covariates".
 %
-% * Explore: Files and factors - Multi-page listing of filenames, 
+% * Explore: Files and factors - Multi-page listing of filenames,
 %                                factor indicies and covariates.
 %
 %     The covariates printed are the raw covariates as entered into
@@ -91,8 +91,8 @@ function varargout = swe_DesRep(varargin)
 %     after any grand mean scaling.
 %
 % * Explore: Covariates - Plots of the covariates, showing how they are
-%                         included into the model. 
-%                  
+%                         included into the model.
+%
 %     Covariates are plotted, one per page, overlaid on the design
 %     matrix. The description strings in the xC covariate structure
 %     array are displayed. The corresponding design matrix column(s)
@@ -149,7 +149,7 @@ function varargout = swe_DesRep(varargin)
 % .swd   - SPM working directory - directory where configuration file resides
 %          [defaults to empty]
 % .SPMid - (recommended) ID string of creator program.
-% h      - handle of menu created ('Tag'ged as 'DesRepUI') 
+% h      - handle of menu created ('Tag'ged as 'DesRepUI')
 %
 %
 % FORMAT spm_DesRep('Files&Factors',P,I,xC,sF,xs)
@@ -256,13 +256,13 @@ function varargout = swe_DesRep(varargin)
 % Version Info:  $Format:%ci$ $Format:%h$
 
 
-SVNid = '$Rev: 6351 $'; 
+SVNid = '$Rev: 6351 $';
 
 %-Format arguments
 %--------------------------------------------------------------------------
 if ~nargin
     SPMid = spm('FnBanner',mfilename,SVNid);
-    hC    = spm_DesRep('DesRepUI'); 
+    hC    = spm_DesRep('DesRepUI');
     SPM   = get(hC,'UserData');
     if ~isempty(SPM)
         cb_menu([],[],'DesMtx',SPM);
@@ -630,7 +630,7 @@ else
   hPEstAx = [];
 end
 spm_figure('NewPage',[hCovMtx;get(hCovMtx,'Children');hPEstAx;get(hPEstAx,'Children');hCovMtxSc])
- 
+
 %-Show components of covariance matrix
 %--------------------------------------------------------------------------
 if isfield(varargin{2},'Vi')
@@ -760,7 +760,7 @@ end
 
 %-Filenames
 % ( Show at most 32, showing every 2nd/3rd/4th/... as necessary to pair )
-% ( down to <32 items. Always show last item so #images is indicated.   )     
+% ( down to <32 items. Always show last item so #images is indicated.   )
 if desmtx && ~isempty(fnames)
     axes('Position',[.68 .4 .3 .4],'Visible','off',...
         'DefaultTextFontSize',FS(8),...
@@ -808,7 +808,7 @@ else
     hDesO   = axes('Position',[.07 .18 .6 .2]);
     tmp = 1-abs(O); tmp(logical(tril(ones(nPar),-1))) = 1;
     hDesOIm = image(tmp*64);
-    
+
     set(hDesO,'Box','off','TickDir','out',...
         'XaxisLocation','top','XTick',PTick,'XTickLabel','',...
         'YaxisLocation','right','YTick',PTick,'YTickLabel','',...
@@ -859,14 +859,14 @@ if ~isempty(xs)
     set(hAx,'Units','points');
     AxPos = get(hAx,'Position');
     set(hAx,'YLim',[0,AxPos(4)])
-    
+
     dy = FS(9); y0 = floor(AxPos(4)) -dy; y = y0;
 
     text(0.3,y,str,...
         'HorizontalAlignment','Center',...
         'FontWeight','Bold','FontSize',FS(11))
     y=y-2*dy;
-    
+
     for sf = fieldnames(xs)'
         text(0.3,y,[strrep(sf{1},'_',' '),' :'],...
             'HorizontalAlignment','Right','FontWeight','Bold',...
@@ -1056,11 +1056,11 @@ for i = 1:length(xC)
     %-Descriptions
     %----------------------------------------------------------------------
     hDAx = axes('Position',[0.03,0.1,0.94,0.30],'Visible','off');
-    
+
     set(hDAx,'Units','points');
     tmp = get(hDAx,'Position');
     set(hDAx,'YLim',[0,tmp(4)])
-    
+
     dy = FS(9); y0 = floor(tmp(4)) -dy; y = y0;
 
     %-Description strings from xC(i).descrip
@@ -1145,7 +1145,7 @@ case 'scantick'
 %==========================================================================
 % spm_DesRep('ScanTick',nScan,lim)
 % ( Show at most 32, showing every 2nd/3rd/4th/... as necessary to pair )
-% ( down to <32 items. Always show last item so #images is indicated.   )     
+% ( down to <32 items. Always show last item so #images is indicated.   )
 if nargin<3, lim=32; else lim=varargin{3}; end
 if nargin<2, error('insufficient arguments'), end
 nScan = varargin{2};
@@ -1567,7 +1567,7 @@ switch action
         spm_DesRep('DesMtx',SPM.xX,...
             filenames,...
             SPM.xsDes);
-            
+
     case 'DesOrth'
         spm_DesRep('DesOrth',SPM.xX);
 

@@ -1,6 +1,6 @@
 function varargout = swe_select(varargin)
   % File selector
-  % This is a copy of swe_select but able to handle CIfTI files as well. 
+  % This is a copy of swe_select but able to handle CIfTI files as well.
   % FORMAT [t,sts] = swe_select(n,typ,mesg,sel,wd,filt,frames)
   % n      - number of files [Default: Inf]
   %          A single value or a range.  e.g.
@@ -43,7 +43,7 @@ function varargout = swe_select(varargin)
   % As above, but for selecting frames of 4D NIfTI files
   % frames - vector of frames to select (defaults to 1, if not specified).
   %          If the frame number is Inf, all frames for the matching images
-  %          are listed. 
+  %          are listed.
   %
   % FORMAT [files,dirs] = swe_select('FPList',direc,filt)
   % FORMAT [files,dirs] = swe_select('ExtFPList',direc,filt,frames)
@@ -63,8 +63,8 @@ function varargout = swe_select(varargin)
   % John Ashburner
   % Modified by Bryan Guillaume
   % Version Info:  $Format:%ci$ $Format:%h$
-  
-  
+
+
   % For developers:
   %--------------------------------------------------------------------------
   % FORMAT cpath = swe_select('CPath',path,cwd)
@@ -91,17 +91,17 @@ function varargout = swe_select(varargin)
   %
   % FORMAT files = swe_select('Expand',files)
   % Return a list of image filenames with appended frame numbers.
-  
+
   persistent isInitSelect;
   if isempty(isInitSelect)
       isInitSelect = true;
       swe_select('init');
       if nargin == 1 && strcmpi(varargin{1},'init'), return; end
   end
-  
+
   %-Commands that are not passed to cfg_getfile
   local_cmds = {'regfilter', 'init', 'expand'};
-  
+
   if nargin && ischar(varargin{1}) && any(strcmpi(varargin{1},local_cmds))
       switch lower(varargin{1})
           case 'init'
@@ -110,7 +110,7 @@ function varargout = swe_select(varargin)
               end
               swe_select('regfilter');
               swe_select('prevdirs',spm('Dir'));
-              
+
           case 'regfilter'
               % Regexp based filters without special handlers
               cfg_getfile('regfilter', 'mesh',  {'\.gii$'});
@@ -126,7 +126,7 @@ function varargout = swe_select(varargin)
               cfg_getfile('regfilter', 'image',...
                   {'.*\.nii(,\d+){0,2}$','.*\.img(,\d+){0,2}$'},...
                   false, @swe_select_image, {frames});
-              
+
           case 'expand'
               varargout{1} = swe_select_expand(varargin{2});
               if ischar(varargin{2}), varargout{1} = char(varargout{1}); end
@@ -151,9 +151,9 @@ function varargout = swe_select(varargin)
       elseif nargin > 6 && isnumeric(varargin{1})
           varargin{7} = struct('frames', varargin{7});
       end
-      
+
       [t, sts] = cfg_getfile(varargin{:});
-      
+
       % cfg_getfile returns cellstr arrays, convert to char arrays
       if nargin > 0 && ischar(varargin{1})
           switch lower(varargin{1})
@@ -168,14 +168,14 @@ function varargout = swe_select(varargin)
       else
           t = char(t);
       end
-  
+
       varargout{1} = t;
       if nargout > 1
           varargout{2} = sts;
       end
   end
-  
-  
+
+
   %==========================================================================
   % FUNCTION varargout = swe_select_image(cmd, varargin)
   %==========================================================================
@@ -211,11 +211,11 @@ function varargout = swe_select(varargin)
           elseif numel(frames)==1 && frames(1)==1
               [ii{:}] = deal(1);
           end
-  
+
           % if domsg
           %     msg(ob,['Listing ' num2str(numel(f)) ' files...']);
           % end
-  
+
           % Combine filename and frame number(s)
           nii      = cellfun(@numel, ii);
           cfiles   = cell(sum(nii),1);
@@ -259,8 +259,8 @@ function varargout = swe_select(varargin)
           ofiles = [ofiles; vfiles];
       end
   end
-  
-  
+
+
   %==========================================================================
   % FUNCTION n = swe_select_get_nbframes(file)
   %==========================================================================
@@ -275,4 +275,3 @@ function varargout = swe_select(varargin)
       dim = [N.dat.dim 1 1 1 1 1];
       n   = dim(4);
     end
-  

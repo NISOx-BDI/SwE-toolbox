@@ -104,7 +104,7 @@ ciftiGeomFiles.values  = {ciftiGeomFile};
 ciftiGeomFiles.num     = [0 Inf];
 
 % ---------------------------------------------------------------------
-% volRoiConstraint 
+% volRoiConstraint
 % ---------------------------------------------------------------------
 volRoiConstraint         = cfg_menu;
 volRoiConstraint.tag     = 'volRoiConstraint';
@@ -170,7 +170,7 @@ groups.help    = {' '
              'Enter the groups in the ordering of the scans.'
              'The groups correspond to subjects sharing a common covariance matrix.'
              'The common covariance matrices are allowed to be different across groups.'
-            
+
              ' '}';
 groups.strtype = 'e';
 groups.num     = [Inf 1];
@@ -473,7 +473,7 @@ dof_mo.help    = {  ' '
                 '             This choice tends to overestimate the degrees of freedom in some designs, but reduce the quantity of images saved and the computation time.'
                 'approx I: degrees of freedom estimation with the estimate proposed in Guillaume et al. (2014).'
                 '             This estimate assumes no missing data and does not correct for the presence of a small sample bias and a missing data bias.'
-                '             Simulations seems to show that the estimate approx II and approx III are better choices (see below).' 
+                '             Simulations seems to show that the estimate approx II and approx III are better choices (see below).'
                 'approx II: degrees of freedom estimation with an alternative estimate proposed in Guillaume (2015).'
                 '             The estimate accounts partially for the presence of missing data and for a small-sample bias, but does not account for a missing data bias.'
                 '             Simulations seems to indicate that it performs better than approx I, but should be used only under no missing data'
@@ -482,7 +482,7 @@ dof_mo.help    = {  ' '
                 '             Simulations seems to indicate that it systematically performs better than approx II under missing data, but seems slightly less well (slightly conservative) than approx II under no missing data.'
                 '             That is the recommended choice by default. Nevertheless, if there is no missing data, approx II could be selected instead.'
                 ' '
-               }';        
+               }';
 % ---------------------------------------------------------------------
 % modified Modified
 % ---------------------------------------------------------------------
@@ -869,11 +869,11 @@ WB_surface.help    = {''
   ''
   'Please enter a mask/''.mat'' file containing mesh data.'};
 
-% --------------------------------------------------------------------- 
+% ---------------------------------------------------------------------
 % WB_voxelwise WB clusterwise volumetric .img input
 % ---------------------------------------------------------------------
 WB_volumetric         = cfg_const;
-WB_volumetric.tag     = 'WB_volumetric'; 
+WB_volumetric.tag     = 'WB_volumetric';
 WB_volumetric.name    = 'Volumetric input';
 WB_volumetric.val     = {0};
 WB_volumetric.help    = {''
@@ -893,7 +893,7 @@ WB_mat.help    = {''
   ''
   'Please select whether the ''.mat'' file contains volumetric or surface data.'};
 
-% --------------------------------------------------------------------- 
+% ---------------------------------------------------------------------
 % WB_voxelwise WB clusterwise .img input
 % ---------------------------------------------------------------------
 WB_img         = cfg_const;

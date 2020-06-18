@@ -12,8 +12,8 @@ function swe_seed(varargin)
 % -------------------------------------------------------------------------
 % Inputs:
 %   - Seed: Value for random number generator seed.
-% Deterministically seed the random number generator with value Seed.  
-% Useful for creating reproducible random numbers for testing; then make 
+% Deterministically seed the random number generator with value Seed.
+% Useful for creating reproducible random numbers for testing; then make
 % sure that "shuffle_seed" default is false to prevent re-seeding.
 % =========================================================================
 % T. Nichols
