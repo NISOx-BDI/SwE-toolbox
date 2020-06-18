@@ -19,8 +19,8 @@ function varargout=swe_conman(varargin)
 %==========================================================================
 %
 % The contrast manager graphicsl user interface (GUI) is a dialog box for
-% the specification and selection of contrasts. The contrast selection 
-% interface is presented initially, pressing the "Define new contrast..." 
+% the specification and selection of contrasts. The contrast selection
+% interface is presented initially, pressing the "Define new contrast..."
 % button pops up the contrast definition interface:
 %
 %__________________________________________________________________________
@@ -28,7 +28,7 @@ function varargout=swe_conman(varargin)
 %
 % The contrast selection interface consists of:
 %
-% * "Show" statistic type radio-buttons: "t-contrasts", "F-contrasts", 
+% * "Show" statistic type radio-buttons: "t-contrasts", "F-contrasts",
 %   "All":
 %   Selects the types of contrast that are presented for selection in the
 %   contrast selection list box. Depending on the use of the contrast
@@ -46,7 +46,7 @@ function varargout=swe_conman(varargin)
 %   Selected contrasts are highlit in black.
 %
 % * Image of the design matrix:
-%   A grey-scale representation of the design matrix, to aid 
+%   A grey-scale representation of the design matrix, to aid
 %   interpretation of the contrasts.
 %
 %   The design matrix is "surfable": Clicking (and holding or dragging)
@@ -149,7 +149,7 @@ function varargout=swe_conman(varargin)
 %     spm_input.m for more tips on using evaluated input widgets.)
 %
 % * For F-contrasts, a "columns for reduced design" edit widget appears:
-%   - Here you can specify SwE{F} maps by specifying the reduced design 
+%   - Here you can specify SwE{F} maps by specifying the reduced design
 %     as a sub-partition of the current design matrix.
 %   - Enter the indicies of the design matrix columns you wish to retain
 %     in the reduced design.
@@ -247,7 +247,7 @@ function varargout=swe_conman(varargin)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % Andrew Holmes
-% Based on: swe_conman.m 4617 2012-01-11 15:46:16Z will 
+% Based on: swe_conman.m 4617 2012-01-11 15:46:16Z will
 
 
 %==========================================================================
@@ -458,11 +458,11 @@ if (nargin==0) || ~ischar(varargin{1})
     if nargin<3, n=1; else n=varargin{3}; end
     if nargin<2, STATmode='T|F'; else STATmode=varargin{2}; end
     if nargin<1, error('no SwE struct specified'); else SwE = varargin{1};end
-    
+
     %-Change to results directory
     %----------------------------------------------------------------------
     try, cd(SwE.swd); end
-    
+
     %----------------------------------------------------------------------
     try
         SwE.xCon;
@@ -481,7 +481,7 @@ if (nargin==0) || ~ischar(varargin{1})
 
     %-Copy SwE structure for later change detecton, eg renamed contrasts
     tmpSPM = SwE;
-    
+
     %-Wait until filenames have been selected
     hDone = findobj(F,'Tag','Done');
     waitfor(hDone,'UserData')
@@ -496,7 +496,7 @@ if (nargin==0) || ~ischar(varargin{1})
     I        = Q(get(hConList,'Value'));
     SwE      = get(F,'UserData');
     xCon     = SwE.xCon;
-    
+
     %-Save SwE.mat only if SwE structure as changed
     if ~isequal(tmpSPM,SwE)
         if spm_check_version('matlab','7') >=0
@@ -548,7 +548,7 @@ switch lower(varargin{1})
             close(F)
             varargout = {[],cF};
             return
-        
+
         %------------------------------------------------------------------
         case {'off','reset'}
         %------------------------------------------------------------------
@@ -559,7 +559,7 @@ switch lower(varargin{1})
                 set(findobj(F,'Tag','Done'),'UserData',-1)
             end
             return
-            
+
         %------------------------------------------------------------------
         case 'on'
         %------------------------------------------------------------------
@@ -1274,7 +1274,7 @@ switch lower(varargin{1})
         if fcn==1                         %-Parse string from ConMtx widget
         %------------------------------------------------------------------
             set(hD_X1cols,'String','')
-            
+
             [c,I,emsg,imsg] = swe_conman('ParseCon',str,xX.X,STAT);
             if all(I)
                 DxCon = spm_FcUtil('Set','',STAT,'c',c,xX.X);
@@ -1368,12 +1368,12 @@ switch lower(varargin{1})
         DxCon.Vspm2 = [];
         DxCon.edf = [];
         DxCon.VspmUncP = [];
-        
+
         if ~strcmp(DxCon.STAT,STAT), error('STAT & DxCon.STAT mismatch!'), end
         SwE      = get(F,'UserData');
         xCon     = SwE.xCon;
-        
-        % Due to an earlier bug in SPM, a spurious field 
+
+        % Due to an earlier bug in SPM, a spurious field
         % PSTAT may have been created. Remove this if it exists.
         if isfield(xCon,'PSTAT')
             xCon=rmfield(xCon,'PSTAT');
@@ -1386,7 +1386,7 @@ switch lower(varargin{1})
         SwE.xCon = xCon;
         set(F,'UserData',SwE);
 
-        
+
         %-Redisplay the new list of contrasts, with the new one selected
         %------------------------------------------------------------------
         hConList = findobj(F,'Tag','ConList');
@@ -1406,7 +1406,7 @@ switch lower(varargin{1})
         set(get(findobj(gcbf,'Tag','DefineNew'),'UserData'),'Visible','off')
         set(gcbf,'UIContextMenu',findobj(gcbf,'Tag','ConMan_ConMen'))
 
-        
+
     %======================================================================
     case 'd_status'
     %======================================================================
@@ -1511,7 +1511,7 @@ switch lower(varargin{1})
             'HorizontalAlignment','Left',...
             'BackgroundColor','w',...
             'Position',[042 320 256 016].*WS);
-        
+
         hh = uicontextmenu('Tag','ConMan_ConMenu');
         uimenu(hh,'Label','Rename selected contrast...',...
             'Tag','CM_Ren',...
@@ -1519,13 +1519,13 @@ switch lower(varargin{1})
             'Interruptible','off','BusyAction','Cancel');
         set(hh,'CallBack','swe_conman(''FConMenu_CB'')',...
             'Interruptible','off','BusyAction','Cancel');
-        
+
         hConList = uicontrol(F,'Style','ListBox','Tag','ConList',...
             'ToolTipString',['Select contrast(s) - drag/shift-click',...
             '/ctrl-click to select multiple contrasts'],...
             'String',{'list','not','set','yet'},...
             'Max',2,...
-            'CallBack','swe_conman(''ConList_CB'')',... 
+            'CallBack','swe_conman(''ConList_CB'')',...
             'UIContextMenu',hh,...
             'Interruptible','off','BusyAction','Queue',...
             'BackgroundColor','w',...

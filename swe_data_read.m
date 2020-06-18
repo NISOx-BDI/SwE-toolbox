@@ -25,7 +25,7 @@ function Y = swe_data_read(V,varargin)
   if ~isstruct(V)
   	V = swe_data_hdr_read(V);
   end
-    
+
   if isa(V(1).private, 'swe_cifti')
     if isempty(varargin)
       Y = zeros(prod(V(1).dim), numel(V)); % to be coherent with spm_read_vols and gifti format

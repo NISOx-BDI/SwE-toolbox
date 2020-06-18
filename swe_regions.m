@@ -35,7 +35,7 @@ function [Y,xY] = swe_regions(xSwE,SwE,hReg,xY)
 % terms of the first eigenvariate of the filtered and adjusted response in
 % all suprathreshold voxels within a specified VOI centred on the current
 % MIP cursor location. Responses are adjusted by removing variance that
-% can be predicted by the null space of the F contrast specified (usually 
+% can be predicted by the null space of the F contrast specified (usually
 % an F-contrast testing for all effects of interest).
 %
 % If temporal filtering has been specified, then the data will be filtered.
@@ -44,7 +44,7 @@ function [Y,xY] = swe_regions(xSwE,SwE,hReg,xY)
 %
 % For a VOI of radius 0, the [adjusted] voxel time-series is returned, and
 % scaled to have a 2-norm of 1. The actual [adjusted] voxel time series can
-% be extracted from xY.y, and will be the same as the [adjusted] data 
+% be extracted from xY.y, and will be the same as the [adjusted] data
 % returned by the plotting routine (spm_graph.m) for the same contrast.
 %__________________________________________________________________________
 % Copyright (C) 1999-2016 Wellcome Trust Centre for Neuroimaging
@@ -80,7 +80,7 @@ if isempty(Finter), noGraph = 1; else noGraph = 0; end
 header = get(Finter,'Name');
 set(Finter,'Name','VOI time-series extraction');
 if ~noGraph, spm_figure('GetWin','Graphics'); end
- 
+
 %-Find nearest voxel [Euclidean distance] in point list
 %--------------------------------------------------------------------------
 if isempty(xSwE.XYZmm)
@@ -95,7 +95,7 @@ catch
              spm_XYZreg('GetCoords',hReg),xSwE.XYZmm);
     xY.xyz = xyz;
 end
- 
+
 % and update GUI location
 %--------------------------------------------------------------------------
 if spm_mesh_detect(SwE.xY.VY)
@@ -103,8 +103,8 @@ if spm_mesh_detect(SwE.xY.VY)
 else
     spm_XYZreg('SetCoords',xyz,hReg);
 end
- 
- 
+
+
 %-Get adjustment options and VOI name
 %--------------------------------------------------------------------------
 if ~noGraph
@@ -115,11 +115,11 @@ if ~noGraph
     end
     spm_input(posstr,1,'d','VOI time-series extraction');
 end
- 
+
 if ~isfield(xY,'name')
     xY.name    = spm_input('name of region','!+1','s','VOI');
 end
- 
+
 if ~isfield(xY,'Ic')
     q(1)   = 0;
     Con    = {'<don''t adjust>'};
@@ -137,7 +137,7 @@ if ~isfield(xY,'Ic')
     i     = spm_input('adjust data for (select contrast)','!+1','m',Con);
     xY.Ic = q(i);
 end
- 
+
 %-If fMRI data then ask user to select session
 %--------------------------------------------------------------------------
 if isfield(SwE,'Sess') && ~isfield(xY,'Sess')
@@ -154,7 +154,7 @@ xY.M = xSwE.M;
 [xY, xY.XYZmm, Q] = spm_ROI(xY, xSwE.XYZmm);
 try, xY = rmfield(xY,'M'); end
 try, xY = rmfield(xY,'rej'); end
- 
+
 if isempty(xY.XYZmm)
     warning('Empty region.');
     [Y, xY.y, xY.u, xY.v, xY.s, xY.X0] = deal([]);
@@ -175,28 +175,28 @@ if isfield(SwE,'Sess') && isfield(xY,'Sess') && isinf(xY.Sess)
         return;
     end
 end
- 
+
 %-Extract required data from results files
 %==========================================================================
 spm('Pointer','Watch')
- 
-%-Get raw data, whiten and filter 
+
+%-Get raw data, whiten and filter
 %--------------------------------------------------------------------------
 y        = swe_data_read(SwE.xY.VY,'xyz',xSwE.XYZ(:,Q));
 %y        = spm_filter(SwE.xX.K,SwE.xX.W*y);
- 
- 
+
+
 %-Computation
 %==========================================================================
- 
+
 %-Remove null space of contrast
 %--------------------------------------------------------------------------
 if xY.Ic ~= 0
- 
+
     %-Parameter estimates: beta = xX.pKX*xX.K*y
     %----------------------------------------------------------------------
     beta  = swe_data_read(SwE.Vbeta,'xyz',xSwE.XYZ(:,Q));
- 
+
     %-subtract Y0 = XO*beta,  Y = Yc + Y0 + e
     %----------------------------------------------------------------------
     if ~isnan(xY.Ic)
@@ -204,13 +204,13 @@ if xY.Ic ~= 0
     else
         y = y - SwE.xX.xKXs.X * beta;
     end
- 
+
 end
- 
+
 %-Confounds
 %--------------------------------------------------------------------------
 xY.X0     = SwE.xX.xKXs.X(:,[SwE.xX.iB SwE.xX.iG]);
- 
+
 %-Extract session-specific rows from data and confounds
 %--------------------------------------------------------------------------
 try
@@ -218,7 +218,7 @@ try
     y     = y(i,:);
     xY.X0 = xY.X0(i,:);
 end
- 
+
 % and add session-specific filter confounds
 %--------------------------------------------------------------------------
 try
@@ -227,12 +227,12 @@ end
 try
     xY.X0 = [xY.X0 SwE.xX.K(xY.Sess).KH]; % Compatibility check
 end
- 
+
 %-Remove null space of X0
 %--------------------------------------------------------------------------
 xY.X0     = xY.X0(:,any(xY.X0));
- 
- 
+
+
 %-Compute regional response in terms of first eigenvariate
 %--------------------------------------------------------------------------
 [m,n]   = size(y);
@@ -251,14 +251,14 @@ d       = sign(sum(v));
 u       = u*d;
 v       = v*d;
 Y       = u*sqrt(s(1)/n);
- 
+
 %-Set in structure
 %--------------------------------------------------------------------------
 xY.y    = y;
 xY.u    = Y;
 xY.v    = v;
 xY.s    = s;
- 
+
 %-Display VOI weighting and eigenvariate
 %==========================================================================
 if ~noGraph
@@ -268,7 +268,7 @@ if ~noGraph
         display_VOI(xY);
     end
 end
- 
+
 %-Save
 %==========================================================================
 str = ['VOI_' xY.name '.mat'];
@@ -279,7 +279,7 @@ save(fullfile(SwE.swd,str),'Y','xY', spm_get_defaults('mat.format'))
 
 cmd = 'swe_regions(''display'',''%s'')';
 fprintf('   VOI saved as %s\n',spm_file(fullfile(SwE.swd,str),'link',cmd));
- 
+
 %-Reset title
 %--------------------------------------------------------------------------
 set(Finter,'Name',header);

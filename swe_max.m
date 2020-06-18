@@ -16,7 +16,7 @@ function [N, N_boxcox, Z, M, A, XYZ] = swe_max(X, locationsInVoxels, boxcoxInfo)
   % =========================================================================
   % Bryan Guillaume
   % Version Info:  $Format:%ci$ $Format:%h$
-  
+
   [N, Z, M, A, XYZ]  = spm_max(X, locationsInVoxels);
 
   try

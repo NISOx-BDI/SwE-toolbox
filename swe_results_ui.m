@@ -6,7 +6,7 @@ function varargout = swe_results_ui(varargin)
 % Inputs/Outputs:
 %  - hReg: handle of MIP XYZ registry object
 %          (see spm_XYZreg.m for details)
-%  - xSwE: structure containing specific SwE data, distribution & filtering 
+%  - xSwE: structure containing specific SwE data, distribution & filtering
 %          details (see spm_getSPM.m for contents)
 %  - SwE: SwE structure containing generic parameters
 %         (see spm_spm.m for contents)
@@ -20,11 +20,11 @@ function varargout = swe_results_ui(varargin)
 % characterisation of the results of a statistical analysis.
 %
 % The user is prompted to select a SwE{T} or SwE{F} image, that is
-% thresholded at user specified levels. For a parametric analysis, the 
-% specification of the contrasts to use and the height and size thresholds 
-% are described in spm_getSPM.m. For a non-parametric analysis the height 
+% thresholded at user specified levels. For a parametric analysis, the
+% specification of the contrasts to use and the height and size thresholds
+% are described in spm_getSPM.m. For a non-parametric analysis the height
 % threshold may have been set earlier in the matlab batch specification.
-% The resulting SwE data is then displayed in the graphics window as a 
+% The resulting SwE data is then displayed in the graphics window as a
 % maximum intensity projection, alongside the design matrix and contrasts
 % employed.
 %
@@ -108,12 +108,12 @@ function varargout = swe_results_ui(varargin)
 % body of the code.
 %__________________________________________________________________________
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
- 
+
 % Original SPM code by Karl Friston & Andrew Holmes
 % Adapted by Bryan Guillaume
 % Based on: swe_results_ui.m 3928 2010-06-16 12:09:22Z guillaume
- 
- 
+
+
 %==========================================================================
 % - FORMAT specifications for embedded CallBack functions
 %==========================================================================
@@ -127,7 +127,7 @@ function varargout = swe_results_ui(varargin)
 %__________________________________________________________________________
 %
 % FORMAT [hreg,xSwE,SwE] = swe_results_ui('Setup')
-% Query SwE and setup GUI. 
+% Query SwE and setup GUI.
 %
 % FORMAT [hreg,xSwE,SwE] = swe_results_ui('Setup',xSwE)
 % Query SwE and setup GUI using a xSwE input structure. This allows to run
@@ -222,7 +222,7 @@ function varargout = swe_results_ui(varargin)
 % deletes HandleGraphics objects, but only if they're valid, thus avoiding
 % warning statements from MATLAB.
 %__________________________________________________________________________
-% Modified version of spm_results_ui by Bryan Guillaume 
+% Modified version of spm_results_ui by Bryan Guillaume
 % Version Info:  $Format:%ci$ $Format:%h$
 
 %-Condition arguments
@@ -233,7 +233,7 @@ if nargin == 0, Action='setup'; else Action=varargin{1}; end
 %==========================================================================
 switch lower(Action), case 'setup'                         %-Set up results
 %==========================================================================
- 
+
     %-Initialise
     %----------------------------------------------------------------------
     [Finter,Fgraph,CmdLine] = spm('FnUIsetup','Stats: Results');
@@ -247,7 +247,7 @@ switch lower(Action), case 'setup'                         %-Set up results
     else
         [SwE,xSwE] = swe_getSPM;
     end
-    
+
     % check format of data
     file_ext = swe_get_file_extension(SwE.xY.P{1});
     isMat    = strcmpi(file_ext,'.mat');
@@ -256,12 +256,12 @@ switch lower(Action), case 'setup'                         %-Set up results
     while(isMat)
       [SwE,xSwE] = swe_getSPM(xSwE);
     end
-    
-    if isempty(xSwE) 
+
+    if isempty(xSwE)
         varargout = {[],[],[]};
         return;
     end
-    
+
     switch xSwE.STAT
         case 'T'
             eSTAT = 'Z';
@@ -279,7 +279,7 @@ switch lower(Action), case 'setup'                         %-Set up results
     %-Ensure pwd = swd so that relative filenames are valid
     %----------------------------------------------------------------------
     cd(SwE.swd)
-    
+
     %-Get space information
     %======================================================================
     M         = SwE.xVol.M;
@@ -315,7 +315,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         catch
             datatype     = 'Volumetric (2D/3D)';
         end
-        
+
         switch datatype
             case 'Volumetric (2D/3D)'
                 units    = {'mm' 'mm' 'mm'};
@@ -347,22 +347,22 @@ switch lower(Action), case 'setup'                         %-Set up results
     end
     xSwE.units      = units;
     SwE.xVol.units  = units;
-    
-     
+
+
     %-Setup Results User Interface; Display MIP, design matrix & parameters
     %======================================================================
- 
+
     %-Setup results GUI
     %----------------------------------------------------------------------
     spm_clf(Finter);
     spm('FigName',['SwE{',xSwE.STAT,'}: Results'],Finter,CmdLine);
     hReg      = swe_results_ui('SetupGUI',M,DIM,xSwE,Finter);
- 
+
     %-Setup design interrogation menu
     %----------------------------------------------------------------------
     hDesRepUI = spm_DesRep('DesRepUI',SwE);
     figure(Finter)
- 
+
     %-Setup contrast menu
     %----------------------------------------------------------------------
     hC = uimenu(Finter,'Label','Contrasts', 'Tag','ContrastsUI');
@@ -398,10 +398,10 @@ switch lower(Action), case 'setup'                         %-Set up results
     xSwEtmp = xSwE; xSwEtmp.thresDesc = 'p<0.001 (unc.)'; xSwEtmp.infType = 0;
     uimenu(hC1,'Label','Set to 0.001 (unc.)','UserData',struct('Ic',xSwE.Ic),...
         'Callback',{@mychgcon,xSwEtmp});
-    
+
     uimenu(hC1,'Label',[xSwE.thresDesc ', k=' num2str(xSwE.k)],...
         'Enable','off','Separator','on');
-    
+
     %-Setup Maximum intensity projection (MIP) & register
     %----------------------------------------------------------------------
     % create a graphic window for each brain structure
@@ -421,7 +421,7 @@ switch lower(Action), case 'setup'                         %-Set up results
             hRotate3d.Enable = 'on';
         end
         for i = 1:numel(SwE.cifti.surfaces)
-          
+
           if mod(it, gridSize) == 1
             offset_y = offset_y + 0.36/gridSize;
             offset_x = 0;
@@ -456,14 +456,14 @@ switch lower(Action), case 'setup'                         %-Set up results
         end
       end
       if numel(SwE.cifti.volume) > 0
-        
+
         if mod(it, gridSize) == 1
           offset_y = offset_y + 0.36/gridSize;
           offset_x = 0;
         else
           offset_x = offset_x + 0.55/gridSize;
         end
-        
+
         hMIPax{it} = axes('Parent', Fgraph, 'Position', [0.05 + offset_x, 0.60 + offset_y, 0.55/gridSize, 0.36/gridSize], 'Visible','off');
         [isSurviving, indInCifti] = ismember(SwE.cifti.volume.indices, xSwE.XYZ(1,:));
         indInCifti = indInCifti(isSurviving);
@@ -476,13 +476,13 @@ switch lower(Action), case 'setup'                         %-Set up results
         'Interpreter','none',...
         'FontSize',FS(sizeFont),'Fontweight','Bold',...
         'Parent',hMIPax{it});
-        
+
         if exist('hRotate3d', 'var')
             setAllowAxesRotate(hRotate3d, hMIPax{it}, false);
         end
       end
     else
-      hMIPax = axes('Parent',Fgraph,'Position',[0.05 0.60 0.55 0.36],'Visible','off'); 
+      hMIPax = axes('Parent',Fgraph,'Position',[0.05 0.60 0.55 0.36],'Visible','off');
       nBrainStructure = 1;
       if xSwE.STAT == 'P'
           str = xSwE.STATstr;
@@ -543,8 +543,8 @@ switch lower(Action), case 'setup'                         %-Set up results
         'HorizontalAlignment','center',...
         'VerticalAlignment','baseline',...
         'FontWeight','Bold','FontSize',FS(14))
- 
- 
+
+
     %-Print SwEresults: Results directory & thresholding info
     %----------------------------------------------------------------------
     hResAx = axes('Parent',Fgraph,...
@@ -574,7 +574,7 @@ switch lower(Action), case 'setup'                         %-Set up results
               elseif isfield(xSwE, 'WB') && xSwE.WB && xSwE.infType == 1 && strcmp(xSwE.clustWise, 'Uncorr')
                 text(0,12,sprintf('Wild Bootstrap p-value threshold %s',thresDesc),'Parent',hResAx)
               else
-                text(0,12,sprintf('Height threshold %c > %0.6f  {%s}',eSTAT,xSwE.u,thresDesc),'Parent',hResAx)               
+                text(0,12,sprintf('Height threshold %c > %0.6f  {%s}',eSTAT,xSwE.u,thresDesc),'Parent',hResAx)
               end
             else
                 text(0,12,sprintf('Height threshold %c > %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
@@ -582,7 +582,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         catch
             text(0,12,sprintf('Height threshold %c > %0.6f',eSTAT,xSwE.u),'Parent',hResAx)
         end
-        if strcmp(xSwE.clustWise, 'FWE') 
+        if strcmp(xSwE.clustWise, 'FWE')
             if ~isfield(xSwE, 'clusterSizeType') || strcmp(xSwE.clusterSizeType, 'classic k_E')
                 text(0,00,sprintf('Wild Bootstrap extent threshold k > %0.0f %s {p<=%0.3f (FWE)}', xSwE.k, strDataType, xSwE.fwep_c), 'Parent', hResAx)
             elseif strcmp(xSwE.clusterSizeType, 'Box-Cox norm. k_{Z}')
@@ -610,7 +610,7 @@ switch lower(Action), case 'setup'                         %-Set up results
             error('Unknown TFCE threshold.')
         end
     end
- 
+
     %-Plot design matrix
     %----------------------------------------------------------------------
     hDesMtx   = axes('Parent',Fgraph,'Position',[0.65 0.55 0.25 0.25]);
@@ -621,7 +621,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         'X',        SwE.xX.X,...
         'fnames',   {reshape({SwE.xY.VY.fname},size(SwE.xY.VY))},...
         'Xnames',   {SwE.xX.name}))
- 
+
     if exist('hRotate3d', 'var')
         setAllowAxesRotate(hRotate3d, hDesMtx, false);
     end
@@ -637,12 +637,12 @@ switch lower(Action), case 'setup'                         %-Set up results
             'Tag','ConGrphAx','Visible','off');
         if exist('hRotate3d', 'var')
             setAllowAxesRotate(hRotate3d, hConAx, false);
-        end        
+        end
         title('contrast(s)')
         htxt   = get(hConAx,'title');
         set(htxt,'Visible','on','HandleVisibility','on')
     end
- 
+
     for ii = nCon:-1:1
         hTmp = axes('Position',[0.65 (0.80 + dy*(nCon - ii +.1)) 0.25 dy*.9]);
         if xCon(xSwE.Ic(ii)).STAT == 'T' && size(xCon(xSwE.Ic(ii)).c,2) == 1
@@ -657,9 +657,9 @@ switch lower(Action), case 'setup'                         %-Set up results
                 'YTick',[-1,0,+1],'YTickLabel','',...
                 'YLim',[min(xCon(xSwE.Ic(ii)).c),max(xCon(xSwE.Ic(ii)).c)] +...
                 [-1 +1] * max(abs(xCon(xSwE.Ic(ii)).c))/10  )
- 
+
         else
- 
+
             %-F-contrast - image
             %--------------------------------------------------------------
             h = image((xCon(xSwE.Ic(ii)).c'/max(abs(xCon(xSwE.Ic(ii)).c(:)))+1)*32);
@@ -670,7 +670,7 @@ switch lower(Action), case 'setup'                         %-Set up results
                 'YTick',[0:size(SwE.xCon(xSwE.Ic(ii)).c,2)]+0.5,....
                 'YTickLabel','',...
                 'YLim', [0,size(xCon(xSwE.Ic(ii)).c,2)]+0.5 )
- 
+
         end
         ylabel(num2str(xSwE.Ic(ii)))
         set(h,'ButtonDownFcn','spm_DesRep(''SurfCon_CB'')',...
@@ -680,10 +680,10 @@ switch lower(Action), case 'setup'                         %-Set up results
 
         if exist('hRotate3d', 'var')
             setAllowAxesRotate(hRotate3d, hTmp, false);
-        end    
+        end
     end
- 
- 
+
+
     %-Store handles of results section Graphics window objects
     %----------------------------------------------------------------------
     H  = get(Fgraph,'Children');
@@ -691,11 +691,11 @@ switch lower(Action), case 'setup'                         %-Set up results
     H  = findobj(H);
     Hv = get(H,'Visible');
     set(hResAx,'Tag','PermRes','UserData',struct('H',H,'Hv',{Hv}))
-    
+
     %-Load whole brain table.
     %------------------------------------------------------------------
     swe_list('List',xSwE,hReg);
-    
+
     %-Finished results setup
     %----------------------------------------------------------------------
     varargout = {hReg,xSwE,SwE};
@@ -703,8 +703,8 @@ switch lower(Action), case 'setup'                         %-Set up results
     assignin ('base','xSwE',xSwE)
     assignin ('base','SwE',SwE)
     spm('Pointer','Arrow')
- 
- 
+
+
     %======================================================================
     case 'setupgui'                            %-Set up results section GUI
     %======================================================================
@@ -717,7 +717,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         Finter = spm_figure('GetWin',Finter);
         WS     = spm('WinScale');
         FS     = spm('FontSizes');
- 
+
         %-Create frame for Results GUI objects
         %------------------------------------------------------------------
         hPan = uipanel('Parent',Finter,'Title','','Units','Pixels',...
@@ -728,11 +728,11 @@ switch lower(Action), case 'setup'                         %-Set up results
                 'BorderType','Etchedin', ...
                 'Position',[005 005 390 180].*WS,...
                 'BackgroundColor',[179 179 179]/255);
- 
+
         %-Initialise registry in hReg frame object
         %------------------------------------------------------------------
         [hReg,xyz] = spm_XYZreg('InitReg',hReg,M,DIM,[0;0;0]);
- 
+
         %-Setup editable XYZ widgets & cross register with registry
         %------------------------------------------------------------------
         hFxyz      = swe_results_ui('DrawXYZgui',M,DIM,varargin{4},xyz,hReg);
@@ -741,16 +741,16 @@ switch lower(Action), case 'setup'                         %-Set up results
         %-Set up buttons for results functions
         %------------------------------------------------------------------
         swe_results_ui('DrawButts',hReg,DIM,Finter,WS,FS);
- 
+
         if spm_check_version('matlab','7.11') ~= 0
             drawnow; % required to force "ratio locking"
             set(findobj(hPan),'Units','Normalized','FontUnits','Normalized');
         end
-        
+
         varargout  = {hReg};
- 
- 
- 
+
+
+
     %======================================================================
     case 'drawbutts'   %-Draw results section buttons in Interactive window
     %======================================================================
@@ -763,7 +763,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         else Finter = varargin{4}; end
         if nargin < 5, WS = spm('WinScale');  else  WS = varargin{5}; end
         if nargin < 6, FS = spm('FontSizes'); else  FS = varargin{6}; end
- 
+
         %-p-values
         %------------------------------------------------------------------
         hPan = uipanel('Parent',hReg,'Title','p-values','Units','Pixels',...
@@ -798,7 +798,7 @@ switch lower(Action), case 'setup'                         %-Set up results
             'Callback','TabDat = swe_VOI(SwE,xSwE,hReg);',...
             'Interruptible','on','Enable','on',...
             'Position',[005 005 100 020].*WS);
- 
+
         %-SwE area - used for Volume of Interest analyses
         %------------------------------------------------------------------
         hPan = uipanel('Parent',hReg,'Title','Multivariate','Units','Pixels',...
@@ -827,7 +827,7 @@ switch lower(Action), case 'setup'                         %-Set up results
             'FontSize',FS(10),...
             'ForegroundColor',[1 1 1],...
             'BackgroundColor',[179 179 179]/255);
-        
+
         uicontrol('Parent',hPan,'Style','PushButton','String','plot',...
             'FontSize',FS(10),...
             'ToolTipString','plot data & contrasts at current voxel',...
@@ -835,11 +835,11 @@ switch lower(Action), case 'setup'                         %-Set up results
             'Interruptible','on','Enable','on',...
             'Position',[005 055 100 020].*WS,...
             'Tag','plotButton');
-          
+
         str  = { 'overlays...','slices','sections','montage','render','previous sections','previous render'};
         tstr = { 'overlay filtered SPM on another image: ',...
             '3 slices / ','slice overlay /','ortho sections / ','render /','previous ortho sections /','previous surface rendering'};
- 
+
         tmp  = { 'spm_transverse(''set'',xSwE,hReg)',...
             'spm_sections(xSwE,hReg)',...
             {@myslover},...
@@ -849,12 +849,12 @@ switch lower(Action), case 'setup'                         %-Set up results
             '''dim'',   xSwE.DIM))'],...
             ['global prevsect;','spm_sections(xSwE,hReg,prevsect)'],...
             ['global prevrend;','if ~isstruct(prevrend)',...
-            'prevrend = struct(''rendfile'','''',''brt'',[],''col'',[]); end;',...            
+            'prevrend = struct(''rendfile'','''',''brt'',[],''col'',[]); end;',...
             'spm_render(    struct( ''XYZ'',    xSwE.XYZ,',...
             '''t'',     xSwE.Z'',',...
             '''mat'',   xSwE.M,',...
             '''dim'',   xSwE.DIM),prevrend.brt,prevrend.rendfile)']};
- 
+
         uicontrol('Parent',hPan,'Style','popupmenu','String',str,...
             'FontSize',FS(10),...
             'ToolTipString',cat(2,tstr{:}),...
@@ -862,7 +862,7 @@ switch lower(Action), case 'setup'                         %-Set up results
             'UserData',tmp,...
             'Interruptible','on','Enable','on',...
             'Position',[005 030 100 020].*WS);
- 
+
         str = {'save...',...
                'thresholded SPM',...
                'all clusters (binary)',...
@@ -872,7 +872,7 @@ switch lower(Action), case 'setup'                         %-Set up results
                {@mysavespm, 'binary' },...
                {@mysavespm, 'n-ary'  },...
                {@mysavespm, 'current'}};
-        
+
         uicontrol('Parent',hPan,'Style','popupmenu','String',str,...
             'FontSize',FS(10),...
             'ToolTipString','Save as image',...
@@ -880,7 +880,7 @@ switch lower(Action), case 'setup'                         %-Set up results
             'UserData',tmp,...
             'Interruptible','on','Enable','on',...
             'Position',[005 005 100 020].*WS);
-          
+
         %-ResultsUI controls
         %------------------------------------------------------------------
         uicontrol('Parent',hReg,'Style','PushButton','String','clear',...
@@ -892,15 +892,15 @@ switch lower(Action), case 'setup'                         %-Set up results
             'Interruptible','on','Enable','on',...
             'DeleteFcn','spm_clf(''Graphics'')',...
             'Position',[280 050 048 020].*WS);
- 
+
         uicontrol('Parent',hReg,'Style','PushButton','String','exit',...
             'ToolTipString','Exit the results section',...
             'FontSize',FS(9),'ForegroundColor','r',...
             'Callback','swe_results_ui(''close'')',...
             'Interruptible','on','Enable','on',...
             'Position',[332 050 048 020].*WS);
- 
- 
+
+
     %======================================================================
     case 'drawxyzgui'                                   %-Draw XYZ GUI area
     %======================================================================
@@ -912,13 +912,13 @@ switch lower(Action), case 'setup'                         %-Set up results
         DIM     = varargin{3};
         M       = varargin{2};
         xyz     = spm_XYZreg('RoundCoords',xyz,M,DIM);
- 
+
         %-Font details
         %------------------------------------------------------------------
         WS      = spm('WinScale');
         FS      = spm('FontSizes');
         PF      = spm_platform('fonts');
- 
+
         %-Create XYZ control objects
         %------------------------------------------------------------------
         hFxyz = uicontrol(Finter,'Style','Pushbutton',...
@@ -929,7 +929,7 @@ switch lower(Action), case 'setup'                         %-Set up results
             'FontSize',FS(10),...
             'HorizontalAlignment','Left',...
             'ForegroundColor','w')
- 
+
         uicontrol(Finter,'Style','Text','String','x =',...
             'Position',[020 015 024 018].*WS,...
             'FontName',PF.times,'FontSize',FS(10),'FontAngle','Italic',...
@@ -941,7 +941,7 @@ switch lower(Action), case 'setup'                         %-Set up results
             'HorizontalAlignment','Right',...
             'Tag','hX',...
             'Callback','swe_results_ui(''EdWidCB'')');
- 
+
         uicontrol(Finter,'Style','Text','String','y =',...
             'Position',[105 015 024 018].*WS,...
             'FontName',PF.times,'FontSize',FS(10),'FontAngle','Italic',...
@@ -953,7 +953,7 @@ switch lower(Action), case 'setup'                         %-Set up results
             'HorizontalAlignment','Right',...
             'Tag','hY',...
             'Callback','swe_results_ui(''EdWidCB'')');
- 
+
         if DIM(3) ~= 1
         uicontrol(Finter,'Style','Text','String','z =',...
             'Position',[190 015 024 018].*WS,...
@@ -969,7 +969,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         else
         hZ = [];
         end
-        
+
         %-Statistic value reporting pane
         %------------------------------------------------------------------
         uicontrol(Finter,'Style','Text','String','statistic',...
@@ -982,8 +982,8 @@ switch lower(Action), case 'setup'                         %-Set up results
             'Position',[285 012 100 020].*WS,...
             'FontSize',FS(10),...
             'HorizontalAlignment','Center');
- 
- 
+
+
         %-Store data
         %------------------------------------------------------------------
         set(hFxyz,'Tag','hFxyz','UserData',struct(...
@@ -997,23 +997,23 @@ switch lower(Action), case 'setup'                         %-Set up results
             'hZ',   hZ,...
             'hSPM', hSPM,...
             'xyz',  xyz ));
- 
+
         set([hX,hY,hZ],'UserData',hFxyz)
         varargout = {hFxyz};
- 
- 
+
+
     %======================================================================
     case 'edwidcb'                          %-Callback for editable widgets
     %======================================================================
         % swe_results_ui('EdWidCB')
- 
+
         hC    = gcbo;
         d     = find(strcmp(get(hC,'Tag'),{'hX','hY','hZ'}));
         hFxyz = get(hC,'UserData');
         UD    = get(hFxyz,'UserData');
         xyz   = UD.xyz;
         nxyz  = xyz;
- 
+
         o = evalin('base',['[',get(hC,'String'),']'],'sprintf(''error'')');
         if ischar(o) || length(o)>1
             warning(sprintf('%s: Error evaluating ordinate:\n\t%s',...
@@ -1022,15 +1022,15 @@ switch lower(Action), case 'setup'                         %-Set up results
             nxyz(d) = o;
             nxyz = spm_XYZreg('RoundCoords',nxyz,UD.M,UD.DIM);
         end
- 
+
         if abs(xyz(d)-nxyz(d))>0
             UD.xyz = nxyz; set(hFxyz,'UserData',UD)
             if ~isempty(UD.hReg), spm_XYZreg('SetCoords',nxyz,UD.hReg,hFxyz); end
             set(hC,'String',sprintf('%.3f',nxyz(d)))
             swe_results_ui('UpdateSPMval',UD)
         end
- 
-        
+
+
     %======================================================================
     case 'updatespmval'                           %-Update SwE value in GUI
     %======================================================================
@@ -1041,8 +1041,8 @@ switch lower(Action), case 'setup'                         %-Set up results
         i  = spm_XYZreg('FindXYZ',UD.xyz,UD.XYZ);
         if isempty(i), str = ''; else str = sprintf('%6.2f',UD.Z(i)); end
         set(UD.hSPM,'String',str);
- 
- 
+
+
     %======================================================================
     case 'getcoords'             % Get current co-ordinates from XYZ widget
     %======================================================================
@@ -1050,8 +1050,8 @@ switch lower(Action), case 'setup'                         %-Set up results
         if nargin<2, hFxyz='Interactive'; else hFxyz=varargin{2}; end
         hFxyz     = swe_results_ui('FindXYZframe',hFxyz);
         varargout = {getfield(get(hFxyz,'UserData'),'xyz')};
- 
- 
+
+
     %======================================================================
     case 'setcoords'                       % Set co-ordinates to XYZ widget
     %======================================================================
@@ -1059,12 +1059,12 @@ switch lower(Action), case 'setup'                         %-Set up results
         if nargin<4, hC=0; else hC=varargin{4}; end
         if nargin<3, hFxyz=swe_results_ui('FindXYZframe'); else hFxyz=varargin{3}; end
         if nargin<2, error('Set co-ords to what!'); else xyz=varargin{2}; end
- 
+
         %-If this is an internal call, then don't do anything
         if hFxyz==hC, return, end
- 
+
         UD = get(hFxyz,'UserData');
- 
+
         %-Check validity of coords only when called without a caller handle
         %------------------------------------------------------------------
         if hC <= 0
@@ -1076,7 +1076,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         else
             d = [];
         end
- 
+
         %-Update xyz information & widget strings
         %------------------------------------------------------------------
         UD.xyz = xyz; set(hFxyz,'UserData',UD)
@@ -1084,17 +1084,17 @@ switch lower(Action), case 'setup'                         %-Set up results
         set(UD.hY,'String',sprintf('%.2f',xyz(2)))
         set(UD.hZ,'String',sprintf('%.2f',xyz(3)))
         swe_results_ui('UpdateSPMval',UD)
- 
+
         %-Tell the registry, if we've not been called by the registry...
         %------------------------------------------------------------------
         if (~isempty(UD.hReg) && UD.hReg~=hC)
             spm_XYZreg('SetCoords',xyz,UD.hReg,hFxyz);
         end
- 
+
         %-Return arguments
         %------------------------------------------------------------------
         varargout = {xyz,d};
- 
+
 
     %======================================================================
     case 'findxyzframe'                                  % Find hFxyz frame
@@ -1115,12 +1115,12 @@ switch lower(Action), case 'setup'                         %-Set up results
     %======================================================================
         % swe_results_ui('PlotUi',hAx)
         if nargin<2, hAx=gca; else hAx=varargin{2}; end
- 
+
         WS = spm('WinScale');
         FS = spm('FontSizes');
         Finter=spm_figure('FindWin','Interactive');
         figure(Finter)
- 
+
         %-Check there aren't already controls!
         %------------------------------------------------------------------
         hGraphUI = findobj(Finter,'Tag','hGraphUI');
@@ -1132,7 +1132,7 @@ switch lower(Action), case 'setup'                         %-Set up results
                 delete(findobj(Finter,'Tag','hGraphUIbg'))
             end
         end
- 
+
         %-Frames & text
         %------------------------------------------------------------------
         hGraphUIbg = uicontrol(Finter,'Style','Frame','Tag','hGraphUIbg',...
@@ -1148,7 +1148,7 @@ switch lower(Action), case 'setup'                         %-Set up results
             'FontAngle','Italic','FontSize',FS(10),...
             'HorizontalAlignment','Left',...
             'ForegroundColor','w');
- 
+
         %-Controls
         %------------------------------------------------------------------
         h1 = uicontrol(Finter,'Style','CheckBox','String','hold',...
@@ -1165,7 +1165,7 @@ switch lower(Action), case 'setup'                         %-Set up results
             'Tag','holdButton',...
             'Position',[015 210 070 020].*WS);
         set(findobj('Tag','plotButton'),'UserData',h1);
- 
+
         h2 = uicontrol(Finter,'Style','CheckBox','String','grid',...
             'ToolTipString','toggle axes grid',...
             'FontSize',FS(10),...
@@ -1206,12 +1206,12 @@ switch lower(Action), case 'setup'                         %-Set up results
             'Callback','swe_results_ui(''PlotUiCB'')',...
             'Interruptible','off','Enable','on',...
             'Position',[315 210 070 020].*WS);
- 
+
         %-Handle storage for linking, and DeleteFcns for linked deletion
         %------------------------------------------------------------------
         set(hGraphUI,'UserData',[h1,h2,h3,h4,h5])
         set([h1,h2,h3,h4,h5],'UserData',hAx)
- 
+
         set(hGraphUIbg,'UserData',...
             [hGraphUI,hGraphUIButtsF,hText,h1,h2,h3,h4,h5],...
             'DeleteFcn','swe_results_ui(''Delete'',get(gcbo,''UserData''))')
@@ -1228,7 +1228,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         if v==1, return, end
         str = cellstr(get(hPM,'String'));
         str = str{v};
- 
+
         hAx = get(hPM,'UserData');
         switch str
             case 'Title'
@@ -1254,31 +1254,31 @@ switch lower(Action), case 'setup'                         %-Set up results
             otherwise
                 warning(['Unknown action: ',str])
         end
- 
+
         set(hPM,'Value',1)
- 
- 
+
+
     %======================================================================
     case 'clear'                                    %-Clear results subpane
     %======================================================================
         % Fgraph = swe_results_ui('Clear',F,mode)
         % mode 1 [default] usual, mode 0 - clear & hide Res stuff, 2 - RNP
- 
+
         if nargin<3, mode=1; else, mode=varargin{3}; end
         if nargin<2, F='Graphics'; else, F=varargin{2}; end
         F = spm_figure('FindWin',F);
- 
+
         %-Clear input objects from 'Interactive' window
         %------------------------------------------------------------------
         %spm_input('!DeleteInputObj')
- 
- 
+
+
         %-Get handles of objects in Graphics window & note permanent results objects
         %------------------------------------------------------------------
         H = get(F,'Children');                          %-Get contents of window
         H = findobj(H,'flat','HandleVisibility','on');  %-Drop GUI components
         h = findobj(H,'flat','Tag','PermRes');          %-Look for 'PermRes' object
- 
+
         if ~isempty(h)
             %-Found 'PermRes' object
             % This has handles of permanent results objects in it's UserData
@@ -1291,23 +1291,23 @@ switch lower(Action), case 'setup'                         %-Set up results
             HRv  = {};
         end
         H = setdiff(H,HR);              %-Drop permanent results obj
- 
- 
+
+
         %-Delete stuff as appropriate
         %------------------------------------------------------------------
         if mode==2  %-Don't delete axes with NextPlot 'add'
             H = setdiff(H,findobj(H,'flat','Type','axes','NextPlot','add'));
         end
- 
+
         delete(H)
- 
+
         if mode==0  %-Hide the permanent results section stuff
             set(HR,'Visible','off')
         else
             set(HR,{'Visible'},HRv)
         end
- 
- 
+
+
     %======================================================================
     case 'launchmp'                            %-Launch multiplanar toolbox
     %======================================================================
@@ -1316,7 +1316,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         hReg = varargin{4};
         DIM  = varargin{3};
         M    = varargin{2};
- 
+
         %-Check for existing MultiPlanar toolbox
         hMP  = get(hBmp,'UserData');
         if ishandle(hMP)
@@ -1324,31 +1324,31 @@ switch lower(Action), case 'setup'                         %-Set up results
             varargout = {hMP};
             return
         end
- 
+
         %-Initialise and cross-register MultiPlanar toolbox
         hMP = spm_XYZreg_Ex2('Create',M,DIM);
         spm_XYZreg('Xreg',hReg,hMP,'spm_XYZreg_Ex2');
- 
+
         %-Setup automatic deletion of MultiPlanar on deletion of results controls
         set(hBmp,'Enable','on','UserData',hMP)
         set(hBmp,'DeleteFcn','swe_results_ui(''delete'',get(gcbo,''UserData''))')
- 
+
         varargout = {hMP};
- 
- 
+
+
     %======================================================================
     case 'delete'                           %-Delete HandleGraphics objects
     %======================================================================
         % swe_results_ui('Delete',h)
         h = varargin{2};
         delete(h(ishandle(h)));
- 
- 
+
+
     %======================================================================
     otherwise
     %======================================================================
         error('Unknown action string')
- 
+
 end
 
 %==========================================================================
@@ -1399,10 +1399,10 @@ XYZ  = xSwE.XYZ;
 switch lower(action)
     case 'thresh'
         Z = xSwE.Z;
-        
+
     case 'binary'
         Z = ones(size(xSwE.Z));
-        
+
     case 'n-ary'
         if ~isfield(xSwE,'G')
             Z       = spm_clusters(XYZ);
@@ -1417,12 +1417,12 @@ switch lower(action)
             C       = spm_mesh_clusters(xSwE.G,C);
             Z       = C(xSwE.XYZ(1,:));
         end
-        
+
     case 'current'
         [xyzmm,i] = spm_XYZreg('NearestXYZ',...
             spm_results_ui('GetCoords'),xSwE.XYZmm);
         spm_results_ui('SetCoords',xSwE.XYZmm(:,i));
-        
+
         if ~isfield(xSwE,'G')
             A   = spm_clusters(XYZ);
             j   = find(A == A(i));
@@ -1435,7 +1435,7 @@ switch lower(action)
             C   = C==C(xSwE.XYZ(1,i));
             Z   = C(xSwE.XYZ(1,:));
         end
-        
+
     otherwise
         error('Unknown action.');
 end
@@ -1466,7 +1466,7 @@ function myslover
     %==========================================================================
     spm_input('!DeleteInputObj');
     xSwE = evalin('base','xSwE;');
-    
+
     so = slover;
     [img,sts] = spm_select(1,'image','Select image for rendering on');
     if ~sts, return; end
@@ -1476,20 +1476,20 @@ function myslover
     %[mx,mn] = slover('volmaxmin', obj.img.vol);
     %obj.img.range = [mn mx];
     so.img.prop = 1;
-    
+
     so = add_spm(so,xSwE);
-    
+
     so.transform = deblank(spm_input('Image orientation', '+1', ...
         'Axial|Coronal|Sagittal', char('axial','coronal','sagittal'), 1));
     so = fill_defaults(so);
     slices = so.slices;
     so.slices = spm_input('Slices to display (mm)', '+1', 'e', ...
         sprintf('%0.0f:%0.0f:%0.0f',slices(1),mean(diff(slices)),slices(end)));
-    
+
     so.figure = spm_figure('GetWin', 'SliceOverlay');
     so = paint(so);
     assignin('base','so',so);
-    
+
 function flag = isNotAnSPMMeshRender(obj, event_obj)
     if strcmpi(obj.Tag, 'SPMMeshRender')
         flag = false;

@@ -5,7 +5,7 @@ function [clusterAssignment, clusterNumbersOfVertices, clusterAreas] = swe_mesh_
 	% activatedVertices 	- a [nVertices x 1] data vector (using NaNs or logicals)
 	% areaFile 					 	- an optional file containing the surface area of each vertex
 	%
-	% clusterAssignment 				- a [1 x nActivatedVertices] vector of cluster indices 
+	% clusterAssignment 				- a [1 x nActivatedVertices] vector of cluster indices
 	% clusterNumbersOfVertices 	- a [1 x nClusters] size of clusters {in vertices}
 	% clusterAreas 							- a [1 x nClusters] vecot of cluster areas
 	% =========================================================================
@@ -15,7 +15,7 @@ function [clusterAssignment, clusterNumbersOfVertices, clusterAreas] = swe_mesh_
 	[clusterAssignment, clusterNumbersOfVertices] = spm_mesh_clusters(M, activatedVertices);
 	clusterAssignment = clusterAssignment(activatedVertices)';
 	clusterNumbersOfVertices = clusterNumbersOfVertices';
-	
+
 	if nargin > 2 && ~isempty(areaFile)
 		area = swe_data_read(areaFile, find(activatedVertices));
 		nClusters = numel(clusterExtents);

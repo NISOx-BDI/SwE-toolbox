@@ -21,7 +21,7 @@ function [fileExtension, sliceInd] = swe_get_file_extension(filename, varargin)
   % =========================================================================
   % Bryan Guillaume
   % Version Info:  $Format:%ci$ $Format:%h$
-  
+
   if nargin == 1
     lastDot = false;
   elseif nargin == 2
@@ -29,10 +29,10 @@ function [fileExtension, sliceInd] = swe_get_file_extension(filename, varargin)
   else
     error('too many inputs');
   end
-  
+
   indexDots = find(filename == '.');
   nDots = numel(indexDots);
-  
+
   if nDots == 0
     error('No extension found!');
   else

@@ -1,7 +1,7 @@
 function swe_cp(SwE)
 % This function computes covariance and beta maps for parametric analyses.
 % =========================================================================
-% For a parametric SwE analysis with nifti input, this function computes 
+% For a parametric SwE analysis with nifti input, this function computes
 % the following maps:
 %
 %   - swe_vox_mask: The mask image for the analysis.
@@ -13,7 +13,7 @@ function swe_cp(SwE)
 %   - swe_vox_cov_g{g#}_v{v1#}_v{v2#}: The covariance map between betas
 %     {v1#} and {v2#} for group {g#}.
 %
-% For a parametric SwE analysis with GIfTI or CIfTI inputs, this function computes 
+% For a parametric SwE analysis with GIfTI or CIfTI inputs, this function computes
 % the following maps:
 %
 %   - swe_dpx_mask: The mask image for the analysis.
@@ -60,7 +60,7 @@ if nargin == 0
         swd     = fileparts(P{i});
         load(fullfile(swd,'SwE.mat'));
         SwE.swd = swd;
-        
+
         % detect if this is a WB analysis or a "standard analysis"
         if isfield(SwE, 'WB')
           swe_cp_WB(SwE);
@@ -139,7 +139,7 @@ end
 %-Delete files from previous analyses
 %--------------------------------------------------------------------------
 if exist(fullfile(SwE.swd,sprintf('swe_%s_mask%s',file_data_type,file_ext)),'file') == 2
- 
+
     str = {'Current directory contains SwE estimation files:',...
         'pwd = ',SwE.swd,...
         'Existing results will be overwritten!'};
@@ -150,7 +150,7 @@ if exist(fullfile(SwE.swd,sprintf('swe_%s_mask%s',file_data_type,file_ext)),'fil
         warning('Overwriting old results\n\t (pwd = %s) ',SwE.swd); %#ok<WNTAG>
     end
 end
- 
+
 files = {'^swe_.{3}_mask(\.dtseries)?(\.dscalar)?\..{3}$',...
         '^swe_.{3}_cov_b\d{2}_b\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
         '^swe_.{3}_cov_vv(\.dtseries)?(\.dscalar)?\..{3}$',...
@@ -172,18 +172,18 @@ files = {'^swe_.{3}_mask(\.dtseries)?(\.dscalar)?\..{3}$',...
         '^swe_clusternorm\d{0,1}_\w{1,2}stat_lp\w{0,3}-WB_c\d{2}(\.dtseries)?(\.dscalar)?\..{3}$',...
         '^swe_.{3}_resid_y\d{2,4}(\.dtseries)?(\.dscalar)?\..{3}$',...
         '^swe_.{3}_fit_y\d{2,4}(\.dtseries)?(\.dscalar)?\..{3}$'};
- 
+
 for i = 1:length(files)
     j = spm_select('List',SwE.swd,files{i});
     for k = 1:size(j,1)
         spm_unlink(deblank(j(k,:)));
     end
 end
- 
+
 %==========================================================================
 % - A N A L Y S I S   P R E L I M I N A R I E S
 %==========================================================================
- 
+
 %-Initialise
 %==========================================================================
 fprintf('%-40s: %30s','Initialising parameters','...computing');        %-#
@@ -202,7 +202,7 @@ switch SwE.SS
     case 0
         corr = ones(nScan,1);
     case 1
-        corr  = sqrt(nScan/(nScan-nBeta)); % residual correction (type 1) 
+        corr  = sqrt(nScan/(nScan-nBeta)); % residual correction (type 1)
     case 2
         corr  = (1-diag(Hat)).^(-0.5); % residual correction (type 2)
     case 3
@@ -214,7 +214,7 @@ switch SwE.SS
             tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
             tmp = (tmp + tmp')/2;
 			[tmpV, tmpE] = eig(tmp);
-            corr{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV'; 
+            corr{i} = tmpV * diag(1./sqrt(diag(tmpE))) * tmpV';
         end
         clear I_Hat tmp
     case 5
@@ -223,14 +223,14 @@ switch SwE.SS
         for i = 1:nSubj
             tmp = I_Hat(iSubj==uSubj(i), iSubj==uSubj(i));
             tmp = (tmp + tmp')/2;
-            corr{i} = inv(tmp); 
+            corr{i} = inv(tmp);
         end
         clear I_Hat tmp
 end
 
 %-detect if the design matrix is separable (a little bit messy, but seems to do the job)
 %
-iGr_dof   = zeros(1,nScan);  
+iGr_dof   = zeros(1,nScan);
 iBeta_dof = zeros(1,nBeta);
 it = 0;
 while ~all(iGr_dof)
@@ -260,18 +260,18 @@ while 1
         ind1 = find(sum(tmp,1)>1,1); % detect the first column in common
         ind2 = find(tmp(:,ind1)==1); % detect the groups to be fused
         for ii = ind2'
-            iGr_dof(iGr_dof==uGr_dof(ii)) = ind2(1); % fuse the groups 
+            iGr_dof(iGr_dof==uGr_dof(ii)) = ind2(1); % fuse the groups
         end
     end
 end
-nSubj_dof = zeros(1,nGr_dof); 
+nSubj_dof = zeros(1,nGr_dof);
 for i = 1:nGr_dof % renumber to avoid gaps in the numbering
     iGr_dof(iGr_dof==uGr_dof(i)) = i;
     iBeta_dof(tmp(i,:)==1) = i;
     nSubj_dof(i) = length(unique(iSubj(iGr_dof==uGr_dof(i))));
 end
-pB_dof   = zeros(1,nGr_dof); 
-for i=1:nBeta    
+pB_dof   = zeros(1,nGr_dof);
+for i=1:nBeta
     tmp=1;
     for ii=1:nSubj
         if length(unique(xX.X(iSubj==uSubj(ii)&iGr_dof'==iBeta_dof(i),i)))>1
@@ -295,38 +295,38 @@ end
 if isfield(SwE.type,'modified')
     dof_type = SwE.type.modified.dof_mo;
 else
-    dof_type = SwE.type.classic.dof_cl;        
+    dof_type = SwE.type.classic.dof_cl;
 end
 
 if dof_type == 0 % so naive estimation is used
     dof_cov = zeros(1,nBeta);
     for i = 1:nBeta
         dof_cov(i) = nSubj_dof(iBeta_dof(i)) - ...
-            pB_dof(iBeta_dof(i));    
+            pB_dof(iBeta_dof(i));
     end
-end  
+end
 
 %-preprocessing for the modified SwE
 if isfield(SwE.type,'modified')
     iVis      = SwE.Vis.iVis;
     iGr       = SwE.Gr.iGr;
-    uGr       = unique(iGr); 
+    uGr       = unique(iGr);
     nGr       = length(uGr);
-    
+
     % info specific for each group
     uVis_g = cell(1,nGr); % unique visits for each group
     nVis_g = zeros(1,nGr); % number of visits for each group
     uSubj_g = cell(1,nGr); % unique visits for each group
     nSubj_g = zeros(1,nGr); % number of visits for each group
     for g = 1:nGr
-        uVis_g{g}  = unique(iVis(iGr==uGr(g))); 
+        uVis_g{g}  = unique(iVis(iGr==uGr(g)));
         nVis_g(g)  = length(uVis_g{g});
         iSubj_g = iSubj(iGr==uGr(g)); % Subject number for each subject in group for each visit
         uSubj_g{g} = unique(iSubj_g); % Unique subject numbers of subjects in group
         nSubj_g(g) = length(uSubj_g{g});
         uSubj_g_tmp = uSubj_g{g};
-        
-        for k = 1:nSubj_g(g) 
+
+        for k = 1:nSubj_g(g)
 
              % The number of visits for subject uSubj_g(k)
              vis_g_subj(k) = sum(iSubj_g==uSubj_g_tmp(k));
@@ -335,17 +335,17 @@ if isfield(SwE.type,'modified')
 
         max_nVis_g(g) = max(vis_g_subj);
         min_nVis_g(g) = min(vis_g_subj);
-        
+
         clear vis_g_subj
-        
+
     end
-    
+
     nCov_vis_g  = nVis_g.*(nVis_g+1)/2; % number of covariance elements to be estimated for each group
-    nCov_vis    = sum(nCov_vis_g); % total number of covariance elements to be estimated   
-    
-    % Flags matrices indicating which residuals have to be used for each covariance element 
+    nCov_vis    = sum(nCov_vis_g); % total number of covariance elements to be estimated
+
+    % Flags matrices indicating which residuals have to be used for each covariance element
     Flagk  = false(nCov_vis,nScan); % Flag indicating scans corresponding to visit k for each covariance element
-    Flagkk = false(nCov_vis,nScan); % Flag indicating scans corresponding to visit kk for each covariance element    
+    Flagkk = false(nCov_vis,nScan); % Flag indicating scans corresponding to visit kk for each covariance element
     Ind_Cov_vis_diag     = nan(1,sum(nVis_g)); % index of the diagonal elements
     Ind_Cov_vis_off_diag = nan(1,nCov_vis - sum(nVis_g)); % index of the off-diagonal elements
     Ind_corr_diag=nan(nCov_vis,2); % index of the 2 corresponding diagonal elements
@@ -354,19 +354,19 @@ if isfield(SwE.type,'modified')
     for g = 1:nGr
         for k = 1:nVis_g(g)
             for kk = k:nVis_g(g)
-               it = it + 1;               	
+               it = it + 1;
                id = intersect(iSubj(iGr==uGr(g) & iVis==uVis_g{g}(k)),...
-                   iSubj(iGr==uGr(g) & iVis==uVis_g{g}(kk))); % identifiaction of the subjects with both visits k & kk                
+                   iSubj(iGr==uGr(g) & iVis==uVis_g{g}(kk))); % identifiaction of the subjects with both visits k & kk
                Flagk(it,:)  = ismember(iSubj,id) & iVis==uVis_g{g}(k);
-               Flagkk(it,:) = ismember(iSubj,id) & iVis==uVis_g{g}(kk);              
-               if k==kk                 
+               Flagkk(it,:) = ismember(iSubj,id) & iVis==uVis_g{g}(kk);
+               if k==kk
                    it2 = it2+1;
                    it4 = it2;
                    Ind_Cov_vis_diag(it2)     = it;
                else
                    it3 = it3 + 1;
                    it4 = it4 + 1;
-                   Ind_Cov_vis_off_diag(it3) = it;                   
+                   Ind_Cov_vis_off_diag(it3) = it;
                end
                Ind_corr_diag(it,:) = [it2 it4];
                iGr_Cov_vis_g(it) = g;
@@ -379,12 +379,12 @@ if isfield(SwE.type,'modified')
     for j = 1:nBeta
         for jj = j:nBeta
             it=it+1;
-            for jjj = Ind_Cov_vis_diag               
+            for jjj = Ind_Cov_vis_diag
                 weight(it,jjj) = pX(j,Flagk(jjj,:))*pX(jj,Flagk(jjj,:))';
             end
-            for jjj = Ind_Cov_vis_off_diag       
+            for jjj = Ind_Cov_vis_off_diag
                 weight(it,jjj) = pX(j,Flagk(jjj,:))*pX(jj,Flagkk(jjj,:))' + ...
-                    pX(j,Flagkk(jjj,:))*pX(jj,Flagk(jjj,:))';              
+                    pX(j,Flagkk(jjj,:))*pX(jj,Flagk(jjj,:))';
             end
 
         end
@@ -401,7 +401,7 @@ if isfield(SwE.type,'modified')
                    tmp = tmp + 1/edof_Subj(uSubj == uSubj_g{g}(j));
                 end
                 edof_Gr(g) = nSubj_g(g)^2/tmp;
-            end            
+            end
         case {2,3} % compute a matrix containing the variables linked to the degrees of freedom (for test II and III)
             dofMat = cell(nGr,1);
             for g = 1:nGr
@@ -446,12 +446,12 @@ if isfield(SwE.type,'classic')
     for i = 1:nSubj
         nVis_i(i) = sum(uSubj(i)==iSubj);
     end
-    nCov_vis      = sum(nVis_i.*(nVis_i+1)/2); % total number of covariance elements to be estimated   
+    nCov_vis      = sum(nVis_i.*(nVis_i+1)/2); % total number of covariance elements to be estimated
     weight        = NaN(nCov_beta,nCov_vis);
     Ind_Cov_vis_classic = NaN(1,nCov_vis);
     Indexk  = NaN(1,nCov_vis);
     Indexkk = NaN(1,nCov_vis);
-    it = 0;    
+    it = 0;
     for j = 1:nBeta
         for jj = j:nBeta
             it = it + 1;
@@ -460,7 +460,7 @@ if isfield(SwE.type,'classic')
                 ind_i=find(iSubj == uSubj(i));
                 for ii = 1:nVis_i(i)
                     it2 = it2 + 1;
-                    weight(it,it2) = pX(j,ind_i(ii))*pX(jj,ind_i(ii));                   
+                    weight(it,it2) = pX(j,ind_i(ii))*pX(jj,ind_i(ii));
                     Ind_Cov_vis_classic(it2) = i;
                     Indexk(it2)  = ind_i(ii);
                     Indexkk(it2) = ind_i(ii);
@@ -474,7 +474,7 @@ if isfield(SwE.type,'classic')
                 end
             end
         end
-    end 
+    end
     %-compute the effective dof from each homogeneous group (here, subject)
     if dof_type == 1
        edof_Gr = edof_Subj;
@@ -599,12 +599,12 @@ if ~isMat
     %                               DIM, M, sprintf('spm_spm:ResI (%02d)', i),...
     %                               isMeshData);
     % end
-    fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-# 
-    %  
+    fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...initialised');    %-#
+    %
     %==========================================================================
     % - F I T   M O D E L   &   W R I T E   P A R A M E T E R    I M A G E S
     %==========================================================================
-    
+
     %-Get explicit mask(s)
     %==========================================================================
     mask = true(DIM);
@@ -650,10 +650,10 @@ if ~isMat
 
     for iChunk=1:nbchunks
       chunk = chunks(iChunk):chunks(iChunk+1)-1;
-      
+
       %-Report progress
       %======================================================================
-      if iChunk > 1, fprintf(repmat(sprintf('\b'),1,72)); end                  %-# 
+      if iChunk > 1, fprintf(repmat(sprintf('\b'),1,72)); end                  %-#
       fprintf('%-40s: %30s', sprintf('Chunk %3d/%-3d',iChunk,nbchunks),...
                              '...processing');
 
@@ -661,16 +661,16 @@ if ~isMat
       %------------------------------------------------------------------
       Y = zeros(nScan, numel(chunk));
       cmask = mask(chunk);
-      
+
       if size(cmask, 2) == 1
         cmask = cmask';
       end
-      
+
       for iScan=1:nScan
         if ~any(cmask), break, end                 %-Break if empty mask
-        
+
         Y(iScan, cmask) = swe_data_read(VY(iScan), chunk(cmask));%-Read chunk of data
-        
+
         cmask(cmask) = Y(iScan, cmask) > xM.TH(iScan);      %-Threshold (& NaN) mask
         if xM.I && ~YNaNrep && xM.TH(iScan) < 0        %-Use implicit mask
             cmask(cmask) = abs(Y(iScan, cmask)) > eps;
@@ -682,12 +682,12 @@ if ~isMat
       % matrix design either in a visit category or within-subject (BG - 27/05/2016)
       %------------------------------------------------------------------
       for g = 1:nGr_dof % first look data for each separable matrix design
-        if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)     
+        if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)
           cmask(cmask)  = any(abs(diff(Y(iGr_dof'==g, cmask),1)) > eps, 1); % mask constant data within separable matrix design g (added by BG on 29/08/16)
           if isfield(SwE.type,'modified') % added by BG on 29/08/16
             for g2 = 1:nGr % then look data for each "homogeneous" group
               % check if the data is contant over subject for each visit category
-              for k = 1:nVis_g(g2) 
+              for k = 1:nVis_g(g2)
                 if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
                   cmask(cmask) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k), cmask),1)) > eps, 1);
                   for kk = k:nVis_g(g2)
@@ -731,7 +731,7 @@ if ~isMat
         end
         clear Y                           %-Clear to save memory
 
-        %-Estimation of the data variance-covariance components (modified SwE) 
+        %-Estimation of the data variance-covariance components (modified SwE)
         %-SwE estimation (classic version)
         %--------------------------------------------------------------
         c = zeros(numel(chunk),1);
@@ -741,7 +741,7 @@ if ~isMat
             for i = Ind_Cov_vis_diag
                 Cov_vis(i,:) = mean(res(Flagk(i,:),:).^2, 1);
             end
-            % Check if some voxels have variance < eps and mask them 
+            % Check if some voxels have variance < eps and mask them
             tmp = ~any(Cov_vis(Ind_Cov_vis_diag,:) < eps); % modified by BG on 29/08/16
             if any(~tmp)
                 beta    = beta(:,tmp);
@@ -778,9 +778,9 @@ if ~isMat
                         end
                     end
                 end
-                
+
                 % compute the beta covariance matrice(s)
-                switch dof_type 
+                switch dof_type
                   case 1
                     Cov_beta = zeros(nCov_beta, CrS);
                     it = 0;
@@ -823,19 +823,19 @@ if ~isMat
       %----------------------------------------------------------------------
       mask(chunk)  = cmask;
       VM           = swe_data_write(VM, cmask', chunk);
-      
+
       %-Write beta files
       %----------------------------------------------------------------------
       for iBeta=1:nBeta
         if CrS
           c(cmask) = beta(iBeta,:);
         end
-        Vbeta(iBeta) = swe_data_write(Vbeta(iBeta), c, chunk); 
+        Vbeta(iBeta) = swe_data_write(Vbeta(iBeta), c, chunk);
       end
 
       %-Write CovVis files if needed
       %----------------------------------------------------------------------
-      if isfield(SwE.type,'modified') 
+      if isfield(SwE.type,'modified')
         for iCov_vis=1:nCov_vis
           if CrS
             c(cmask) = Cov_vis(iCov_vis,:);
@@ -852,29 +852,29 @@ if ~isMat
         end
         Vcov_beta(iCov_beta) = swe_data_write(Vcov_beta(iCov_beta), c, chunk);
       end
-      
+
       %-Report progress
       %======================================================================
       fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done');             %-#
       swe_progress_bar('Set',i);
     end % iChunk=1:nbchunks
 
-    swe_progress_bar('Clear');        
-    
+    swe_progress_bar('Clear');
+
     %==========================================================================
     % - P O S T   E S T I M A T I O N   C L E A N U P
     %==========================================================================
-    
+
     S = nnz(mask);
     if S == 0
       error('Please check your data: There are no inmask voxels.');
     end
-    
+
     %-Compute coordinates of voxels within mask
     %--------------------------------------------------------------------------
     [x,y,z]        = ind2sub(DIM,find(mask));
     XYZ            = [x y z]';
-    
+
 else % matrix input
     % check how the data image treat 0 (as NaN or not)
     YNaNrep = 0;
@@ -891,9 +891,9 @@ else % matrix input
     elseif size(Y, 1) ~= SwE.nscan
         error('The input data does not have %i rows and thus is not compatible with the other specified variables. Please revised the model specification.', SwE.nscan)
     end
-    
+
     nVox = size(Y, 2);
-    
+
     %-Produce the mask
     cmask = true(1, nVox);
     %-Use the explicit mask if specified
@@ -912,12 +912,12 @@ else % matrix input
     % matrix design either in a visit category or within-subject (BG - 27/05/2016)
     %------------------------------------------------------------------
     for g = 1:nGr_dof % first look data for each separable matrix design
-      if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)     
+      if sum(iGr_dof'==g) > 1 % do not look for cases where the separable matrix design is only one row (BG - 05/08/2016)
         cmask(cmask) = any(abs(diff(Y(iGr_dof'==g,cmask),1)) > eps, 1); % mask constant data within separable matrix design g (added by BG on 29/08/16)
         if isfield(SwE.type,'modified') % added by BG on 29/08/16
           for g2 = 1:nGr % then look data for each "homogeneous" group
             % check if the data is contant over subject for each visit category
-            for k = 1:nVis_g(g2) 
+            for k = 1:nVis_g(g2)
               if sum(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k)) > 1 % do not look for cases when the data is only one row (BG - 05/08/2016)
                 cmask(cmask) = any(abs(diff(Y(iGr_dof'==g & iGr == uGr(g2) & iVis == uVis_g{g2}(k) ,cmask),1)) > eps, 1);
                 for kk = k:nVis_g(g2)
@@ -1032,12 +1032,12 @@ else % matrix input
         if isfield(SwE.type,'modified')
             fprintf('\n');                                                    %-#
             disp('Working on the SwE computation...');
-            switch dof_type 
+            switch dof_type
                 case 1
                     crCov_beta = zeros(nCov_beta,CrS); % initialize SwE for the plane
                     crCov_beta_i =  zeros(nGr,nCov_beta,CrS);
                     for g = 1:nGr
-                        crCov_beta_i(g,:,:) = weight(:,iGr_Cov_vis_g==g) * crCov_vis(iGr_Cov_vis_g==g,:);                
+                        crCov_beta_i(g,:,:) = weight(:,iGr_Cov_vis_g==g) * crCov_vis(iGr_Cov_vis_g==g,:);
                         Cov_beta = Cov_beta + crCov_beta_i(g,:,:);
                     end
                 case {0 2 3}
@@ -1046,12 +1046,12 @@ else % matrix input
         end
         fprintf('\n');                                                    %-#
     end
-        
-    %-Save betas etc. 
+
+    %-Save betas etc.
     %----------------------------------------------------------
     fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...saving results'); %-#
 
-    mask = cmask;       
+    mask = cmask;
     save(sprintf('swe_%s_mask%s',file_data_type,file_ext), 'mask');
     clear mask
 
@@ -1082,10 +1082,10 @@ else % matrix input
         save(sprintf('swe_%s_cov_g_bb%s',file_data_type,file_ext), 'cov_beta_g');
         clear cov_beta_g crCov_beta_i
     end
-    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');   
-    
+    fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...done');
+
     fprintf('%s%30s',repmat(sprintf('\b'),1,30),'...some clean up'); %-#
-  
+
     XYZ         = [];
     M           = [];
     DIM         = [];
@@ -1112,7 +1112,7 @@ SwE.xVol.units = {'mm' 'mm' 'mm'};
 SwE.Vbeta      = Vbeta;             %-Filehandle - Beta
 SwE.Vcov_beta  = Vcov_beta;         %-Filehandle - Beta covariance
 if isfield(SwE.type,'modified')
-    SwE.Vcov_vis   = Vcov_vis;      %-Filehandle - Visit covariance    
+    SwE.Vcov_vis   = Vcov_vis;      %-Filehandle - Visit covariance
 end
 if dof_type == 1
     SwE.Vcov_beta_g  = Vcov_beta_g;     %-Filehandle - Beta covariance contributions
@@ -1134,7 +1134,7 @@ SwE.Subj.uSubj = uSubj;
 SwE.Subj.nSubj = nSubj;
 
 if isfield(SwE.type,'modified')
-    
+
     if dof_type >1
         SwE.Vis.weight        = weight;
         SwE.Vis.iGr_Cov_vis_g = iGr_Cov_vis_g;
@@ -1146,7 +1146,7 @@ if isfield(SwE.type,'modified')
     SwE.Vis.nCov_vis = nCov_vis;
     SwE.Vis.max_nVis_g = max_nVis_g;
     SwE.Vis.min_nVis_g = min_nVis_g;
-    
+
     SwE.Gr.uGr       = uGr;
     SwE.Gr.nGr       = nGr;
     SwE.Gr.nSubj_g   = nSubj_g;
@@ -1157,20 +1157,20 @@ else
     end
 end
 
-SwE.dof.uGr_dof   = uGr_dof; 
+SwE.dof.uGr_dof   = uGr_dof;
 SwE.dof.nGr_dof   = nGr_dof;
-SwE.dof.iGr_dof   = iGr_dof; 
+SwE.dof.iGr_dof   = iGr_dof;
 SwE.dof.iBeta_dof = iBeta_dof;
 SwE.dof.pB_dof    = pB_dof;
 SwE.dof.nSubj_dof = nSubj_dof;
 SwE.dof.edof_Subj = edof_Subj;
 SwE.dof.dof_type  = dof_type;
-if dof_type == 1 
+if dof_type == 1
     SwE.dof.edof_Gr = edof_Gr;
 elseif dof_type == 0
     SwE.dof.dof_cov = dof_cov;
 else
-    SwE.dof.dofMat = dofMat; 
+    SwE.dof.dofMat = dofMat;
 end
 
 % save the version number of the toolbox
@@ -1193,4 +1193,4 @@ fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done')                %-#
 %==========================================================================
 %spm('FigName','Stats: done',Finter); spm('Pointer','Arrow')
 fprintf('%-40s: %30s\n','Completed',spm('time'))                        %-#
-fprintf('...use the results section for assessment\n\n')  
+fprintf('...use the results section for assessment\n\n')

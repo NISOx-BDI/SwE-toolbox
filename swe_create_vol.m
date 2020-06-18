@@ -3,7 +3,7 @@ function vol=swe_create_vol(fname, DIM, M, varargin)
 % =========================================================================
 % FORMAT vol = swe_create_vol(fname, DIM, M [, descrip])
 % -------------------------------------------------------------------------
-% Inputs: 
+% Inputs:
 %   - fname:    Filename of new image
 %   - DIM:      Row vector giving image dimensions
 %   - M:        4x4 homogeneous transformation, from V.mat
@@ -12,7 +12,7 @@ function vol=swe_create_vol(fname, DIM, M, varargin)
 %   - metadata: metadata from GIfTI file (SPM set metadata = {} for NIfTI)
 % =========================================================================
 % Version Info:  $Format:%ci$ $Format:%h$
-    
+
     if nargin > 3
         descrip = varargin{1};
     else
@@ -45,5 +45,5 @@ function vol=swe_create_vol(fname, DIM, M, varargin)
     else
         vol = spm_create_vol(vol);
     end
-    
+
 end

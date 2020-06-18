@@ -15,10 +15,10 @@
 
 global SwEdefs
 
-% If true, shuffles the seed of the random number generator to get 
-% different results every time. Use false, if you want to specify your own 
-% seed, for instance to insure that results can be replicated or when using 
+% If true, shuffles the seed of the random number generator to get
+% different results every time. Use false, if you want to specify your own
+% seed, for instance to insure that results can be replicated or when using
 % a high performance cluster.
 %------------------------------------------------------------------------
-SwEdefs.shuffle_seed = true; 
+SwEdefs.shuffle_seed = true;
 

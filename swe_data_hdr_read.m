@@ -4,7 +4,7 @@ function V = swe_data_hdr_read(P, varargin)
   % P        - a char or cell array of filenames
   % V        - a structure array containing data information
   %
-  % This function behaves like spm_data_hdr_read but can also read the  
+  % This function behaves like spm_data_hdr_read but can also read the
   % headers of CIfTI files.
   % =========================================================================
   % Bryan Guillaume
@@ -26,14 +26,14 @@ function V = swe_data_hdr_read(P, varargin)
       if ~(strcmpi(file_ext,'.dtseries.nii') ||  strcmpi(file_ext,'.dscalar.nii'))
         error('Not all files are CIfTI files');
       end
-      
+
       % if some slices of data are requested, remove this from the filename
       if ~isempty(sliceInd)
         P2{i} = P2{i}(1:(end-numel(sliceInd)));
       end
-      
+
       ciftiObject = swe_cifti(P2{i}, readExt);
-      
+
       if isempty(sliceInd)
         sliceInd = 1:ciftiObject.dat.dim(5);
       else
@@ -52,7 +52,7 @@ function V = swe_data_hdr_read(P, varargin)
         it = it + 1;
       end
     end
-  else 
+  else
     V = spm_data_hdr_read(P);
   end
 end

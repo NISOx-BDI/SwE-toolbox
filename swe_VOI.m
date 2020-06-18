@@ -4,7 +4,7 @@ function [TabDat,xSVC] = swe_VOI(SwE,xSwE,hReg,xY)
 % FORMAT [TabDat,xSVC] = swe_VOI(SwE,xSwE,hReg,[xY])
 % -------------------------------------------------------------------------
 % Inputs:
-% 
+%
 % SwE    - Structure containing analysis details (see spm_spm)
 %
 % xSwE   - Structure containing SwE, distribution & filtering details
@@ -52,7 +52,7 @@ function [TabDat,xSVC] = swe_VOI(SwE,xSwE,hReg,xY)
 % voxels with values greater than 0.
 %
 % See also: spm_list
-% Adapted version of `spm_VOI.m`. 
+% Adapted version of `spm_VOI.m`.
 % Author of Adaptation: Tom Maullin (07/09/2018)
 % Version Info:  $Format:%ci$ $Format:%h$
 %__________________________________________________________________________
@@ -90,7 +90,7 @@ try
 catch
     xyzmm  = spm_results_ui('GetCoords');
 end
-    
+
 %-Specify search volume
 %--------------------------------------------------------------------------
 if isfield(xY,'def')
@@ -176,7 +176,7 @@ switch SPACE
     str    = spm_file(D.fname,'short30');
     str    = regexprep(str, {'\\' '\^' '_' '{' '}'}, ...
         {'\\\\' '\\^' '\\_' '\\{' '\\}'}); % Escape TeX special characters
-    str    = sprintf('image mask: %s',str); 
+    str    = sprintf('image mask: %s',str);
     VOX    = sqrt(sum(D.mat(1:3,1:3).^2));
     XYZ    = D.mat \ [xSwE.XYZmm; ones(1, size(xSwE.XYZmm, 2))];
     j      = find(spm_sample_vol(D, XYZ(1,:), XYZ(2,:), XYZ(3,:),0) > 0);

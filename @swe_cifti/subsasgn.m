@@ -27,7 +27,7 @@ case {'()'}
     if length(subs)>1
         t    = subsref(objs,subs(1));
         % A lot of this stuff is a little flakey, and may cause Matlab to bomb.
-        % 
+        %
         %if numel(t) ~= nargin-2,
         %    error('The number of outputs should match the number of inputs.');
         %end;

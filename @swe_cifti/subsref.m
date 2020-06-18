@@ -86,7 +86,7 @@ case {'.'}
             if s
                 d = findindict(s,'units');
                 if ~isempty(d)
-                    t = diag([d.rescale*[1 1 1] 1])*t; 
+                    t = diag([d.rescale*[1 1 1] 1])*t;
                 end
             end
 
@@ -151,12 +151,12 @@ case {'.'}
                 se = double(h.slice_end)+1;
                 ss = max(ss,1);
                 se = min(se,double(h.dim(t.slice+1)));
-                
+
                 sd = double(h.slice_duration);
                 s  = double(bitand(h.xyzt_units,24));
                 d  = findindict(s,'units');
                 if d.rescale, sd = sd*d.rescale; end
-                
+
                 ns       = (se-ss+1);
                 d = findindict(sc,'sliceorder');
                 if isempty(d)

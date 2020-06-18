@@ -1,7 +1,7 @@
 function convertedLabels = swe_cifti_convertVolLabels(originalLabels, abbreviate)
   % Convert CIFTI struture labels from long labels to abbreviations or convert abbreviations to long labels
   % FORMAT convertedLabels = swe_cifti_convertVolLabels(originalLabels, abbreviate)
-  % originalLabels            - a cell array of cifti volume labels or a single cifti volume label 
+  % originalLabels            - a cell array of cifti volume labels or a single cifti volume label
   % abbreviate   							- a boolean indicating if the labels needs to be abbreviated (true) or if the full labels need to be given (false)
   % convertedLabels      			- a cell array of converted cifti volume labels or a single cifti converted volume label
 	ciftiVolumeLabels = {...

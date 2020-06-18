@@ -10,7 +10,7 @@ function boxCoxLambda = swe_estimateBoxCoxLambda(data)
   % =========================================================================
   % Bryan Guillaume
   % Version Info:  $Format:%ci$ $Format:%h$
-  
+
   if min(data) <= 0
     error('The data must be positive.')
   end
@@ -18,13 +18,13 @@ function boxCoxLambda = swe_estimateBoxCoxLambda(data)
   startingLambdaValue = 0;
   boxCoxLambda = fminsearch( @(lambda) getMinusBoxCoxLogLikelihood(data, lambda), startingLambdaValue);
 
-  function minusBoxCoxLogLikelihood = getMinusBoxCoxLogLikelihood(data, lambda)    
+  function minusBoxCoxLogLikelihood = getMinusBoxCoxLogLikelihood(data, lambda)
 
     nData = numel(data);
-    
+
     transformedData = swe_boxCoxTransform(data, lambda);
 
     minusBoxCoxLogLikelihood = 0.5 * nData * log(var(transformedData, 0)) + (1 - lambda) * sum(log(data));
-    
+
   end
 end
