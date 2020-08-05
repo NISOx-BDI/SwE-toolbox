@@ -856,7 +856,7 @@ if ~isMat
       %-Report progress
       %======================================================================
       fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done');             %-#
-      swe_progress_bar('Set',i);
+      swe_progress_bar('Set',iChunk);
     end % iChunk=1:nbchunks
 
     swe_progress_bar('Clear');
