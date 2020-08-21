@@ -90,11 +90,9 @@ function varargout = swe_list(varargin)
 % swe_list characterizes SwE data (thresholded at u and k) in terms of
 % excursion sets (a collection of face, edge and vertex connected subsets
 % or clusters).  The corrected significance of the results are based on
-% set, cluster and voxel-level inferences using distributional
-% approximations from the Theory of Gaussian Fields and/or common bootstrap
-% methods. These distributions assume that the SwE map is a reasonable
-% lattice approximation of a continuous random field with known component
-% field smoothness.
+% voxel-level inferences assuming Gaussian errors, uncorrected or 
+% FDR-corrected, or, with wild bootstrap, voxel-level uncorrected, FDR-
+% corrected and FWE-corrected, and cluster-level FWE-corrected.
 %
 % The p values are based on the probability of obtaining c, or more,
 % clusters of k, or more, resels above u, in the volume S analysed =
