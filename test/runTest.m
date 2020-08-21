@@ -231,16 +231,16 @@ function mapsEqual = verifyMapsUnchanged(pOrWb, inferenceType, tOrF, matNiiGiiOr
 
   % List all files for testing
   if strcmp(matNiiGiiOrCii, 'nii')
-    files = ls("*.nii");
+    files = ls('*.nii');
     filetype = 'nii';
   elseif strcmp(matNiiGiiOrCii, 'gii')
-    files = ls("*.gii");
+    files = ls('*.gii');
     filetype = 'gii';
   elseif strcmp(matNiiGiiOrCii, 'cii')
-    files = ls("*.nii");
+    files = ls('*.nii');
     filetype = 'cii';
   else
-    files = ls("swe_*.mat");
+    files = ls('swe_*.mat');
     filetype = 'mat';
   end
 
@@ -266,8 +266,8 @@ function mapsEqual = verifyMapsUnchanged(pOrWb, inferenceType, tOrF, matNiiGiiOr
     else
 
       % Read in the surface data.
-      file = load(strrep(file, " ", ""));
-      gt_file = load(strrep(gt_file, " ", ""));
+      file = load(strrep(file, ' ', ''));
+      gt_file = load(strrep(gt_file, ' ', ''));
 
       % Retrieve field name.
       fieldname = fieldnames(file){1};
