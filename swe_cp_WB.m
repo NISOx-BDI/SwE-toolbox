@@ -270,7 +270,7 @@ if WB.clusterWise == 1 && WB.RSwE ==1
   SwE.WB.RSwE = 0;
   if isOctave
     save('SwE.mat','SwE');
-  elseif spm_matlab_version_chk('7') >=0
+  elseif spm_check_version('matlab','7') >=0
     save('SwE','SwE','-V6');
   else
     save('SwE','SwE');
@@ -1764,7 +1764,7 @@ end
 %--------------------------------------------------------------------------
 if isOctave
   save('SwE.mat','SwE');
-elseif spm_matlab_version_chk('7') >=0
+elseif spm_check_version('matlab','7') >=0
   save('SwE','SwE','-V6');
 else
   save('SwE','SwE');
@@ -2950,7 +2950,7 @@ end
 %Save SwE.
 if isOctave
   save('SwE.mat','SwE');
-elseif spm_matlab_version_chk('7') >=0
+elseif spm_check_version('matlab','7') >=0
   save('SwE','SwE','-V6');
 else
   save('SwE','SwE');
