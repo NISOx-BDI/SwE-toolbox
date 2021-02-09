@@ -1,6 +1,6 @@
 function [N, N_area, N_boxcox, Z, M, A, XYZ] = swe_mesh_max(X, locationsInVertices, G, boxcoxInfo, areaFile)
   % Sizes, local maxima and locations of excursion sets on volume data
-  % FORMAT [N, N_area, N_boxcox, Z, M, A, XYZ] = spm_max(X, locationsInVoxels, G, boxcoxInfo, areaFile)
+  % FORMAT [N, N_area, N_boxcox, Z, M, A, XYZ] = swe_mesh_max(X, locationsInVoxels, G, boxcoxInfo, areaFile)
   %
   % X                     		- an [nx1] array of stat values
   % locationsInVertices			  - an [1xn] array of locations {in vertices}
