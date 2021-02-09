@@ -659,7 +659,7 @@ case 'table'                                                        %-Table
         [N, N_boxcox, Z, XYZ, A, L]  = swe_max(Z, XYZ, boxcoxInfo);
         N_area = [];
     else
-        [N, N_area, N_boxcox, Z, XYZ, A, L]  = spm_mesh_max(Z, XYZ, xSwE.G, boxcoxInfo);
+        [N, N_area, N_boxcox, Z, XYZ, A, L]  = swe_mesh_max(Z, XYZ, xSwE.G, boxcoxInfo);
     end
     Z              = Z - minz - 1;
 
