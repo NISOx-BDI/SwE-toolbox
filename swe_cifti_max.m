@@ -1,6 +1,6 @@
 function [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm, brainStructureShortLabels, brainStructureLongLabels] = swe_cifti_max(X, indSurvivingInCifti, ciftiInformation, boxcoxInfo)
   % Sizes, local maxima and locations of excursion sets on a cifti file
-  % FORMAT [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm] = spm_mesh_max(X, indSurvivingInCifti, ciftiInformation, boxcoxInfo)
+  % FORMAT [N, N_area, N_boxcox, Z, M, A, XYZ, Mmm] = swe_cifti_max(X, indSurvivingInCifti, ciftiInformation, boxcoxInfo)
   % X                     		- an [nx1] array of stat values
   % indSurvivingInCifti   		- an [nx1] array of locations {in cifti indices}
   % ciftiInformation      		- cifti information
