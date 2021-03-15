@@ -19,5 +19,3 @@ For questions about using SwE please start with the [SwE Toolbox Google group](h
 If you feel you have found a bug or problem with the software, please use [SwE Toolbox group](https://groups.google.com/g/swe-toolbox) or leave a [GitHub issue](https://github.com/NISOx-BDI/SwE-toolbox/issues).
 
 The GitHub wiki presently only has information on managing releases.
-
-If you have a question or a suggestion about the toolbox, please submit a new issue with this question.
