@@ -1,5 +1,5 @@
 function [groups,subjects,visits,X] = swe_GenFactorialDes(nVis,nSub)
-% Create key input variables for full factorial design
+% Create key input variables for a full factorial design
 % =========================================================================
 % Based on the number of visits and number of subjects per group, this
 % function creates the four essential inputs for a SwE analysis:
